@@ -1,0 +1,4 @@
+{
+    "ignore": ["datastore/*"],
+    "ext": "js, json, html,ejs,cjs,mjs"
+}

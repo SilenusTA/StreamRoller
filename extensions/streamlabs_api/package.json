@@ -1,0 +1,16 @@
+{
+  "name": "streamlabs_api",
+  "version": "1.0.0",
+  "description": "Connects to Streamlabs API for alert data etc",
+  "main": "streamlabs_api.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io-client_2.0.3": "npm:socket.io-client@^2.0.3"
+  }
+
+}

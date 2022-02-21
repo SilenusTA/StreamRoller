@@ -1,0 +1,214 @@
+<mxfile host="65bd71144e">
+    <diagram id="BgQU_KeTrB_UCvm2fVYO" name="Page-1">
+        <mxGraphModel dx="919" dy="623" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="13" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#FF3333;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="910" width="580" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=#1A1A1A;" vertex="1" parent="1">
+                    <mxGeometry x="30" y="560" width="780" height="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="630" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="570" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="Adminpage" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="320" y="60" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="Live Page (streamer)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#292A01;" vertex="1" parent="1">
+                    <mxGeometry x="30" y="480" width="770" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#FF3333;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="840" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="Chat Control" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="570" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="Game" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="930" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="Start" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="90" y="960" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="End" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="200" y="940" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="340" y="955" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="Ban" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="590" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="start game" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="590" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="Turn on TTS" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="730" y="590" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="710" y="610" width="90" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="Alerts" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="690" y="630" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="Mute" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="650" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="Replay" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="660" y="650" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="... most recent alerts ..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="670" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="720" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="Stream" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="690" y="720" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="Title" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="745" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="Game" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="670" y="745" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="765" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" value="PlayAd" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="745" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="Live 6555kbs 12viewers &quot;song playing&quot; ..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="570" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="Start" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="820" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="Stop" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="670" y="820" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="790" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="Music" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="680" y="790" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="OBS Volume" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="670" y="840" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="870" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="620" y="890" width="50" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="" style="line;strokeWidth=4;html=1;perimeter=backbonePerimeter;points=[];outlineConnect=0;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="677.5" y="875" width="102.5" height="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="" style="line;strokeWidth=4;html=1;perimeter=backbonePerimeter;points=[];outlineConnect=0;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="777.5" y="875" width="12.5" height="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="" style="line;strokeWidth=4;html=1;perimeter=backbonePerimeter;points=[];outlineConnect=0;fillColor=#60a917;strokeColor=#2D7600;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="677.5" y="895" width="102.5" height="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="" style="line;strokeWidth=4;html=1;perimeter=backbonePerimeter;points=[];outlineConnect=0;fillColor=#a20025;strokeColor=#6F0000;fontColor=#ffffff;" vertex="1" parent="1">
+                    <mxGeometry x="777.5" y="895" width="12.5" height="10" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="Stream Deck Style buttons" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="232.5" y="915" width="177.5" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="59" value="Message" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="800" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="Message" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="880" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="MOD CHAT&lt;br&gt;Read chat, hightlight messages &lt;br&gt;(mods etc) &lt;br&gt;Integrate other mesage ie. discord mod channel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="820" width="570" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="CHAT&lt;br&gt;Read chat, hightlight messages &lt;br&gt;(mods etc) &lt;br&gt;Integrate other mesage ie. discord mod channel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="590" width="570" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="Stream Mod" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#292A01;" vertex="1" parent="1">
+                    <mxGeometry x="25" y="1050" width="780" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#FF3333;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1470" width="580" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FFFFFF;fillColor=#1A1A1A;" vertex="1" parent="1">
+                    <mxGeometry x="25" y="1110" width="780" height="440" as="geometry"/>
+                </mxCell>
+                <mxCell id="64" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="1270" width="180" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="1130" width="180" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="67" value="Chat Control" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="655" y="1130" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="737.5" y="1500" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="72" value="Ban" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="615" y="1150" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="73" value="start game" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="655" y="1150" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="75" value="..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="692.5" y="1230" width="90" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="1390" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="81" value="Emergency Actions" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="635" y="1390" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="Intermission" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="625" y="1430" width="75" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="86" value="Live 6555kbs 12viewers &quot;song playing&quot; ..." style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1130" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="98" value="Stream Deck Style buttons" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="227.5" y="1475" width="177.5" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="99" value="Message" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1360" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="100" value="Message" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#FF3333;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1440" width="570" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="101" value="MOD CHAT&lt;br&gt;Read chat, hightlight messages &lt;br&gt;(mods etc) &lt;br&gt;Integrate other mesage ie. discord mod channel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1380" width="570" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="102" value="CHAT&lt;br&gt;Read chat, hightlight messages &lt;br&gt;(mods etc) &lt;br&gt;Integrate other mesage ie. discord mod channel" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=#66CC00;" vertex="1" parent="1">
+                    <mxGeometry x="35" y="1150" width="570" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="103" value="Stop Stream" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;gradientColor=none;strokeColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="700" y="1430" width="75" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="105" value="Poll" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="615" y="1170" width="90" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="106" value="Stream/Overlay" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="670" y="1270" width="40" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="popups" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1500" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="108" value="Create Clip" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="1500" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="109" value="Create VOD(YT)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="210" y="1500" width="100" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

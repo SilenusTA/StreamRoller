@@ -1,0 +1,22 @@
+{
+  "name": "data_center",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon ./data_center/server.js ",
+    "startdebug": "set DEBUG=express:* & nodemon ./data_center/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "node extensioninstaller.js"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "ejs": "^3.1.6",
+    "socket.io": "^3.0.5",
+    "socket.io-client": "^3.0.5"
+  },
+  "devDependencies": {}
+}

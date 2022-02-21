@@ -1,0 +1,140 @@
+<!--
+// ############################ MAIN_OVERLAY.HTML #############################
+// Example html file for an overlay connected to the data center
+// -------------------------- Creation ----------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// Datatype : JSON message as provided by streamlabs api.
+// Date: 14-Jan-2021
+// --------------------------- functionality ----------------------------------
+// 
+// --------------------------- description -------------------------------------
+// 
+// ----------------------------- notes ----------------------------------------
+// TBD. 
+// ============================================================================
+-->
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js" type="text/javascript"></script>
+    <meta charset="UTF-8" />
+    <meta http-equiv="cache-control" content="no-cache" />
+</head>
+
+<body>
+    <main>
+        <!-- alert animations -->
+        <script type="text/javascript" src="alertscript.js"></script>
+        <link rel="stylesheet" href="style.css" />
+        <div id="animated_alert">
+            <div id="Alert_Container" class="ABClass">
+                <div id="Alert_Header" class="ABHeader"></div>
+                <div id="Alert_ImageL" class="ABImage"></div>
+                <div id="Alert_ContentText" class="ABContent"></div>
+            </div>
+        </div>
+        <!-- end alert animations -->
+
+        <div id="subcount"></div>
+        <div id="discord"></div>
+
+        <script>
+            /* Define our function to handle the callbacks */
+            function update_from_discord(message) {
+                elem = document.getElementById("discord");
+                elem.innerHTML = message;
+            }
+
+            function total_subscriber_count_cmd(count) {
+                elem = document.getElementById("subcount");
+                elem.innerHTML = "No of subscribers : " + count;
+            }
+
+            const messageStream = io("http://localhost:3000", {
+                transports: ["websocket"],
+            });
+
+            messageStream.on("connect", () => {
+                console.log("Connected to server as: ", messageStream.id);
+                SOCKET_ID = messageStream.id;
+                // Register for the messages we want to see
+                messageStream.emit("register", buildMessage(SOCKET_ID, "OBS_MAIN_OVERLAY", "STREAMLABS_ALERT", "info", ""));
+            });
+
+            //Perform Action on event
+            messageStream.on("message", (message) => {
+                const decoded_message = JSON.parse(message);
+
+                if (decoded_message.channel === "STREAMLABS_ALERT" && decoded_message.type === "data") {
+                    const eventData = JSON.parse(decoded_message.data);
+                    console.log("eventData => ", eventData);
+
+                    if ((eventData.for === "streamlabs" && eventData.type === "donation") || eventData.for === "twitch_account") {
+                        /* Alerts/Events */
+                        switch (eventData.type) {
+                            case "follow":
+                                //code to handle events events
+                                console.log("messageStream " + eventData.type + " received");
+                                console.log(eventData.message[0].name);
+                                console.log(eventData);
+                                follow_cmd(eventData.message[0].name);
+                                break;
+                            case "donation":
+                                //code to handle events events
+                                console.log(eventData.message[0].name, "donated", eventData.message[0].formatted_amount, ":", eventData.message[0].message);
+
+                                break;
+                            default:
+                                console.log("messageStream event received: " + eventData.type);
+                                console.log(eventData);
+                        }
+                    } else if (eventData.type === "streamlabels.underlying") {
+                        /* data */
+                        var channeldata = eventData.message.data;
+                        total_subscriber_count_cmd(channeldata.total_subscriber_count.count);
+                        console.log("streamlabels event:");
+                        console.log(channeldata);
+                    } else {
+                        console.log(decoded_message);
+                        console.log(eventData);
+                        console.log("No pattern matched\n");
+                    }
+                } else if (decoded_message.channel === "BDO_TIMER" && decoded_message.type === "data") {
+                    update_from_discord(decoded_message.data);
+                    console.log("*** DATA ***", decoded_message);
+                    console.log("############################");
+                } else if (decoded_message.type === "error") {
+                    console.log("*** ERROR ***", decoded_message);
+                    console.log("############################");
+                } else if (decoded_message.type === "info") {
+                    console.log("*** INFO ***", decoded_message);
+                    console.log("############################");
+                } else {
+                    console.log("*** UNKNOWN ***", decoded_message);
+                    console.log("############################");
+                }
+            });
+
+            // lets output some other messages just for debugging purposes
+            messageStream.on("error", (eventData) => {
+                console.log("error");
+                if (eventData) {
+                    console.log(eventData);
+                }
+                console.log("############################");
+            });
+
+            function buildMessage(id, name, channel, type, data) {
+                return JSON.stringify({
+                    clientid: id,
+                    name: name,
+                    channel: channel,
+                    type: type,
+                    data: data,
+                });
+            }
+        </script>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+{
+    "name": "StreamRoller",
+    "extensionname": "datacenter",
+    "SYSTEM_LOGGING_TAG": "DATA-CENTER",
+    "HOST": "http://localhost",
+    "PORT": 4000,
+    "logginglevel": "0",
+    "apiVersion": "0.2"
+}

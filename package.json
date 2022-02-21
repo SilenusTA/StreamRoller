@@ -1,0 +1,22 @@
+{
+  "name": "streamroller",
+  "version": "1.0.0",
+  "description": "System using socket based data sharing for streaming",
+  "main": "backend/data_center/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon ./backend/data_center/server.js ",
+    "startdebug": "set STREAMROLLER_DEBUG_LEVEL=extended-line && setx STREAMROLLER_DEBUG_LEVEL=0 && DEBUG=express:* nodemon ./backend/data_center/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd backend && npm install"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^4.3.3",
+    "express": "^4.17.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4"
+  }
+}

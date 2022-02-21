@@ -1,0 +1,16 @@
+{
+  "name": "adminpage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "adminpage.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6"
+  }
+
+}

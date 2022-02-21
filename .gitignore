@@ -1,0 +1,12 @@
+.vscode
+**/node_modules
+BAK*
+cheatsheet.txt
+debug.log
+streamtool/debug.log
+ODG_Overlay
+odg/
+*.env
+tmp/
+php/
+test-ext/

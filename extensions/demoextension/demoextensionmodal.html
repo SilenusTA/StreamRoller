@@ -1,0 +1,77 @@
+<!--
+    This code will be displayed when the user clicks on the extension name in datacenter admin page
+it is displayed in a model box (popup) and should be coded accordingly
+Important items in this file are:
+
+****** The Invisible section is needed so that the webpage knows what channel to post the data back to
+
+name="" 
+    must be added to each form item so that we can extract the data. The name given will be sent with the value
+    back to the extnsion via a socket message when the form is submitted. The format of the return is an array of objects
+    [{name,value},{name,value}]
+[name]checked
+    this will be replaced with checked when we send the modal back ot the server. This allows us to set the defaults in hthe
+    modal ot the current config values. the [name] part must match the value in the name="" tag
+[name]text
+    Same as above but for text fields
+
+    in this file there are three config variables that match the config in the code
+    -channel
+    -demovar1
+    -demotext1
+    These are automatically parsed and set when this code is read before it is sent to be displayed
+
+-->
+<!--Modal HTML-->
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">Demo Extension Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>This code is sent from the demo extension and the results posted back to it via
+                the socket code
+            </p>
+            <!-- Thess fields are needed so the data can be sent back to the correct addon -->
+            <div class="form-group invisible">
+                <!-- name of the extension. used to allow the web page to know who to send the data back to -->
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
+                    tabindex="-1" />
+                <!-- type of code that this form is fore. This is defined by the webpage that will request and use this
+                modal to display data. When a modal is requested (for this one the message is RequestAdminModal) this
+                is the message type that needs to be sent back with this file as the data field -->
+                <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
+                <!-- This is the message type that the webpage will send when it processes the data from a form submit
+                on this page. The message will be sent to the extension name above, with the message type shown here and 
+                the form data in the data field of the message -->
+                <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
+                <!-- This is the channel to be sent on. not currently used in this form submit as it is sent to the 
+                extension name socket directly but might be used in future so for now it is left here -->
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+            <!-- fields for user interaction
+            some demo fields to show how this works.
+            note the variable name from our cofig "demovar1" is used as part or all of some of the fields.
+            The 'name fields are madatory for the AdminModal code as it will simply pull all the 'name' fields
+            and valyes out of the form to send back to us -->
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="demovar1" type="checkbox" id="demovar1" demovar1checked>
+                    <label class="form-check-label" for="demovar1">demovar1</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="demotext1" class="col-form-label">demotext1</label>
+                <input type="text" name="demotext1" class="form-control" id="demotext1" value="demotext1text">
+            </div>
+        </div>
+        <!-- Standard footer with submit and cancel buttons -->
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+<!-- END: -->
