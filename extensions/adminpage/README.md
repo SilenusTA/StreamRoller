@@ -14,6 +14,7 @@
       - [Description](#description)
       - [Hidden fields](#hidden-fields)
       - [Extension data](#extension-data)
+
 The admin page extension is designed to display various information about the system and all control/settings to be issues to extensions in use
 ## Purpose
 To allow configuration of the extensions/backend and to show the status of the sytem.
@@ -210,6 +211,7 @@ Hidden fields are used to know where to send the form back to and the type of da
 <input type="hidden" name="channel" class="form-control" value="TWITCH_CHAT" tabindex="-1" />
 ```
 #### Extension data
+
 This are the fields you would like to receive when the form is submitted. You can used most fields but some will not get processed. Currently radio boxes and drop downs are not processed so it is best to stick with text boxes and checkboxes.
 
 Note: that checkboxes will not be in the returned message if disabled. An unchecked checkbox is verified as unchecked if it doesn't appear in the returned data.
