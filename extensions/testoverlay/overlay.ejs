@@ -1,0 +1,189 @@
+<script>
+    // use globals here 
+    host = '<%- host %>';
+    port = '<%- port %>';
+</script>
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js" type="text/javascript"></script>
+    <!-- loaded from teh public folder as defined in the server express setup -->
+    <script src="streamroller-message-api.cjs"></script>
+    <meta charset="UTF-8" />
+    <meta http-equiv="cache-control" content="no-cache" />
+</head>
+
+<body>
+    <main>
+        <!-- alert animations -->
+        <script type="text/javascript" src="alertscript.js"></script>
+        <link rel="stylesheet" href="style.css" />
+        <div>
+            <H1>This page is a dummy overlay.</H1>
+            <BR>If StreamRoller is setup and connected to streamlabs alerts then sending an
+            alert will show that alert on here.<BR>
+            <BR>Note: sound may not be heard if opening this in a browser unless you right click and inspect the
+            page (modernbrowser do not allow code to autoplay media files until the user has 'interacted' with the
+            page).
+            <BR>Pressing the test button counts as interacting so sound should work from the button without needing to
+            'inspect' the page
+            <br>
+            <br>To test in standalone mode (just loading the html file in a browser rather than using
+            localhost:3000/overlay) you will need to provide the host and port number for the server to connect to.
+            <BR>ie. file://c:/streamroller/extensions/testoverlay/testoverlaystandalone.html?host=loclahost&port=3000
+            <BR><B>The host and port will need to be changed in the ovlerlay file for loading the
+                streamroller-message-api.cjs script</B>
+            <BR> Alternatively you can also copy the api file from
+            /backend/data_centerpublic/streamroller-message-api.cjs into the
+            local folder for the overaly and load from there.
+            <BR><BR>Currnetly just shows a follow animation, donation message and discord messages
+            <BR><BR>
+            <div id="warnings" style="color:red"></div>
+            <BR><BR>
+
+            <button id="text" onclick=testAlert()>Test alert</button>
+        </div>
+        <div id="animated_alert">
+            <div id="Alert_Container" class="ABClass">
+                <div id="Alert_Header" class="ABHeader"></div>
+                <div id="Alert_ImageL" class="ABImage"></div>
+                <div id="Alert_ContentText" class="ABContent"></div>
+            </div>
+        </div>
+        <!-- end alert animations -->
+        <div id="subcount"></div>
+        <div id="donation"></div>
+        <div id="discord"></div>
+        <script>
+            /* button to test the animated alerts */
+            function testAlert()
+            {
+                follow_cmd("Billy the Goat");
+            }
+            /* Define our function to handle the callbacks */
+            // porocess discord messgages
+            function update_from_discord(message)
+            {
+                msg = JSON.parse(message).data
+                elem = document.getElementById("discord");
+                elem.innerHTML = msg.name + ": " + msg.message;
+            }
+            // process subscriber messages
+            function total_subscriber_count_cmd(count)
+            {
+                elem = document.getElementById("subcount");
+                elem.innerHTML = "No of subscribers : " + count;
+            }
+
+            ///////////////////////////////////////
+            // start the connection and register our callbacks
+            console.log(host + ":" + port);
+            DataCenterSocket = sr_api.setupConnection(
+                onDataCenterMessage,
+                onConnect,
+                onDisconnect,
+                host,
+                port);
+
+            // on connection register to received data on channels we are interested in
+            function onConnect()
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        "testoverlay",
+                        "STREAMLABS_ALERT"
+                    )
+                )
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        "testoverlay",
+                        "DISCORD_BOT"
+                    )
+                )
+
+            }
+            // disconnect.
+            function onDisconnect(responce) { }
+            // message handler. this will handle any data sent to us or the channels we are registered on 
+            function onDataCenterMessage(message)
+            {
+                const decoded_message = JSON.parse(message);
+                console.log(decoded_message);
+                // channle data are messaged sent out by the extension we have registed to listen to (ie alerts, discord etc)
+                if (decoded_message.type === "ChannelData")
+                {
+                    // just to save some typeing we will use a variable
+                    const eventData = decoded_message.data;
+                    // we got a discord message
+                    if (decoded_message.dest_channel === "STREAMLABS_ALERT")
+                    {
+                        if ((eventData.for === "streamlabs" && eventData.type === "donation")
+                            || eventData.for === "twitch_account")
+                        {
+                            /* Alerts/Events */
+                            switch (eventData.type)
+                            {
+                                case "follow":
+                                    //code to handle events events
+                                    console.log("messageStream " + eventData.type + " received");
+                                    follow_cmd(eventData.message[0].name);
+                                    break;
+                                case "donation":
+                                    //code to handle events events
+                                    console.log(eventData.message[0].name, "donated", eventData.message[0].formatted_amount, ":", eventData.message[0].message);
+                                    elem = document.getElementById("donation").innerText = eventData.message[0].name + "donated" + eventData.message[0].formatted_amount;
+                                    break;
+                                default:
+                                    console.log("messageStream event received: " + eventData.type);
+                                    console.log(eventData);
+                            }
+                        } else if (eventData.type === "streamlabels.underlying")
+                        {
+                            /* data */
+                            var channeldata = eventData.message.data;
+                            total_subscriber_count_cmd(channeldata.total_subscriber_count.count);
+                            console.log("streamlabels event:");
+                            console.log(channeldata);
+                        } else
+                        {
+                            console.log(decoded_message);
+                            console.log(eventData);
+                            console.log("No pattern matched\n");
+                        }
+                    }
+                    else if (decoded_message.dest_channel === "DISCORD_BOT")
+                    {
+                        update_from_discord(decoded_message.data);
+                    }
+                } else
+                {
+                    console.log("*** UNKNOWN ***", decoded_message);
+                    console.log("############################");
+                }
+
+            }
+            function getUrlParameter(sParam)
+            {
+                var sPageURL = window.location.search.substring(1),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
+
+                for (i = 0; i < sURLVariables.length; i++)
+                {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam)
+                    {
+                        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                    }
+                }
+                return false;
+            };
+        </script>
+    </main>
+</body>
+
+</html>

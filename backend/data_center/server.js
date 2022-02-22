@@ -67,12 +67,12 @@ app.use(express.static(__dirname + "/public"));
 
 // server our overlay. Overlay currently needs updating and moving into the extensions
 // as this is where I suspect it should live. or maybe we need a separate overlays folder?
-let overlayfolder = __dirname + "/../../frontend/overlays/main_overlay";
-app.use("/overlay", express.static(overlayfolder));
-app.get("/overlay", (req, res) =>
-{
-    res.sendFile('main_overlay.html', { root: overlayfolder });
-});
+//////let overlayfolder = __dirname + "/../../frontend/overlays/main_overlay";
+//////app.use("/overlay", express.static(overlayfolder));
+//////app.get("/overlay", (req, res) =>
+////{
+/////    res.sendFile('main_overlay.html', { root: overlayfolder });
+/////});
 // #############################################################
 // Note that we shouldn't be using php any more now we are on  #
 // node.js but until I can rewite my overlay this will remain  #
@@ -137,7 +137,7 @@ function loadExtensions(extensionFolder)
                                 {
                                     extensions[file] = { initialise: module.initialise };
                                     if (typeof extensions[file].initialise === 'function')
-                                        extensions[file].initialise(app, JSON.stringify(config.HOST), config.PORT);
+                                        extensions[file].initialise(app, config.HOST, config.PORT);
                                     else
                                         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Extension module " + file + " did not export an intialise function");
                                 })

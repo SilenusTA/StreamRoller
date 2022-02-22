@@ -1,0 +1,103 @@
+/** style.css */
+html {
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    margin-top: 0px;
+    margin-left: 0px;
+    overflow: hidden;
+}
+
+.ABClass {
+    width: 0px;
+    height: 0px;
+    display: none;
+    background-color: #af8800;
+    top: 15%;
+    left: calc(50vw - 500px);
+    position: absolute;
+    overflow: hidden;
+    border-radius: 10px;
+    -webkit-animation: animateAB 10s 0s 1;
+}
+
+.ABHeader {
+    background-color: #ff8c00;
+    overflow: hidden;
+    height: 60px;
+    width: 1000px;
+    text-align: center;
+    font-size: 50px;
+    line-height: 1.2;
+    color: black;
+}
+
+.ABImage {
+    width: 200px;
+    height: 200px;
+}
+
+.ABContent {
+    position: absolute;
+    text-align: center;
+    word-break: break-word;
+    width: 800px;
+    top: 110px;
+    bottom: auto;
+    left: 200px;
+    line-height: 1.2;
+    font-size: 60px;
+    color: white;
+}
+
+@-webkit-keyframes animateAB {
+    0%,
+    100% {
+        width: 0px;
+        height: 60px;
+        -webkit-box-shadow: 0px 50px 20px #0f336940;
+        transform-origin: 50% 0%;
+        transform: perspective(800px) rotatex(90deg);
+    }
+    15%,
+    85% {
+        width: 1000px;
+        height: 60px;
+        -webkit-box-shadow: 0px 50px 20px #0f336940;
+        transform-origin: 50% 0%;
+        transform: perspective(800px) rotatex(50deg);
+    }
+    30%,
+    70% {
+        width: 1000px;
+        height: 260px;
+        -webkit-box-shadow: 0px 50px 20px #0f336940;
+        transform-origin: 50% 0%;
+        transform: perspective(800px) rotatex(45deg);
+    }
+    40%,
+    50% {
+        width: 1000px;
+        height: 260px;
+        -webkit-box-shadow: 0px 0px 20px #0f336940;
+        transform-origin: 50% 0%;
+        transform: perspective(800px) rotatex(0deg);
+    }
+}
+
+#subcount {
+    position: absolute;
+    width: auto;
+    height: 50px;
+    background-color: black;
+    color: white;
+    bottom: 5px;
+    left: 10px;
+    font-size: 50px;
+}
+t-size: 50px;
+}

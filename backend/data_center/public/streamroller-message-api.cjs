@@ -112,13 +112,14 @@ function setupConnection(onMessage, onConnect, onDisconnect, host, port)
         if (typeof module !== "undefined" && module.exports)
         {
             const SocketIo = require("socket.io-client");
-            DCSocket = SocketIo(JSON.parse(host) + ":" + port,
+            DCSocket = SocketIo(host + ":" + port,
                 { transports: ["websocket"] });
         }
         else
         {
+            console.log("connectingto", host + ":" + port);
             // user has imported the package via the <script tag>
-            DCSocket = io(JSON.parse(host) + ":" + port,
+            DCSocket = io(host + ":" + port,
                 { transports: ["websocket"] });
         }
         // handlers
@@ -128,7 +129,7 @@ function setupConnection(onMessage, onConnect, onDisconnect, host, port)
         return DCSocket;
     } catch (err)
     {
-        console.log(config.SYSTEM_LOGGING_TAG + "streamroller-message-api.setupConnection", "DataCenterSocket connection failed:", err);
+        console.log("streamroller-message-api.setupConnection", "DataCenterSocket connection failed:", err);
         throw "streamroller-message-api failed to create connection";
     }
 }
