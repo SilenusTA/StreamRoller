@@ -242,7 +242,8 @@ function onDataCenterMessage(data)
     else if (decoded_data.type === "ChannelJoined"
         || decoded_data.type === "ChannelCreated"
         || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel")
+        || decoded_data.type === "LoggingLevel"
+        || decoded_data.type === "ChannelData")
     {
         // just a blank handler for items we are not using to avoid message from the catchall
     }

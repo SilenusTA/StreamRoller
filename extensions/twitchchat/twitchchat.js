@@ -128,10 +128,9 @@ function onDataCenterMessage(data)
         let decoded_packet = JSON.parse(decoded_data.data);
         // -------------------- PROCESSING ADMIN MODALS -----------------------
         if (decoded_packet.type === "RequestAdminModalCode")
-            SendModal(decoded_packet.channel);
+            SendModal(decoded_data.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            console.log(decoded_packet.data)
             if (decoded_packet.to === serverConfig.extensionname)
             {
                 // we shall either turn this checkbox on or not get it in the message so we can just turn it off here 
@@ -174,7 +173,8 @@ function onDataCenterMessage(data)
     else if (decoded_data.type === "ChannelJoined"
         || decoded_data.type === "ChannelCreated"
         || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel")
+        || decoded_data.type === "LoggingLevel"
+        || decoded_data.type === "ChannelData")
     {
         // just a blank handler for items we are not using to avoid message from the catchall
     }
@@ -224,7 +224,10 @@ function SendModal(tochannel)
                         modalstring,
                         "",
                         tochannel,
-                        config.OUR_CHANNEL)));
+                        config.OUR_CHANNEL),
+                    "",
+                    tochannel
+                ));
         }
     });
 }

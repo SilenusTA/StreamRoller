@@ -17,22 +17,23 @@
             <!-- DataCenter message scrollable box -->
             <div class="col-md-8 border bg-light">Chat
                 <%- include('../cards/ChatMessagesCard'); %>
-                Mod Messages
-                <%- include('../cards/ModMessagesCard'); %>
+                    Mod Messages
+                    <%- include('../cards/ModMessagesCard'); %>
             </div>
             <div class="col-md-4 border bg-light">Channels and Extensions
                 <%- include('../cards/ChannelsListCard'); %>
-                <%- include('../cards/ExtensionsListCard'); %>
+                    <%- include('../cards/ExtensionsListCard'); %>
             </div>
         </div>
         <div class="row border bg-light">Some controls I haven't though of yet
+            <%- include('../cards/OBSControllsCard'); %>
         </div>
         <!-- end container -->
     </main>
     <%- include('../scripts/datahandler'); %>
-    <footer>
-        <%- include('../partials/foot'); %>
-    </footer>
+        <footer>
+            <%- include('../partials/foot'); %>
+        </footer>
 </body>
 
 </html>

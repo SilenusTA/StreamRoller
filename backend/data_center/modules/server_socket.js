@@ -147,7 +147,11 @@ function onMessage(socket, data)
     // make sure we are using the same api version
     if (decoded_data.version != config.apiVersion)
     {
+        console.log(data)
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
+            "Version mismatch:", decoded_data.version, "!=", config.apiVersion);
+
+        logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "!!!!!!! Message Sytem API version doesn't match: ", decoded_data);
         mh.errorMessage(socket, "Incorrect api version", data);
         return;
@@ -193,9 +197,19 @@ function onMessage(socket, data)
     else if (decoded_data.type === "LeaveChannel")
         mh.leaveChannel(socket, decoded_data.from, decoded_data.data);
     else if (decoded_data.type === "ExtensionMessage")
-        mh.forwardMessage(socket, data, channels, extensions);
+    {
+        if (decoded_data.to === undefined)
+            mh.errorMessage(socket, "No extension name specified for ExtensionMessage", decoded_data);
+        else
+            mh.forwardMessage(socket, data, channels, extensions);
+    }
     else if (decoded_data.type === "ChannelData")
-        mh.forwardMessage(socket, data, channels, extensions);
+    {
+        if (decoded_data.dest_channel === undefined)
+            mh.errorMessage(socket, "No Channel specified for ChannelData", decoded_data);
+        else
+            mh.forwardMessage(socket, data, channels, extensions);
+    }
     else if (decoded_data.type === "SetLoggingLevel")
     {
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "logging set to level ", decoded_data.data);

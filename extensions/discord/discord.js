@@ -152,7 +152,7 @@ function onDataCenterMessage(data)
                 serverConfig.channel + " message received !?!?", decoded_data);
         else
         {
-            logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.info(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received message: ", decoded_data);
         }
     }

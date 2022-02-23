@@ -127,9 +127,8 @@ function onDataCenterConnect(socket)
         SaveConfigToServer();
     else
         // Save our config to the server
-        sr_api.sendMessage(
+        sr_api.sendMessage(config.DataCenterSocket,
             sr_api.ServerPacket("SaveConfig", config.EXTENSION_NAME, serverConfig));
-
 
     // Create a channel for messages to be sent out on
     sr_api.sendMessage(config.DataCenterSocket,
@@ -202,10 +201,10 @@ function onDataCenterMessage(data)
         // this is normally inserted into a link on the main page so we can send/receive
         // data from the webpage (ie to change our settings etc)
         if (decoded_packet.type === "RequestAdminModalCode")
-            // just call the sendModal function below with the channel to send the message back on
-            SendModal(decoded_packet.from);
+            // just call the SendAdminModal function below with the channel to send the message back on
+            SendAdminModal(decoded_packet.from);
         // if we receive data back from our admin modal we process this here.
-        else if (decoded_packet.message_type === "AdminModalData")
+        else if (decoded_packet.type === "AdminModalData")
         {
             //make sure it is for us
             if (decoded_packet.extensionname === serverConfig.extensionname)
@@ -230,8 +229,8 @@ function onDataCenterMessage(data)
                 // currently we have the same data as sent so no need to update the admin page at the moment
                 // if you wish to do verification at this point and reject some of the data then you need to send the updated modal
                 // back (ie with the checkboxes changed etc)
-                // note the SendModal function will update the admin page to match what is in our current settings
-                // SendModal(decoded_data.channel);
+                // note the SendAdminModal function will update the admin page to match what is in our current settings
+                // SendAdminModal(decoded_data.channel);
             }
         }
     }
@@ -263,18 +262,16 @@ function onDataCenterMessage(data)
         else
             logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
     }
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (decoded_data.type === "InvalidMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
-        if (decoded_packet.type === "AdminModalData")
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received our modal ", decoded_packet.data);
-        else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received  ", decoded_packet.type);
+        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
+            "InvalidMessage ", decoded_data.data.error, decoded_data);
     }
     else if (decoded_data.type === "ChannelJoined"
         || decoded_data.type === "ChannelCreated"
         || decoded_data.type === "ChannelLeft"
         || decoded_data.type === "LoggingLevel"
+        || decoded_data.type === "ExtensionMessage"
     )
     {
 
@@ -306,9 +303,9 @@ function process_stream_alert(decoded_data)
 
 }
 // ===========================================================================
-//                           FUNCTION: SendModal
+//                           FUNCTION: SendAdminModal
 // ===========================================================================
-// Desription: Send the modal code back after setting the defaults according 
+// Desription: Send the admin modal code back after setting the defaults according 
 // to our server settings
 // Parameters: channel to send data to
 // ----------------------------- notes ---------------------------------------
@@ -321,10 +318,10 @@ function process_stream_alert(decoded_data)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendModal(tochannel)
+function SendAdminModal(tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + '/demoextensionmodal.html', function (err, filedata)
+    fs.readFile(__dirname + '/demoextensionadminmodal.html', function (err, filedata)
     {
         if (err)
             throw err;

@@ -239,8 +239,8 @@ function forwardMessage(client_socket, data, channels, extensions)
     }//if message provides a channel but we don't have that channel in our list then return an error
     else if (decoded_data.dest_channel && !channels.includes(decoded_data.dest_channel))
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:channel:", decoded_data.dest_channel, "doesn't exist");
+        logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+            "Destination:channel:", decoded_data.dest_channel, "doesn't exist (is the extension running?)");
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, decoded_data.dest_channel));
     }
@@ -285,7 +285,7 @@ function broadcastMessage(server_socket, data)
 function errorMessage(client_socket, error, data)
 {
     logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.errorMessage",
-        error);
+        error, data);
     client_socket.emit("message",
         sr_api.ServerPacket("InvalidMessage",
             EXTENSION_NAME,
