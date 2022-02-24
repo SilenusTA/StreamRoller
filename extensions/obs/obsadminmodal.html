@@ -5,7 +5,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <p>OBS Control and information
+            <p>OBS Control and information TBD
             </p>
             <div class="form-group invisible">
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
@@ -14,17 +14,22 @@
                 <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
-            <div class="form-group">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="obsenable" type="checkbox" id="obsenable" obsenablechecked>
-                    <label class="form-check-label" for="obsenable">Enable/Disable OBS</label>
+            <div class="form-group row">
+                <label for="mainsceneselector" class="col-sm-3 col-form-label">Main Scene Identifier</label>
+                <div class="col-sm-2">
+                    <input type="text" name="mainsceneselector" class="form-control" id="mainsceneselector"
+                        value="mainsceneselectortext">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="secondarysceneselector" class="col-sm-3 col-form-label">Secondary Scene Identifier</label>
+                <div class="col-sm-2">
+                    <input type="text" name="secondarysceneselector" class="form-control" id="secondarysceneselector"
+                        value="secondarysceneselectortext">
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="obsscene" class="col-form-label">obsscene</label>
-                <input type="text" name="obsscene" class="form-control" id="obsscene" value="obsscenetext">
-            </div>
+
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

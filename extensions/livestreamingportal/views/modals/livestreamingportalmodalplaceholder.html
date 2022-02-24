@@ -18,15 +18,24 @@
                         tabindex="-1" />
                     <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
                 </div>
+                <div class="form-group"> Scene Display
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="showSecondaryScenes" type="checkbox"
+                            id="showSecondaryScenes" showSecondarySceneschecked>
+                        <label class="form-check-label" for="showSecondaryScenes">Secondary Scenes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="showAllScenes" type="checkbox" id="showAllScenes"
+                            showAllSceneschecked>
+                        <label class="form-check-label" for="showAllScenes">Show All Scenes</label>
+                    </div>
+                </div>
+            </div>
 
-
-
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
-        </div>
     </div>
-</div>
 </div>

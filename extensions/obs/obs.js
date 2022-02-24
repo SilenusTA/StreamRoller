@@ -41,8 +41,8 @@ const serverConfig = {
     channel: config.OUR_CHANNEL,
     obsenable: "on",
     obsscene: "OBS scene to switch to",
-    mainSceneDeliminator: "##",
-    secondarySceneDeliminator: "**"
+    mainsceneselector: "##",
+    secondarysceneselector: "**"
 };
 const OverwriteDataCenterConfig = false;
 
@@ -129,13 +129,19 @@ function onDataCenterMessage(data)
             SendAdminModal(decoded_packet.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            if (decoded_packet.extensionname === serverConfig.extensionname)
+            console.log(decoded_packet.data)
+            console.log(serverConfig)
+            if (decoded_packet.to === serverConfig.extensionname)
             {
                 serverConfig.obsenable = "off";
-                for (const [key, value] of Object.entries(decoded_packet.message_contents))
+                for (const [key, value] of Object.entries(decoded_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
+                // we might have updated our settins so lets send out a new data list (incase we changed the deliminatores for the buttons)
+                processOBSSceneList(config.OBSAvailableScenes);
+                sendScenes();
             }
+            console.log(serverConfig)
         }
         else if (decoded_packet.type === "RequestScenes")
         {
@@ -343,16 +349,16 @@ function processOBSSceneList(scenes)
         {
             {
                 console.log(scene.name)
-                if (scene.name.startsWith(serverConfig.mainSceneDeliminator))
+                if (scene.name.startsWith(serverConfig.mainsceneselector))
                     config.sceneList.main.push({
-                        displayName: scene.name.replace(serverConfig.mainSceneDeliminator, ""),
+                        displayName: scene.name.replace(serverConfig.mainsceneselector, ""),
                         sceneName: scene.name
                     }
                     )
-                else if (scene.name.startsWith(serverConfig.secondarySceneDeliminator))
+                else if (scene.name.startsWith(serverConfig.secondarysceneselector))
                     config.sceneList.secondary.push(
                         {
-                            displayName: scene.name.replace(serverConfig.secondarySceneDeliminator, ""),
+                            displayName: scene.name.replace(serverConfig.secondarysceneselector, ""),
                             sceneName: scene.name
                         }
                     )
@@ -482,7 +488,9 @@ function onStreamStarted(data)
 function sendScenes()
 {
     logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSScenes");
-    // saves our serverConfig to the server so we can load it again next time we startup
+    // lets add the deliminatores we currently are using before sending it out
+    config.sceneList.mainsceneselector = serverConfig.mainsceneselector;
+    config.sceneList.secondarysceneselector = serverConfig.secondarysceneselector;
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
             ("ChannelData",

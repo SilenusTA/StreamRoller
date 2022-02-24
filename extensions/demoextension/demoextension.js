@@ -175,7 +175,7 @@ function onDataCenterMessage(data)
         // if it is empty we will use our current default and send it to the server 
         if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)
         {
-            // we could just assign the values here (ie serverConfig = decoded_packet.message_contents)
+            // we could just assign the values here (ie serverConfig = decoded_packet.data)
             // but if we change/remove an item it would never get removed from the store.
             // we will update any fields we have that are in the message passed to us
             for (const [key, value] of Object.entries(serverConfig))
@@ -220,7 +220,7 @@ function onDataCenterMessage(data)
                 // note this for loop requires the modal html code names to match what we want in the config variable
                 // means we can just assign them here without having to work out what the config name is 
                 // for the given name in the modal html
-                for (const [key, value] of Object.entries(decoded_packet.message_contents))
+                for (const [key, value] of Object.entries(decoded_packet.data))
                     serverConfig[key] = value;
 
                 // Update our saved data to the server for next time we run.

@@ -5,14 +5,20 @@
     const serverConfig = {
         extensionname: "livestreamingportal",
         channel: "LIVE_STREAMING_PORTAL",
-        logginglevel: "5"
+        showSecondaryScenes: "on",
+        showAllScenes: "on"
     };
+    const config =
+    {
+        OBSchannellist: {}
+    }
+
     // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
     // during development you may find your server data gets messed up if changing it often.
     // while uncommented your data will not presist and be overwritten by the above config
     // every time the server runs up.
 
-    const OverwriteDataCenterConfig = true;
+    const OverwriteDataCenterConfig = false;
 
     // will hold the data center socket needed to send receive data
     // after refactoring the code this should hopefully not be needed anymore
@@ -213,7 +219,7 @@
             else if (decoded_packet.type === "AdminModalData")
             {
                 // check that it is ours
-                if (decoded_packet.to === serverserverConfig.extensionname)
+                if (decoded_packet.to === serverConfig.extensionname)
                 {
                     // lets reset our config checkbox settings (modal will omit ones not
                     // checked in checkboxes so set them to "off" here first if you have them)
@@ -356,7 +362,7 @@
     function SendModal(toextension)
     {
 
-        let modalstring = JSON.stringify(adminData.extensions[serverConfig.extensionname].admincard);
+        let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
         // first lets update our modal to the current settings
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -424,17 +430,21 @@
                 // we need to process it ourselves first
                 if (xname == serverConfig.extensionname)
                 {
+                    // process this data oursleves first
                     processOwnModalSubmit(xname);
                     // now it is processed we can parse it and send the data out to other who
                     // migh have it on their page
                     parseExtensionModalData(xname);
+                    // As we have some updateded data we need to make sure that we refresh ourselves in case
+                    // we have changed some settings (ie buttons to be shown)
+                    ParseOBSScenesList(config.OBSchannellist);
                 }
                 else
                     parseExtensionModalData(xname);
                 return false;
             });
             adminData.extensions[xname] = {
-                admincard: document.getElementById(xname)
+                admincard: document.getElementById(xname).innerHTML
             }
         }
     }
@@ -447,20 +457,22 @@
         let secondaryScenes = data.secondary;
         let restScenes = data.rest;
         // remove the existing buttons
-        //document.getElementById("OBSButtons").remove()
         var element = document.getElementById("OBSControllsCardText");
         //remove the old buttons
         element.textContent = ""
-        //buttondiv = document.createElement('div'),
-        //    buttondiv.id = 'OBSButtons';
 
-        //element.appendChild(buttondiv);
+        // always show the primary scene list
 
-        // clear out the existing button list and creae some new ones
-
-        primaryScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
-        secondaryScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
-        restScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
+        if (typeof (primaryScenes) !== "undefined")
+            primaryScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
+        // if we have all or secondory selected to show then show them
+        if (typeof (secondaryScenes) !== "undefined" && (serverConfig.showAllScenes === "on" || serverConfig.showSecondaryScenes === "on"))
+            secondaryScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
+        // only show remaining scenes if all is set
+        if (typeof (restScenes) !== "undefined" && serverConfig.showAllScenes === "on")
+            restScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName) })
+        //store the data incase the user updated what they want to display
+        config.OBSchannellist = data;
     }
     // ============================================================================
     //                           FUNCTION: addOBSSceneButton
@@ -508,7 +520,7 @@
         // convert our array of objects into a more usable objet
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
         console.log(fieldsAsObject);
-        if (fieldsAsObject.channel)
+        if (fieldsAsObject.extensionname)
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
@@ -546,6 +558,8 @@
                 modalstring = modalstring.replace(key + "text", value);
         }
         adminData.extensions[serverConfig.extensionname].admincard = modalstring;
+        // Update the OBS channel list as we might have changed what we want to show
+        ParseOBSScenesList(config.OBSchannellist);
     }
     // ============================================================================
     //                      FUNCTION: processOwnModalSubmit
@@ -562,14 +576,6 @@
         let fieldsAsArray = $('#' + name + "_modal").serializeArray();
         // convert our array of objects into a more usable object
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        // if we have changed hte logging level let us set that now
-        if (fieldsAsObject.logginglevel != "null" && serverConfig.logginglevel != fieldsAsObject.logginglevel)
-        {
-            // change server logging level
-            changeServerLogging(fieldsAsObject.logginglevel);
-            // change our logging level (probably should be a separate option)
-            G_LOGLEVEL = fieldsAsObject.logginglevel;
-        }
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
