@@ -226,9 +226,9 @@ function forwardMessage(client_socket, data, channels, extensions)
     if (decoded_data.to && !extensions[decoded_data.to].socket)
     {
         logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:extension:", decoded_data.to, "doesn't exist");
+            "Destination:extension:", decoded_data.to, " connection doesn't exist");
         client_socket.emit("message",
-            sr_api.ServerPacket("UnknownExtension", EXTENSION_NAME, decoded_data.to));
+            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: decoded_data }));
     }
     // send direct to client
     else if (extensions[decoded_data.to] && extensions[decoded_data.to].socket)

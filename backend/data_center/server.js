@@ -110,7 +110,6 @@ else
 
 function loadExtensions(extensionFolder)
 {
-    //app.use(express.static(extensionFolder + '/extensionhelper'));
     logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Loading extensions");
     fs.readdir(extensionFolder, (err, files) =>
     {
@@ -119,7 +118,8 @@ function loadExtensions(extensionFolder)
             // loop through each directory
             files.forEach((file) =>
             {
-                if (file !== "extensionhelper")
+                // ignore files starting wiht "~~"
+                if (!file.startsWith("~~"))
                 {
                     fs.access(extensionFolder + "/" + file + "/" + file + ".js", fs.F_OK, (err) =>
                     {

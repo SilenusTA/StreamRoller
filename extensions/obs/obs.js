@@ -20,23 +20,42 @@
 import * as logger from "../../backend/data_center/modules/logger.js";
 import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { config } from "./config.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let streamlabsChannelConnectionAttempts = 0;
+// local config
+const config = {
+    OUR_CHANNEL: "OBS_CHANNEL",
+    EXTENSION_NAME: "obs",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    channelConnectionAttempts: 20,
+    OBSAvailableScenes: null,
+    sceneList: { main: [], secondary: [], rest: [] },
 
+};
+//sever config (stuff we want to save over runs)
 const serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL,
     obsenable: "on",
-    obsscene: "OBS scene to switch to"
+    obsscene: "OBS scene to switch to",
+    mainSceneDeliminator: "##",
+    secondarySceneDeliminator: "**"
 };
 const OverwriteDataCenterConfig = false;
+
 
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension
+ * @param {Object} app 
+ * @param {String} host 
+ * @param {String} port 
+ */
 function initialise(app, host, port)
 {
     try
@@ -46,7 +65,7 @@ function initialise(app, host, port)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "connection failed:", err);
     }
-    connectToObs();
+    connectToObs(obs, "localhost", "4445", "pass");
 }
 
 // ============================================================================
@@ -65,7 +84,7 @@ function onDataCenterDisconnect(reason)
 // ============================================================================
 /**
  * Connection message handler
- * @param {*} socket 
+ * @param {Socket} socket 
  */
 function onDataCenterConnect(socket)
 {
@@ -79,11 +98,6 @@ function onDataCenterConnect(socket)
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", config.EXTENSION_NAME, config.OUR_CHANNEL)
     );
-
-    /*sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", config.EXTENSION_NAME, "STREAMLABS_ALERT")
-    );*/
-
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -94,11 +108,13 @@ function onDataCenterConnect(socket)
  */
 function onDataCenterMessage(data)
 {
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", data);
     var decoded_data = JSON.parse(data);
     if (decoded_data.type === "ConfigFile")
     {
         if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)
         {
+            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage Received config");
             for (const [key, value] of Object.entries(serverConfig))
                 if (key in decoded_data.data)
                     serverConfig[key] = decoded_data.data[key];
@@ -108,6 +124,7 @@ function onDataCenterMessage(data)
     else if (decoded_data.type === "ExtensionMessage")
     {
         let decoded_packet = JSON.parse(decoded_data.data);
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage ExtensionMessage", decoded_packet.type);
         if (decoded_packet.type === "RequestAdminModalCode")
             SendAdminModal(decoded_packet.from);
         else if (decoded_packet.type === "AdminModalData")
@@ -120,16 +137,32 @@ function onDataCenterMessage(data)
                 SaveConfigToServer();
             }
         }
-        else if (decoded_packet.type === "ChangeScene")
+        else if (decoded_packet.type === "RequestScenes")
         {
-            ChangeScene(decoded_packet.data)
+            sr_api.sendMessage(config.DataCenterSocket,
+                sr_api.ServerPacket
+                    ("ExtensionMessage",
+                        config.EXTENSION_NAME,
+                        sr_api.ExtensionPacket(
+                            "SceneList",
+                            serverConfig.extensionname,
+                            config.sceneList,
+                            "",
+                            decoded_data.from
+                        ),
+                        "",
+                        decoded_data.from
+                    )
+            )
         }
+        else if (decoded_packet.type === "ChangeScene")
+            changeScene(decoded_packet.data);
         else
             logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "unhandled ExtensionMessage ", decoded_data);
-
     }
     else if (decoded_data.type === "UnknownChannel")
     {
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage UnknownChannel", decoded_packet.type);
         if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
         {
             logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
@@ -157,6 +190,7 @@ function onDataCenterMessage(data)
         || decoded_data.type === "LoggingLevel"
     )
     {
+        //logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage Not handling", decoded_data.type);
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
@@ -165,53 +199,6 @@ function onDataCenterMessage(data)
             ".onDataCenterMessage", "Unhandled message type", decoded_data.data.error);
 }
 
-// ===========================================================================
-//                           FUNCTION: SendOBSControlModal
-// ===========================================================================
-/**
- * send some modal code to be displayed on the admin page or somewhere else
- * this is done as part of the webpage request for modal message we get from 
- * extension. It is a way of getting some user feedback via submitted forms
- * from a page that supports the modal system
- * @param {String} tochannel 
- */
-function SendOBSControlModal(tochannel)
-{
-    // read our modal file
-    fs.readFile(__dirname + '/obsadminmodal.html', function (err, filedata)
-    {
-        if (err)
-            throw err;
-        else
-        {
-            let modalstring = filedata.toString();
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
-                // replace text strings
-                else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
-            }
-            // send the modified modal data to the server
-            sr_api.sendMessage(config.DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    config.EXTENSION_NAME,
-                    sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
-                        config.EXTENSION_NAME, //our name
-                        modalstring,// data
-                        "",
-                        tochannel,
-                        config.OUR_CHANNEL
-                    ),
-                    "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
-                ))
-        }
-    });
-}
 // ===========================================================================
 //                           FUNCTION: SendAdminModal
 // ===========================================================================
@@ -259,23 +246,12 @@ function SendAdminModal(tochannel)
         }
     });
 }
-
-function ChangeScene(scene)
-{
-    console.log("changing scene ", scene)
-    obs.send('SetCurrentScene', {
-        'scene-name': scene
-    }).catch((err) =>
-    {
-        console.log("OBS Changescene failed ", err)
-    }
-
-    )
-
-}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * savel config file to the server
+ */
 function SaveConfigToServer()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -284,28 +260,185 @@ function SaveConfigToServer()
             config.EXTENSION_NAME,
             serverConfig))
 }
+
+// ############################################################################
 // ============================================================================
-//                           FUNCTION: SceneChanged
+//                             OBS websockets
 // ============================================================================
-function SceneChanged(scene)
+// ############################################################################
+import OBSWebSocket from "obs-websocket-js";
+const obs = new OBSWebSocket();
+// ============================================================================
+//                           FUNCTION: onOBSScenes
+// ============================================================================
+/**
+ * connects to the obs server
+ */
+function connectToObs(obs, host, port, pass)
 {
-    // saves our serverConfig to the server so we can load it again next time we startup
+    logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", host, port, pass);
+    logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", "implement host:port and pass functionality");
+    obs.connect({
+        address: 'localhost:4445',
+        password: 'pass'
+    })
+        .then(() =>
+        {
+            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", "OBS Connected");
+            return obs.send('GetSceneList');
+        })
+        .then(data =>
+        {
+            try { processOBSSceneList(data.scenes) }
+            catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs create scenes list", err); }
+        })
+        .catch((err) =>
+        {
+            //Need to setup a reschedule if we have a connection failure
+            logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs Failed to connect to OBS, scheduling reconnect", err);
+            setTimeout(() =>
+            {
+                connectToObs(obs, host, port, pass);
+            }, 10000);
+        })
+}
+
+// ============================================================================
+//                           FUNCTION: OBSRequest
+// ============================================================================
+/**
+ * Make an OBS request using the data provided
+ * @param {String} request request string
+ * @param {Function} callback function to handle the callback data
+ */
+function OBSRequest(request, data)
+{
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSRequest", request, data);
+    try { obs.sendCallback(request, data, function (err, data) { console.log(err, data) }); }
+    catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSRequest failed", request, data); }
+}
+// ============================================================================
+//                FUNCTION: StreamRoller Request Handlers
+// ============================================================================
+// see the following link for possibly handlers
+// https://gist.github.com/lee-brown/70e6014a903dfea9e2dfe7e35fc8ab88
+// example
+// https://www.npmjs.com/package/@streamdasher/obs-websocket-js
+
+// ============================================================================
+//                           FUNCTION: processOBSSceneList
+// ============================================================================
+/**
+ * process a new list of scenes from OBS
+ * @param {Scenes} scenes 
+ */
+function processOBSSceneList(scenes)
+{
+    try
+    {
+        logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".processOBSSceneList", scenes);
+        config.OBSAvailableScenes = scenes;
+        config.sceneList = { main: [], secondary: [], rest: [] };
+        scenes.forEach(scene =>
+        {
+            {
+                console.log(scene.name)
+                if (scene.name.startsWith(serverConfig.mainSceneDeliminator))
+                    config.sceneList.main.push({
+                        displayName: scene.name.replace(serverConfig.mainSceneDeliminator, ""),
+                        sceneName: scene.name
+                    }
+                    )
+                else if (scene.name.startsWith(serverConfig.secondarySceneDeliminator))
+                    config.sceneList.secondary.push(
+                        {
+                            displayName: scene.name.replace(serverConfig.secondarySceneDeliminator, ""),
+                            sceneName: scene.name
+                        }
+                    )
+                else
+                    config.sceneList.rest.push({ displayName: scene.name, sceneName: scene.name })
+            }
+        })
+    }
+    catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".processOBSSceneList", "Failed ot process scene list", err); }
+}
+
+// ============================================================================
+//                           FUNCTION: changeScene
+// ============================================================================
+/**
+ * Change to the scene named in the paramert
+ * @param {String} scene 
+ */
+function changeScene(scene)
+{
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".changeScene", " request come in. changing to ", scene);
+
+    OBSRequest('SetCurrentScene',
+        {
+            'scene-name': scene
+        })
+}
+
+// ============================================================================
+//                           FUNCTION: Callback Handlers
+// ============================================================================
+obs.on("StreamStatus", data => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS StreamStatus received", data) });
+obs.on("GetVersion", data => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS GetVersion received", data) });
+obs.on('error', err => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS error message received", err); });
+obs.on('SwitchScenes', data => { onSwitchedScenes(data) });
+obs.on('StreamStarted', data => { onStreamStarted(data) });
+obs.on('StreamStopped', data => { onStreamStopped(data) });
+obs.on('ScenesChanged', data => { onScenesListChanged(data) });
+
+// ============================================================================
+//                           FUNCTION: onScenesChanged
+// ============================================================================
+function onScenesListChanged(data)
+{
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onScenesListChanged", "OBS scenes list has changed");
+    processOBSSceneList(data.scenes);
+    // send the scenes list on our channel
+    sendScenes();
+}
+
+
+// ============================================================================
+//                           FUNCTION: onSceneChanged
+// ============================================================================
+/**
+ * handles onSceneChanged callback
+ * @param {Scene} scene 
+ */
+function onSwitchedScenes(scene)
+{
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onSwitchedScenes", "OBS scene changed ", scene);
+    console.log(scene);
+    // send the information out on our channel
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
             ("ChannelData",
                 config.EXTENSION_NAME,
-                {
-                    type: "SceneChanged",
-                    scene: scene.sceneName
-                },
-                config.OUR_CHANNEL
-            ));
+                sr_api.ExtensionPacket(
+                    "SceneChanged",
+                    serverConfig.extensionname,
+                    scene.sceneName,
+                    config.OUR_CHANNEL
+                ), config.OUR_CHANNEL)
+    )
+
 }
 // ============================================================================
-//                           FUNCTION: StreamStopped
+//                           FUNCTION: onStreamStopped
 // ============================================================================
-function StreamStopped(data)
+/**
+ * Called when the stream is stopped
+ * @param {Object} data 
+ */
+function onStreamStopped(data)
 {
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".StreamStopped", scene);
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
@@ -319,10 +452,15 @@ function StreamStopped(data)
             ));
 }
 // ============================================================================
-//                           FUNCTION: StreamStarted
+//                           FUNCTION: onStreamStarted
 // ============================================================================
-function StreamStarted(data)
+/**
+ * Called when the stream is started
+ * @param {Object} data 
+ */
+function onStreamStarted(data)
 {
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".StreamStarted", data);
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
@@ -336,92 +474,28 @@ function StreamStarted(data)
             ));
 }
 // ============================================================================
-//                           FUNCTION: OBSScenes
+//                           FUNCTION: onOBSScenes
 // ============================================================================
-function OBSScenes(data)
+/**
+ * Called with a list of scene (triggered by the get scenes call)
+ */
+function sendScenes()
 {
-    //console.log(data)
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSScenes");
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
             ("ChannelData",
-                config.EXTENSION_NAME,
-                {
-                    type: "OBSScenes",
-                    scene: data
-                },
-                config.OUR_CHANNEL
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "ScenesList",
+                    serverConfig.extensionname,
+                    config.sceneList,
+                    serverConfig.channel
+                ),
+                serverConfig.channel
             ));
 }
-// ############################################################################
-// ============================================================================
-//                             OBS functionality
-// ============================================================================
-// ############################################################################
-import OBSWebSocket from "obs-websocket-js";
-//let obs = null;
-
-function connectToObs()
-{ }
-const obs = new OBSWebSocket();
-obs.connect({
-    address: 'localhost:4445',
-    password: 'pass'
-}).then(() =>
-{
-    console.log(`Success! We're connected & authenticated.`);
-
-    return obs.send('GetSceneList');
-}).then((data) =>
-{
-    //console.log(data);
-    OBSScenes(data);
-})
-
-obs.on("SceneList", data =>
-{
-    console.log(data);
-});
-
-obs.on('SwitchScenes', data =>
-{
-    console.log('New Active Scene: ', data.sceneName);
-    SceneChanged(data)
-});
-
-obs.on('StreamStarted', data =>
-{
-    //console.log('StreamStarted: ', data);
-    StreamStarted(data)
-});
-
-obs.on('StreamStopped', data =>
-{
-    //console.log('StreamStopped: ', data);
-    StreamStopped(data)
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

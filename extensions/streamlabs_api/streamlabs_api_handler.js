@@ -57,11 +57,16 @@ This can be found at streamlabs.com, its a long hex string under settings->API T
     {
         try
         {
-            StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + SL_SOCKET_TOKEN, { transports: ["websocket"] });
-            // handlers
-            StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
-            StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
-            StreamLabsSocket.on("event", (data) => onStreamLabsEvent(DataCenterSocket, data));
+            if (config.ENABLE_STREAMLABS_CONNECTION)
+            {
+                StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + SL_SOCKET_TOKEN, { transports: ["websocket"] });
+                // handlers
+                StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
+                StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
+                StreamLabsSocket.on("event", (data) => onStreamLabsEvent(DataCenterSocket, data));
+            }
+            else
+                logger.warn(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "Streamlabs disabled in config");
         } catch (err)
         {
             logger.err(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "clientio connection failed:", err);
