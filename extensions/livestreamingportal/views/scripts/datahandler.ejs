@@ -105,13 +105,14 @@
                         serverConfig.extensionname,
                         serverConfig.channel
                     ));
+
                 //Connect to backend when page is loaded
                 setTimeout(() =>
                 {
                     console.log("Requesting lists");
                     RequestChList();
                     RequestExtList();
-                }, 1000);
+                }, 2000);
 
             }
             // ============================================================================
@@ -153,7 +154,7 @@
                 {
                     console.info("datahandler.onDataCenterMessage", decoded_data.type + " received");
                     adminData.channellist = decoded_data.data;
-                    var html = "<ul>";
+                    /*var html = "<ul>";
                     for (var i = 0; i < adminData.channellist.length; i++)
                     {
                         html += "<li>" + adminData.channellist[i] + "</li>";
@@ -162,14 +163,16 @@
                     document.getElementById("ChannelsListCard").getElementsByClassName("card-title")[0].innerHTML = "ChannelsList";
                     document.getElementById("ChannelsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
                     // register to all channels that are available.
+                    */
                     adminData.channellist.forEach(element =>
                     {
-                        sr_api.sendMessage(DataCenterSocket,
-                            sr_api.ServerPacket(
-                                "CreateChannel",
-                                serverConfig.extensionname,
-                                element
-                            ));
+                        if (element != serverConfig.channel)
+                            sr_api.sendMessage(DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "JoinChannel",
+                                    serverConfig.extensionname,
+                                    element
+                                ));
 
                     });
                 }
@@ -257,17 +260,23 @@
                     }
                     else if (decoded_data.dest_channel == "OBS_CHANNEL")
                     {
+                        console.log(decoded_data)
                         decoded_packet = JSON.parse(decoded_data.data);
                         if (decoded_packet.type === "ScenesList")
                         {
                             console.info(".ScenesList", "ScenesList received");
                             ParseOBSScenesList(decoded_packet.data)
                         }
-                        if (decoded_packet.type === "SceneChanged")
+                        else if (decoded_packet.type === "SceneChanged")
                         {
                             console.info(".ScenesList", "ScenesList received");
                             config.OBSchannellist.current = decoded_packet.data;
                             ParseOBSScenesList(config.OBSchannellist);
+                        }
+                        else if (decoded_packet.type === "OBSStats")
+                        {
+                            console.info(".OBSStats", "Status received");
+                            ProcessOBSStats(decoded_packet.data);
                         }
                         else
                             console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", decoded_packet.type, " from ", decoded_packet.from);
@@ -307,6 +316,24 @@
                 //displayChannelMessages(decoded_data);
             }
 
+            // ============================================================================
+            //                           FUNCTION: SaveConfigToServer
+            // ============================================================================
+            // Desription:save config on backend data store
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function ProcessOBSStats(data)
+            {
+                let rate = data.kbitsPerSec;
+                let strain = data.strain; // red/green/amber icon needed
+
+                var tm = new Date(1000 * data.totalStreamTime).toISOString().substr(11, 8);
+                // saves our serverConfig to the server so we can load it again next time we startup
+                document.getElementById("OBSInfo").innerHTML = "Uptime " + tm + " " + rate + " kb/s strain:" + strain;
+
+            }
             // ============================================================================
             //                           FUNCTION: SaveConfigToServer
             // ============================================================================

@@ -166,11 +166,11 @@ function onDataCenterMessage(data)
         else if (decoded_packet.type === "ChangeScene")
             changeScene(decoded_packet.data);
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "unhandled ExtensionMessage ", decoded_data);
+            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "unhandled ExtensionMessage ", decoded_data);
     }
     else if (decoded_data.type === "UnknownChannel")
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage UnknownChannel", decoded_packet.type);
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage UnknownChannel", decoded_data);
         if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
         {
             logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
@@ -471,10 +471,20 @@ function changeScene(scene)
 obs.on("StreamStatus", data =>
 {
 
-    //console.log(config.OBSAvailableScenes);
+    //console.log(data);
     //logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS StreamStatus received", data)
-
-
+    sr_api.sendMessage(config.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            config.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "OBSStats",
+                serverConfig.extensionname,
+                data,
+                config.OUR_CHANNEL
+            ),
+            config.OUR_CHANNEL)
+    )
 });
 obs.on("GetVersion", data => { logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS GetVersion received", data) });
 obs.on('error', err => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS error message received", err); });
@@ -514,10 +524,11 @@ function onSwitchedScenes(scene)
                 config.EXTENSION_NAME,
                 sr_api.ExtensionPacket(
                     "SceneChanged",
-                    serverConfig.extensionname,
+                    config.EXTENSION_NAME,
                     scene.sceneName,
                     config.OUR_CHANNEL
-                ), config.OUR_CHANNEL)
+                ),
+                config.OUR_CHANNEL)
     )
 
 }
@@ -536,10 +547,11 @@ function onStreamStopped(data)
         sr_api.ServerPacket
             ("ChannelData",
                 config.EXTENSION_NAME,
-                {
-                    type: "StreamStopped",
-                    scene: data
-                },
+                sr_api.ExtensionPacket(
+                    "StreamStopped",
+                    config.EXTENSION_NAME,
+                    data,
+                    config.OUR_CHANNEL),
                 config.OUR_CHANNEL
             ));
 }
@@ -558,10 +570,11 @@ function onStreamStarted(data)
         sr_api.ServerPacket
             ("ChannelData",
                 config.EXTENSION_NAME,
-                {
-                    type: "StreamStarted",
-                    scene: data
-                },
+                sr_api.ExtensionPacket(
+                    "StreamStarted",
+                    config.EXTENSION_NAME,
+                    data,
+                    config.OUR_CHANNEL),
                 config.OUR_CHANNEL
             ));
 }

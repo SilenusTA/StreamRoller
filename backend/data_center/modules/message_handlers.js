@@ -223,7 +223,7 @@ function forwardMessage(client_socket, data, channels, extensions)
     //console.log("to ", decoded_data.to);
 
     // if message provides a destination but we don't a client socket for it
-    if (decoded_data.to && !extensions[decoded_data.to].socket)
+    if (decoded_data.to && extensions[decoded_data.to] && !extensions[decoded_data.to].socket)
     {
         logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", decoded_data.to, " connection doesn't exist");
