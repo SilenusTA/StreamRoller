@@ -344,7 +344,71 @@ function OBSRequest(request, data, callback)
 // https://gist.github.com/lee-brown/70e6014a903dfea9e2dfe7e35fc8ab88
 // example
 // https://www.npmjs.com/package/@streamdasher/obs-websocket-js
+/*
+An OBS scene will contain the following
+    {
+      alignment: 5,
+      cx: 1260,
+      cy: 709,
+      id: 301,
+      locked: true,
+      muted: false,
+      name: 'NS-POPUPS',
+      render: true,
+      source_cx: 2560,
+      source_cy: 1440,
+      type: 'scene',
+      volume: 1,
+      x: 705,
+      y: 0
+    },
 
+Stats message
+{
+  'average-frame-time': 1.452454,
+  'bytes-per-sec': 586327,
+  'cpu-usage': 2.049031889024745,
+  fps: 30.000000300000007,
+  'free-disk-space': 515068.38671875,
+  'kbits-per-sec': 4580,
+  'memory-usage': 1437.1171875,
+  'num-dropped-frames': 0,
+  'num-total-frames': 45743,
+  'output-skipped-frames': 2,
+  'output-total-frames': 91593,
+  'preview-only': false,
+  recording: false,
+  'recording-paused': false,
+  'render-missed-frames': 120,
+  'render-total-frames': 54921,
+  'replay-buffer-active': true,
+  strain: 0,
+  'stream-timecode': '00:25:24.766',
+  streaming: true,
+  'total-stream-time': 1524,
+  'update-type': 'StreamStatus',
+  averageFrameTime: 1.452454,
+  bytesPerSec: 586327,
+  cpuUsage: 2.049031889024745,
+  freeDiskSpace: 515068.38671875,
+  kbitsPerSec: 4580,
+  memoryUsage: 1437.1171875,
+  numDroppedFrames: 0,
+  numTotalFrames: 45743,
+  outputSkippedFrames: 2,
+  outputTotalFrames: 91593,
+  previewOnly: false,
+  recordingPaused: false,
+  renderMissedFrames: 120,
+  renderTotalFrames: 54921,
+  replayBufferActive: true,
+  streamTimecode: '00:25:24.766',
+  totalStreamTime: 1524,
+  updateType: 'StreamStatus'
+}
+
+
+*/
 // ============================================================================
 //                           FUNCTION: processOBSSceneList
 // ============================================================================
