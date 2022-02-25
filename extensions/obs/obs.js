@@ -32,7 +32,7 @@ const config = {
     DataCenterSocket: null,
     channelConnectionAttempts: 20,
     OBSAvailableScenes: null,
-    sceneList: { main: [], secondary: [], rest: [] },
+    sceneList: { current: "", main: [], secondary: [], rest: [] },
 
 };
 //sever config (stuff we want to save over runs)
@@ -42,7 +42,11 @@ const serverConfig = {
     obsenable: "on",
     obsscene: "OBS scene to switch to",
     mainsceneselector: "##",
-    secondarysceneselector: "**"
+    secondarysceneselector: "**",
+    obshost: "localhost",
+    obsport: "4445",
+    obspass: "pass"
+
 };
 const OverwriteDataCenterConfig = false;
 
@@ -65,7 +69,7 @@ function initialise(app, host, port)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "connection failed:", err);
     }
-    connectToObs(obs, "localhost", "4445", "pass");
+    connectToObs(obs, serverConfig.obshost, serverConfig.obsport, serverConfig.obspass);
 }
 
 // ============================================================================
@@ -129,8 +133,6 @@ function onDataCenterMessage(data)
             SendAdminModal(decoded_packet.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            console.log(decoded_packet.data)
-            console.log(serverConfig)
             if (decoded_packet.to === serverConfig.extensionname)
             {
                 serverConfig.obsenable = "off";
@@ -138,10 +140,10 @@ function onDataCenterMessage(data)
                     serverConfig[key] = value;
                 SaveConfigToServer();
                 // we might have updated our settins so lets send out a new data list (incase we changed the deliminatores for the buttons)
+                connectToObs(obs, serverConfig.obshost, serverConfig.obsport, serverConfig.obspass);
                 processOBSSceneList(config.OBSAvailableScenes);
                 sendScenes();
             }
-            console.log(serverConfig)
         }
         else if (decoded_packet.type === "RequestScenes")
         {
@@ -284,13 +286,22 @@ function connectToObs(obs, host, port, pass)
 {
     logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", host, port, pass);
     logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", "implement host:port and pass functionality");
-    obs.connect({
-        address: 'localhost:4445',
-        password: 'pass'
-    })
+    if (obs !== "undefined")
+    {
+        //obs.disconnect()
+    }
+    else
+        console.log("skipping disconnet")
+
+    //obs.connect({ address: 'localhost:4445', password: 'pass' })
+    obs.connect({ address: serverConfig.obshost + ':' + serverConfig.obsport, password: serverConfig.obspass })
         .then(() =>
         {
             logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", "OBS Connected");
+            OBSRequest("GetCurrentScene", null, function (err, data)
+            {
+                config.sceneList.current = data.name;
+            });
             return obs.send('GetSceneList');
         })
         .then(data =>
@@ -307,6 +318,8 @@ function connectToObs(obs, host, port, pass)
                 connectToObs(obs, host, port, pass);
             }, 10000);
         })
+
+
 }
 
 // ============================================================================
@@ -315,12 +328,13 @@ function connectToObs(obs, host, port, pass)
 /**
  * Make an OBS request using the data provided
  * @param {String} request request string
- * @param {Function} callback function to handle the callback data
+ * @param {Object} data extra data for the request
+ * @param {Function} callback called back with the data
  */
-function OBSRequest(request, data)
+function OBSRequest(request, data, callback)
 {
     logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSRequest", request, data);
-    try { obs.sendCallback(request, data, function (err, data) { console.log(err, data) }); }
+    try { obs.sendCallback(request, data, callback); }
     catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBSRequest failed", request, data); }
 }
 // ============================================================================
@@ -344,11 +358,13 @@ function processOBSSceneList(scenes)
     {
         logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".processOBSSceneList", scenes);
         config.OBSAvailableScenes = scenes;
-        config.sceneList = { main: [], secondary: [], rest: [] };
+        config.sceneList.main = [];
+        config.sceneList.secondary = [];
+        config.sceneList.rest = [];
         scenes.forEach(scene =>
         {
+            if (scene !== "current")
             {
-                console.log(scene.name)
                 if (scene.name.startsWith(serverConfig.mainsceneselector))
                     config.sceneList.main.push({
                         displayName: scene.name.replace(serverConfig.mainsceneselector, ""),
@@ -365,6 +381,8 @@ function processOBSSceneList(scenes)
                 else
                     config.sceneList.rest.push({ displayName: scene.name, sceneName: scene.name })
             }
+
+
         })
     }
     catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".processOBSSceneList", "Failed ot process scene list", err); }
@@ -380,23 +398,27 @@ function processOBSSceneList(scenes)
 function changeScene(scene)
 {
     logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".changeScene", " request come in. changing to ", scene);
-
-    OBSRequest('SetCurrentScene',
-        {
-            'scene-name': scene
-        })
+    OBSRequest('SetCurrentScene', { 'scene-name': scene }, function (data, err) { console.log("OBSRequest SetCurrentScene", data, err); })
 }
 
 // ============================================================================
 //                           FUNCTION: Callback Handlers
 // ============================================================================
-obs.on("StreamStatus", data => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS StreamStatus received", data) });
-obs.on("GetVersion", data => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS GetVersion received", data) });
+obs.on("StreamStatus", data =>
+{
+
+    //console.log(config.OBSAvailableScenes);
+    //logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS StreamStatus received", data)
+
+
+});
+obs.on("GetVersion", data => { logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS GetVersion received", data) });
 obs.on('error', err => { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS error message received", err); });
 obs.on('SwitchScenes', data => { onSwitchedScenes(data) });
 obs.on('StreamStarted', data => { onStreamStarted(data) });
 obs.on('StreamStopped', data => { onStreamStopped(data) });
 obs.on('ScenesChanged', data => { onScenesListChanged(data) });
+obs.on('CurrentScene', data => { logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".OBS CurrentScene received", data) });
 
 // ============================================================================
 //                           FUNCTION: onScenesChanged
@@ -420,7 +442,7 @@ function onScenesListChanged(data)
 function onSwitchedScenes(scene)
 {
     logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onSwitchedScenes", "OBS scene changed ", scene);
-    console.log(scene);
+    config.sceneList.current = scene;
     // send the information out on our channel
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
@@ -444,7 +466,7 @@ function onSwitchedScenes(scene)
  */
 function onStreamStopped(data)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".StreamStopped", scene);
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".StreamStopped", data);
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket
