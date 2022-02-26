@@ -1,5 +1,7 @@
 # Demo Extension
+## Outgoing channel : "DEMOEXT_CHANNEL"
 - [Demo Extension](#demo-extension)
+  - [Outgoing channel : "DEMOEXT_CHANNEL"](#outgoing-channel--demoext_channel)
   - [Description](#description)
   - [Features](#features)
     - [Standard Features](#standard-features)

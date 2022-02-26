@@ -1,5 +1,7 @@
 # Adminpage
+## Outgoing channel : none
 - [Adminpage](#adminpage)
+  - [Outgoing channel : none](#outgoing-channel--none)
   - [Purpose](#purpose)
   - [Usage](#usage)
   - [Funcionality](#funcionality)

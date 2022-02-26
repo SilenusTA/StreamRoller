@@ -36,7 +36,7 @@ function initialise(app, host, port)
     try
     {
         // add ourselves to the app loader so we can server these pages on the main server connection
-        dataCenterApp.get('/', function (req, res)
+        dataCenterApp.get('/admin', function (req, res)
         {
             var servervar1 = "server variable passed ok";
             // we will store our global data in app.data so we need to pass this to any new page

@@ -1,14 +1,29 @@
 # Discord
+## Outgoing channel : "DISCORD_BOT"
 - [Discord](#discord)
+  - [Outgoing channel : "DISCORD_BOT"](#outgoing-channel--discord_bot)
 - [Setup](#setup)
 - [About](#about)
+  - [Features](#features)
+    - [Channel messages](#channel-messages)
+    - [Requests](#requests)
   - [Discord credentials](#discord-credentials)
+  - [Future ideas?!?](#future-ideas)
 
 # Setup
 ```
 Note You need an environment variable, "DISCORD_TOKEN", set to your bot accounts token in order for this extension to work.
 ```
 # About
+## Features
+- Send alerts to discord. This can be configured in the alerts modal. Channel to use and which alerts to send are currently available
+### Channel messages
+All messages follow the standard server message with with the obs data within the data section.
+These will be broadcast on the outgoing channel
+- Discord chat messages - from the assigned channel (can be set in the admind card on the admin page)
+### Requests
+- none
+
 The discord extension currently provides the following features
 - Creates a 'DISCORD_BOT' channel for other extension to consume mesages from
 - Reads messages from a discord channel (set in the settings) and sends them out on the 'DISCORD_BOT' channel with the following format
@@ -42,3 +57,6 @@ The discord extension currently provides the following features
   
 ## Discord credentials
 Currnetly the extension reads the environment variable "DISCORD_TOKEN" to be able to connect to the discord needed. You will need to provide a token in your PC's environment variable to use this addon
+
+## Future ideas?!?
+- send a chat message to discord. This would allow a viewer (using a command) to send a message to a discord channel. Useful for reminders, saving the viewers from having to switch to discord to remind me of things.

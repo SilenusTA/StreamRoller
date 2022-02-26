@@ -47,7 +47,7 @@ function initialise(app, host, port)
     try
     {
         //DataCenterSocket = eh.setupConnection(onDataCenterConnect, onDataCenterDisconnect, onDataCenterMessage);
-        dataCenterApp.get('/live', function (req, res)
+        dataCenterApp.get('/', function (req, res)
         {
             // we will store our global data in app.data so we need to pass this to any new page
             res.render(__dirname + '/views/pages/index', {

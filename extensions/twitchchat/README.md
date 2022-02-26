@@ -1,5 +1,5 @@
 # Twitch Chat
-
+## Outgoing channel : "TWITCH_CHAT"
 # Usage
 Currenlty the extension is just readonly so no credentials are requried. This will be updated to be able to use credentials (and thereby posting as well as reading froma chat channel)
 

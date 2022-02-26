@@ -1,5 +1,7 @@
 # Streamlabs API
+## Outgoing channel : "STREAMLABS_ALERT"
 - [Streamlabs API](#streamlabs-api)
+  - [Outgoing channel : "STREAMLABS_ALERT"](#outgoing-channel--streamlabs_alert)
 - [Setup](#setup)
 - [About](#about)
 # Setup
