@@ -211,13 +211,13 @@ function sendLoggingLevel(client_socket)
  * forwards a message on based on the data provided
  * priority is "to","dest_channel" and the broadcast (except sender)
  * @param {Socket} server_socket 
- * @param {Object} data 
+ * @param {Object} decoded_data 
  * @param {Array} channels 
  * @param {Object} extensions 
  */
-function forwardMessage(client_socket, data, channels, extensions)
+function forwardMessage(client_socket, decoded_data, channels, extensions)
 {
-    let decoded_data = JSON.parse(data);
+    //let decoded_data = JSON.parse(data);
     // check if we tried to send to an invalid channel or extension name
     // check for a 'to' field but no valid socket registered for it
     //console.log("to ", decoded_data.to);
@@ -228,14 +228,14 @@ function forwardMessage(client_socket, data, channels, extensions)
         logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", decoded_data.to, " connection doesn't exist");
         client_socket.emit("message",
-            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: decoded_data }));
+            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: JSON.stringify(decoded_data) }));
     }
     // send direct to client
     else if (extensions[decoded_data.to] && extensions[decoded_data.to].socket)
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", decoded_data.type, decoded_data.to, decoded_data.data);
-        extensions[decoded_data.to].socket.emit("message", data)
+        extensions[decoded_data.to].socket.emit("message", JSON.stringify(decoded_data))
     }//if message provides a channel but we don't have that channel in our list then return an error
     else if (decoded_data.dest_channel && !channels.includes(decoded_data.dest_channel))
     {
@@ -249,13 +249,13 @@ function forwardMessage(client_socket, data, channels, extensions)
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:channel:", decoded_data.type, decoded_data.dest_channel);
-        client_socket.to(decoded_data.dest_channel).emit("message", data);
+        client_socket.to(decoded_data.dest_channel).emit("message", JSON.stringify(decoded_data));
     }
     else
     {// broadcast (except the sender)
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:BROADCAST(Except sender):", decoded_data);
-        client_socket.broadcast.emit("message", data);
+        client_socket.broadcast.emit("message", JSON.stringify(decoded_data));
 
     }
 }
@@ -271,7 +271,7 @@ function broadcastMessage(server_socket, data)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.broadcastMessage",
         "Destination:BROADCAST(Except sender)", data.type, data.from);
-    server_socket.emit("message", data);
+    server_socket.emit("message", JSON.stringify(data));
 }
 // ============================================================================
 //                           FUNCTION: errorMessage
@@ -280,7 +280,7 @@ function broadcastMessage(server_socket, data)
  * Send an error message to the given socket
  * @param {Socket} client_socket 
  * @param {String} error 
- * @param {String} data 
+ * @param {Object} data 
  */
 function errorMessage(client_socket, error, data)
 {
@@ -289,7 +289,7 @@ function errorMessage(client_socket, error, data)
     client_socket.emit("message",
         sr_api.ServerPacket("InvalidMessage",
             EXTENSION_NAME,
-            { error: error, data: data }))
+            JSON.stringify({ error: error, data: data })))
 }
 // ============================================================================
 //                           EXPORTS: 

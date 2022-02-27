@@ -91,9 +91,9 @@ function onDataCenterConnect(socket)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function onDataCenterMessage(data)
+function onDataCenterMessage(decoded_data)
 {
-    var decoded_data = JSON.parse(data);
+    //var decoded_data = JSON.parse(data);
     if (decoded_data.type === "ConfigFile")
     {
         let chatSettingsChanged = false;

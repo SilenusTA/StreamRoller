@@ -155,13 +155,13 @@ function onDataCenterConnect(socket)
 // ===========================================================================
 /**
  * receives message from the socket
- * @param {data} data 
+ * @param {data} decoded_data 
  */
-function onDataCenterMessage(data)
+function onDataCenterMessage(decoded_data)
 {
     // we received messasges as an object that has been converted to a string so first we need to convert them back
     // so we can access the date easier
-    var decoded_data = JSON.parse(data);
+    //var decoded_data = JSON.parse(data);
 
     // a bit of logging helps while developing the code
     //logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", decoded_data);

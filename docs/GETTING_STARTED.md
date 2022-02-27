@@ -24,7 +24,7 @@ _Note: this documentation is currently being written and as such will probably b
 
 ## Live streaming
 
-StreamRoller is designed to allow easier integration of anything you might want to use while streaming. ie twitch chat, discord mod messages, obs controls, twitch alerts etc.
+StreamRoller is designed to allow easier integration of anything you might want to use while streaming. ie twitch chat, discord chat mod messages, obs controls, twitch alerts etc.
 
 The idea is to bring all these together so you can have one simple web page open while streaming with all the information controls you want on one page.
 

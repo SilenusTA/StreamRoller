@@ -1,5 +1,5 @@
-// ############################# DISCORD.js ##############################
-// In progress test discord app.
+// ############################# DISCORDCHAT.js ##############################
+// In progress test discord chat app.
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
 // GitHub: https://github.com/SilenusTA/streamer
@@ -84,9 +84,9 @@ function onDataCenterConnect()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-function onDataCenterMessage(data)
+function onDataCenterMessage(decoded_data)
 {
-    var decoded_data = JSON.parse(data);
+    //var decoded_data = JSON.parse(data);
     if (decoded_data.type === "ConfigFile")
     {
         // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
@@ -337,7 +337,7 @@ discordClient.on("messageCreate", function (message)
         console.log(message.author.username);*/
         let messagedata = { name: message.author.username, message: message.content }
 
-        // Send the message received out on our streamroller "DISCORD_MOD_CHAT" channel for other extensions to use if needed
+        // Send the message received out on our streamroller "DISCORD_CHAT" channel for other extensions to use if needed
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,

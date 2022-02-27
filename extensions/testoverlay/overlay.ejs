@@ -99,7 +99,7 @@
                     sr_api.ServerPacket(
                         "JoinChannel",
                         "testoverlay",
-                        "DISCORD_BOT"
+                        "DISCORD_CHAT"
                     )
                 )
 
@@ -107,9 +107,9 @@
             // disconnect.
             function onDisconnect(responce) { }
             // message handler. this will handle any data sent to us or the channels we are registered on 
-            function onDataCenterMessage(message)
+            function onDataCenterMessage(decoded_message)
             {
-                const decoded_message = JSON.parse(message);
+                //const decoded_message = JSON.parse(message);
                 console.log(decoded_message);
                 // channle data are messaged sent out by the extension we have registed to listen to (ie alerts, discord etc)
                 if (decoded_message.type === "ChannelData")
@@ -153,7 +153,7 @@
                             console.log("No pattern matched\n");
                         }
                     }
-                    else if (decoded_message.dest_channel === "DISCORD_BOT")
+                    else if (decoded_message.dest_channel === "DISCORD_CHAT")
                     {
                         update_from_discord(decoded_message.data);
                     }

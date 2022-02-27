@@ -1,7 +1,7 @@
-# Discord
-## Outgoing channel : "DISCORD_BOT"
-- [Discord](#discord)
-  - [Outgoing channel : "DISCORD_BOT"](#outgoing-channel--discord_bot)
+# Discord Chat
+## Outgoing channel : "DISCORD_CHAT"
+- [Discord Chat](#discord-chat)
+  - [Outgoing channel : "DISCORD_CHAT"](#outgoing-channel--discord_chat)
 - [Setup](#setup)
 - [About](#about)
   - [Features](#features)
@@ -24,36 +24,36 @@ These will be broadcast on the outgoing channel
 ### Requests
 - none
 
-The discord extension currently provides the following features
-- Creates a 'DISCORD_BOT' channel for other extension to consume mesages from
-- Reads messages from a discord channel (set in the settings) and sends them out on the 'DISCORD_BOT' channel with the following format
+The discordchat extension currently provides the following features
+- Creates a 'DISCORD_CHAT' channel for other extension to consume mesages from
+- Reads messages from a discord channel (set in the settings) and sends them out on the 'DISCORD_CHAT' channel with the following format
   ```
   {
       type: "ChannelData",
-      from: "discord",
+      from: "discordchat",
       {
           "DiscordModChat",
-          "discord",
+          "discordchat",
           {
             name: <message author>,
             message: <message sent>,
           },
-          "DISCORD_BOT"
+          "DISCORD_CHAT"
       },
-      dest_channel: "DISCORD_BOT",
+      dest_channel: "DISCORD_CHAT",
   }
   ```
 - Listents to 'STREAMLABS_ALERT' channel and posts certain events on the discord channel set in the settings
 - Discord Channels
   - There are two channels the extension utilises. 
-    - mod messages channel - used to read messages and output on our "DISCORD_BOT' channel for other extension to use
+    - mod messages channel - used to read messages and output on our "DISCORD_CHAT' channel for other extension to use
     - alerts channel - used to post alerts to
   - These channel names are defined in the settings files and can be updated buy the provided admin modal code
 - AdminModal.
   - Provide an admin modal to the admin page to allow the user to set the following values
     - streamlabs alerts to log
     - channelname for streamlabs alerts to be post on (on discord)
-    - channelname to read on discord for message we will post out on our 'DISCORD_BOT' channel
+    - channelname to read on discord for message we will post out on our 'DISCORD_CHAT' channel
   
 ## Discord credentials
 Currnetly the extension reads the environment variable "DISCORD_TOKEN" to be able to connect to the discord needed. You will need to provide a token in your PC's environment variable to use this addon

@@ -101,7 +101,7 @@ function start(app, server, exts)
             // call onConnect to store the connection details
             onConnect(socket);
             socket.on("disconnect", (reason) => onDisconnect(socket, reason));
-            socket.on("message", (data) => onMessage(socket, data));
+            socket.on("message", (data) => onMessage(socket, JSON.parse(data)));
         });
     } catch (err)
     {
@@ -138,22 +138,22 @@ function onDisconnect(socket, reason)
 /**
  * receives messages
  * @param {Socket} socket 
- * @param {Object} data 
+ * @param {Object} decoded_data 
  */
-function onMessage(socket, data)
+function onMessage(socket, decoded_data)
 {
-    var decoded_data = JSON.parse(data);
+    //var decoded_data = JSON.parse(data);
     logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", decoded_data);
     // make sure we are using the same api version
     if (decoded_data.version != config.apiVersion)
     {
-        console.log(data)
+        console.log(decoded_data)
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "Version mismatch:", decoded_data.version, "!=", config.apiVersion);
 
         logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "!!!!!!! Message Sytem API version doesn't match: ", decoded_data);
-        mh.errorMessage(socket, "Incorrect api version", data);
+        mh.errorMessage(socket, "Incorrect api version", decoded_data);
         return;
     }
 
@@ -162,7 +162,7 @@ function onMessage(socket, data)
     {
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "!!!!!!! Invalid data: ", decoded_data);
-        mh.errorMessage(socket, "Missing type/from field", data);
+        mh.errorMessage(socket, "Missing type/from field", decoded_data);
         return;
     }
     // add this socket to the extension if it doesn't already exist
@@ -201,14 +201,14 @@ function onMessage(socket, data)
         if (decoded_data.to === undefined)
             mh.errorMessage(socket, "No extension name specified for ExtensionMessage", decoded_data);
         else
-            mh.forwardMessage(socket, data, channels, extensions);
+            mh.forwardMessage(socket, decoded_data, channels, extensions);
     }
     else if (decoded_data.type === "ChannelData")
     {
         if (decoded_data.dest_channel === undefined)
             mh.errorMessage(socket, "No Channel specified for ChannelData", decoded_data);
         else
-            mh.forwardMessage(socket, data, channels, extensions);
+            mh.forwardMessage(socket, decoded_data, channels, extensions);
     }
     else if (decoded_data.type === "SetLoggingLevel")
     {

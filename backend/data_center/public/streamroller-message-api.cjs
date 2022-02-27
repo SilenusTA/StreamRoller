@@ -123,7 +123,7 @@ function setupConnection(onMessage, onConnect, onDisconnect, host, port)
                 { transports: ["websocket"] });
         }
         // handlers
-        DCSocket.on("message", (data) => onMessage(data));
+        DCSocket.on("message", (data) => { onMessage(JSON.parse(data)) });
         DCSocket.on("connect", () => onConnect());
         DCSocket.on("disconnect", (reason) => onDisconnect(reason));
         return DCSocket;

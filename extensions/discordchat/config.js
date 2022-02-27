@@ -6,8 +6,8 @@
 // Date: 08-Jan-2022
 // ============================================================================
 export const config = {
-    OUR_CHANNEL: "DISCORD_BOT",
-    EXTENSION_NAME: "discord",
+    OUR_CHANNEL: "DISCORD_CHAT",
+    EXTENSION_NAME: "discordchat",
     SYSTEM_LOGGING_TAG: "[EXTENSION]"
 
 };

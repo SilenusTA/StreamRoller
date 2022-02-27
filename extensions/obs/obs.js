@@ -108,12 +108,12 @@ function onDataCenterConnect(socket)
 // ============================================================================
 /**
  * receives message from the socket
- * @param {data} data 
+ * @param {data} decoded_data 
  */
-function onDataCenterMessage(data)
+function onDataCenterMessage(decoded_data)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", data);
-    var decoded_data = JSON.parse(data);
+    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", decoded_data);
+    //var decoded_data = JSON.parse(data);
     if (decoded_data.type === "ConfigFile")
     {
         if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)

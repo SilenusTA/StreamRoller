@@ -1,8 +1,8 @@
 {
-    "name": "discord",
+    "name": "discordchat",
     "version": "1.0.0",
-    "description": "discord bot",
-    "main": "discord.js",
+    "description": "discordchat chat functionality",
+    "main": "discordchat.js",
     "type": "module",
     "scripts": {
         "start": "echo This code is an extension and will be autloaded by the backend data server. "

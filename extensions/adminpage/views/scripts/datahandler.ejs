@@ -119,9 +119,9 @@
     // ----------------------------- notes ----------------------------------------
     // none
     // ===========================================================================
-    function onDataCenterMessage(data)
+    function onDataCenterMessage(decoded_data)
     {
-        let decoded_data = JSON.parse(data);
+        //let decoded_data = JSON.parse(data);
         // -------------------------------------------------------------------------------------------------
         //                  RECEIVED CONFIG
         // -------------------------------------------------------------------------------------------------
@@ -247,7 +247,12 @@
             // need to add some sort of flood control here so we are only attempting to join one at a time
             setTimeout(() =>
             {
-                DataCenterSocket.emit("register", buildMessage(DataCenterSocket.id, config.EXTENSION_NAME, decoded_data.channel, "info", buildInfoMessagePacket("")));
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        config.EXTENSION_NAME,
+                        decoded_data.channel
+                    ));
             }, 10000);
         } else if (decoded_data.type === "ChannelJoined"
             || decoded_data.type === "ChannelCreated"
@@ -586,7 +591,7 @@
             let decoded_packet = JSON.parse(data.data);
             if (data.dest_channel === "STREAMLABS_ALERT")
                 cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.type + "<BR>";
-            else if (data.dest_channel === "DISCORD_BOT")
+            else if (data.dest_channel === "DISCORD_CHAT")
                 cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.data + "<BR>";
             else
                 cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.message_type + "<BR>";
