@@ -1,0 +1,14 @@
+/*@import url('/liveportal/stylesheets/Audiowide-Regular.ttf');*/
+@font-face {
+	font-family: 'Audiowide-Regular';
+	src: url(/liveportal/stylesheets/Audiowide-Regular.ttf);
+	}
+body {
+  padding: 50px;
+  font: 14px "Audiowide-Regular", Helvetica, Arial, sans-serif;
+  /*font-family: 'Audiowide-Regular';*/
+}
+
+a {
+  color: #1ea0d3;
+}

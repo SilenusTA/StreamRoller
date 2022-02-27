@@ -27,7 +27,7 @@ The only additions steps needed for a standalone extension or webpage is to load
 i.e for a standalone web page
 ```
 <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js' type='text/javascript'></script>
-<script src="streamroller-message-api.cjs"></script>
+<script src="/streamroller-message-api.cjs"></script>
 ```
 ### Node.js
 (optional in some cases)

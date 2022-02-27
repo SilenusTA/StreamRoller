@@ -1,10 +1,10 @@
-<script src="streamroller-message-api.cjs"></script>
+<script src="/streamroller-message-api.cjs"></script>
 <%- include('../modals/extensionsettingsplaceholdermodal'); %>
-<%- include("../modals/livestreamingportalmodalplaceholder.html"); %>
+<%- include("../modals/liveportalmodalplaceholder.html"); %>
 <script>
     const serverConfig = {
-        extensionname: "livestreamingportal",
-        channel: "LIVE_STREAMING_PORTAL",
+        extensionname: "liveportal",
+        channel: "LIVE_PORTAL",
         showsecondaryscenes: "on",
         showallscenes: "on",
         modchattomodwindow: "on"
@@ -55,7 +55,7 @@
     // ===========================================================================
     function ConnectToDataCenter(host, port)
     {// we set this hear as it means the page has loaded at this point 
-        adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('livestreamingportalmodalplaceholder').innerHTML };
+        adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
         try
         {
             console.log(host + ":" + port)
@@ -524,10 +524,10 @@
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
-                    "livestreamingportal",
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "ChangeScene",
-                        "livestreamingportal",
+                        serverConfig.extensionname,
                         scenename,
                         "",
                         "obs"
@@ -583,7 +583,7 @@
     function UpdateAdminModalData()
     {
         //get the updated dom we just changed and change the rest using sting replace
-        let modalstring = document.getElementById("livestreamingportalmodalplaceholder").innerHTML;
+        let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes

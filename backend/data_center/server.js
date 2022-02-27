@@ -64,7 +64,14 @@ app.set('view engine', 'ejs');
 // set our static routes
 // server public files (just dump them all in here for now. need a better structure)
 app.use(express.static(__dirname + "/public"));
-
+// set th e default page
+app.get('/', function (req, res)
+{
+    res.render(__dirname + '/../../extensions/liveportal/views/pages/index', {
+        host: config.HOST,
+        port: config.PORT
+    });
+});
 // server our overlay. Overlay currently needs updating and moving into the extensions
 // as this is where I suspect it should live. or maybe we need a separate overlays folder?
 //////let overlayfolder = __dirname + "/../../frontend/overlays/main_overlay";

@@ -49,7 +49,7 @@ In the demo code you will need to update the line changing the server:port to wh
 #### Method 2
 Alternativly you could copy the file into the same directory as the overlay. (copy from the backend/data_center/public folder) and then just reference that in the src command
 ``` 
-<script src="streamroller-message-api.cjs"></script>
+<script src="/streamroller-message-api.cjs"></script>
 ```
 ###
 Provide the host and port in the URL to access the server for messages

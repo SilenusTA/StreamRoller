@@ -20,8 +20,7 @@
 // ============================================================================
 
 const config = {
-    OUR_CHANNEL: "LIVE_STREAMING_PORTAL",
-    EXTENSION_NAME: "livestreamingportal",
+    EXTENSION_NAME: "liveportal",
     SYSTEM_LOGGING_TAG: "[EXTENSION]"
 };
 import express from "express";
@@ -42,12 +41,13 @@ let dataCenterApp = null;
 // ============================================================================
 function initialise(app, host, port)
 {
-    app.use("/images/", express.static(__dirname + '/public/images'));
+    //app.use("/images/", express.static(__dirname + '/public/images'));
+    app.use("/liveportal/", express.static(__dirname + '/public'));
     dataCenterApp = app;
     try
     {
         //DataCenterSocket = eh.setupConnection(onDataCenterConnect, onDataCenterDisconnect, onDataCenterMessage);
-        dataCenterApp.get('/', function (req, res)
+        dataCenterApp.get('/liveportal', function (req, res)
         {
             // we will store our global data in app.data so we need to pass this to any new page
             res.render(__dirname + '/views/pages/index', {

@@ -15,7 +15,7 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-
+import express from "express";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,8 +35,9 @@ function initialise(app, host, port)
     dataCenterApp = app;
     try
     {
+        dataCenterApp.use("/adminpage/", express.static(__dirname + '/public'));
         // add ourselves to the app loader so we can server these pages on the main server connection
-        dataCenterApp.get('/admin', function (req, res)
+        dataCenterApp.get('/adminpage', function (req, res)
         {
             var servervar1 = "server variable passed ok";
             // we will store our global data in app.data so we need to pass this to any new page
