@@ -1,1 +1,1 @@
-{"extensionname":"discordchat","channel":"DISCORD_CHAT","modmessage_channel":"stream-mod-messages","donations_channel":"announcements","follows":"off","raids":"on","hosts":"on","subs":"on","resubs":"on","giftsubs":"on","cloudbotredemption":"on","merch":"on","bits":"on","donations":"on"}
+{"extensionname":"discordchat","channel":"DISCORD_CHAT","listeningchannel":"mod-message-channel"}

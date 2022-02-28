@@ -29,18 +29,7 @@ let DataCenterSocket = null;
 let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL, // backend socket channel.
-    modmessage_channel: "stream-mod-messages", // discord channel
-    donations_channel: "announcements", // discord channel
-    follows: "off",
-    raids: "off",
-    hosts: "off",
-    subs: "off",
-    resubs: "off",
-    giftsubs: "off",
-    cloudbotredemption: "off",
-    merch: "off",
-    bits: "off",
-    donations: "off"
+    listeningchannel: "mod-message-channel"
 };
 
 // ============================================================================
@@ -78,8 +67,6 @@ function onDataCenterConnect()
     // Create/Join the channels we need for this
     sr_api.sendMessage(DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
-    sr_api.sendMessage(DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT"))
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -122,13 +109,14 @@ function onDataCenterMessage(decoded_data)
     {
         var decoded_packet = JSON.parse(decoded_data.data);
         // received a reqest for our admin bootstrap modal code
-        if (decoded_packet.type === "RequestAdminModalCode")
-            SendAdminModal(decoded_packet.from);
-        // received data from our admin modal. A user has requested some settings be changedd
-        else if (decoded_packet.type === "AdminModalData")
+        if (decoded_packet.to === serverConfig.extensionname)
         {
-            if (decoded_packet.to === serverConfig.extensionname)
-            {// lets reset our config checkbox settings (modal will omit ones not checked)
+            if (decoded_packet.type === "RequestAdminModalCode")
+                SendAdminModal(decoded_packet.from);
+            // received data from our admin modal. A user has requested some settings be changedd
+            else if (decoded_packet.type === "AdminModalData")
+            {
+                // lets reset our config checkbox settings (modal will omit ones not checked)
                 serverConfig.follows = serverConfig.raids = serverConfig.hosts = serverConfig.bits = serverConfig.donations =
                     serverConfig.subs = serverConfig.resubs = serverConfig.giftsubs = serverConfig.merch = serverConfig.cloudbotredemption = "off";
                 // set our config values to the ones in message
@@ -141,13 +129,23 @@ function onDataCenterMessage(decoded_data)
                 // currently we have the same data as sent so no need to update the server page at the moment
                 SendAdminModal(decoded_packet.from);
             }
+            else if (decoded_packet.type === "PostMessage")
+            {
+                const channel = discordClient.channels.cache.find(channel => channel.name === decoded.packet.channel);
+                channel.send(decoded.packet.message);
+                console.log("PostMessage received ", decoded_packet);
+            }
+            else
+                logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    "Unable to process ExtensionMessage : ", decoded_data);
         }
+        else
+            logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                "received Unhandled ExtensionMessage : ", decoded_data);
     }
     else if (decoded_data.type === "ChannelData")
     {
-        if (decoded_data.dest_channel === "STREAMLABS_ALERT")
-            process_stream_alert(decoded_data);
-        else if (decoded_data.channel === serverConfig.channel)
+        if (decoded_data.channel === serverConfig.channel)
             logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.channel + " message received !?!?", decoded_data);
         else
@@ -169,76 +167,7 @@ function onDataCenterMessage(decoded_data)
         logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
 }
-// ============================================================================
-//                           FUNCTION: process_stream_alert
-// ============================================================================
-/**
- * handle any stream alerts that come in. Will will post donations etc to discord
- * @param {Object} decoded_data 
- */
-function process_stream_alert(decoded_data)
-{
-    let alertdata = decoded_data.data;
-    const channel = discordClient.channels.cache.find(channel => channel.name === serverConfig.donations_channel);
-    let alertcontents = alertdata.message[0];
-    let messagetxt = "Thankyou ";
-    switch (alertdata.type)
-    {
-        case "follow":
-            messagetxt += alertcontents.name + " for the follow."
-            if (serverConfig.follows === "on")
-                channel.send(messagetxt);
-            break;
-        case "raid":
-            messagetxt += alertcontents.name + " for the raid " + alertcontents.raiders + " raiders."
-            if (serverConfig.raids === "on")
-                channel.send(messagetxt)
-            break;
-        case "host":
-            messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
-            if (serverConfig.hosts === "on")
-                channel.send(messagetxt)
-            break;
-        case "donation":
-            messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive. "' + alertcontents.message + '"'
-            if (serverConfig.donations === "on")
-                channel.send(messagetxt)
-            break;
-        case "bits":
-            messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits. "' + alertcontents.message + '"'
-            if (serverConfig.bits === "on")
-                channel.send(messagetxt)
-            break;
-        case "subscription":
-            if (alertcontents.months === 1)
-                messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + alertcontents.message + '"'
-            else
-                messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + alertcontents.message + '"'
-            if (serverConfig.subs === "on")
-                channel.send(messagetxt);
-            break;
-        case "resub":
-            messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + '). "' + alertcontents.message + '"'
-            if (serverConfig.resubs === "on")
-                channel.send(messagetxt)
-            break;
-        case "prime_sub_gift":
-            messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
-            if (serverConfig.giftsubs === "on")
-                channel.send(messagetxt)
-            break;
-        case "merch":
-            messagetxt += alertcontents.from + " purchacing my merch. Hope you enjoy the " + alertcontents.product + ". " + alertcontents.imageHref
-            if (serverConfig.merch === "on")
-                channel.send(messagetxt)
-            break;
-        case "loyalty_store_redemption":
-            messagetxt += alertcontents.from + " for using the your channel points for " + alertcontents.product + ". " + alertcontents.imageHref
-            if (serverConfig.cloudbotredemption === "on")
-                channel.send(messagetxt)
-            break;
-    }
-}
+
 // ===========================================================================
 //                           FUNCTION: SendAdminModal
 // ===========================================================================
@@ -306,6 +235,7 @@ function SaveConfigToServer()
 //                           IMPORTS AND GLOBALS
 // ============================================================================
 import { Client, Intents, Permissions, Guild } from "discord.js";
+import { Console } from "console";
 // Instantiate a new client with some necessary parameters.
 const discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 // Notify progress
@@ -324,7 +254,7 @@ discordClient.on("messageCreate", function (message)
     if (message.author.id === discordClient.user.id)
         return;
     //restrict to only channel the channel we want to
-    if (message.channel.name === serverConfig.modmessage_channel)
+    if (message.channel.name === serverConfig.listeningchannel)
     {
         //restrict to only Twitch Subscribers who have synced with discord
         //if (message.member.roles.cache.some((role) => role.name === "Twitch Subscriber")) {

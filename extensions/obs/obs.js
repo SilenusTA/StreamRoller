@@ -285,7 +285,6 @@ const obs = new OBSWebSocket();
 function connectToObs(obs, host, port, pass)
 {
     logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", host, port, pass);
-    logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", "implement host:port and pass functionality");
     if (obs !== "undefined")
     {
         //obs.disconnect()
