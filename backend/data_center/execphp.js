@@ -16,7 +16,7 @@ class ExecPHP
 {
     constructor()
     {
-        let winpath = __dirname + "/../../php/php.exe";
+        let winpath = "C:/repos/ODGOverlay/php/php.exe";
         let linuxparth = "/usr/bin/php";
 
         this.foundphp = false;

@@ -293,7 +293,6 @@ function connectToObs(obs, host, port, pass)
     else
         console.log("skipping disconnet")
 
-    //obs.connect({ address: 'localhost:4445', password: 'pass' })
     obs.connect({ address: serverConfig.obshost + ':' + serverConfig.obsport, password: serverConfig.obspass })
         .then(() =>
         {

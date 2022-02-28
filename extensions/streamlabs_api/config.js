@@ -15,6 +15,6 @@ export let config = {
     OUR_CHANNEL: "STREAMLABS_ALERT",
     EXTENSION_NAME: "streamlabs_api",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
-    ENABLE_STREAMLABS_CONNECTION: false
+    ENABLE_STREAMLABS_CONNECTION: true
 };
 

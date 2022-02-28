@@ -88,6 +88,7 @@ app.get('/', function (req, res)
 // #############################################################
 import { execPHP } from './execphp.js';
 execPHP.phpFolder = __dirname + '/../../../ODGOverlay';
+console.log(execPHP.phpFolder);
 var webfiles = __dirname + '/../../../ODGOverlay';
 app.use('*.php', function (request, response, next)
 {

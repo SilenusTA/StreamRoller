@@ -166,9 +166,12 @@ function onMessage(socket, decoded_data)
         return;
     }
     // add this socket to the extension if it doesn't already exist
-    if (!extensions[decoded_data.from])
-        extensions.push(decoded_data.from);
-    if (!extensions[decoded_data.from].socket)
+    if (typeof (extensions[decoded_data.from]) === undefined || !extensions[decoded_data.from])
+    {
+        console.log("adding ", decoded_data.from)
+        extensions[decoded_data.from] = {};
+    }
+    if (typeof (extensions[decoded_data.from].socket) === undefined || !extensions[decoded_data.from].socket)
     {
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + decoded_data.from);
         extensions[decoded_data.from].socket = socket;

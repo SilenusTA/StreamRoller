@@ -138,13 +138,13 @@ function joinChannel(server_socket, client_socket, channel_to_join, channels, ex
         client_socket.join(channel_to_join);
         //broadcast out that the extension doing the channel
         server_socket.emit("message",
-            sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_join));
+            sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_join, "", extensionname));
     } else
     {
         logger.warn("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
             + extensionname + " joining unknown channel " + channel_to_join);
         client_socket.emit("message",
-            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, channel_to_join));
+            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, channel_to_join, "", extensionname));
     }
 }
 // ============================================================================
