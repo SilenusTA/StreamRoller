@@ -69,7 +69,6 @@ function initialise(app, host, port)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "connection failed:", err);
     }
-    connectToObs(obs, serverConfig.obshost, serverConfig.obsport, serverConfig.obspass);
 }
 
 // ============================================================================
@@ -102,6 +101,7 @@ function onDataCenterConnect(socket)
     sr_api.sendMessage(config.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", config.EXTENSION_NAME, config.OUR_CHANNEL)
     );
+    connectToObs(obs, serverConfig.obshost, serverConfig.obsport, serverConfig.obspass);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -304,7 +304,11 @@ function connectToObs(obs, host, port, pass)
         })
         .then(data =>
         {
-            try { processOBSSceneList(data.scenes) }
+            try
+            {
+                processOBSSceneList(data.scenes);
+                sendScenes();
+            }
             catch (err) { logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs create scenes list", err); }
         })
         .catch((err) =>
@@ -589,17 +593,17 @@ function sendScenes()
     config.sceneList.mainsceneselector = serverConfig.mainsceneselector;
     config.sceneList.secondarysceneselector = serverConfig.secondarysceneselector;
     sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket
-            ("ChannelData",
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "ScenesList",
                 serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "ScenesList",
-                    serverConfig.extensionname,
-                    config.sceneList,
-                    serverConfig.channel
-                ),
+                config.sceneList,
                 serverConfig.channel
-            ));
+            ),
+            serverConfig.channel
+        ));
 }
 
 

@@ -206,8 +206,8 @@ function onDataCenterMessage(decoded_data)
         // if we receive data back from our admin modal we process this here.
         else if (decoded_packet.type === "AdminModalData")
         {
-            //make sure it is for us
-            if (decoded_packet.extensionname === serverConfig.extensionname)
+            //make sure it is our modal
+            if (decoded_packet.data.extensionname === serverConfig.extensionname)
             {
                 // This data has come from the html modal for sumit action (user clicked submit on the page)
                 // It will only contain items we have set in our modal html file we sent above
@@ -233,10 +233,13 @@ function onDataCenterMessage(decoded_data)
                 // SendAdminModal(decoded_data.channel);
             }
         }
+        else
+            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
+
     }
     // looks like a channel we requested to join isn't available. Maybe the extension hasn't started up yet so lets just set a timer
     // to keep trying. 
-    if (decoded_data.type === "UnknownChannel")
+    else if (decoded_data.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
         if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)

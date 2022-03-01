@@ -167,6 +167,9 @@ function onDataCenterMessage(decoded_data)
                 SaveConfigToServer();
             }
         }
+        else
+            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
+
     }
     // ------------------------------------------------ error message received -----------------------------------------------
     else if (decoded_data.data === "UnknownChannel")
@@ -351,7 +354,8 @@ let client = {}
 connectToTwtich();
 function connectToTwtich()
 {
-    if (process.env.twitchchatbot == "" || process.env.twitchchatoauth == "")
+    if (typeof process.env.twitchchatbot === "undefined" || typeof process.env.twitchchatoauth === "undefined" ||
+        process.env.twitchchatbot === "" || process.env.twitchchatoauth === "")
     {
         logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
         client = new tmi.Client({

@@ -235,7 +235,6 @@ function SaveConfigToServer()
 //                           IMPORTS AND GLOBALS
 // ============================================================================
 import { Client, Intents, Permissions, Guild } from "discord.js";
-import { Console } from "console";
 // Instantiate a new client with some necessary parameters.
 const discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 // Notify progress
