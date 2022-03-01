@@ -263,42 +263,41 @@
 
         else if (decoded_data.type === "ChannelData")
         {
-            if (decoded_data.channel === serverConfig.channel)
+
+            if (decoded_data.dest_channel === "STREAMLABS_ALERT")
+                ProcessStreamAlert(decoded_data);
+            else if (decoded_data.dest_channel == "TWITCH_CHAT")
             {
-                if (decoded_data.dest_channel === "STREAMLABS_ALERT")
-                    ProcessStreamAlert(decoded_data);
-                else if (decoded_data.dest_channel == "TWITCH_CHAT")
-                {
-                    displayChatMessages(decoded_data);
-                }
-                else if (decoded_data.dest_channel == "DISCORD_CHAT")
-                {
-                    displayDiscordMessages(decoded_data);
-                }
-                else if (decoded_data.dest_channel == "OBS_CHANNEL")
-                {
-                    console.log(decoded_data)
-                    decoded_packet = JSON.parse(decoded_data.data);
-                    if (decoded_packet.type === "ScenesList")
-                    {
-                        console.info(".ScenesList", "ScenesList received");
-                        ParseOBSScenesList(decoded_packet.data)
-                    }
-                    else if (decoded_packet.type === "SceneChanged")
-                    {
-                        console.info(".ScenesList", "ScenesList received");
-                        config.OBSchannellist.current = decoded_packet.data;
-                        ParseOBSScenesList(config.OBSchannellist);
-                    }
-                    else if (decoded_packet.type === "OBSStats")
-                    {
-                        console.info(".OBSStats", "Status received");
-                        ProcessOBSStats(decoded_packet.data);
-                    }
-                    else
-                        console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", decoded_packet.type, " from ", decoded_packet.from);
-                }
+                displayChatMessages(decoded_data);
             }
+            else if (decoded_data.dest_channel == "DISCORD_CHAT")
+            {
+                displayDiscordMessages(decoded_data);
+            }
+            else if (decoded_data.dest_channel == "OBS_CHANNEL")
+            {
+                console.log(decoded_data)
+                decoded_packet = JSON.parse(decoded_data.data);
+                if (decoded_packet.type === "ScenesList")
+                {
+                    console.info(".ScenesList", "ScenesList received");
+                    ParseOBSScenesList(decoded_packet.data)
+                }
+                else if (decoded_packet.type === "SceneChanged")
+                {
+                    console.info(".ScenesList", "ScenesList received");
+                    config.OBSchannellist.current = decoded_packet.data;
+                    ParseOBSScenesList(config.OBSchannellist);
+                }
+                else if (decoded_packet.type === "OBSStats")
+                {
+                    console.info(".OBSStats", "Status received");
+                    ProcessOBSStats(decoded_packet.data);
+                }
+                else
+                    console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", decoded_packet.type, " from ", decoded_packet.from);
+            }
+
             else
             {
                 console.info(".onDataCenterMessage", "Channel Data " + decoded_data.dest_channel + " not handled");

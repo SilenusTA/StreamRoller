@@ -21,11 +21,23 @@
                     <label class="form-check-label" for="enabletwitchchat">Enable/Disable</label>
                 </div>
             </div>
-
             <div class="form-group">
-                <label for="streamername" class="col-form-label">Streamer name</label>
+                <label for="streamername" class="col-form-label">Streamer name (chatchannel to join)</label>
                 <input type="text" name="streamername" class="form-control" id="streamername" value="streamernametext">
             </div>
+            <div class="form-group">
+                <label for="botname" class="col-form-label">Bot name</label>
+                <input type="text" name="botname" class="form-control" id="botname" value="botnametext">
+            </div>
+            <div class="form-group">
+                <label for="botoauth" class="col-form-label">Bot OAUTH token (from <a
+                        href="https://twitchapps.com/tmi/">https://twitchapps.com/tmi/</a> log in twitch with bot before
+                    visiting)</label>
+                <input type="text" name="botoauth" class="form-control" id="botoauth" value="botoauthtext">
+            </div>
+
+
+
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

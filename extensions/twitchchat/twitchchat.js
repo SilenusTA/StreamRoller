@@ -29,7 +29,9 @@ let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL,
     enabletwitchchat: "on",
-    streamername: "OldDepressedGamer"
+    streamername: "OldDepressedGamer",
+    botname: "",
+    botoauth: ""
 };
 // ============================================================================
 //                           FUNCTION: initialise
@@ -106,19 +108,26 @@ function onDataCenterMessage(decoded_data)
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in decoded_packet)
                     {
-                        if (key === "streamername" &&
-                            serverConfig[key] != decoded_data.data[key])
-                            // if we have changed the streamer name we need to update the chat client 
-                            chatSettingsChanged = true;
-                        else if (key === "enabletwitchchat" &&
-                            serverConfig[key] != decoded_data.data[key])
-                            // if we have changed the streamer name we need to update the chat client 
-                            chatSettingsChanged = true;
-                        // update the key as we have one for this
+                        if (serverConfig[key] != decoded_data.data[key])
+                        {
+                            // check for a chat setting change
+                            switch (key)
+                            {
+                                case "streamername":
+                                    chatSettingsChanged = true;
+                                case "enabletwitchchat":
+                                    chatSettingsChanged = true;
+                                case "botname":
+                                    chatSettingsChanged = true;
+                                case "botoauth":
+                                    chatSettingsChanged = true;
+                                    break;
+                            }
+                        }
                         serverConfig[key] = decoded_data.data[key];
                     }
                 if (chatSettingsChanged)
-                    reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
+                    connectToTwtich()
             }
         }
         SaveConfigToServer();
@@ -131,22 +140,33 @@ function onDataCenterMessage(decoded_data)
             SendModal(decoded_data.from);
         else if (decoded_packet.type === "AdminModalData")
         {
+            console.log(decoded_packet)
+            let chatSettingsChanged = false;
             if (decoded_packet.to === serverConfig.extensionname)
             {
-                // we shall either turn this checkbox on or not get it in the message so we can just turn it off here 
-                // and reset it if the user turn it on rather than trying to find out if it doesn't exist in the message
-                serverConfig.enabletwitchchat = "off";
-                for (const [key, value] of Object.entries(decoded_packet.data))
-                {
-                    //if streamer name has changed update it
-                    if (key === "streamername")
-                        serverConfig[key] = value;
-                    if (key === "enabletwitchchat")
-                        serverConfig[key] = "on";
-                }
-                // we reconnect chat even if nothing changed as the user might
-                // have opened the settings if connection bugged out
-                reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
+                for (const [key, value] of Object.entries(serverConfig))
+                    if (key in decoded_packet.data)
+                    {
+                        if (serverConfig[key] != decoded_packet.data[key])
+                        {
+                            // check for a chat setting change
+                            switch (key)
+                            {
+                                case "streamername":
+                                    chatSettingsChanged = true;
+                                case "enabletwitchchat":
+                                    chatSettingsChanged = true;
+                                case "botname":
+                                    chatSettingsChanged = true;
+                                case "botoauth":
+                                    chatSettingsChanged = true;
+                                    break;
+                            }
+                        }
+                        serverConfig[key] = decoded_packet.data[key];
+                    }
+                if (chatSettingsChanged)
+                    connectToTwtich()
                 SaveConfigToServer();
             }
         }
@@ -308,19 +328,19 @@ function leaveAllChannels()
     connectedChannels.forEach(element =>
     {
         client.part(element)
-            .then(channel => logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "left Chat channel " + channel))
-            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".reconnectChat", "Leave chat failed", element, err));
+            .then(channel => logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel))
+            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err));
     })
 }
 function joinChatChannel(streamername)
 {
     client.join(streamername)
         .then(
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "Chat channel changed to " + streamername)
+            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + streamername)
         )
         .catch((err) =>
         {
-            logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "stream join threw an error", err, " sheduling reconnect");
+            logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
             setTimeout(() =>
             {
                 reconnectChat(streamername, "on")
@@ -329,63 +349,62 @@ function joinChatChannel(streamername)
 }
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
-const client = new tmi.Client({
-    channels: [serverConfig.streamername]
-});
-client.connect()
-    .then(logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "Twitch chat client connected"))
-    .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "Twitch chat connect failed", err))
-
-client.on('message', (channel, tags, message, self) =>
+let client = {}
+connectToTwtich();
+function connectToTwtich()
 {
-    process_chat_data(channel, tags, message, self);
-});
-
-// with Oauth bot connection
-/*
-const client = new tmi.Client({
-    options: { debug: true, messagesLogLevel: "info" },
-    connection: {
-        reconnect: true,
-        secure: true
-    },
-    identity: {
-        username: 'bot-name',
-        password: 'oauth:my-bot-token'
-    },
-    channels: ['my-channel']
-});
-client.connect().catch(console.error);
-client.on('message', (channel, tags, message, self) =>
-{
-    if (self) return;
-    if (message.toLowerCase() === '!hello')
+    if (serverConfig.botname == "" || serverConfig.botoauth == "")
     {
-        client.say(channel, `@${tags.username}, heya!`);
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
+        client = new tmi.Client({
+            channels: [serverConfig.streamername]
+        });
+        client.connect()
+            .then(logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected"))
+            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
+
+        client.on('message', (channel, tags, message, self) =>
+        {
+            process_chat_data(channel, tags, message, self);
+        });
     }
-});
-*/
+    else
+    // with Oauth bot connection
+    {
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH")
+        client = new tmi.Client({
+            options: { debug: true, messagesLogLevel: "info" },
+            connection: {
+                reconnect: true,
+                secure: true
+            },
+            identity: {
+                username: serverConfig.botname,//'bot-name',
+                password: serverConfig.botoauth//'oauth:my-bot-token'
+            },
+            channels: [serverConfig.streamername]
+        });
+        client.connect()
+            .then(logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected"))
+            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        client.on('message', (channel, tags, message, self) =>
+        {
+            console.log("twitchchat channel ", channel)
+            console.log("twitchchat tags ", tags)
+            console.log("twitchchat message ", message)
+            console.log("twitchchat self ", self)
+            // don't respond to self
+            //if (self) return;
+            if (message.toLowerCase() === '!hello')
+            {
+                client.say(channel, `@${tags.username}, heya!`);
+            }
+        });
+    }
+}
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================
-// Desription: exports from this module
-// ----------------------------- notes ----------------------------------------
-// will also need additional exports in future (ie reconnect, stop, start etc)
-// ============================================================================
+
 export { initialise };
