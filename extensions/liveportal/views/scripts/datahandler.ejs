@@ -686,7 +686,7 @@
             usercolor = "<img src='images/badge_mod.png'><span style='color: #ff4500'>";
         else
             usercolor = "<span style='color: " + chatdata.data.color + "'>";
-        let username = usercolor + ' ' + chatdata.data.displayName + "&gt</span>";
+        let username = usercolor + ' ' + chatdata.data['display-name'] + "&gt</span>";
         time = timecolor + time + ":</span>";
         cardref.innerHTML = time + ":" + username + " " + chatdata.message + "<BR>" + cardref.innerHTML;
         if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
