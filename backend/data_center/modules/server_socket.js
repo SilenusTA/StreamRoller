@@ -74,7 +74,7 @@ import * as cm from "./common.js";
 const channels = [];
 let extensions = {};
 let server_socket = null;
-let config = cm.loadConfig('datacenter');
+let config = {}
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -87,6 +87,7 @@ let config = cm.loadConfig('datacenter');
 function start(app, server, exts)
 {
     extensions = exts;
+    config = cm.loadConfig('datacenter');
     //setup our server socket on the http server
     try
     {

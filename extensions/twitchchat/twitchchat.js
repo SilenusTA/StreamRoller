@@ -29,9 +29,7 @@ let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL,
     enabletwitchchat: "on",
-    streamername: "OldDepressedGamer",
-    botname: "",
-    botoauth: ""
+    streamername: "OldDepressedGamer"
 };
 // ============================================================================
 //                           FUNCTION: initialise
@@ -127,7 +125,7 @@ function onDataCenterMessage(decoded_data)
                         serverConfig[key] = decoded_data.data[key];
                     }
                 if (chatSettingsChanged)
-                    connectToTwtich()
+                    reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
             }
         }
         SaveConfigToServer();
@@ -140,7 +138,6 @@ function onDataCenterMessage(decoded_data)
             SendModal(decoded_data.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            console.log(decoded_packet)
             let chatSettingsChanged = false;
             if (decoded_packet.to === serverConfig.extensionname)
             {
@@ -166,7 +163,7 @@ function onDataCenterMessage(decoded_data)
                         serverConfig[key] = decoded_packet.data[key];
                     }
                 if (chatSettingsChanged)
-                    connectToTwtich()
+                    reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
                 SaveConfigToServer();
             }
         }
@@ -349,11 +346,12 @@ function joinChatChannel(streamername)
 }
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
+import { env } from "process";
 let client = {}
 connectToTwtich();
 function connectToTwtich()
 {
-    if (serverConfig.botname == "" || serverConfig.botoauth == "")
+    if (process.env.twitchchatbot == "" || process.env.twitchchatoauth == "")
     {
         logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
         client = new tmi.Client({
@@ -371,7 +369,7 @@ function connectToTwtich()
     else
     // with Oauth bot connection
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH")
+        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
         client = new tmi.Client({
             options: { debug: true, messagesLogLevel: "info" },
             connection: {
@@ -379,8 +377,8 @@ function connectToTwtich()
                 secure: true
             },
             identity: {
-                username: serverConfig.botname,//'bot-name',
-                password: serverConfig.botoauth//'oauth:my-bot-token'
+                username: process.env.twitchchatbot,//'bot-name',
+                password: process.env.twitchchatoauth//'oauth:my-bot-token'
             },
             channels: [serverConfig.streamername]
         });
@@ -390,16 +388,14 @@ function connectToTwtich()
 
         client.on('message', (channel, tags, message, self) =>
         {
-            console.log("twitchchat channel ", channel)
-            console.log("twitchchat tags ", tags)
-            console.log("twitchchat message ", message)
-            console.log("twitchchat self ", self)
+
             // don't respond to self
             //if (self) return;
-            if (message.toLowerCase() === '!hello')
+            /*if (message.toLowerCase() === '!hello')
             {
                 client.say(channel, `@${tags.username}, heya!`);
-            }
+            }*/
+            process_chat_data(channel, tags, message, self);
         });
     }
 }

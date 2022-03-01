@@ -28,8 +28,8 @@ if (config === "")
         SYSTEM_LOGGING_TAG: "DATA-CENTER",
         HOST: "http://localhost",
         PORT: 3000,
-        logginglevel: 0,
-        apiVersion: __api_version__
+        logginglevel: 5,
+        apiVersion: __api_version__,
     };
     cm.saveConfig(config.extensionname, config);
 }
