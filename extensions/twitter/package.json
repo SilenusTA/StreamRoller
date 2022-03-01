@@ -1,0 +1,15 @@
+{
+  "name": "twitter",
+  "version": "1.0.0",
+  "description": "twitter client",
+  "main": "twitter.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "twitter-api-client": "^1.5.2"
+  }
+}
