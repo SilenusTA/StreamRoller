@@ -92,7 +92,7 @@ function onDataCenterConnect(socket)
         SaveConfigToServer();
     else
         sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket("SaveConfig", localConfig.EXTENSION_NAME, serverConfig));
+            sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
@@ -255,7 +255,10 @@ function SaveConfigToServer()
  */
 function tweetmessage(message)
 {
-    twitterClient.tweetsV2.createTweet({ "text": message })
+    console.log("################# SENDING TWEET ######################")
+    console.log(message)
+    /*
+    serverConfig.twitterClient.tweetsV2.createTweet({ "text": message })
         .then(response =>
         {
             console.log("Tweeted!", response)
@@ -263,6 +266,7 @@ function tweetmessage(message)
         {
             console.error(err)
         })
+        */
 }
 
 //tweetmessage("Testing from StreamRoller.")

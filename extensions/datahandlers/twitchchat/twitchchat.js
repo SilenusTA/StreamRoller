@@ -174,6 +174,10 @@ function onDataCenterMessage(decoded_data)
                 SaveConfigToServer();
             }
         }
+        else if (decoded_packet.type === "SendChatMessage")
+        {
+            sendChatMessage(serverConfig.streamername, decoded_packet.data)
+        }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
 
@@ -278,9 +282,6 @@ function SaveConfigToServer()
 //                     FUNCTION: process_chat_data
 // ============================================================================
 // Desription: receives twitch chat messages
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
 // ===========================================================================
 function process_chat_data(channel, tags, chatmessage, self)
 {
@@ -300,6 +301,17 @@ function process_chat_data(channel, tags, chatmessage, self)
                 localConfig.OUR_CHANNEL
             ));
     }
+}
+/**
+ * send a message to the twitch channel specified
+ * @param {String} channel 
+ * @param {String} message 
+ */
+function sendChatMessage(channel, message)
+{
+    localConfig.twitchClient.say(channel, message)
+        .then(console.log("message sent ", channel, message))
+        .catch((e) => { console.log("Twitch.say error", e) })
 }
 // ############################# IRC Client #########################################
 // ============================================================================
@@ -356,7 +368,6 @@ function joinChatChannel(streamername)
 }
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
-import { env } from "process";
 connectToTwtich();
 function connectToTwtich()
 {
@@ -393,7 +404,7 @@ function connectToTwtich()
         localConfig.twitchClient.connect()
             .then((res) =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
             })
             .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
 

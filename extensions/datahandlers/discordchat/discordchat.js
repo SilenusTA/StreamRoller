@@ -30,6 +30,7 @@ let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
+    discordenabled: "off"
 };
 
 // ============================================================================
@@ -119,6 +120,7 @@ function onDataCenterMessage(decoded_data)
             else if (decoded_packet.type === "AdminModalData")
             {
                 // set our config values to the ones in message
+                serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in decoded_packet.data)
@@ -130,17 +132,26 @@ function onDataCenterMessage(decoded_data)
             }
             else if (decoded_packet.type === "PostMessage")
             {
-                console.log(decoded_packet.data)
-                const channel = discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
-                channel.send(decoded_packet.data.message);
-                console.log("PostMessage received ", decoded_packet);
+                if (serverConfig.discordenabled === "on")
+                {
+                    const channel = discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
+                    if (typeof (channel) != "undefined")
+                        channel.send(decoded_packet.data.message);
+                    else
+                        logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                            "Failed to find discord channel to send to", decoded_packet.data.channel);
+                }
+                else
+                {
+                    logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                        "Not posting to Discord as extension is turned off ", decoded_packet.data.message);
+                }
             }
             else if (decoded_packet.type === "ChangeListeningChannel")
             {
-                console.log(decoded_packet.data)
-                serverConfig.monitoring_channel = decoded_packet.data.name;
+                serverConfig.monitoring_channel = decoded_packet.data;
                 SaveConfigToServer();
-                console.log("ChangeListeningChannel received ", decoded_packet.data.name);
+                logger.info(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", decoded_packet.data);
             }
             else
                 logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",

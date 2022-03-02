@@ -285,13 +285,6 @@ const obs = new OBSWebSocket();
 function connectToObs(obs, host, port, pass)
 {
     logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToObs", host, port, pass);
-    if (obs !== "undefined")
-    {
-        //obs.disconnect()
-    }
-    else
-        console.log("skipping disconnet")
-
     obs.connect({ address: serverConfig.obshost + ':' + serverConfig.obsport, password: serverConfig.obspass })
         .then(() =>
         {

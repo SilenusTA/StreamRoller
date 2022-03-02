@@ -3,13 +3,18 @@
 <%- include("../modals/liveportalmodalplaceholder.html"); %>
 <script>
     const serverConfig = {
+        // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
+        // obs settings
         showsecondaryscenes: "on",
         showallscenes: "on",
+        // chat window settings
         modchattomodwindow: "on",
+        // discord settings
         modmessage_channel: "stream-mod-messages", // discord channel
         donations_channel: "announcements", // discord channel
+        // alerts posting to discord
         follows: "off",
         raids: "off",
         hosts: "off",
@@ -22,9 +27,10 @@
         donations: "off"
 
     };
-    const config =
+    const localConfig =
     {
-        OBSchannellist: {}
+        OBSchannellist: {},
+        obslive: false // set on a heartbeat from obs messages
     }
 
     // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -267,21 +273,32 @@
                     ParseOBSScenesList(decoded_packet.data)
                 else if (decoded_packet.type === "SceneChanged")
                 {
-                    config.OBSchannellist.current = decoded_packet.data;
-                    ParseOBSScenesList(config.OBSchannellist);
+                    localConfig.OBSchannellist.current = decoded_packet.data;
+                    ParseOBSScenesList(localConfig.OBSchannellist);
                 }
                 else if (decoded_packet.type === "OBSStats")
                     ProcessOBSStats(decoded_packet.data);
                 else if (decoded_packet.type === "StreamStarted")
+                {
+                    console.log("StreamStarted");
+                    serverConfig.obslive = true;
+                    OBSLiveCheck();
+
                     postMessageToTwitter("Were up and running at http://twitch.tv/OldDepressedGamer why not pop in and say hi. Sent from StreamRoller");
+                }
+                else if (decoded_packet.type === "StreamStopped")
+                {
+                    console.log("StreamStopped");
+                    serverConfig.obslive = false;
+                    OBSLiveCheck();
+                }
                 else
                     console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", decoded_packet.type, " from ", decoded_packet.from);
             }
             else
             {
                 console.info(".onDataCenterMessage", "Channel Data " + decoded_data.dest_channel + " not handled");
-                //log messages to screen
-                //displayChannelMessages(decoded_data);
+                console.log(decoded_data);
             }
         } else if (decoded_data.type === "UnknownChannel")
         {
@@ -324,20 +341,66 @@
     {
         let rate = data.kbitsPerSec;
         let strain = data.strain; // red/green/amber icon needed
-
+        var straincolor = (255 / 1 * strain);
         var tm = new Date(1000 * data.totalStreamTime).toISOString().substr(11, 8);
         // saves our serverConfig to the server so we can load it again next time we startup
-        document.getElementById("OBSInfo").innerHTML = "Uptime " + tm + " " + rate + " kb/s strain:" + strain;
+        //document.getElementById("OBSInfo").innerHTML = "<div id="OBSInfo">Uptime 00:02:21 2610 kb/s strain:0</div>"
+        document.getElementById("OBSUptime").innerHTML = tm;
+        document.getElementById("OBSRate").innerHTML = rate + " kb/s";
+        //document.getElementById("OBSStrain").innerHTML = strain;
+        document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
 
+        localConfig.obslive = true;
+        OBSLiveCheck();
+    }
+
+    // ============================================================================
+    //                           FUNCTION: SaveConfigToServer
+    // ============================================================================
+    function OBSLiveCheck()
+    {
+        let livebackbround = document.getElementById("OBSControllsCard");
+        if (localConfig.obslive)
+        {
+            // currently set to live so lets set the background to green
+            //lets up date the colours
+            livebackbround.style["background-color"] = "#013301";
+            // remove any previous colours for the background
+            livebackbround.classList.remove('bg-dark');
+            livebackbround.classList.remove('bg-light');
+            // remove previous heartbeat timeout
+            clearTimeout(localConfig.liveHearbeatHandle);
+
+            // set a timeout so that we can remove the colour if obs stops 
+            // broadcasting status update (this function is called on each obs broadcast)
+            localConfig.liveHearbeatHandle = setTimeout(() =>
+            {
+                localConfig.obslive = false;
+                OBSLiveCheck()
+
+            }, 2500)
+        }
+        else
+        {
+            // not live anymore so set the background back to normal
+            document.getElementById("OBSRate").innerHTML = ""
+            document.getElementById("OBSStrain").style.removeProperty("background-color")
+            // background is set in the navbar partial code and uses local storage. should probably update this and move it here
+            if (localStorage.getItem("darkmode") === "true")
+            {
+                livebackbround.classList.add('bg-dark');
+                livebackbround.classList.remove('bg-light');
+            }
+            else
+            {
+                livebackbround.classList.add('bg-light');
+                livebackbround.classList.remove('bg-dark');
+            }
+        }
     }
     // ============================================================================
     //                           FUNCTION: SaveConfigToServer
     // ============================================================================
-    // Desription:save config on backend data store
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
     function SaveConfigToServer()
     {
         // saves our serverConfig to the server so we can load it again next time we startup
@@ -467,7 +530,7 @@
                     parseExtensionModalData(xname);
                     // As we have some updateded data we need to make sure that we refresh ourselves in case
                     // we have changed some settings (ie buttons to be shown)
-                    ParseOBSScenesList(config.OBSchannellist);
+                    ParseOBSScenesList(localConfig.OBSchannellist);
                     // send the obs message with the settings just in case they had changed or just to refresh them
                     /*sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -508,7 +571,7 @@
         //remove the old buttons
         element.textContent = ""
         //store the data incase the user updated what they want to display
-        config.OBSchannellist = data;
+        localConfig.OBSchannellist = data;
         // always show the primary scene list
         if (typeof (primaryScenes) !== "undefined")
             primaryScenes.forEach((scene) => { addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current) })
@@ -608,7 +671,7 @@
         }
         adminData.extensions[serverConfig.extensionname].admincard = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
-        ParseOBSScenesList(config.OBSchannellist);
+        ParseOBSScenesList(localConfig.OBSchannellist);
     }
     // ============================================================================
     //                      FUNCTION: processOwnModalSubmit
@@ -629,7 +692,7 @@
         for (const [key, value] of Object.entries(serverConfig))
         {
             //lets check out settings and send out updates as required
-            if (value === "modmessage_channel")
+            if (key === "modmessage_channel")
             {
                 // udpate the server (or just refresh the value even if the same)
                 changeDiscordListeningChannel(serverConfig[key]);
@@ -866,27 +929,27 @@
                 messagetxt += alertcontents.name + " for the follow."
                 if (serverConfig.follows === "on")
                     //channel.send(messagetxt);
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "raid":
                 messagetxt += alertcontents.name + " for the raid " + alertcontents.raiders + " raiders."
                 if (serverConfig.raids === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "host":
                 messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
                 if (serverConfig.hosts === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "donation":
                 messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive. "' + alertcontents.message + '"'
                 if (serverConfig.donations === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "bits":
                 messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits. "' + alertcontents.message + '"'
                 if (serverConfig.bits === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "subscription":
                 if (alertcontents.months === 1)
@@ -894,34 +957,34 @@
                 else
                     messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + alertcontents.message + '"'
                 if (serverConfig.subs === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);;
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);;
                 break;
             case "resub":
                 messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + '). "' + alertcontents.message + '"'
                 if (serverConfig.resubs === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "prime_sub_gift":
                 messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
                 if (serverConfig.giftsubs === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "merch":
                 messagetxt += alertcontents.from + " purchacing my merch. Hope you enjoy the " + alertcontents.product + ". " + alertcontents.imageHref
                 if (serverConfig.merch === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
             case "loyalty_store_redemption":
                 messagetxt += alertcontents.from + " for using the your channel points for " + alertcontents.product + ". " + alertcontents.imageHref
                 if (serverConfig.cloudbotredemption === "on")
-                    PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 break;
         }
     }
     // ============================================================================
-    //                           FUNCTION: PostAlertToDiscord
+    //                           FUNCTION: PostMessageToDiscord
     // ============================================================================
-    function PostAlertToDiscord(msg, channel)
+    function PostMessageToDiscord(msg, channel)
     {
         console.log("Posting messaage to discord, ", msg, channel)
         sr_api.sendMessage(DataCenterSocket,
@@ -959,6 +1022,24 @@
             ));
     }
     // ============================================================================
+    //                           FUNCTION: postMessageToTwitch
+    // ============================================================================
+    function postMessageToTwitch(msg)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "SendChatMessage",
+                    serverConfig.extensionname,
+                    msg,
+                    "",
+                    "twitchchat"),
+                "",
+                "twitchchat"
+            ));
+    }
+    // ============================================================================
     //                           FUNCTION: changeDiscordListeningChannel
     // ============================================================================
     function changeDiscordListeningChannel(channel)
@@ -975,5 +1056,27 @@
                 "",
                 "discordchat"
             ));
+    }
+    // ============================================================================
+    //                           FUNCTION: chatInput
+    // ============================================================================
+    function chatInput(event)
+    {
+        event.preventDefault();
+        console.log("ChattInput")
+        console.log(document.getElementById("chatInputText").value)
+        postMessageToTwitch(document.getElementById("chatInputText").value)
+        document.getElementById("chatInputText").value = ""
+    }
+    // ============================================================================
+    //                           FUNCTION: modInput
+    // ============================================================================
+    function modInput(event)
+    {
+        event.preventDefault();
+        console.log("modtInput")
+        console.log(document.getElementById("modInputText").value)
+        PostMessageToDiscord(document.getElementById("modInputText").value, serverConfig.modmessage_channel);
+        document.getElementById("modInputText").value = ""
     }
 </script>

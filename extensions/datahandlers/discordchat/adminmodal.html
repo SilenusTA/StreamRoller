@@ -16,9 +16,11 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="monitoring_channel" class="col-form-label">Discord Channel to monitor:</label>
-            <input type="text" name="monitoring_channel" class="form-control" id="monitoring_channel"
-                value="monitoring_channeltext">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="discordenabled" type="checkbox" id="discordenabled"
+                    discordenabledchecked>
+                <label class="form-check-label" for="discordenabled">discordenabled</label>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
