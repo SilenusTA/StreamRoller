@@ -24,9 +24,9 @@
 // ============================================================================
 // note this has to be socket.io-client version 2.0.3 to allow support for StreamLabs api.
 import StreamLabsIo from "socket.io-client_2.0.3";
-import * as logger from "../../backend/data_center/modules/logger.js";
+import * as logger from "../../../backend/data_center/modules/logger.js";
 import { config } from "./config.js";
-import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs"
+import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

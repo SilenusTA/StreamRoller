@@ -9,17 +9,23 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import { TwitterClient } from 'twitter-api-client';
-import * as logger from "../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { config } from "./config.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
+const localConfig = {
+    OUR_CHANNEL: "TWITTER_CHANNEL",
+    EXTENSION_NAME: "twitter",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    twitterClient: null,
+    DataCenterSocket: null,
+    channelConnectionAttempts: 20
+};
 const serverConfig = {
-    extensionname: config.EXTENSION_NAME,
-    channel: config.OUR_CHANNEL,
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
     twitterenabled: "on"
 };
 const OverwriteDataCenterConfig = false;
@@ -37,11 +43,25 @@ function initialise(app, host, port)
 {
     try
     {
-        config.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "DataCenterSocket connection failed:", err);
     }
+    try
+    {
+        localConfig.twitterClient = new TwitterClient({
+            apiKey: process.env.twitterAPIkey,
+            apiSecret: process.env.twitterAPISecret,
+            accessToken: process.env.twitterAccessToken,
+            accessTokenSecret: process.env.TwitterAccessTokenSecret
+        });
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "twitter connection failed:", e.message);
+    }
+
 }
 
 // ============================================================================
@@ -54,7 +74,7 @@ function initialise(app, host, port)
 function onDataCenterDisconnect(reason)
 {
     // do something here when disconnt happens if you want to handle them
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(config.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -67,15 +87,15 @@ function onDataCenterDisconnect(reason)
  */
 function onDataCenterConnect(socket)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
     if (OverwriteDataCenterConfig)
         SaveConfigToServer();
     else
-        sr_api.sendMessage(config.DataCenterSocket,
-            sr_api.ServerPacket("SaveConfig", config.EXTENSION_NAME, serverConfig));
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("SaveConfig", localConfig.EXTENSION_NAME, serverConfig));
 
-    sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", config.EXTENSION_NAME, config.OUR_CHANNEL)
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
     );
 }
 // ============================================================================
@@ -87,7 +107,7 @@ function onDataCenterConnect(socket)
  */
 function onDataCenterMessage(decoded_data)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", decoded_data);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "message received ", decoded_data);
 
     if (decoded_data.type === "ConfigFile")
     {
@@ -126,28 +146,28 @@ function onDataCenterMessage(decoded_data)
                 else
                     console.log("tweeting disabled ", decoded_packet.data)
         } else
-            logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", decoded_data);
     }
     else if (decoded_data.type === "UnknownChannel")
     {
-        if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
+        if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
-                sr_api.sendMessage(config.DataCenterSocket,
+                sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", config.EXTENSION_NAME, decoded_data.data
+                        "JoinChannel", localConfig.EXTENSION_NAME, decoded_data.data
                     ));
             }, 5000);
         }
     }
     // we have received data from a channel we are listening to
     else if (decoded_data.type === "ChannelData")
-        logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
     else if (decoded_data.type === "InvalidMessage")
-        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
             "InvalidMessage ", decoded_data.data.error, decoded_data);
     else if (decoded_data.type === "ChannelJoined"
         || decoded_data.type === "ChannelCreated"
@@ -161,7 +181,7 @@ function onDataCenterMessage(decoded_data)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
 }
 
@@ -193,17 +213,17 @@ function SendAdminModal(tochannel)
                 else if (typeof (value) == "string")
                     modalstring = modalstring.replace(key + "text", value);
             }
-            sr_api.sendMessage(config.DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    config.EXTENSION_NAME,
+                    localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
                         "AdminModalCode", // message type
-                        config.EXTENSION_NAME, //our name
+                        localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
                         tochannel,
-                        config.OUR_CHANNEL
+                        localConfig.OUR_CHANNEL
                     ),
                     "",
                     tochannel // in this case we only need the "to" channel as we will send only to the requester
@@ -220,22 +240,15 @@ function SendAdminModal(tochannel)
 function SaveConfigToServer()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
-    sr_api.sendMessage(config.DataCenterSocket, sr_api.ServerPacket
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
         ("SaveConfig",
-            config.EXTENSION_NAME,
+            localConfig.EXTENSION_NAME,
             serverConfig))
 }
 
 // ============================================================================
-//                           Twitter client
+//                           Twitter client code
 // ============================================================================
-// setup the client
-const twitterClient = new TwitterClient({
-    apiKey: process.env.twitterAPIkey,
-    apiSecret: process.env.twitterAPISecret,
-    accessToken: process.env.twitterAccessToken,
-    accessTokenSecret: process.env.TwitterAccessTokenSecret
-})
 /**
  * tweet a message
  * @param {String} message 

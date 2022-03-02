@@ -16,8 +16,8 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { config } from "./config.js";
 import { dirname } from 'path';
@@ -29,9 +29,7 @@ let DataCenterSocket = null;
 let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL, // backend socket channel.
-    modmessage_channel: "stream-mod-messages", // discord channel
-    donations_channel: "announcements" // discord channel
-    //listeningchannel: "mod-message-channel"
+    monitoring_channel: "stream-mod-messages", // discord channel
 };
 
 // ============================================================================
@@ -120,11 +118,8 @@ function onDataCenterMessage(decoded_data)
             // received data from our admin modal. A user has requested some settings be changedd
             else if (decoded_packet.type === "AdminModalData")
             {
-                // lets reset our config checkbox settings (modal will omit ones not checked)
-                serverConfig.follows = serverConfig.raids = serverConfig.hosts = serverConfig.bits = serverConfig.donations =
-                    serverConfig.subs = serverConfig.resubs = serverConfig.giftsubs = serverConfig.merch = serverConfig.cloudbotredemption = "off";
                 // set our config values to the ones in message
-                // NOTE: this will ignore new items in hte page that we don't currently have in our config
+                // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in decoded_packet.data)
                         serverConfig[key] = decoded_packet.data[key];
@@ -139,6 +134,13 @@ function onDataCenterMessage(decoded_data)
                 const channel = discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
                 channel.send(decoded_packet.data.message);
                 console.log("PostMessage received ", decoded_packet);
+            }
+            else if (decoded_packet.type === "ChangeListeningChannel")
+            {
+                console.log(decoded_packet.data)
+                serverConfig.monitoring_channel = decoded_packet.data.name;
+                SaveConfigToServer();
+                console.log("ChangeListeningChannel received ", decoded_packet.data.name);
             }
             else
                 logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -258,7 +260,7 @@ discordClient.on("messageCreate", function (message)
     if (message.author.id === discordClient.user.id)
         return;
     //restrict to only channel the channel we want to
-    if (message.channel.name === serverConfig.modmessage_channel)
+    if (message.channel.name === serverConfig.monitoring_channel)
     {
         //restrict to only Twitch Subscribers who have synced with discord
         //if (message.member.roles.cache.some((role) => role.name === "Twitch Subscriber")) {

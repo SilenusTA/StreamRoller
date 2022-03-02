@@ -25,7 +25,7 @@
 // none
 // ============================================================================
 import { start as SL_connection_start } from "./streamlabs_api_handler.js";
-import * as logger from "../../backend/data_center/modules/logger.js";
+import * as logger from "../../../backend/data_center/modules/logger.js";
 import { config } from "./config.js";
 // ============================================================================
 //                           FUNCTION: initialise

@@ -18,8 +18,8 @@
 // ----------------------------- notes ----------------------------------------
 // // https://github.com/tmijs/docs
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { config } from "./config.js";
 import { dirname } from 'path';

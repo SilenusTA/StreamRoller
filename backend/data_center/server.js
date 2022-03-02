@@ -108,11 +108,13 @@ if (testing)
 {
     logger.usecoloredlogs("off");
     loadExtensions(__dirname + "/../../test-ext")
+    loadExtensions(__dirname + "/../../extensions/datahandlers")
     loadExtensions(__dirname + "/../../extensions")
 }
 else
 {
     logger.usecoloredlogs("default");
+    loadExtensions(__dirname + "/../../extensions/datahandlers")
     loadExtensions(__dirname + "/../../extensions")
 }
 
@@ -137,8 +139,8 @@ function loadExtensions(extensionFolder)
                         } else
                         {
                             // we hava a script so lets load it.
-                            // var extfile = extensionFolder + "/" + file + "/" + file + ".js";
-                            var extfile = "../../extensions/" + file + "/" + file + ".js";
+                            var extfile = extensionFolder + "/" + file + "/" + file + ".js";
+                            //var extfile = "../../extensions/" + file + "/" + file + ".js";
                             logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "loading extension " + extfile);
                             import(extfile)
                                 .then(module =>
