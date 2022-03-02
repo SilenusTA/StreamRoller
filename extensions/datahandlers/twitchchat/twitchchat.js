@@ -21,13 +21,20 @@
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { config } from "./config.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let serverConfig = {
-    extensionname: config.EXTENSION_NAME,
-    channel: config.OUR_CHANNEL,
+const localConfig = {
+    OUR_CHANNEL: "TWITCH_CHAT",
+    EXTENSION_NAME: "twitchchat",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    twitchClient: null,
+    channelConnectionAttempts: 20
+};
+const serverConfig = {
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
     streamername: "OldDepressedGamer"
 };
@@ -44,11 +51,11 @@ function initialise(app, host, port)
 {
     try
     {
-        config.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage,
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage,
             onDataCenterConnect, onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
 }
 
@@ -62,7 +69,7 @@ function initialise(app, host, port)
 // ===========================================================================
 function onDataCenterDisconnect(reason)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -78,10 +85,10 @@ function onDataCenterDisconnect(reason)
 function onDataCenterConnect(socket)
 {
     // create our channel
-    sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", config.EXTENSION_NAME, config.OUR_CHANNEL));
-    sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("RequestConfig", config.EXTENSION_NAME));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -168,27 +175,27 @@ function onDataCenterMessage(decoded_data)
             }
         }
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
 
     }
     // ------------------------------------------------ error message received -----------------------------------------------
     else if (decoded_data.data === "UnknownChannel")
     {
         // if we have enough connection attempts left we should reschedule the connection
-        if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
+        if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
-                sr_api.sendMessage(config.DataCenterSocket,
+                sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
                         "JoinChannel",
-                        config.EXTENSION_NAME,
+                        localConfig.EXTENSION_NAME,
                         decoded_data.channel));
             }, 5000);
         }
         else
-            logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Failed ot connect to channel", decoded_data.data);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Failed ot connect to channel", decoded_data.data);
     }
     else if (decoded_data.type === "ChannelJoined"
         || decoded_data.type === "ChannelCreated"
@@ -200,7 +207,7 @@ function onDataCenterMessage(decoded_data)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
 }
 
@@ -234,17 +241,17 @@ function SendModal(tochannel)
                     modalstring = modalstring.replace(key + "text", value);
             }
             // send the modified modal data to the server
-            sr_api.sendMessage(config.DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
-                    config.EXTENSION_NAME,
+                    localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
                         "AdminModalCode",
-                        config.EXTENSION_NAME,
+                        localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
                         tochannel,
-                        config.OUR_CHANNEL),
+                        localConfig.OUR_CHANNEL),
                     "",
                     tochannel
                 ));
@@ -261,10 +268,10 @@ function SendModal(tochannel)
 // ===========================================================================
 function SaveConfigToServer()
 {
-    sr_api.sendMessage(config.DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveConfig",
-            config.EXTENSION_NAME,
+            localConfig.EXTENSION_NAME,
             serverConfig));
 }
 // ============================================================================
@@ -285,12 +292,12 @@ function process_chat_data(channel, tags, chatmessage, self)
             message: chatmessage,
             data: tags
         };
-        sr_api.sendMessage(config.DataCenterSocket,
+        sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "ChannelData",
-                config.EXTENSION_NAME,
+                localConfig.EXTENSION_NAME,
                 data,
-                config.OUR_CHANNEL
+                localConfig.OUR_CHANNEL
             ));
     }
 }
@@ -305,7 +312,7 @@ function process_chat_data(channel, tags, chatmessage, self)
 // ===========================================================================
 function reconnectChat(streamername, enable)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".enableChat", "Reconnecting chat " + streamername + ":" + enable);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".enableChat", "Reconnecting chat " + streamername + ":" + enable);
     try
     {
         leaveAllChannels();
@@ -317,30 +324,30 @@ function reconnectChat(streamername, enable)
     }
     catch (err)
     {
-        logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", streamername, err);
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", streamername, err);
     }
 }
 
 function leaveAllChannels()
 {
     // leave the existing channels
-    var connectedChannels = client.getChannels();
+    var connectedChannels = localConfig.twitchClient.getChannels();
     connectedChannels.forEach(element =>
     {
-        client.part(element)
-            .then(channel => logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel))
-            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err));
+        localConfig.twitchClient.part(element)
+            .then(channel => logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel))
+            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err));
     })
 }
 function joinChatChannel(streamername)
 {
-    client.join(streamername)
+    localConfig.twitchClient.join(streamername)
         .then(
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + streamername)
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + streamername)
         )
         .catch((err) =>
         {
-            logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
             setTimeout(() =>
             {
                 reconnectChat(streamername, "on")
@@ -350,22 +357,19 @@ function joinChatChannel(streamername)
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
 import { env } from "process";
-let client = {}
 connectToTwtich();
 function connectToTwtich()
 {
     if (typeof process.env.twitchchatbot === "undefined" || typeof process.env.twitchchatoauth === "undefined" ||
         process.env.twitchchatbot === "" || process.env.twitchchatoauth === "")
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
-        client = new tmi.Client({
-            channels: [serverConfig.streamername]
-        });
-        client.connect()
-            .then(logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected"))
-            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
+        localConfig.twitchClient = new tmi.Client({ channels: [serverConfig.streamername] });
+        localConfig.twitchClient.connect()
+            .then(logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly"))
+            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
 
-        client.on('message', (channel, tags, message, self) =>
+        localConfig.twitchClient.on('message', (channel, tags, message, self) =>
         {
             process_chat_data(channel, tags, message, self);
         });
@@ -373,8 +377,8 @@ function connectToTwtich()
     else
     // with Oauth bot connection
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
-        client = new tmi.Client({
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
+        localConfig.twitchClient = new tmi.Client({
             options: { debug: true, messagesLogLevel: "info" },
             connection: {
                 reconnect: true,
@@ -386,18 +390,21 @@ function connectToTwtich()
             },
             channels: [serverConfig.streamername]
         });
-        client.connect()
-            .then(logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected"))
-            .catch((err) => logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
+        localConfig.twitchClient.connect()
+            .then((res) =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
+            })
+            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
 
-        client.on('message', (channel, tags, message, self) =>
+        localConfig.twitchClient.on('message', (channel, tags, message, self) =>
         {
 
             // don't respond to self
             //if (self) return;
             /*if (message.toLowerCase() === '!hello')
             {
-                client.say(channel, `@${tags.username}, heya!`);
+                localConfig.twitchClient.say(channel, `@${tags.username}, heya!`);
             }*/
             process_chat_data(channel, tags, message, self);
         });

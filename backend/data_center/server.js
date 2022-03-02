@@ -128,8 +128,8 @@ function loadExtensions(extensionFolder)
             // loop through each directory
             files.forEach((file) =>
             {
-                // ignore files starting wiht "~~"
-                if (!file.startsWith("~~"))
+                // ignore files starting wiht "~~" or the datahandler folder
+                if (!file.startsWith("~~") && !file.startsWith("datahandlers"))
                 {
                     fs.access(extensionFolder + "/" + file + "/" + file + ".js", fs.F_OK, (err) =>
                     {
