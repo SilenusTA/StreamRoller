@@ -8,8 +8,8 @@
                 showsecondaryscenes: "on",
                 showallscenes: "on",
                 modchattomodwindow: "on",
-                modmessage_channel: "stream-mod-messages", // discord channel
-                donations_channel: "announcements", // discord channel
+                //modmessage_channel: "stream-mod-messages", // discord channel
+                //donations_channel: "announcements", // discord channel
                 follows: "off",
                 raids: "off",
                 hosts: "off",
@@ -481,9 +481,26 @@
                             // As we have some updateded data we need to make sure that we refresh ourselves in case
                             // we have changed some settings (ie buttons to be shown)
                             ParseOBSScenesList(config.OBSchannellist);
+                            // send the discord message with the settings just in case they had changed (could checkthem but lets refresh it anyway)
+                            sr_api.sendMessage(DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "ExtensionMessage",
+                                    serverConfig.extensionname,
+                                    sr_api.ExtensionPacket(
+                                        "ChangeScene",
+                                        serverConfig.extensionname,
+                                        scenename,
+                                        "",
+                                        "obs"
+                                    ),
+                                    "",
+                                    "obs"
+                                )
+                            )
                         }
                         else
-                            parseExtensionModalData(xname);
+                            console.log(xname)
+                        parseExtensionModalData(xname);
                         return false;
                     });
                     adminData.extensions[xname] = {
@@ -673,7 +690,7 @@
                 var timecolor = "<span style='color: #757875'>";
                 var usercolor = ""
                 if (chatdata.data.mod)
-                    usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color: #ff4500'>";
+                    usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
                 else
                     usercolor = "<span style='color: " + chatdata.data.color + "'>";
                 let username = usercolor + ' ' + chatdata.data['display-name'] + "&gt</span>";
@@ -726,7 +743,6 @@
                 let time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
                 let msgoutput = time;
 
-
                 if (data.type === "ExtensionMessage")
                 {
                     let decoded_packet = JSON.parse(data.data);
@@ -768,8 +784,6 @@
                         serverConfig.extensionname,
                     ));
             }
-
-
             // ============================================================================
             //                           FUNCTION: RequestOBSScenes
             // ============================================================================
@@ -858,27 +872,27 @@
                         messagetxt += alertcontents.name + " for the follow."
                         if (serverConfig.follows === "on")
                             //channel.send(messagetxt);
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "raid":
                         messagetxt += alertcontents.name + " for the raid " + alertcontents.raiders + " raiders."
                         if (serverConfig.raids === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "host":
                         messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
                         if (serverConfig.hosts === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "donation":
                         messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive. "' + alertcontents.message + '"'
                         if (serverConfig.donations === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "bits":
                         messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits. "' + alertcontents.message + '"'
                         if (serverConfig.bits === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "subscription":
                         if (alertcontents.months === 1)
@@ -886,27 +900,27 @@
                         else
                             messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + alertcontents.message + '"'
                         if (serverConfig.subs === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);;
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);;
                         break;
                     case "resub":
                         messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + '). "' + alertcontents.message + '"'
                         if (serverConfig.resubs === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "prime_sub_gift":
                         messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
                         if (serverConfig.giftsubs === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "merch":
                         messagetxt += alertcontents.from + " purchacing my merch. Hope you enjoy the " + alertcontents.product + ". " + alertcontents.imageHref
                         if (serverConfig.merch === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                     case "loyalty_store_redemption":
                         messagetxt += alertcontents.from + " for using the your channel points for " + alertcontents.product + ". " + alertcontents.imageHref
                         if (serverConfig.cloudbotredemption === "on")
-                            PostAlertToDiscord(messagetxt, serverConfig.discordalertchannel);
+                            PostAlertToDiscord(messagetxt, serverConfig.donations_channel);
                         break;
                 }
             }
@@ -927,9 +941,9 @@
                                 channel: channel
                             },
                             "",
-                            extname),
+                            "discordchat"),
                         "",
-                        extname
+                        "discordchat"
                     ));
             }
             // ============================================================================

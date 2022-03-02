@@ -29,7 +29,9 @@ let DataCenterSocket = null;
 let serverConfig = {
     extensionname: config.EXTENSION_NAME,
     channel: config.OUR_CHANNEL, // backend socket channel.
-    listeningchannel: "mod-message-channel"
+    modmessage_channel: "stream-mod-messages", // discord channel
+    donations_channel: "announcements" // discord channel
+    //listeningchannel: "mod-message-channel"
 };
 
 // ============================================================================
@@ -109,6 +111,8 @@ function onDataCenterMessage(decoded_data)
     {
         var decoded_packet = JSON.parse(decoded_data.data);
         // received a reqest for our admin bootstrap modal code
+        console.log(decoded_packet.to)
+        console.log(serverConfig.extensionname)
         if (decoded_packet.to === serverConfig.extensionname)
         {
             if (decoded_packet.type === "RequestAdminModalCode")
@@ -131,8 +135,9 @@ function onDataCenterMessage(decoded_data)
             }
             else if (decoded_packet.type === "PostMessage")
             {
-                const channel = discordClient.channels.cache.find(channel => channel.name === decoded.packet.channel);
-                channel.send(decoded.packet.message);
+                console.log(decoded_packet.data)
+                const channel = discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
+                channel.send(decoded_packet.data.message);
                 console.log("PostMessage received ", decoded_packet);
             }
             else
@@ -253,7 +258,7 @@ discordClient.on("messageCreate", function (message)
     if (message.author.id === discordClient.user.id)
         return;
     //restrict to only channel the channel we want to
-    if (message.channel.name === serverConfig.listeningchannel)
+    if (message.channel.name === serverConfig.modmessage_channel)
     {
         //restrict to only Twitch Subscribers who have synced with discord
         //if (message.member.roles.cache.some((role) => role.name === "Twitch Subscriber")) {

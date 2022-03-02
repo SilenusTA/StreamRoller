@@ -18,3 +18,7 @@ Still in early stages of development the portal is still limited until I get OBS
 -   Displays OBS scenes. Three levels availalbe, Primary scnes always displayed. Secondary and 'All' scene options
 -   Primary and secondary scenes are depicted by prepending the scent title with a configurable set of charactors.
 -   OBS streaming stats shown, uptime, bitrate and a health indicator
+
+TBD.
+Add volume monitoring to portal
+Add music player to portal
