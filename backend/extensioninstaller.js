@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 const path = dirname(fileURLToPath(import.meta.url));
 const root = process.cwd() + "/../extensions";
 npm_install_recursive(root);
+npm_install_recursive(root + "/datahandlers");
 
 function npm_install_recursive(folder)
 {

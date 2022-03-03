@@ -19,16 +19,29 @@
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { config } from "./config.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // declare our stream references
-let DataCenterSocket = null;
+
+// use localConfig for stuff that doesn't change or is temporary and not needed to
+// be saved over restarts
+const localConfig = {
+    OUR_CHANNEL: "DISCORD_CHAT",
+    EXTENSION_NAME: "discordchat",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    discordClient: null,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
+    status: {
+        connected: false
+    },
+    DataCenterSocket: null
+};
 //this object will be overwritten from the sever data if it exists
-let serverConfig = {
-    extensionname: config.EXTENSION_NAME,
-    channel: config.OUR_CHANNEL, // backend socket channel.
+const serverConfig = {
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
     discordenabled: "off"
 };
@@ -39,14 +52,20 @@ let serverConfig = {
 /**
  * maddatory function so that the backend can start us up
  */
-function initialise(app, host, port)
+function initialise(app, host, port, heartbeat)
 {
+
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+
     try
     {
-        DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket connection failed:", err);
     }
 }
 
@@ -55,7 +74,7 @@ function initialise(app, host, port)
 // ============================================================================
 function onDataCenterDisconnect(reason)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -63,11 +82,18 @@ function onDataCenterDisconnect(reason)
 function onDataCenterConnect()
 {
     // Request our config from the server
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname, serverConfig.channel));
     // Create/Join the channels we need for this
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+    // start discord connection
+    connentToDiscord();
+    // clear the previous timeout if we have one
+    clearTimeout(localConfig.heartBeatHandle);
+    // start our heatbeat timer
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -94,13 +120,13 @@ function onDataCenterMessage(decoded_data)
     }
     else if (decoded_data.type === "UnknownChannel")
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
         //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
         // need to add some sort of flood control here so we are only attempting to join one at a time
         setTimeout(() =>
         {
-            sr_api.sendMessage(DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("JoinChannel",
                     serverConfig.extensionname,
                     decoded_data.data));
@@ -110,8 +136,6 @@ function onDataCenterMessage(decoded_data)
     {
         var decoded_packet = JSON.parse(decoded_data.data);
         // received a reqest for our admin bootstrap modal code
-        console.log(decoded_packet.to)
-        console.log(serverConfig.extensionname)
         if (decoded_packet.to === serverConfig.extensionname)
         {
             if (decoded_packet.type === "RequestAdminModalCode")
@@ -138,12 +162,12 @@ function onDataCenterMessage(decoded_data)
                     if (typeof (channel) != "undefined")
                         channel.send(decoded_packet.data.message);
                     else
-                        logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                             "Failed to find discord channel to send to", decoded_packet.data.channel);
                 }
                 else
                 {
-                    logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                         "Not posting to Discord as extension is turned off ", decoded_packet.data.message);
                 }
             }
@@ -151,24 +175,24 @@ function onDataCenterMessage(decoded_data)
             {
                 serverConfig.monitoring_channel = decoded_packet.data;
                 SaveConfigToServer();
-                logger.info(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", decoded_packet.data);
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", decoded_packet.data);
             }
             else
-                logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                     "Unable to process ExtensionMessage : ", decoded_data);
         }
         else
-            logger.err(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", decoded_data);
     }
     else if (decoded_data.type === "ChannelData")
     {
         if (decoded_data.channel === serverConfig.channel)
-            logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.channel + " message received !?!?", decoded_data);
         else
         {
-            logger.info(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received message: ", decoded_data);
         }
     }
@@ -182,7 +206,7 @@ function onDataCenterMessage(decoded_data)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
 }
 
@@ -214,7 +238,7 @@ function SendAdminModal(extensionname)
                     modalstring = modalstring.replace(key + "text", value);
             }
             // send the modal data to the server
-            sr_api.sendMessage(DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
@@ -239,7 +263,7 @@ function SendAdminModal(extensionname)
  */
 function SaveConfigToServer()
 {
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveConfig",
             serverConfig.extensionname,
@@ -253,22 +277,78 @@ function SaveConfigToServer()
 //                           IMPORTS AND GLOBALS
 // ============================================================================
 import { Client, Intents, Permissions, Guild } from "discord.js";
-// Instantiate a new client with some necessary parameters.
-const discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-// Notify progress
-discordClient.on("ready", function (e)
+//import { clearTimeout } from "timers";
+
+// ============================================================================
+//                          FUNCTION: connentToDiscord
+// ============================================================================
+function connentToDiscord()
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${discordClient.user.tag}!`);
-});
+    /*try
+    {*/
+    localConfig.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+    localConfig.discordClient.on("ready", function (e)
+    {
+        localConfig.status.connected = true;
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
+    });
+    // Authenticate the discord client to start it up
+    if (!process.env.DISCORD_TOKEN)
+    {
+        localConfig.status.connected = false;
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
+    }
+    else
+    {
+        localConfig.discordClient.login(process.env.DISCORD_TOKEN);
+        localConfig.status.connected = true;
+    }
+    localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
+    localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
+    localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
+    localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
+    /*}
+    catch (err)
+    {
+        localConfig.status.connected = false;
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord Error ", err.name, err.message);
+
+    }*/
+}
 // ============================================================================
-//                          DISCORD MESSAGE HANDLING
+//                          FUNCTION: discordDisconnectHandler
 // ============================================================================
-discordClient.on("messageCreate", function (message)
+function discordDisconnectHandler(message)
+{
+    localConfig.status.connected = false;
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordDisconnectHandler", "Discord Error ", message);
+}
+// ============================================================================
+//                          FUNCTION: discordErrorHandler
+// ============================================================================
+function discordErrorHandler(message)
+{
+    localConfig.status.connected = false;
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordErrorHandler", "Discord Error ", message);
+}
+// ============================================================================
+//                          FUNCTION: discordErrorHandler
+// ============================================================================
+function discordReconnectHandler(message)
+{
+    localConfig.status.connected = true;
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordReconnectHandler", "Discord Reconnected ");
+}
+
+// ============================================================================
+//                          FUNCTION: discordMessageHandler
+// ============================================================================
+function discordMessageHandler(message)
 {
     // stop bot responding to other bots
     if (message.author.bot) return;
     // Stop bot responding to itself
-    if (message.author.id === discordClient.user.id)
+    if (message.author.id === localConfig.discordClient.user.id)
         return;
     //restrict to only channel the channel we want to
     if (message.channel.name === serverConfig.monitoring_channel)
@@ -285,7 +365,7 @@ discordClient.on("messageCreate", function (message)
         let messagedata = { name: message.author.username, message: message.content }
 
         // Send the message received out on our streamroller "DISCORD_CHAT" channel for other extensions to use if needed
-        sr_api.sendMessage(DataCenterSocket,
+        sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
@@ -297,14 +377,28 @@ discordClient.on("messageCreate", function (message)
             ),
         );
     }
-});
+};
 
-// Authenticate the discord client to start it up
-if (!process.env.DISCORD_TOKEN)
-    logger.log(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
-else
-    discordClient.login(process.env.DISCORD_TOKEN);
 
+
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                localConfig.status,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================

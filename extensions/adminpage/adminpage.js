@@ -30,7 +30,7 @@ let dataCenterApp = null;
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-function initialise(app, host, port)
+function initialise(app, host, port, heartbeat)
 {
     dataCenterApp = app;
     try
@@ -43,7 +43,8 @@ function initialise(app, host, port)
             // we will store our global data in app.data so we need to pass this to any new page
             res.render(__dirname + '/views/pages/index', {
                 host: host,
-                port: port
+                port: port,
+                heartbeat: heartbeat
             });
         });
     } catch (err)

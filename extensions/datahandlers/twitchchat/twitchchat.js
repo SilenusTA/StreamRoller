@@ -30,7 +30,12 @@ const localConfig = {
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
     twitchClient: null,
-    channelConnectionAttempts: 20
+    channelConnectionAttempts: 20,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
+    status: {
+        connected: false // this is our connection indicator for discord
+    },
 };
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
@@ -47,8 +52,13 @@ const serverConfig = {
 // this funcion is required by the backend to start the extensions.
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-function initialise(app, host, port)
+function initialise(app, host, port, heartbeat)
 {
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage,
@@ -89,6 +99,7 @@ function onDataCenterConnect(socket)
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -111,6 +122,7 @@ function onDataCenterMessage(decoded_data)
             if (decoded_data.to === serverConfig.extensionname)
             {
                 for (const [key, value] of Object.entries(serverConfig))
+                {
                     if (key in decoded_packet)
                     {
                         if (serverConfig[key] != decoded_data.data[key])
@@ -131,8 +143,11 @@ function onDataCenterMessage(decoded_data)
                         }
                         serverConfig[key] = decoded_data.data[key];
                     }
-                if (chatSettingsChanged)
-                    reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
+                }
+                if (localConfig.status.connected)
+                    reconnectChat();
+                else
+                    connectToTwtich();
             }
         }
         SaveConfigToServer();
@@ -170,7 +185,7 @@ function onDataCenterMessage(decoded_data)
                         serverConfig[key] = decoded_packet.data[key];
                     }
                 if (chatSettingsChanged)
-                    reconnectChat(serverConfig.streamername, serverConfig.enabletwitchchat);
+                    reconnectChat();
                 SaveConfigToServer();
             }
         }
@@ -322,53 +337,61 @@ function sendChatMessage(channel, message)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function reconnectChat(streamername, enable)
+function reconnectChat()
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".enableChat", "Reconnecting chat " + streamername + ":" + enable);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Reconnecting chat " + serverConfig.streamername + ":" + serverConfig.enabletwitchchat);
     try
     {
-        leaveAllChannels();
-        if (enable == "on")
+        var connectedChannels = localConfig.twitchClient.getChannels();
+        connectedChannels.forEach(element =>
         {
-            // need to give client chance to finish up
-            setTimeout(() => { joinChatChannel(streamername) }, 1000);
-        }
+            localConfig.twitchClient.part(element)
+                .then(channel => 
+                {
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
+                    if (serverConfig.enabletwitchchat == "on")
+                    {
+                        joinChatChannel();
+                    }
+                })
+                .catch((err) => 
+                {
+                    localConfig.status.connected = false;
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
+                });
+        })
+
+
     }
     catch (err)
     {
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", streamername, err);
+        localConfig.status.connected = false;
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
     }
 }
 
-function leaveAllChannels()
+function joinChatChannel()
 {
-    // leave the existing channels
-    var connectedChannels = localConfig.twitchClient.getChannels();
-    connectedChannels.forEach(element =>
-    {
-        localConfig.twitchClient.part(element)
-            .then(channel => logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel))
-            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err));
-    })
-}
-function joinChatChannel(streamername)
-{
-    localConfig.twitchClient.join(streamername)
-        .then(
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + streamername)
+    localConfig.twitchClient.join(serverConfig.streamername)
+        .then(() =>
+        {
+            localConfig.status.connected = true;
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername)
+        }
         )
         .catch((err) =>
         {
+            localConfig.status.connected = false;
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
             setTimeout(() =>
             {
-                reconnectChat(streamername, "on")
+                reconnectChat()
             }, 5000)
         });
 }
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
-connectToTwtich();
+
 function connectToTwtich()
 {
     if (typeof process.env.twitchchatbot === "undefined" || typeof process.env.twitchchatoauth === "undefined" ||
@@ -377,8 +400,19 @@ function connectToTwtich()
         logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
         localConfig.twitchClient = new tmi.Client({ channels: [serverConfig.streamername] });
         localConfig.twitchClient.connect()
-            .then(logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly"))
-            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
+            .then(() =>
+            {
+                localConfig.status.connected = true;
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly")
+            }
+            )
+
+            .catch((err) => 
+            {
+                localConfig.status.connected = false;
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
+            }
+            )
 
         localConfig.twitchClient.on('message', (channel, tags, message, self) =>
         {
@@ -390,7 +424,7 @@ function connectToTwtich()
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
         localConfig.twitchClient = new tmi.Client({
-            options: { debug: true, messagesLogLevel: "info" },
+            options: { debug: false, messagesLogLevel: "info" },
             connection: {
                 reconnect: true,
                 secure: true
@@ -404,9 +438,14 @@ function connectToTwtich()
         localConfig.twitchClient.connect()
             .then((res) =>
             {
+                localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
             })
-            .catch((err) => logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err))
+            .catch((err) => 
+            {
+                localConfig.status.connected = false;
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
+            })
 
         localConfig.twitchClient.on('message', (channel, tags, message, self) =>
         {
@@ -420,6 +459,24 @@ function connectToTwtich()
             process_chat_data(channel, tags, message, self);
         });
     }
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                localConfig.status,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                           EXPORTS: initialise

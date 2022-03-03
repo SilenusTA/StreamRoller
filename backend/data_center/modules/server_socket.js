@@ -118,7 +118,7 @@ function start(app, server, exts)
  */
 function onConnect(socket)
 {
-    logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onConnect", socket.id);
+    //logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onConnect", socket.id);
     socket.emit("connected", socket.id);
 }
 // ============================================================================
@@ -144,7 +144,7 @@ function onDisconnect(socket, reason)
 function onMessage(socket, decoded_data)
 {
     //var decoded_data = JSON.parse(data);
-    logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", decoded_data);
+    logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", decoded_data);
     // make sure we are using the same api version
     if (decoded_data.version != config.apiVersion)
     {

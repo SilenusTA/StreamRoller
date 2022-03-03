@@ -19,3 +19,16 @@ a
 {
   color: #1ea0d3;
 }
+
+
+.extensioncardicon
+{
+  color: #1ea0d3;
+  /* Change the color */
+  font-weight: bold;
+  /* If you want it to be bold */
+   display: inline-block;
+  /* Needed to add space between the bullet and the text */
+  width: 1em;
+}
+ 

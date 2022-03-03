@@ -39,7 +39,8 @@ function initialise(app, host, port)
         // when someone requests testoverlay lets return our overlay file
         res.render(__dirname + '/overlay.ejs', {
             host: host,
-            port: port
+            port: port,
+            heartbeat: heartbeat
         });
     });
 }

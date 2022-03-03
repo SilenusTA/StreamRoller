@@ -25,8 +25,6 @@
 // none
 // ============================================================================
 import { start as SL_connection_start } from "./streamlabs_api_handler.js";
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import { config } from "./config.js";
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -35,10 +33,9 @@ import { config } from "./config.js";
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-function initialise(app, host, port)
+function initialise(app, host, port, heartbeat)
 {
-    SL_connection_start(host, port);
-    logger.log(config.SYSTEM_LOGGING_TAG + "streamlabs_api.initialise", "Streamlabs Socket initialised ");
+    SL_connection_start(host, port, heartbeat);
 }
 
 // ============================================================================

@@ -42,6 +42,7 @@ function ServerPacket(type, from, data, dest_channel, to, ret_channel, version =
             data: data,
             version: version
         });
+
 }
 // ============================================================================
 //                  FUNCTION: ExtensionPacket
@@ -59,6 +60,7 @@ function ServerPacket(type, from, data, dest_channel, to, ret_channel, version =
  */
 function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, version = __api_version__)
 {
+    //console.log("ExtensionPacket data:", type, typeof (data))
     return JSON.stringify({
         type: type,
         from: from,

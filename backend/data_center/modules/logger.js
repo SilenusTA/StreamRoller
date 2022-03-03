@@ -46,6 +46,7 @@ let logColour = "";
 let infoColour = "";
 let warnColour = "";
 let errColour = "";
+let extraColour = ""
 
 /**
  * Turn on or off color
@@ -64,6 +65,7 @@ function usecoloredlogs(val)
         infoColour = "";
         warnColour = "";
         errColour = "";
+        extraColour = "";
     }
     else if (val === "default")
     {
@@ -74,10 +76,11 @@ function usecoloredlogs(val)
             resetColour = "\x1b[0m";
             dimText = "\x1b[2m";
             brightText = "\x1b[1m";
-            logColour = "\x1b[32m";
-            infoColour = "\x1b[33m";
-            warnColour = "\x1b[31m";
+            infoColour = "\x1b[32m";
+            logColour = "\x1b[33m";
+            warnColour = "\x1b[35m";
             errColour = "\x1b[31m";
+            extraColour = "\x1b[32m";
         }
         else if (process.platform === "linux")
         {
@@ -85,10 +88,11 @@ function usecoloredlogs(val)
             resetColour = "\x1b[0m";
             dimText = "\x1b[2m";
             brightText = "\x1b[1m";
-            logColour = "\x1b[32m";
-            infoColour = "\x1b[33m";
-            warnColour = "\x1b[33m";
+            infoColour = "\x1b[32m";
+            logColour = "\x1b[33m";
+            warnColour = "\x1b[35m";
             errColour = "\x1b[31m";
+            extraColour = "\x1b[32m";
         }
     }
     else
@@ -101,6 +105,7 @@ function usecoloredlogs(val)
         infoColour = val;
         warnColour = val;
         errColour = val;
+        extraColour = val;
     }
 }
 /* color reference
@@ -210,6 +215,21 @@ function err(source, ...args)
 {
     output(brightText + bgColour + errColour + "%s" + resetColour, source, "!!! ERROR !!! ", args);
 }
+
+// ============================================================================
+//                           FUNCTION: extra
+// ============================================================================
+/**
+ * log an extra message
+ * logging level 0 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function extra(source, ...args)
+{
+    if (loglevel >= 4)
+        output(brightText + bgColour + extraColour + "%s" + resetColour, source, "[extra] ", args);
+}
 // ============================================================================
 //                           FUNCTION: output
 // ============================================================================
@@ -236,6 +256,6 @@ function output(col, func, tag, message)
         console.log(col, tag, func, message);
 }
 // ============================================================================
-//                           EXPORTS: log(), err(), warn()
+//                           EXPORTS: 
 // ============================================================================
-export { log, err, warn, info, loglevel, setLoggingLevel, getLoggingLevel, usecoloredlogs };
+export { log, err, warn, info, extra, loglevel, setLoggingLevel, getLoggingLevel, usecoloredlogs };

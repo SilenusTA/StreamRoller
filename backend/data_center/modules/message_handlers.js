@@ -132,7 +132,7 @@ function joinChannel(server_socket, client_socket, channel_to_join, channels, ex
 {
     if (channels.includes(channel_to_join))
     {
-        logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
+        logger.info("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
             + extensionname + " joining " + channel_to_join);
         // attach socket to channel
         client_socket.join(channel_to_join);
@@ -141,7 +141,7 @@ function joinChannel(server_socket, client_socket, channel_to_join, channels, ex
             sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_join, "", extensionname));
     } else
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
+        logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
             + extensionname + " joining unknown channel " + channel_to_join);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, channel_to_join, "", extensionname));
@@ -225,7 +225,7 @@ function forwardMessage(client_socket, decoded_data, channels, extensions)
     // if message provides a destination but we don't a client socket for it
     if (decoded_data.to && extensions[decoded_data.to] && !extensions[decoded_data.to].socket)
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", decoded_data.to, " connection doesn't exist");
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: JSON.stringify(decoded_data) }));
@@ -233,13 +233,13 @@ function forwardMessage(client_socket, decoded_data, channels, extensions)
     // send direct to client
     else if (extensions[decoded_data.to] && extensions[decoded_data.to].socket)
     {
-        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", decoded_data.type, decoded_data.to, decoded_data.data);
         extensions[decoded_data.to].socket.emit("message", JSON.stringify(decoded_data))
     }//if message provides a channel but we don't have that channel in our list then return an error
     else if (decoded_data.dest_channel && !channels.includes(decoded_data.dest_channel))
     {
-        logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:channel:", decoded_data.dest_channel, "doesn't exist (is the extension running?)");
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, decoded_data.dest_channel));
@@ -247,13 +247,13 @@ function forwardMessage(client_socket, decoded_data, channels, extensions)
     // send to channel
     else if (decoded_data.dest_channel && channels.includes(decoded_data.dest_channel))
     {
-        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:channel:", decoded_data.type, decoded_data.dest_channel);
         client_socket.to(decoded_data.dest_channel).emit("message", JSON.stringify(decoded_data));
     }
     else
     {// broadcast (except the sender)
-        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.warning("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:BROADCAST(Except sender):", decoded_data);
         client_socket.broadcast.emit("message", JSON.stringify(decoded_data));
 

@@ -29,18 +29,19 @@ if (config === "")
         HOST: "http://localhost",
         PORT: 3000,
         logginglevel: 5,
+        heartbeat: 5000, // heartbeat timers
         apiVersion: __api_version__,
     };
     cm.saveConfig(config.extensionname, config);
 }
 logger.setLoggingLevel(config.logginglevel);
-console.log(config);
+console.log("serverSettings: ", config);
 // ============================================================================
 //                          IMPORTS/VARIABLES
 // ============================================================================
 // fix for ES6 not having the __dirname var
 import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import express from "express";
 import http from "http";
 import * as fs from "fs";
@@ -69,7 +70,8 @@ app.get('/', function (req, res)
 {
     res.render(__dirname + '/../../extensions/liveportal/views/pages/index', {
         host: config.HOST,
-        port: config.PORT
+        port: config.PORT,
+        heartbeat: config.heartbeat
     });
 });
 // server our overlay. Overlay currently needs updating and moving into the extensions
@@ -88,7 +90,6 @@ app.get('/', function (req, res)
 // #############################################################
 import { execPHP } from './execphp.js';
 execPHP.phpFolder = __dirname + '/../../../ODGOverlay';
-console.log(execPHP.phpFolder);
 var webfiles = __dirname + '/../../../ODGOverlay';
 app.use('*.php', function (request, response, next)
 {
@@ -120,7 +121,6 @@ else
 
 function loadExtensions(extensionFolder)
 {
-    logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Loading extensions");
     fs.readdir(extensionFolder, (err, files) =>
     {
         if (!err)
@@ -139,24 +139,23 @@ function loadExtensions(extensionFolder)
                         } else
                         {
                             // we hava a script so lets load it.
-                            var extfile = extensionFolder + "/" + file + "/" + file + ".js";
-                            //var extfile = "../../extensions/" + file + "/" + file + ".js";
+                            var extfile = pathToFileURL(extensionFolder + "/" + file + "/" + file + ".js")
                             logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "loading extension " + extfile);
                             import(extfile)
                                 .then(module =>
                                 {
                                     extensions[file] = { initialise: module.initialise };
                                     if (typeof extensions[file].initialise === 'function')
-                                        extensions[file].initialise(app, config.HOST, config.PORT);
+                                        extensions[file].initialise(app, config.HOST, config.PORT, config.heartbeat);
                                     else
                                         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Extension module " + file + " did not export an intialise function");
                                 })
 
-                            // put this catch back in for release. removed it to get a better idea of what was breaking during extension startup
-                            /*.catch(err => {
-                                logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "catching error on import from " + file + ". Comment out this catch statement to trace the error better", err.message);
-                            })
-                            ;*/
+                                // put this catch back in for release. removed it to get a better idea of what was breaking during extension startup
+                                /*.catch(err =>
+                                {
+                                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "catching error on import from " + file + ". Comment out this catch statement to trace the error better", err.message);
+                                })*/                                ;
                         }
                     });
                 }

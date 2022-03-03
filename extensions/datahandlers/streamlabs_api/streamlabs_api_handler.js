@@ -25,51 +25,65 @@
 // note this has to be socket.io-client version 2.0.3 to allow support for StreamLabs api.
 import StreamLabsIo from "socket.io-client_2.0.3";
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import { config } from "./config.js";
 import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let serverConfig = {
-    extensionname: config.EXTENSION_NAME,
-    channel: config.OUR_CHANNEL,
-    enabled: "off"
+
+let localConfig = {
+    ENABLE_STREAMLABS_CONNECTION: true, // disables the socket to streamlabs (testing purposes only)
+    OUR_CHANNEL: "STREAMLABS_ALERT",
+    EXTENSION_NAME: "streamlabs_api",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
+    status: {
+        connected: false // this is our connection indicator for discord
+    },
+    DataCenterSocket: null,
+    StreamLabsSocket: null
 };
 
-// declare our stream references
-let StreamLabsSocket = null;
-let DataCenterSocket = null;
+let serverConfig = {
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
+    enabled: "off"
+};
 
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
-function start(host, port)
+function start(host, port, heartbeat)
 {
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
     // ########################## SETUP STREAMLABS CONNECTION ###############################
     /* add the stream token that your streamlabs chatbot uses here if not using the external file above. 
-This can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token */
+    This can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token */
     const SL_SOCKET_TOKEN = process.env.SL_SOCKET_TOKEN;
     if (!process.env.SL_SOCKET_TOKEN)
-        logger.warn(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set in environment variable");
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set in environment variable");
 
     else
     {
         try
         {
-            if (config.ENABLE_STREAMLABS_CONNECTION)
+            if (localConfig.ENABLE_STREAMLABS_CONNECTION)
             {
-                StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + SL_SOCKET_TOKEN, { transports: ["websocket"] });
+                localConfig.StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + SL_SOCKET_TOKEN, { transports: ["websocket"] });
                 // handlers
-                StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
-                StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
-                StreamLabsSocket.on("event", (data) => onStreamLabsEvent(DataCenterSocket, data));
+                localConfig.StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
+                localConfig.StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
+                localConfig.StreamLabsSocket.on("event", (data) => onStreamLabsEvent(data));
             }
             else
-                logger.warn(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "Streamlabs disabled in config");
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "Streamlabs disabled in config");
         } catch (err)
         {
-            logger.err(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "clientio connection failed:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "clientio connection failed:", err);
             throw ("streamlabs_api_handler.js failed to connect to streamlabs");
         }
     }
@@ -77,10 +91,10 @@ This can be found at streamlabs.com, its a long hex string under settings->API T
     try
     {
         //use the helper to setup and register our callbacks
-        DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "localConfig.DataCenterSocket connection failed:", err);
         throw ("streamlabs_api_handler.js failed to connect to data socket");
     }
 }
@@ -90,7 +104,8 @@ This can be found at streamlabs.com, its a long hex string under settings->API T
 // ============================================================================
 function onStreamLabsDisconnect(reason)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsDisconnect", reason);
+    localConfig.status.connected = false;
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onStreamLabsConnect
@@ -101,8 +116,9 @@ function onStreamLabsDisconnect(reason)
 // ============================================================================
 function onStreamLabsConnect()
 {
-
-    logger.log(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsConnect", "streamlabs api socket connected");
+    localConfig.status.connected = true;
+    // start our heatbeat timer
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsConnect", "streamlabs api socket connected");
 }
 // ============================================================================
 //                           FUNCTION: onStreamLabsEvent
@@ -111,20 +127,20 @@ function onStreamLabsConnect()
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onStreamLabsEvent(DataCenterSocket, data)
+function onStreamLabsEvent(data)
 {
-    logger.info(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "received message: ", data);
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "received message: ", data);
     // Send this data to the channel for this
     if (serverConfig.enabled === "on")
-        sr_api.sendMessage(DataCenterSocket,
+        sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "ChannelData",
-                config.EXTENSION_NAME,
+                localConfig.EXTENSION_NAME,
                 data,
-                config.OUR_CHANNEL
+                localConfig.OUR_CHANNEL
             ));
     else
-        logger.err(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "serverConfig is set to off");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "serverConfig is set to off");
 }
 // ########################## DATACENTER CONNECTION #######################
 // ============================================================================
@@ -136,7 +152,7 @@ function onStreamLabsEvent(DataCenterSocket, data)
 // ============================================================================
 function onDataCenterDisconnect(reason)
 {
-    logger.log(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -145,23 +161,27 @@ function onDataCenterDisconnect(reason)
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onDataCenterConnect(socket)
+function onDataCenterConnect()
 {
     //store our Id for futre reference
-    logger.log(config.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterConnect", "Creating our channel");
     //register our channels
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "CreateChannel",
-            config.EXTENSION_NAME,
-            config.OUR_CHANNEL
+            localConfig.EXTENSION_NAME,
+            localConfig.OUR_CHANNEL
         ));
 
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "RequestConfig",
-            config.EXTENSION_NAME
+            localConfig.EXTENSION_NAME
         ));
+    // clear the previous timeout if we have one
+    clearTimeout(localConfig.heartBeatHandle);
+    // start our heatbeat timer
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -219,7 +239,7 @@ function onDataCenterMessage(decoded_data)
     }
     else if (decoded_data.type === "UnknownChannel")
     {
-        logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
             "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
         //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
         // need to add some sort of flood control here so we are only attempting to join one at a time
@@ -227,9 +247,9 @@ function onDataCenterMessage(decoded_data)
         {
             setTimeout(() =>
             {
-                sr_api.sendMessage(DataCenterSocket,
+                sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("CreateChannel",
-                        config.EXTENSION_NAME,
+                        localConfig.EXTENSION_NAME,
                         decoded_data.data));
             }, 5000);
         }
@@ -237,9 +257,9 @@ function onDataCenterMessage(decoded_data)
         {
             setTimeout(() =>
             {
-                sr_api.sendMessage(DataCenterSocket,
+                sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("JoinChannel",
-                        config.EXTENSION_NAME,
+                        localConfig.EXTENSION_NAME,
                         decoded_data.data));
             }, 5000);
         }
@@ -254,7 +274,7 @@ function onDataCenterMessage(decoded_data)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
 }
 // ============================================================================
@@ -286,13 +306,13 @@ function SendModal(toextension)
                     modalstring = modalstring.replace(key + "text", value);
             }
             // send the modal data to the server
-            sr_api.sendMessage(DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
-                    config.EXTENSION_NAME,
+                    localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
                         "AdminModalCode",
-                        config.EXTENSION_NAME,
+                        localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
                         toextension
@@ -315,12 +335,31 @@ function SendModal(toextension)
 function SaveConfigToServer()
 {
     console.log("saving config");
-    sr_api.sendMessage(DataCenterSocket,
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveConfig",
-            config.EXTENSION_NAME,
+            localConfig.EXTENSION_NAME,
             serverConfig
         ));
+}
+
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                localConfig.status,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                           EXPORTS: start
