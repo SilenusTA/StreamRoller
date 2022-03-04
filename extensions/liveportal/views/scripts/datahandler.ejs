@@ -795,6 +795,7 @@
     // ===========================================================================
     function displayChatMessages(data)
     {
+
         console.log(data)
         let chatdata = data.data;
         let cardref = document.getElementById("ChatMessagesCardText")
@@ -803,7 +804,12 @@
         // make it colourful
         var timecolor = "<span style='color: #757875'>";
         var usercolor = ""
-        let message = getMessageHTML(chatdata.message, chatdata.data.emotes);
+
+        // lets sanitise the message before we add the emotes
+        var element = document.createElement('div');
+        element.innerText = chatdata.message
+        // add any twitch emotes
+        let message = addTwitchEmotes(element.innerHTML, chatdata.data.emotes);
 
         if (chatdata.data.mod)
             usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
@@ -811,7 +817,6 @@
             usercolor = "<span style='color: " + chatdata.data.color + "'>";
         let username = usercolor + ' ' + chatdata.data['display-name'] + "&gt</span>";
         time = timecolor + time + ":</span>";
-
 
         // set the card data
         document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
@@ -831,10 +836,10 @@
 
     }
     // ============================================================================
-    //                           FUNCTION: getMessageHTML
+    //                           FUNCTION: addTwitchEmotes
     // adds emotes to the message string
     // ============================================================================
-    function getMessageHTML(message, emotes)
+    function addTwitchEmotes(message, emotes)
     {
         if (!emotes) return message;
 
