@@ -114,33 +114,17 @@ function onDataCenterMessage(decoded_data)
     //var decoded_data = JSON.parse(data);
     if (decoded_data.type === "ConfigFile")
     {
-        let chatSettingsChanged = false;
         if (decoded_data.data != "")
         {
             var decoded_packet = decoded_data.data;
             // check it is our config
+            serverConfig.enabletwitchchat = "off";
             if (decoded_data.to === serverConfig.extensionname)
             {
                 for (const [key, value] of Object.entries(serverConfig))
                 {
                     if (key in decoded_packet)
                     {
-                        if (serverConfig[key] != decoded_data.data[key])
-                        {
-                            // check for a chat setting change
-                            switch (key)
-                            {
-                                case "streamername":
-                                    chatSettingsChanged = true;
-                                case "enabletwitchchat":
-                                    chatSettingsChanged = true;
-                                case "botname":
-                                    chatSettingsChanged = true;
-                                case "botoauth":
-                                    chatSettingsChanged = true;
-                                    break;
-                            }
-                        }
                         serverConfig[key] = decoded_data.data[key];
                     }
                 }
@@ -160,32 +144,19 @@ function onDataCenterMessage(decoded_data)
             SendModal(decoded_data.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            let chatSettingsChanged = false;
+            console.log(decoded_packet.to, serverConfig.extensionname)
             if (decoded_packet.to === serverConfig.extensionname)
             {
+                serverConfig.enabletwitchchat = "off";
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in decoded_packet.data)
                     {
-                        if (serverConfig[key] != decoded_packet.data[key])
-                        {
-                            // check for a chat setting change
-                            switch (key)
-                            {
-                                case "streamername":
-                                    chatSettingsChanged = true;
-                                case "enabletwitchchat":
-                                    chatSettingsChanged = true;
-                                case "botname":
-                                    chatSettingsChanged = true;
-                                case "botoauth":
-                                    chatSettingsChanged = true;
-                                    break;
-                            }
-                        }
                         serverConfig[key] = decoded_packet.data[key];
                     }
-                if (chatSettingsChanged)
+                if (localConfig.status.connected)
                     reconnectChat();
+                else
+                    connectToTwtich();
                 SaveConfigToServer();
             }
         }
@@ -349,7 +320,7 @@ function reconnectChat()
                 .then(channel => 
                 {
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
-                    if (serverConfig.enabletwitchchat == "on")
+                    if (serverConfig.enabletwitchchat === "on")
                     {
                         joinChatChannel();
                     }
@@ -372,22 +343,25 @@ function reconnectChat()
 
 function joinChatChannel()
 {
-    localConfig.twitchClient.join(serverConfig.streamername)
-        .then(() =>
-        {
-            localConfig.status.connected = true;
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername)
-        }
-        )
-        .catch((err) =>
-        {
-            localConfig.status.connected = false;
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
-            setTimeout(() =>
+    if (serverConfig.enabletwitchchat === "on")
+    {
+        localConfig.twitchClient.join(serverConfig.streamername)
+            .then(() =>
             {
-                reconnectChat()
-            }, 5000)
-        });
+                localConfig.status.connected = true;
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername)
+            }
+            )
+            .catch((err) =>
+            {
+                localConfig.status.connected = false;
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+                setTimeout(() =>
+                {
+                    reconnectChat()
+                }, 5000)
+            });
+    }
 }
 // ############################# IRC Client Initial Connection #########################################
 import * as tmi from "tmi.js";
@@ -465,13 +439,16 @@ function connectToTwtich()
 // ============================================================================
 function heartBeatCallback()
 {
+    let connected = localConfig.status.connected
+    if (serverConfig.enabletwitchchat === "off")
+        connected = false;
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                localConfig.status,
+                { connected: connected },
                 serverConfig.channel),
             serverConfig.channel
         ),

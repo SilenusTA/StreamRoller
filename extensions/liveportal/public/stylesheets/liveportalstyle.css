@@ -7,6 +7,14 @@ body
 {
   font-family: "Audiowide-Regular";
 }
+.card-title
+{
+  font-family: "Audiowide-Regular";
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-bottom: 0px;
+}
+
 #ChatMessagesCard
 {
   font-family: sans-serif;
@@ -19,15 +27,25 @@ a
 {
   color: #1ea0d3;
 }
-
-
+.navbar {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.card-body{
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}
 .extensioncardicon
 {
   color: #1ea0d3;
   /* Change the color */
   font-weight: bold;
   /* If you want it to be bold */
-   display: inline-block;
+  display: inline-block;
   /* Needed to add space between the bullet and the text */
   width: 1em;
 }

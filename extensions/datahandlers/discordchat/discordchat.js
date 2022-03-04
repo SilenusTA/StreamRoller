@@ -284,36 +284,36 @@ import { Client, Intents, Permissions, Guild } from "discord.js";
 // ============================================================================
 function connentToDiscord()
 {
-    /*try
-    {*/
-    localConfig.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-    localConfig.discordClient.on("ready", function (e)
+    try
     {
-        localConfig.status.connected = true;
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
-    });
-    // Authenticate the discord client to start it up
-    if (!process.env.DISCORD_TOKEN)
-    {
-        localConfig.status.connected = false;
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
+        localConfig.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+        localConfig.discordClient.on("ready", function (e)
+        {
+            localConfig.status.connected = true;
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
+        });
+        // Authenticate the discord client to start it up
+        if (!process.env.DISCORD_TOKEN)
+        {
+            localConfig.status.connected = false;
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
+        }
+        else
+        {
+            localConfig.discordClient.login(process.env.DISCORD_TOKEN);
+            localConfig.status.connected = true;
+        }
+        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
+        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
+        localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
+        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
     }
-    else
-    {
-        localConfig.discordClient.login(process.env.DISCORD_TOKEN);
-        localConfig.status.connected = true;
-    }
-    localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
-    localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
-    localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
-    localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
-    /*}
     catch (err)
     {
         localConfig.status.connected = false;
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord Error ", err.name, err.message);
 
-    }*/
+    }
 }
 // ============================================================================
 //                          FUNCTION: discordDisconnectHandler
@@ -386,13 +386,17 @@ function discordMessageHandler(message)
 // ============================================================================
 function heartBeatCallback()
 {
+    let connected = localConfig.status.connected
+
+    if (serverConfig.discordenabled === "off")
+        connected = false;
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                localConfig.status,
+                { connected: connected },
                 serverConfig.channel),
             serverConfig.channel
         ),

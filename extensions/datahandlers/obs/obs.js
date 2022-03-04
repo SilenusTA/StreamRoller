@@ -640,7 +640,33 @@ function sendScenes()
             serverConfig.channel
         ));
 }
-
+function ToggleMute(source)
+{
+    localConfig.obsConnection.send("ToggleMute", { source: source })
+        .then(data =>
+        {
+            localConfig.obsConnection.send("GetMute", { source: source })
+                .then(data =>
+                {
+                    if (data.status === "ok")
+                        sr_api.sendMessage(
+                            localConfig.DataCenterSocket,
+                            sr_api.ServerPacket(
+                                "ChannelData",
+                                serverConfig.extensionname,
+                                sr_api.ExtensionPacket(
+                                    "Muted",
+                                    serverConfig.extensionname,
+                                    { scene: source },
+                                    serverConfig.channel),
+                                serverConfig.channel
+                            ));
+                    console.log(data);
+                })
+                .catch(e => { console.log(e) })
+        })
+        .catch(e => { console.log(e) })
+}
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================

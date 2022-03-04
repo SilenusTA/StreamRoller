@@ -348,13 +348,16 @@ function SaveConfigToServer()
 // ============================================================================
 function heartBeatCallback()
 {
+    let connected = localConfig.status.connected
+    if (serverConfig.enabled === "off")
+        connected = false;
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                localConfig.status,
+                { connected: connected },
                 serverConfig.channel),
             serverConfig.channel
         ),
