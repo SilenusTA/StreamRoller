@@ -314,25 +314,30 @@ function reconnectChat()
     try
     {
         var connectedChannels = localConfig.twitchClient.getChannels();
-        connectedChannels.forEach(element =>
+        if (connectedChannels.length == 0)
         {
-            localConfig.twitchClient.part(element)
-                .then(channel => 
-                {
-                    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
-                    if (serverConfig.enabletwitchchat === "on")
+            joinChatChannel();
+        }
+        else
+        {
+            connectedChannels.forEach(element =>
+            {
+                localConfig.twitchClient.part(element)
+                    .then(channel => 
                     {
-                        joinChatChannel();
-                    }
-                })
-                .catch((err) => 
-                {
-                    localConfig.status.connected = false;
-                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
-                });
-        })
-
-
+                        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
+                        if (serverConfig.enabletwitchchat === "on")
+                        {
+                            joinChatChannel();
+                        }
+                    })
+                    .catch((err) => 
+                    {
+                        localConfig.status.connected = false;
+                        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
+                    });
+            })
+        }
     }
     catch (err)
     {

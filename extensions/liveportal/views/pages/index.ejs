@@ -9,7 +9,7 @@
     <header class="margin-xs">
         <%- include('../partials/navbar'); %>
     </header>
-    <main class="container">
+    <main class="container-fluid">
         <!-- start container -->
         <h5>Live Streaming Portal</h5>
         <!--Row with two equal columns-->
@@ -17,10 +17,11 @@
             <!-- DataCenter message scrollable box -->
             <div class="col-md-10 border bg-light px-1">
                 <%- include('../cards/ChatMessagesCard'); %>
-                <%- include('../cards/ModMessagesCard'); %>
+                    <%- include('../cards/ModMessagesCard'); %>
             </div>
             <div class="col-md-2 border bg-light px-1">Extensions
                 <%- include('../cards/ExtensionsListCard'); %>
+                    <%- include('../cards/AlertsCard'); %>
             </div>
         </div>
         <div class="row border bg-light">
@@ -29,9 +30,9 @@
         <!-- end container -->
     </main>
     <%- include('../scripts/datahandler'); %>
-    <footer>
-        <%- include('../partials/foot'); %>
-    </footer>
+        <footer>
+            <%- include('../partials/foot'); %>
+        </footer>
 </body>
 
 </html>

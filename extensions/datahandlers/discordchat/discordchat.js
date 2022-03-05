@@ -158,7 +158,7 @@ function onDataCenterMessage(decoded_data)
             {
                 if (serverConfig.discordenabled === "on")
                 {
-                    const channel = discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
+                    const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
                     if (typeof (channel) != "undefined")
                         channel.send(decoded_packet.data.message);
                     else
