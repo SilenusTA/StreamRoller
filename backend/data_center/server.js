@@ -16,7 +16,7 @@
 // ============================================================================
 import * as cm from "./modules/common.js";
 import * as logger from "./modules/logger.js";
-import { __api_version__ } from "./public/streamroller-message-api.cjs";
+import sr_api from "./public/streamroller-message-api.cjs";
 // load our config settings
 let config = cm.loadConfig('datacenter');
 // check we have a config. if this is a new instance the we need to create a config
@@ -30,7 +30,7 @@ if (config === "")
         PORT: 3000,
         logginglevel: 5,
         heartbeat: 5000, // heartbeat timers
-        apiVersion: __api_version__,
+        apiVersion: sr_api.__api_version__,
     };
     cm.saveConfig(config.extensionname, config);
 }

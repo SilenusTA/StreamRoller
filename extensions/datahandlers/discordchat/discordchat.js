@@ -17,7 +17,7 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -83,7 +83,7 @@ function onDataCenterConnect()
 {
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname, serverConfig.channel));
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     // Create/Join the channels we need for this
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
@@ -98,30 +98,29 @@ function onDataCenterConnect()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    //var decoded_data = JSON.parse(data);
-    if (decoded_data.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile")
     {
         // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
         // if it is empty we will use our current default and send it to the server 
-        if (decoded_data.data != "")
+        if (server_packet.data != "")
 
             // check it is our config
-            if (decoded_data.to === serverConfig.extensionname)
+            if (server_packet.to === serverConfig.extensionname)
             {
                 // we could just assign the values here (ie serverConfig = decoded_packet.message_contents)
                 // but if we change/remove an item it would never get removed from the store
                 for (const [key, value] of Object.entries(serverConfig))
-                    if (key in decoded_data.data)
-                        serverConfig[key] = decoded_data.data[key];
+                    if (key in server_packet.data)
+                        serverConfig[key] = server_packet.data[key];
             }
         SaveConfigToServer();
     }
-    else if (decoded_data.type === "UnknownChannel")
+    else if (server_packet.type === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-            "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
         //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
         // need to add some sort of flood control here so we are only attempting to join one at a time
         setTimeout(() =>
@@ -129,12 +128,12 @@ function onDataCenterMessage(decoded_data)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("JoinChannel",
                     serverConfig.extensionname,
-                    decoded_data.data));
+                    server_packet.data));
         }, 5000);
     }
-    else if (decoded_data.type == "ExtensionMessage")
+    else if (server_packet.type == "ExtensionMessage")
     {
-        var decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data;
         // received a reqest for our admin bootstrap modal code
         if (decoded_packet.to === serverConfig.extensionname)
         {
@@ -179,35 +178,35 @@ function onDataCenterMessage(decoded_data)
             }
             else
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                    "Unable to process ExtensionMessage : ", decoded_data);
+                    "Unable to process ExtensionMessage : ", server_packet);
         }
         else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "received Unhandled ExtensionMessage : ", decoded_data);
+                "received Unhandled ExtensionMessage : ", server_packet);
     }
-    else if (decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelData")
     {
-        if (decoded_data.channel === serverConfig.channel)
+        if (server_packet.channel === serverConfig.channel)
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.channel + " message received !?!?", decoded_data);
+                serverConfig.channel + " message received !?!?", server_packet);
         else
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "received message: ", decoded_data);
+                "received message: ", server_packet);
         }
     }
 
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel")
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel")
     {
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
 // ===========================================================================

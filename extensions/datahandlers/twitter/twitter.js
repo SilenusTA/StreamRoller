@@ -10,7 +10,7 @@
 // ============================================================================
 import { TwitterClient } from 'twitter-api-client';
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -115,27 +115,27 @@ function onDataCenterConnect(socket)
 // ============================================================================
 /**
  * receives message from the socket
- * @param {data} decoded_data 
+ * @param {data} server_packet 
  */
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", decoded_data);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
 
-    if (decoded_data.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile")
     {
-        if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             for (const [key, value] of Object.entries(serverConfig))
-                if (key in decoded_data.data)
-                    serverConfig[key] = decoded_data.data[key];
+                if (key in server_packet.data)
+                    serverConfig[key] = server_packet.data[key];
 
             SaveConfigToServer();
 
         }
     }
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data;
         if (decoded_packet.type === "RequestAdminModalCode")
             SendAdminModal(decoded_packet.from);
         else if (decoded_packet.type === "AdminModalData")
@@ -159,33 +159,33 @@ function onDataCenterMessage(decoded_data)
                     console.log("tweeting disabled ", decoded_packet.data)
         } else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage",
-                "received Unhandled ExtensionMessage : ", decoded_data);
+                "received Unhandled ExtensionMessage : ", server_packet);
     }
-    else if (decoded_data.type === "UnknownChannel")
+    else if (server_packet.type === "UnknownChannel")
     {
         if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", serverConfig.extensionname, decoded_data.data
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
     }
     // we have received data from a channel we are listening to
-    else if (decoded_data.type === "ChannelData")
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
-    else if (decoded_data.type === "InvalidMessage")
+    else if (server_packet.type === "ChannelData")
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+    else if (server_packet.type === "InvalidMessage")
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-            "InvalidMessage ", decoded_data.data.error, decoded_data);
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel"
-        || decoded_data.type === "ExtensionMessage"
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
+        || server_packet.type === "ExtensionMessage"
     )
     {
 
@@ -194,7 +194,7 @@ function onDataCenterMessage(decoded_data)
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
 
@@ -267,15 +267,24 @@ function SaveConfigToServer()
  */
 function tweetmessage(message)
 {
-    serverConfig.twitterClient.tweetsV2.createTweet({ "text": message })
-        .then(response =>
-        {
-            console.log("Tweeted!", response)
-        }).catch(err =>
-        {
-            localConfig.status.connected = false;
-            console.error(err)
-        })
+    try
+    {
+
+        serverConfig.twitterClient.tweetsV2.createTweet({ "text": message })
+            .then(response =>
+            {
+                console.log("Tweeted!", response)
+            }).catch(err =>
+            {
+                localConfig.status.connected = false;
+                console.error(err)
+            })
+    }
+    catch (e)
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".tweetmessage", "Failed", e);
+    }
 }
 // ============================================================================
 //                           FUNCTION: heartBeat
