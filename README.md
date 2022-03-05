@@ -28,6 +28,9 @@
   - [Dev links](#dev-links)
 
 ## What is is?
+Contact link [Discord, (streamroller-stuff channel)](https://discord.gg/5MUzJjSK). For questions, suggestions etc.
+
+[![Watch the video](https://img.youtube.com/vi/tGLe5n-Yyy8/hqdefault.jpg)](https://youtu.be/tGLe5n-Yyy8)
 
 StreamRoller is a tool designed to bring all the data needed for streaming into one system to make it easier to expand your streaming features. i.e. want to post your alerts to discord/twitter? you can do that without having to code a discord and twitter bot. Just load the existing extensions for twitter and discord, then forward the alert message to them to do the work for you.
 
