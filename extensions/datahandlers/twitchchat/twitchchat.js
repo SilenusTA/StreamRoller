@@ -376,7 +376,7 @@ function connectToTwtich()
     if (typeof process.env.twitchchatbot === "undefined" || typeof process.env.twitchchatoauth === "undefined" ||
         process.env.twitchchatbot === "" || process.env.twitchchatoauth === "")
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
         localConfig.twitchClient = new tmi.Client({ channels: [serverConfig.streamername] });
         localConfig.twitchClient.connect()
             .then(() =>
@@ -401,7 +401,7 @@ function connectToTwtich()
     else
     // with Oauth bot connection
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
         localConfig.twitchClient = new tmi.Client({
             options: { debug: false, messagesLogLevel: "info" },
             connection: {
