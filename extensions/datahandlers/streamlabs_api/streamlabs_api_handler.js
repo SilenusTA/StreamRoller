@@ -25,7 +25,7 @@
 // note this has to be socket.io-client version 2.0.3 to allow support for StreamLabs api.
 import StreamLabsIo from "socket.io-client_2.0.3";
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs"
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -190,31 +190,30 @@ function onDataCenterConnect()
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    //var decoded_data = JSON.parse(data);
-    if (decoded_data.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile")
     {
         // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
         // if it is empty we will use our current default and send it to the server 
         //save our data if the server has no data
-        if (decoded_data.data != "")
+        if (server_packet.data != "")
             // check it is our config
-            if (decoded_data.to === serverConfig.extensionname)
+            if (server_packet.to === serverConfig.extensionname)
             {
                 // we could just assign the values here (ie serverConfig = decoded_packet.message_contents)
                 // but if we change/remove an item it would never get removed from the store
                 for (const [key, value] of Object.entries(serverConfig))
-                    if (key in decoded_data.data)
+                    if (key in server_packet.data)
                     {
-                        serverConfig[key] = decoded_data.data[key];
+                        serverConfig[key] = server_packet.data[key];
                     }
             }
         SaveConfigToServer();
     }
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data;
         // received a reqest for our admin bootstrap modal code
         if (decoded_packet.type === "RequestAdminModalCode")
             SendModal(decoded_packet.from);
@@ -232,25 +231,25 @@ function onDataCenterMessage(decoded_data)
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // currently we have the same data as sent so no need to update the server page at the moment
-                // SendModal(decoded_data.channel);
+                // SendModal(server_packet.channel);
             }
         }
 
     }
-    else if (decoded_data.type === "UnknownChannel")
+    else if (server_packet.type === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
-            "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
         //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
         // need to add some sort of flood control here so we are only attempting to join one at a time
-        if (decoded_data.data === serverConfig.channel)
+        if (server_packet.data === serverConfig.channel)
         {
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("CreateChannel",
                         localConfig.EXTENSION_NAME,
-                        decoded_data.data));
+                        server_packet.data));
             }, 5000);
         }
         else
@@ -260,22 +259,22 @@ function onDataCenterMessage(decoded_data)
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("JoinChannel",
                         localConfig.EXTENSION_NAME,
-                        decoded_data.data));
+                        server_packet.data));
             }, 5000);
         }
     }
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel"
-        || decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
+        || server_packet.type === "ChannelData")
     {
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ============================================================================
 //                           FUNCTION: SendModal
@@ -334,7 +333,6 @@ function SendModal(toextension)
 // ===========================================================================
 function SaveConfigToServer()
 {
-    console.log("saving config");
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveConfig",

@@ -32,16 +32,16 @@ let __api_version__ = "0.2";
  */
 function ServerPacket(type, from, data, dest_channel, to, ret_channel, version = __api_version__)
 {
-    return JSON.stringify(
-        {
-            type: type,
-            from: from,
-            dest_channel: dest_channel,
-            to: to,
-            ret_channel: ret_channel,
-            data: data,
-            version: version
-        });
+    //console.log("ServerPacket data:", type, from, typeof (data))
+    return {
+        type: type,
+        from: from,
+        dest_channel: dest_channel,
+        to: to,
+        ret_channel: ret_channel,
+        data: data,
+        version: version
+    };
 
 }
 // ============================================================================
@@ -60,8 +60,8 @@ function ServerPacket(type, from, data, dest_channel, to, ret_channel, version =
  */
 function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, version = __api_version__)
 {
-    //console.log("ExtensionPacket data:", type, typeof (data))
-    return JSON.stringify({
+    // console.log("ExtensionPacket data:", type, typeof (data), data)
+    return {
         type: type,
         from: from,
         dest_channel: dest_channel,
@@ -69,7 +69,7 @@ function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, versio
         ret_channel: ret_channel,
         data: data,
         version: version
-    });
+    };
 }
 // ============================================================================
 //                  FUNCTION: sendMessage
@@ -81,6 +81,7 @@ function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, versio
  */
 function sendMessage(connection, data)
 {
+    //console.log("sendMessage", data, "end sendMessage")
     connection.emit("message", data);
 }
 // ============================================================================
@@ -119,13 +120,13 @@ function setupConnection(onMessage, onConnect, onDisconnect, host, port)
         }
         else
         {
-            console.log("connectingto", host + ":" + port);
+            console.log("connecting to", host + ":" + port);
             // user has imported the package via the <script tag>
             DCSocket = io(host + ":" + port,
                 { transports: ["websocket"] });
         }
         // handlers
-        DCSocket.on("message", (data) => { onMessage(JSON.parse(data)) });
+        DCSocket.on("message", (data) => { onMessage(data) });
         DCSocket.on("connect", () => onConnect());
         DCSocket.on("disconnect", (reason) => onDisconnect(reason));
         return DCSocket;
@@ -149,6 +150,13 @@ function setupConnection(onMessage, onConnect, onDisconnect, host, port)
 // import * as streamroller_api from './public/streamroller_apis.cjs';
 // streamroller_api.ServerPacket("CreateChannel","STREAMROLLER_API");
 // ---------------------------------------------------------
+let sr_api = {
+    ExtensionPacket,
+    ServerPacket,
+    setupConnection,
+    sendMessage,
+    __api_version__
+};
 if (typeof module !== "undefined" && module.exports)
 {
     /** 
@@ -157,14 +165,8 @@ if (typeof module !== "undefined" && module.exports)
      * @exports ExtensionPacket() Create Extension data packet
      * @exports setupConnection() Create a socket connetion
      * @export sendMessage() send a message on the conection
-     * */
-    module.exports = {
-        ExtensionPacket: ExtensionPacket,
-        ServerPacket: ServerPacket,
-        setupConnection: setupConnection,
-        sendMessage: sendMessage,
-        __api_version__: __api_version__
-    };
+     */
+    module.exports = sr_api;
 }
 else
 {
@@ -172,7 +174,7 @@ else
      * something or other
     * @module sr_api CJS export comment :D
     */
-    var sr_api = {
+    let sr_api = {
         ExtensionPacket,
         ServerPacket,
         setupConnection,

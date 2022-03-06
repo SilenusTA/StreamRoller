@@ -19,7 +19,7 @@
 // // https://github.com/tmijs/docs
 // ============================================================================
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -109,23 +109,22 @@ function onDataCenterConnect(socket)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    //var decoded_data = JSON.parse(data);
-    if (decoded_data.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile")
     {
-        if (decoded_data.data != "")
+        if (server_packet.data != "")
         {
-            var decoded_packet = decoded_data.data;
+            var decoded_packet = server_packet.data;
             // check it is our config
             serverConfig.enabletwitchchat = "off";
-            if (decoded_data.to === serverConfig.extensionname)
+            if (server_packet.to === serverConfig.extensionname)
             {
                 for (const [key, value] of Object.entries(serverConfig))
                 {
                     if (key in decoded_packet)
                     {
-                        serverConfig[key] = decoded_data.data[key];
+                        serverConfig[key] = server_packet.data[key];
                     }
                 }
                 if (localConfig.status.connected)
@@ -136,15 +135,15 @@ function onDataCenterMessage(decoded_data)
         }
         SaveConfigToServer();
     }
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data;
         // -------------------- PROCESSING ADMIN MODALS -----------------------
         if (decoded_packet.type === "RequestAdminModalCode")
-            SendModal(decoded_data.from);
+            SendModal(server_packet.from);
         else if (decoded_packet.type === "AdminModalData")
         {
-            console.log(decoded_packet.to, serverConfig.extensionname)
+            //console.log(decoded_packet.to, serverConfig.extensionname)
             if (decoded_packet.to === serverConfig.extensionname)
             {
                 serverConfig.enabletwitchchat = "off";
@@ -165,40 +164,40 @@ function onDataCenterMessage(decoded_data)
             sendChatMessage(serverConfig.streamername, decoded_packet.data)
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     // ------------------------------------------------ error message received -----------------------------------------------
-    else if (decoded_data.data === "UnknownChannel")
+    else if (server_packet.data === "UnknownChannel")
     {
         // if we have enough connection attempts left we should reschedule the connection
         if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
                         "JoinChannel",
                         localConfig.EXTENSION_NAME,
-                        decoded_data.channel));
+                        server_packet.channel));
             }, 5000);
         }
         else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Failed ot connect to channel", decoded_data.data);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Failed ot connect to channel", server_packet.data);
     }
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel"
-        || decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
+        || server_packet.type === "ChannelData")
     {
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
 // ===========================================================================
@@ -296,7 +295,7 @@ function process_chat_data(channel, tags, chatmessage, self)
 function sendChatMessage(channel, message)
 {
     localConfig.twitchClient.say(channel, message)
-        .then(console.log("message sent ", channel, message))
+        .then(console.log("twitchClient.message sent ", channel, message))
         .catch((e) => { console.log("Twitch.say error", e) })
 }
 // ############################# IRC Client #########################################

@@ -155,32 +155,27 @@ function onDataCenterConnect(socket)
 // ===========================================================================
 /**
  * receives message from the socket
- * @param {data} decoded_data 
+ * @param {data} server_packet 
  */
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    // we received messasges as an object that has been converted to a string so first we need to convert them back
-    // so we can access the date easier
-    //var decoded_data = JSON.parse(data);
-
-    // a bit of logging helps while developing the code
-    //logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", decoded_data);
+    //logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
 
     // if we have requested our stored data we will receive a 'ConfigFile' type of packet
-    if (decoded_data.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile")
     {
         // check if there is any data in this packet. This could be empty if it is our first run or we have never 
         // saved any config data before. 
         // if it has data we need to update our serverConfig varable.
         // if it is empty we will use our current default and send it to the server 
-        if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             // we could just assign the values here (ie serverConfig = decoded_packet.data)
             // but if we change/remove an item it would never get removed from the store.
             // we will update any fields we have that are in the message passed to us
             for (const [key, value] of Object.entries(serverConfig))
-                if (key in decoded_data.data)
-                    serverConfig[key] = decoded_data.data[key];
+                if (key in server_packet.data)
+                    serverConfig[key] = server_packet.data[key];
 
             // send the config back to the server. This is only need if the server config
             // and our raw congig elements differ sending back is quick and not done often
@@ -190,9 +185,9 @@ function onDataCenterMessage(decoded_data)
         }
     }
     // This is a message from an extension. the content format will be described by the extension
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data;
         // -------------------- PROCESSING ADMIN MODALS -----------------------
         // Modals are the bit of html code we send to the server to be used on the webpages
         // it is not required to be used so these can be omitted if you wish.
@@ -230,51 +225,51 @@ function onDataCenterMessage(decoded_data)
                 // if you wish to do verification at this point and reject some of the data then you need to send the updated modal
                 // back (ie with the checkboxes changed etc)
                 // note the SendAdminModal function will update the admin page to match what is in our current settings
-                // SendAdminModal(decoded_data.channel);
+                // SendAdminModal(server_packet.channel);
             }
         }
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", decoded_data);
+            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     // looks like a channel we requested to join isn't available. Maybe the extension hasn't started up yet so lets just set a timer
     // to keep trying. 
-    else if (decoded_data.type === "UnknownChannel")
+    else if (server_packet.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
         if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
         {
-            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             setTimeout(() =>
             {
                 // resent the register command to see if the extension is up and running yet
                 sr_api.sendMessage(config.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", config.EXTENSION_NAME, decoded_data.data
+                        "JoinChannel", config.EXTENSION_NAME, server_packet.data
                     ));
             }, 5000);
         }
     }    // we have received data from a channel we are listening to
-    else if (decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelData")
     {
         // first we check which channel the message came in on
-        if (decoded_data.channel === "STREAMLABS_ALERT")
+        if (server_packet.channel === "STREAMLABS_ALERT")
             // do something with the data
-            process_stream_alert(decoded_data);
+            process_stream_alert(server_packet);
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
+            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
-    else if (decoded_data.type === "InvalidMessage")
+    else if (server_packet.type === "InvalidMessage")
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
-            "InvalidMessage ", decoded_data.data.error, decoded_data);
+            "InvalidMessage ", server_packet.data.error, server_packet);
     }
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel"
-        || decoded_data.type === "ExtensionMessage"
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
+        || server_packet.type === "ExtensionMessage"
     )
     {
 
@@ -283,7 +278,7 @@ function onDataCenterMessage(decoded_data)
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.type);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
 // ============================================================================
@@ -296,9 +291,9 @@ function onDataCenterMessage(decoded_data)
 // ===========================================================================
 /**
  * Just a function to log data from the streamlabs api messages
- * @param {String} decoded_data 
+ * @param {String} server_packet 
  */
-function process_stream_alert(decoded_data)
+function process_stream_alert(server_packet)
 {
     // for this type of message we need to know the format of the data packet. 
     //and do something usefull with it 

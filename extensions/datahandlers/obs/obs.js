@@ -18,7 +18,7 @@
 // none
 // ============================================================================
 import * as logger from "../../../backend/data_center/modules/logger.js";
-import * as sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -128,26 +128,25 @@ function onDataCenterConnect(socket)
 // ============================================================================
 /**
  * receives message from the socket
- * @param {data} decoded_data 
+ * @param {data} server_packet 
  */
-function onDataCenterMessage(decoded_data)
+function onDataCenterMessage(server_packet)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", decoded_data);
-    //var decoded_data = JSON.parse(data);
-    if (decoded_data.type === "ConfigFile")
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", server_packet);
+    if (server_packet.type === "ConfigFile")
     {
-        if (decoded_data.data != "" && decoded_data.to === serverConfig.extensionname)
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Received config");
             for (const [key, value] of Object.entries(serverConfig))
-                if (key in decoded_data.data)
-                    serverConfig[key] = decoded_data.data[key];
+                if (key in server_packet.data)
+                    serverConfig[key] = server_packet.data[key];
             SaveConfigToServer();
         }
     }
-    else if (decoded_data.type === "ExtensionMessage")
+    else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = JSON.parse(decoded_data.data);
+        let decoded_packet = server_packet.data
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", decoded_packet.type);
         if (decoded_packet.type === "RequestAdminModalCode")
             SendAdminModal(decoded_packet.from);
@@ -180,55 +179,55 @@ function onDataCenterMessage(decoded_data)
                             serverConfig.extensionname,
                             localConfig.sceneList,
                             "",
-                            decoded_data.from
+                            server_packet.from
                         ),
                         "",
-                        decoded_data.from
+                        server_packet.from
                     )
             )
         }
         else if (decoded_packet.type === "ChangeScene")
             changeScene(decoded_packet.data);
         else
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", decoded_data);
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
     }
-    else if (decoded_data.type === "UnknownChannel")
+    else if (server_packet.type === "UnknownChannel")
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", decoded_data);
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
         if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + decoded_data.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", serverConfig.extensionname, decoded_data.data
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
     }    // we have received data from a channel we are listening to
-    else if (decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelData")
     {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", decoded_data.dest_channel);
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
-    else if (decoded_data.type === "InvalidMessage")
+    else if (server_packet.type === "InvalidMessage")
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-            "InvalidMessage ", decoded_data.data.error, decoded_data);
+            "InvalidMessage ", server_packet.data.error, server_packet);
     }
-    else if (decoded_data.type === "ChannelJoined"
-        || decoded_data.type === "ChannelCreated"
-        || decoded_data.type === "ChannelLeft"
-        || decoded_data.type === "LoggingLevel"
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
     )
     {
-        //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", decoded_data.type);
+        //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", server_packet.type);
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", decoded_data.data.error);
+            ".onDataCenterMessage", "Unhandled message type", server_packet.data.error);
 }
 
 // ===========================================================================
@@ -317,6 +316,7 @@ function connectToObs(host, port, pass)
             localConfig.obsConnecting = false
             localConfig.status.connected = true;
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", "OBS Connected");
+            OBSRequest("GetCurrentScene", null);
             return localConfig.obsConnection.send('GetSceneList');
         })
         .then(data =>
@@ -339,6 +339,8 @@ function connectToObs(host, port, pass)
                 connectToObs(host, port, pass);
             }, 5000);
         })
+
+
 }
 
 // ============================================================================
@@ -350,13 +352,10 @@ function connectToObs(host, port, pass)
  * @param {Object} data extra data for the request
  * @param {Function} callback called back with the data
  */
-function OBSRequest(request, data, callback = OBSRequestCallback)
+function OBSRequest(request, data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequest", request, data);
-    try
-    {
-        localConfig.obsConnection.sendCallback(request, callback);
-    }
+    try { localConfig.obsConnection.sendCallback(request, data, OBSRequestCallback); }
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequest failed", request, data, err);
@@ -364,9 +363,8 @@ function OBSRequest(request, data, callback = OBSRequestCallback)
 }
 function OBSRequestCallback(data)
 {
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequestCallback ", data);
-
-
+    if (data != null)
+        console.log("OBSRequestCallBack", data);
 }
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
@@ -493,7 +491,6 @@ function processOBSSceneList(scenes)
 function changeScene(scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
-    localConfig.status.currentscene = scene;
     OBSRequest('SetCurrentScene', { 'scene-name': scene })
 }
 
@@ -522,13 +519,8 @@ localConfig.obsConnection.on('SwitchScenes', data => { onSwitchedScenes(data) })
 localConfig.obsConnection.on('StreamStarted', data => { onStreamStarted(data) });
 localConfig.obsConnection.on('StreamStopped', data => { onStreamStopped(data) });
 localConfig.obsConnection.on('ScenesChanged', data => { onScenesListChanged(data) });
-localConfig.obsConnection.on('CurrentScene', data => { onCurrentScene(data) });
+localConfig.obsConnection.on('CurrentScene', data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS CurrentScene received", data) });
 
-function onCurrentScene(data)
-{
-    localConfig.status.currentscene = data;
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS CurrentScene received", data)
-}
 // ============================================================================
 //                           FUNCTION: obs error
 // ============================================================================
@@ -559,7 +551,7 @@ function onScenesListChanged(data)
  */
 function onSwitchedScenes(scene)
 {
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
     localConfig.sceneList.current = scene;
     // send the information out on our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -668,7 +660,7 @@ function ToggleMute(source)
                                     serverConfig.channel),
                                 serverConfig.channel
                             ));
-                    console.log(data);
+                    console.log("OBS.js ToggleMute", data);
                 })
                 .catch(e => { console.log(e) })
         })

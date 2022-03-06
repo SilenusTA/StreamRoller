@@ -79,7 +79,7 @@
             // porocess discord messgages
             function update_from_discord(message)
             {
-                msg = JSON.parse(message).data
+                msg = message.data
                 elem = document.getElementById("discord");
                 elem.innerHTML = msg.name + ": " + msg.message;
             }
@@ -123,7 +123,6 @@
             // message handler. this will handle any data sent to us or the channels we are registered on 
             function onDataCenterMessage(decoded_message)
             {
-                //const decoded_message = JSON.parse(message);
                 console.log(decoded_message);
                 // channle data are messaged sent out by the extension we have registed to listen to (ie alerts, discord etc)
                 if (decoded_message.type === "ChannelData")

@@ -102,7 +102,7 @@ function start(app, server, exts)
             // call onConnect to store the connection details
             onConnect(socket);
             socket.on("disconnect", (reason) => onDisconnect(socket, reason));
-            socket.on("message", (data) => onMessage(socket, JSON.parse(data)));
+            socket.on("message", (data) => onMessage(socket, data));
         });
     } catch (err)
     {
@@ -139,92 +139,92 @@ function onDisconnect(socket, reason)
 /**
  * receives messages
  * @param {Socket} socket 
- * @param {Object} decoded_data 
+ * @param {Object} server_packet 
  */
-function onMessage(socket, decoded_data)
+function onMessage(socket, server_packet)
 {
-    //var decoded_data = JSON.parse(data);
-    logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", decoded_data);
+    //console.log(("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet))
+    logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet);
     // make sure we are using the same api version
-    if (decoded_data.version != config.apiVersion)
+    if (server_packet.version != config.apiVersion)
     {
-        console.log(decoded_data)
+        //console.log("onMessage2" ,server_packet)
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
-            "Version mismatch:", decoded_data.version, "!=", config.apiVersion);
+            "Version mismatch:", server_packet.version, "!=", config.apiVersion);
 
         logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
-            "!!!!!!! Message Sytem API version doesn't match: ", decoded_data);
-        mh.errorMessage(socket, "Incorrect api version", decoded_data);
+            "!!!!!!! Message Sytem API version doesn't match: ", server_packet);
+        mh.errorMessage(socket, "Incorrect api version", server_packet);
         return;
     }
 
     // check that the sender has sent a name and id
-    if (!decoded_data.type || !decoded_data.from || !decoded_data.type === "" || !decoded_data.from === "")
+    if (!server_packet.type || !server_packet.from || !server_packet.type === "" || !server_packet.from === "")
     {
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
-            "!!!!!!! Invalid data: ", decoded_data);
-        mh.errorMessage(socket, "Missing type/from field", decoded_data);
+            "!!!!!!! Invalid data: ", server_packet);
+        mh.errorMessage(socket, "Missing type/from field", server_packet);
         return;
     }
     // add this socket to the extension if it doesn't already exist
-    if (typeof (extensions[decoded_data.from]) === undefined || !extensions[decoded_data.from])
+    if (typeof (extensions[server_packet.from]) === undefined || !extensions[server_packet.from])
     {
-        console.log("adding ", decoded_data.from)
-        extensions[decoded_data.from] = {};
+        console.log("adding ", server_packet.from)
+        extensions[server_packet.from] = {};
     }
-    if (typeof (extensions[decoded_data.from].socket) === undefined || !extensions[decoded_data.from].socket)
+    if (typeof (extensions[server_packet.from].socket) === undefined || !extensions[server_packet.from].socket)
     {
-        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + decoded_data.from);
-        extensions[decoded_data.from].socket = socket;
+        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + server_packet.from);
+        extensions[server_packet.from].socket = socket;
     }
     else  
     {
-        if (extensions[decoded_data.from].socket.id != socket.id)
+        if (extensions[server_packet.from].socket.id != socket.id)
         {
-            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket changed for " + decoded_data.from);
-            extensions[decoded_data.from].socket = socket;
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket changed for " + server_packet.from);
+            extensions[server_packet.from].socket = socket;
         }
     }
     // process the clients request
-    if (decoded_data.type === "RequestConfig")
-        mh.sendConfig(socket, decoded_data.from);
-    else if (decoded_data.type === "SaveConfig")
-        mh.saveConfig(decoded_data.from, decoded_data.data);
-    else if (decoded_data.type === "RequestExtensionsList")
-        mh.sendExtensionList(socket, decoded_data.from, extensions);
-    else if (decoded_data.type === "RequestChannelsList")
-        mh.sendChannelList(socket, decoded_data.from, channels);
-    else if (decoded_data.type === "CreateChannel")
-        mh.createChannel(server_socket, socket, decoded_data.data, channels, decoded_data.from);
-    else if (decoded_data.type === "JoinChannel")
-        mh.joinChannel(server_socket, socket, decoded_data.data, channels, decoded_data.from);
-    else if (decoded_data.type === "LeaveChannel")
-        mh.leaveChannel(socket, decoded_data.from, decoded_data.data);
-    else if (decoded_data.type === "ExtensionMessage")
+    if (server_packet.type === "RequestConfig")
+        mh.sendConfig(socket, server_packet.from);
+    else if (server_packet.type === "SaveConfig")
+        mh.saveConfig(server_packet.from, server_packet.data);
+    else if (server_packet.type === "RequestExtensionsList")
+        mh.sendExtensionList(socket, server_packet.from, extensions);
+    else if (server_packet.type === "RequestChannelsList")
+        mh.sendChannelList(socket, server_packet.from, channels);
+    else if (server_packet.type === "CreateChannel")
+        mh.createChannel(server_socket, socket, server_packet.data, channels, server_packet.from);
+    else if (server_packet.type === "JoinChannel")
+        mh.joinChannel(server_socket, socket, server_packet.data, channels, server_packet.from);
+    else if (server_packet.type === "LeaveChannel")
+        mh.leaveChannel(socket, server_packet.from, server_packet.data);
+    else if (server_packet.type === "ExtensionMessage")
     {
-        if (decoded_data.to === undefined)
-            mh.errorMessage(socket, "No extension name specified for ExtensionMessage", decoded_data);
+        if (server_packet.to === undefined)
+            mh.errorMessage(socket, "No extension name specified for ExtensionMessage", server_packet);
         else
-            mh.forwardMessage(socket, decoded_data, channels, extensions);
+            mh.forwardMessage(socket, server_packet, channels, extensions);
     }
-    else if (decoded_data.type === "ChannelData")
+    else if (server_packet.type === "ChannelData")
     {
-        if (decoded_data.dest_channel === undefined)
-            mh.errorMessage(socket, "No Channel specified for ChannelData", decoded_data);
+        if (server_packet.dest_channel === undefined)
+            mh.errorMessage(socket, "No Channel specified for ChannelData", server_packet);
         else
-            mh.forwardMessage(socket, decoded_data, channels, extensions);
+            mh.forwardMessage(socket, server_packet, channels, extensions);
     }
-    else if (decoded_data.type === "SetLoggingLevel")
+    else if (server_packet.type === "SetLoggingLevel")
     {
-        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "logging set to level ", decoded_data.data);
-        mh.setLoggingLevel(server_socket, decoded_data.data);
-        config.logginglevel = decoded_data.data;
+        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "logging set to level ", server_packet.data);
+        mh.setLoggingLevel(server_socket, server_packet.data);
+        config.logginglevel = server_packet.data;
         cm.saveConfig(config.extensionname, config);
     }
-    else if (decoded_data.type === "RequestLoggingLevel")
+    else if (server_packet.type === "RequestLoggingLevel")
         mh.sendLoggingLevel(socket);
     else
-        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", decoded_data);
+        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
 
 }
 

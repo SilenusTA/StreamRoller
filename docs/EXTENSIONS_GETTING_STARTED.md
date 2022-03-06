@@ -155,14 +155,14 @@ In your message handler you just need to check for the message type to decide wh
 The example below is if you have joined the "TWITCH_CHAT" channel
 
 ```
-function message(decoded_data)
+function message(server_packet)
 {
-  if (decoded_data.type === "ChannelData")
+  if (server_packet.type === "ChannelData")
   {
-    if (decoded_data.dest_channel == "TWITCH_CHAT")
+    if (server_packet.dest_channel == "TWITCH_CHAT")
     {
       // Get the extension data packet
-      let extension_data = decoded_data.data;
+      let extension_data = server_packet.data;
 
       console.log("Channel data received from ", extensions_data.from);
       // Get the data from that extension packet
