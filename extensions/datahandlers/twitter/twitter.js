@@ -60,6 +60,7 @@ function initialise(app, host, port, heartbeat)
     }
     try
     {
+        console.log("twitter initialise")
         localConfig.twitterClient = new TwitterClient({
             apiKey: process.env.twitterAPIkey,
             apiSecret: process.env.twitterAPISecret,
@@ -86,7 +87,7 @@ function initialise(app, host, port, heartbeat)
 function onDataCenterDisconnect(reason)
 {
     // do something here when disconnt happens if you want to handle them
-    logger.log(config.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -267,10 +268,10 @@ function SaveConfigToServer()
  */
 function tweetmessage(message)
 {
+
     try
     {
-
-        serverConfig.twitterClient.tweetsV2.createTweet({ "text": message })
+        localConfig.twitterClient.tweetsV2.createTweet({ "text": message })
             .then(response =>
             {
                 console.log("Tweeted!", response)
@@ -279,11 +280,13 @@ function tweetmessage(message)
                 localConfig.status.connected = false;
                 console.error(err)
             })
+
     }
     catch (e)
     {
+        console.log("tweet", localConfig.twitterClient.tweetsV2)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".tweetmessage", "Failed", e);
+            ".tweetmessage", "Failed ... ", e.name, e.message);
     }
 }
 // ============================================================================
