@@ -317,7 +317,6 @@ function connectToObs(host, port, pass)
             localConfig.obsConnecting = false
             localConfig.status.connected = true;
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", "OBS Connected");
-            OBSRequest("GetCurrentScene", null);
             return localConfig.obsConnection.send('GetSceneList');
         })
         .then(data =>
@@ -340,8 +339,6 @@ function connectToObs(host, port, pass)
                 connectToObs(host, port, pass);
             }, 5000);
         })
-
-
 }
 
 // ============================================================================
@@ -353,10 +350,13 @@ function connectToObs(host, port, pass)
  * @param {Object} data extra data for the request
  * @param {Function} callback called back with the data
  */
-function OBSRequest(request, data)
+function OBSRequest(request, data, callback = OBSRequestCallback)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequest", request, data);
-    try { localConfig.obsConnection.sendCallback(request, data, OBSRequestCallback); }
+    try
+    {
+        localConfig.obsConnection.sendCallback(request, callback);
+    }
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequest failed", request, data, err);
@@ -364,8 +364,9 @@ function OBSRequest(request, data)
 }
 function OBSRequestCallback(data)
 {
-    if (data != null)
-        console.log(data);
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequestCallback ", data);
+
+
 }
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
@@ -492,6 +493,7 @@ function processOBSSceneList(scenes)
 function changeScene(scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
+    localConfig.status.currentscene = scene;
     OBSRequest('SetCurrentScene', { 'scene-name': scene })
 }
 
@@ -520,8 +522,13 @@ localConfig.obsConnection.on('SwitchScenes', data => { onSwitchedScenes(data) })
 localConfig.obsConnection.on('StreamStarted', data => { onStreamStarted(data) });
 localConfig.obsConnection.on('StreamStopped', data => { onStreamStopped(data) });
 localConfig.obsConnection.on('ScenesChanged', data => { onScenesListChanged(data) });
-localConfig.obsConnection.on('CurrentScene', data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS CurrentScene received", data) });
+localConfig.obsConnection.on('CurrentScene', data => { onCurrentScene(data) });
 
+function onCurrentScene(data)
+{
+    localConfig.status.currentscene = data;
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS CurrentScene received", data)
+}
 // ============================================================================
 //                           FUNCTION: obs error
 // ============================================================================
@@ -552,7 +559,7 @@ function onScenesListChanged(data)
  */
 function onSwitchedScenes(scene)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
     localConfig.sceneList.current = scene;
     // send the information out on our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,

@@ -146,23 +146,23 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function onDataCenterMessage(decoded_data)
+            function onDataCenterMessage(server_packet)
             {
                 // -------------------------------------------------------------------------------------------------
                 //                  RECEIVED CONFIG
                 // -------------------------------------------------------------------------------------------------
-                if (decoded_data.type === "ConfigFile")
+                if (server_packet.type === "ConfigFile")
                 {
-                    console.info("datahandler.onDataCenterMessage", decoded_data.type
-                        + " for " + decoded_data.to);
+                    console.info("datahandler.onDataCenterMessage", server_packet.type
+                        + " for " + server_packet.to);
                     // update our config
-                    if (decoded_data.data != "")
+                    if (server_packet.data != "")
                         // check it is our config
-                        if (decoded_data.to === serverConfig.extensionname)
+                        if (server_packet.to === serverConfig.extensionname)
                         {
                             for (const [key, value] of Object.entries(serverConfig))
-                                if (key in decoded_data.data)
-                                    serverConfig[key] = decoded_data.data[key];
+                                if (key in server_packet.data)
+                                    serverConfig[key] = server_packet.data[key];
                             // update our modal to match the new data
                             UpdateAdminModalData();
                             //update the logging on the server
@@ -172,10 +172,10 @@
                 // -------------------------------------------------------------------------------------------------
                 //                  RECEIVED CHANNEL LIST
                 // -------------------------------------------------------------------------------------------------
-                else if (decoded_data.type === "ChannelList")
+                else if (server_packet.type === "ChannelList")
                 {
-                    console.info("datahandler.onDataCenterMessage", decoded_data.type + " received");
-                    adminData.channellist = decoded_data.data;
+                    console.info("datahandler.onDataCenterMessage", server_packet.type + " received");
+                    adminData.channellist = server_packet.data;
                     adminData.channellist.forEach(element =>
                     {
                         if (element != serverConfig.channel)
@@ -190,9 +190,9 @@
                 // -------------------------------------------------------------------------------------------------
                 //                   RECEIVED EXTENSION LIST
                 // -------------------------------------------------------------------------------------------------
-                else if (decoded_data.type === "ExtensionList")
+                else if (server_packet.type === "ExtensionList")
                 {
-                    console.info("datahandler.onDataCenterMessage", decoded_data.type + " received");
+                    console.info("datahandler.onDataCenterMessage", server_packet.type + " received");
                     // we need to reload the page if we receive more than one list due to callback handler isses
                     // on the form
                     if (bugfix_extensionlist_count > 0)
@@ -200,46 +200,46 @@
                     else
                         bugfix_extensionlist_count++;
                     //load extension cards
-                    loadExtensionCards(decoded_data.data);
-                    if (decoded_data.data.includes("obs"))
+                    loadExtensionCards(server_packet.data);
+                    if (server_packet.data.includes("obs"))
                     {
                         RequestOBSScenes("obs");
                     }
                 }
-                else if (decoded_data.type === "ExtensionMessage")
+                else if (server_packet.type === "ExtensionMessage")
                 {
-                    decoded_packet = JSON.parse(decoded_data.data);
-                    console.info(".onDataCenterMessage", "ExtensionMessage ", decoded_packet.type);
+                    extension_packet = JSON.parse(server_packet.data);
+                    console.info(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED ADMIN MODAL REQUEST
                     // -------------------------------------------------------------------------------------------------
-                    if (decoded_packet.type === "RequestAdminModalCode")
+                    if (extension_packet.type === "RequestAdminModalCode")
                     {
-                        console.info("datahandler.onDataCenterMessage", decoded_packet.type + " from "
-                            + decoded_packet.from);
-                        SendModal(decoded_packet.from, decoded_packet.data);
+                        console.info("datahandler.onDataCenterMessage", extension_packet.type + " from "
+                            + extension_packet.from);
+                        SendModal(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED EXTENSION MODAL CODE
                     // -------------------------------------------------------------------------------------------------
-                    else if (decoded_packet.type === "AdminModalCode")
+                    else if (extension_packet.type === "AdminModalCode")
                     {
-                        console.info("datahandler.onDataCenterMessage", decoded_packet.type
-                            + " from " + decoded_packet.from);
-                        addModal(decoded_packet.from, decoded_packet.data);
+                        console.info("datahandler.onDataCenterMessage", extension_packet.type
+                            + " from " + extension_packet.from);
+                        addModal(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
                     // -------------------------------------------------------------------------------------------------
-                    else if (decoded_packet.type === "AdminModalData")
+                    else if (extension_packet.type === "AdminModalData")
                     {
                         // check that it is ours
-                        if (decoded_packet.to === serverConfig.extensionname)
+                        if (extension_packet.to === serverConfig.extensionname)
                         {
                             // lets reset our config checkbox settings (modal will omit ones not
                             // checked in checkboxes so set them to "off" here first if you have them)
                             // set our config values to the ones in message
-                            for (const [key, value] of Object.entries(decoded_packet.data))
+                            for (const [key, value] of Object.entries(extension_packet.data))
                                 serverConfig[key] = value;
                             // save our data to the server for next time we run
                             SaveConfigToServer();
@@ -250,83 +250,84 @@
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED Scenes list from OBS
                     // -------------------------------------------------------------------------------------------------
-                    else if (decoded_packet.type === "SceneList")
+                    else if (extension_packet.type === "SceneList")
                     {
-                        console.info(".onDataCenterMessage", "Scenelist received ", decoded_packet.type, " parsing obs list", decoded_packet.data);
-                        ParseOBSScenesList(decoded_packet.data)
+                        console.info(".onDataCenterMessage", "Scenelist received ", extension_packet.type, " parsing obs list", extension_packet.data);
+                        ParseOBSScenesList(extension_packet.data)
                     }
                     else
-                        console.info(".onDataCenterMessage", "ExtensionMessage not handled ", decoded_packet.type, " from ", decoded_packet.from);
+                        console.info(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
                 }
-                else if (decoded_data.type === "ChannelData")
+                else if (server_packet.type === "ChannelData")
                 {
                     // need to fix this. Some Extensions messages are strings and need parsing and others are objects that dont need parsing.
-                    if (typeof (decoded_data.data) === "string")
-                        decoded_packet = JSON.parse(decoded_data.data);
+                    console.log(typeof (server_packet.data))
+                    if (typeof (server_packet.data) === "string")
+                        extension_packet = JSON.parse(server_packet.data);
                     else
-                        decoded_packet = decoded_data.data;
-                    if (decoded_packet.type === "HeartBeat")
+                        extension_packet = server_packet.data;
+                    if (extension_packet.type === "HeartBeat")
                     {
                         //check if we have this extension
-                        if (typeof (adminData.extensions[decoded_data.from]) !== "undefined")
+                        if (typeof (adminData.extensions[server_packet.from]) !== "undefined")
                         {
                             // set the on screen status for this extension
-                            setExtensionStatus(decoded_packet.from, decoded_packet.data.connected)
+                            setExtensionStatus(extension_packet.from, extension_packet.data.connected)
                             //clear the previous timeout handle
-                            clearTimeout(adminData.extensions[decoded_data.from].heartBeatHandle);
+                            clearTimeout(adminData.extensions[server_packet.from].heartBeatHandle);
                             // setup a new timeout for this extension
-                            adminData.extensions[decoded_data.from].heartBeatHandle = setTimeout(() => 
+                            adminData.extensions[server_packet.from].heartBeatHandle = setTimeout(() => 
                             {
-                                heartBeatCallback(decoded_packet.from)
+                                heartBeatCallback(extension_packet.from)
                             },
                                 localConfig.heartBeatTimeout);
 
                         }
                     }
-                    else if (decoded_data.dest_channel === "STREAMLABS_ALERT")
-                        ProcessStreamAlert(decoded_data);
-                    else if (decoded_data.dest_channel == "TWITCH_CHAT")
+                    else if (server_packet.dest_channel === "STREAMLABS_ALERT")
+                        ProcessStreamAlert(server_packet);
+                    else if (server_packet.dest_channel == "TWITCH_CHAT")
                     {
-                        displayChatMessages(decoded_data);
+                        displayChatMessages(server_packet);
                     }
-                    else if (decoded_data.dest_channel == "DISCORD_CHAT")
+                    else if (server_packet.dest_channel == "DISCORD_CHAT")
                     {
-                        displayDiscordMessages(decoded_data);
+                        displayDiscordMessages(server_packet);
                     }
-                    else if (decoded_data.dest_channel == "OBS_CHANNEL")
+                    else if (server_packet.dest_channel == "OBS_CHANNEL")
                     {
 
-                        if (decoded_packet.type === "ScenesList")
-                            ParseOBSScenesList(decoded_packet.data)
-                        else if (decoded_packet.type === "SceneChanged")
+                        if (extension_packet.type === "ScenesList")
+                            ParseOBSScenesList(extension_packet.data)
+                        else if (extension_packet.type === "SceneChanged")
                         {
-                            localConfig.OBSSceneslist.current = decoded_packet.data;
+                            localConfig.OBSSceneslist.current = extension_packet.data;
                             ParseOBSScenesList(localConfig.OBSSceneslist);
                         }
-                        else if (decoded_packet.type === "OBSStats")
-                            ProcessOBSStats(decoded_packet.data);
-                        else if (decoded_packet.type === "StreamStarted")
+                        else if (extension_packet.type === "OBSStats")
+                            ProcessOBSStats(extension_packet.data);
+                        else if (extension_packet.type === "StreamStarted")
                         {
                             serverConfig.obslive = true;
                             OBSLiveCheck();
                             postMessageToTwitter("Were up and running at http://twitch.tv/OldDepressedGamer why not pop in and say hi. Sent from StreamRoller");
                         }
-                        else if (decoded_packet.type === "StreamStopped")
+                        else if (extension_packet.type === "StreamStopped")
                         {
                             serverConfig.obslive = false;
                             OBSLiveCheck();
                         }
                         else
-                            console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", decoded_packet.type, " from ", decoded_packet.from);
+                            console.info(".onDataCenterMessage", "OBS_CHANNEL message ignored ", extension_packet.type, " from ", extension_packet.from);
                     }
                     else
                     {
-                        console.info(".onDataCenterMessage", "Channel Data " + decoded_data.dest_channel + " not handled");
-                        console.log(decoded_data);
+                        console.info(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
+                        console.log(server_packet);
                     }
-                } else if (decoded_data.type === "UnknownChannel")
+                } else if (server_packet.type === "UnknownChannel")
                 {
-                    console.info(".onDataCenterMessage", "Channel " + decoded_data.channel + " doesn't exist, scheduling rejoin");
+                    console.info(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
                     //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
                     // need to add some sort of flood control here so we are only attempting to join one at a time
                     setTimeout(() =>
@@ -339,17 +340,17 @@
                                 serverConfig.channel
                             ));
                     }, 10000);
-                } else if (decoded_data.type === "ChannelJoined"
-                    || decoded_data.type === "ChannelCreated"
-                    || decoded_data.type === "ChannelLeft"
-                    || decoded_data.type === "LoggingLevel"
+                } else if (server_packet.type === "ChannelJoined"
+                    || server_packet.type === "ChannelCreated"
+                    || server_packet.type === "ChannelLeft"
+                    || server_packet.type === "LoggingLevel"
                 )
                 {
                     // just a blank handler for items we are not using to avoid message from the catchall
                 }
                 // ------------------------------------------------ unknown message type received -----------------------------------------------
                 else
-                    console.warn(".onDataCenterMessage", "Unhandled message type:", decoded_data);
+                    console.warn(".onDataCenterMessage", "Unhandled message type:", server_packet);
             }
             // ============================================================================
             //                           FUNCTION: heartBeatCallback
@@ -361,7 +362,7 @@
             // ===========================================================================
             function heartBeatCallback(extensionname)
             {
-                setExtensionStatus(decoded_packet.from, false);
+                setExtensionStatus(extension_packet.from, false);
             }
             // ============================================================================
             //                           FUNCTION: SaveConfigToServer
@@ -1002,10 +1003,10 @@
             // ============================================================================
             //                           FUNCTION: process_stream_alert
             // ============================================================================
-            function ProcessStreamAlert(decoded_data)
+            function ProcessStreamAlert(server_packet)
             {
-                console.log("ProcessStreamAlert ", decoded_data);
-                let alertdata = decoded_data.data;
+                console.log("ProcessStreamAlert ", server_packet);
+                let alertdata = server_packet.data;
                 // display the alert
 
                 let alertcontents = alertdata.message[0];
