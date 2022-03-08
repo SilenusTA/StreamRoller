@@ -188,6 +188,8 @@ function onDataCenterMessage(server_packet)
         }
         else if (decoded_packet.type === "ChangeScene")
             changeScene(decoded_packet.data);
+        else if (decoded_packet.type === "ToggleMute")
+            ToggleMute(decoded_packet.data)
         else
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
     }
@@ -358,13 +360,22 @@ function OBSRequest(request, data)
     try { localConfig.obsConnection.sendCallback(request, data, OBSRequestCallback); }
     catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSRequest failed", request, data, err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".OBSRequest failed", request, data, err);
     }
 }
-function OBSRequestCallback(data)
+function OBSRequestCallback(err, data)
 {
+
+    if (err != null)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.messageId);
+        clogger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.status);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.error);
+    }
     if (data != null)
-        console.log("OBSRequestCallBack", data);
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", data);
+    else
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", data);
 }
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
@@ -461,18 +472,20 @@ function processOBSSceneList(scenes)
                 if (scene.name.startsWith(serverConfig.mainsceneselector))
                     localConfig.sceneList.main.push({
                         displayName: scene.name.replace(serverConfig.mainsceneselector, ""),
-                        sceneName: scene.name
+                        sceneName: scene.name,
+                        muted: scene.muted
                     }
                     )
                 else if (scene.name.startsWith(serverConfig.secondarysceneselector))
                     localConfig.sceneList.secondary.push(
                         {
                             displayName: scene.name.replace(serverConfig.secondarysceneselector, ""),
-                            sceneName: scene.name
+                            sceneName: scene.name,
+                            muted: scene.muted
                         }
                     )
                 else
-                    localConfig.sceneList.rest.push({ displayName: scene.name, sceneName: scene.name })
+                    localConfig.sceneList.rest.push({ displayName: scene.name, sceneName: scene.name, muted: scene.muted })
             }
 
 
@@ -497,9 +510,29 @@ function changeScene(scene)
 // ============================================================================
 //                           FUNCTION: Callback Handlers
 // ============================================================================
-localConfig.obsConnection.on("StreamStatus", data =>
-{
+localConfig.obsConnection.on("StreamStatus", data => { onStreamStatus(data); });
+localConfig.obsConnection.on("GetVersion", data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'GetVersion' received", data) });
+localConfig.obsConnection.on('SwitchScenes', data => { onSwitchedScenes(data) });
+localConfig.obsConnection.on('StreamStarted', data => { onStreamStarted(data) });
+localConfig.obsConnection.on('StreamStopped', data => { onStreamStopped(data) });
+localConfig.obsConnection.on('ScenesChanged', data => { onScenesListChanged(data) });
+localConfig.obsConnection.on('CurrentScene', data => { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'CurrentScene' received", data) });
+localConfig.obsConnection.on('SourceMuteStateChanged', data => { onSourceMuteStateChanged(data) });
 
+// ============================================================================
+//                           FUNCTION: obs error
+// ============================================================================
+localConfig.obsConnection.on('error', err => 
+{
+    localConfig.status.connected = false;
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS error message received", err);
+});
+
+// ============================================================================
+//                           FUNCTION: onStreamStatus
+// ============================================================================
+function onStreamStatus(data)
+{
     localConfig.status.connected = true;
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -513,23 +546,7 @@ localConfig.obsConnection.on("StreamStatus", data =>
             ),
             serverConfig.channel)
     )
-});
-localConfig.obsConnection.on("GetVersion", data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS GetVersion received", data) });
-localConfig.obsConnection.on('SwitchScenes', data => { onSwitchedScenes(data) });
-localConfig.obsConnection.on('StreamStarted', data => { onStreamStarted(data) });
-localConfig.obsConnection.on('StreamStopped', data => { onStreamStopped(data) });
-localConfig.obsConnection.on('ScenesChanged', data => { onScenesListChanged(data) });
-localConfig.obsConnection.on('CurrentScene', data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS CurrentScene received", data) });
-
-// ============================================================================
-//                           FUNCTION: obs error
-// ============================================================================
-localConfig.obsConnection.on('error', err => 
-{
-    localConfig.status.connected = false;
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS error message received", err);
-});
-
+}
 // ============================================================================
 //                           FUNCTION: onScenesChanged
 // ============================================================================
@@ -639,32 +656,36 @@ function sendScenes()
             serverConfig.channel
         ));
 }
-function ToggleMute(source)
+// ============================================================================
+//                           FUNCTION: ToggleMute
+// ============================================================================
+function ToggleMute(input)
 {
-    localConfig.obsConnection.send("ToggleMute", { source: source })
-        .then(data =>
-        {
-            localConfig.obsConnection.send("GetMute", { source: source })
-                .then(data =>
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "ToggleMute", input)
+    OBSRequest("ToggleMute", { source: input });
+    OBSRequest("GetMute", { source: input });
+}
+// ============================================================================
+//                           FUNCTION: SourceMuteStateChanged
+// ============================================================================
+function onSourceMuteStateChanged(data)
+{
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'SourceMuteStateChanged' received", data)
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "MuteStatus",
+                serverConfig.extensionname,
                 {
-                    if (data.status === "ok")
-                        sr_api.sendMessage(
-                            localConfig.DataCenterSocket,
-                            sr_api.ServerPacket(
-                                "ChannelData",
-                                serverConfig.extensionname,
-                                sr_api.ExtensionPacket(
-                                    "Muted",
-                                    serverConfig.extensionname,
-                                    { scene: source },
-                                    serverConfig.channel),
-                                serverConfig.channel
-                            ));
-                    console.log("OBS.js ToggleMute", data);
-                })
-                .catch(e => { console.log(e) })
-        })
-        .catch(e => { console.log(e) })
+                    scene: data.sourceName,
+                    muted: data.muted
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ));
 }
 // ============================================================================
 //                           FUNCTION: heartBeat
