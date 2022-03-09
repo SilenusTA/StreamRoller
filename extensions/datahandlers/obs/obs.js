@@ -365,17 +365,14 @@ function OBSRequest(request, data)
 }
 function OBSRequestCallback(err, data)
 {
-
     if (err != null)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.messageId);
-        clogger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.status);
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.error);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", err.status, err.error);
     }
     if (data != null)
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", data);
     else
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack", data);
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "OBSRequestCallBack null data callback");
 }
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
