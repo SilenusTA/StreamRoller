@@ -27,17 +27,14 @@ class ExecPHP
             {
                 this.phpPath = winpath;
                 this.foundphp = true;
-                console.log(e);
             }
         });
         exists(linuxparth, (e) =>
         {
-            //console.log(linuxparth, e);
             if (e)
             {
                 this.phpPath = linuxparth;
                 this.foundphp = true;
-                console.log(e);
             }
         });
         this.phpFolder = '';

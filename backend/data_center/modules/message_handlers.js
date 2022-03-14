@@ -259,6 +259,35 @@ function forwardMessage(client_socket, server_packet, channels, extensions)
     }
 }
 // ============================================================================
+//                           FUNCTION: UpdateCredentials
+// ============================================================================
+function UpdateCredentials(server_packet)
+{
+    cm.saveCredentials(server_packet);
+}
+
+// ============================================================================
+//                           FUNCTION: RetrieveCredentials
+// ============================================================================
+function RetrieveCredentials(from, extensions)
+{
+
+    let loadedCredentials = cm.loadCredentials(from);
+    logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+        "Sending credential file", from);
+    if (loadedCredentials && loadedCredentials.ExtensionName)
+    {
+
+        // create our message packet
+        let msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, loadedCredentials, "", loadedCredentials.ExtensionName);
+        extensions[loadedCredentials.ExtensionName].socket.emit("message", msg);
+    }
+    else
+        logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+            "Sending credential file failed. Unknown Extension", loadedCredentials.ExtensionName);
+
+}
+// ============================================================================
 //                           FUNCTION: broadcastMessage
 // ============================================================================
 /**
@@ -306,6 +335,8 @@ export
     sendLoggingLevel,
     forwardMessage,
     broadcastMessage,
-    errorMessage
+    errorMessage,
+    UpdateCredentials,
+    RetrieveCredentials
 }
 

@@ -84,11 +84,12 @@ function onDataCenterConnect()
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+    // Request our credentials from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
     // Create/Join the channels we need for this
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
-    // start discord connection
-    connentToDiscord();
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
     // start our heatbeat timer
@@ -116,6 +117,17 @@ function onDataCenterMessage(server_packet)
                         serverConfig[key] = server_packet.data[key];
             }
         SaveConfigToServer();
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+        // if it is empty we will use our current default and send it to the server 
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+            // start discord connection
+            connentToDiscord(server_packet.data);
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                "CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -281,7 +293,7 @@ import { Client, Intents, Permissions, Guild } from "discord.js";
 // ============================================================================
 //                          FUNCTION: connentToDiscord
 // ============================================================================
-function connentToDiscord()
+function connentToDiscord(credentials)
 {
     try
     {
@@ -299,8 +311,11 @@ function connentToDiscord()
         }
         else
         {
-            localConfig.discordClient.login(process.env.DISCORD_TOKEN);
-            localConfig.status.connected = true;
+            localConfig.discordClient.login(credentials.DISCORD_TOKEN)
+                .then(() => { localConfig.status.connected = true; })
+                .catch((err) => logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord login failed", err.message))
+
+
         }
         localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
         localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));

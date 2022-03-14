@@ -16,6 +16,18 @@
   "dependencies": {
     "debug": "^4.3.3",
     "express": "^4.17.3",
-    "nodemon": "^2.0.15"
-  }
+    "nodemon": "^2.0.15",
+    "request": "^2.88.2"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SilenusTA/StreamRoller.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SilenusTA/StreamRoller/issues"
+  },
+  "homepage": "https://github.com/SilenusTA/StreamRoller#readme"
 }

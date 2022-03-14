@@ -58,23 +58,6 @@ function initialise(app, host, port, heartbeat)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket connection failed:", err);
     }
-    try
-    {
-        console.log("twitter initialise")
-        localConfig.twitterClient = new TwitterClient({
-            apiKey: process.env.twitterAPIkey,
-            apiSecret: process.env.twitterAPISecret,
-            accessToken: process.env.twitterAccessToken,
-            accessTokenSecret: process.env.TwitterAccessTokenSecret
-        });
-        localConfig.status.connected = true;
-    }
-    catch (e)
-    {
-        localConfig.status.connected = false;
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "twitter connection failed:", e.message);
-    }
-
 }
 
 // ============================================================================
@@ -106,7 +89,9 @@ function onDataCenterConnect(socket)
     else
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
-
+    // Request our credentials from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
@@ -120,7 +105,7 @@ function onDataCenterConnect(socket)
  */
 function onDataCenterMessage(server_packet)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet.type);
 
     if (server_packet.type === "ConfigFile")
     {
@@ -133,6 +118,17 @@ function onDataCenterMessage(server_packet)
             SaveConfigToServer();
 
         }
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+        // if it is empty we will use our current default and send it to the server 
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+            // start discord connection
+            connectToTwitter(server_packet.data);
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                "CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -157,7 +153,7 @@ function onDataCenterMessage(server_packet)
                 if (serverConfig.twitterenabled != "off")
                     tweetmessage(decoded_packet.data)
                 else
-                    console.log("tweeting disabled ", decoded_packet.data)
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
         } else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", server_packet);
@@ -197,7 +193,24 @@ function onDataCenterMessage(server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-
+function connectToTwitter(creds)
+{
+    try
+    {
+        localConfig.twitterClient = new TwitterClient({
+            apiKey: creds.twitterAPIkey,
+            apiSecret: creds.twitterAPISecret,
+            accessToken: creds.twitterAccessToken,
+            accessTokenSecret: creds.TwitterAccessTokenSecret
+        });
+        localConfig.status.connected = true;
+    }
+    catch (e)
+    {
+        localConfig.status.connected = false;
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "twitter connection failed:", e.message);
+    }
+}
 
 // ===========================================================================
 //                           FUNCTION: SendAdminModal
@@ -268,13 +281,13 @@ function SaveConfigToServer()
  */
 function tweetmessage(message)
 {
-
     try
     {
         localConfig.twitterClient.tweetsV2.createTweet({ "text": message })
             .then(response =>
             {
-                console.log("Tweeted!", response)
+                logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".tweetmessage", "Tweet sent ", message);
             }).catch(err =>
             {
                 localConfig.status.connected = false;
@@ -284,7 +297,7 @@ function tweetmessage(message)
     }
     catch (e)
     {
-        console.log("tweet", localConfig.twitterClient.tweetsV2)
+
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".tweetmessage", "Failed ... ", e.name, e.message);
     }

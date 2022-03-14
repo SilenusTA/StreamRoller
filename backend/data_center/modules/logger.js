@@ -31,7 +31,16 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
+import * as fs from "fs";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const logfilename = __dirname + "/../credentialstore/log.log"
+
+const __createlogfile = false;
+let firstrun = true;
 // cap message to 300 chars max
+
 let cap_message_length = 300;
 //default level
 let loglevel = 5;
@@ -171,6 +180,8 @@ function getLoggingLevel()
  */
 function log(source, ...args)
 {
+    if (__createlogfile)
+        addToLogfile("[log]" + source, args)
     if (loglevel >= 2)
         output(dimText + bgColour + logColour + "%s" + resetColour, "[log]" + source, "", args);
 }
@@ -185,6 +196,8 @@ function log(source, ...args)
  */
 function info(source, ...args)
 {
+    if (__createlogfile)
+        addToLogfile("[info]" + source, args)
     if (loglevel >= 3)
         output(dimText + bgColour + infoColour + "%s" + resetColour, "[info]" + source, "", args);
 }
@@ -199,6 +212,8 @@ function info(source, ...args)
  */
 function warn(source, ...args)
 {
+    if (__createlogfile)
+        addToLogfile("[warn]" + source, args)
     if (loglevel >= 1)
         output(brightText + bgColour + warnColour + "%s" + resetColour, source, "!#! WARNING !#!", args);
 }
@@ -213,6 +228,8 @@ function warn(source, ...args)
  */
 function err(source, ...args)
 {
+    if (__createlogfile)
+        addToLogfile("[err]" + source, args)
     output(brightText + bgColour + errColour + "%s" + resetColour, source, "!!! ERROR !!! ", args);
 }
 
@@ -227,6 +244,8 @@ function err(source, ...args)
  */
 function extra(source, ...args)
 {
+    if (__createlogfile)
+        addToLogfile("[extra]" + source, args)
     if (loglevel >= 4)
         output(brightText + bgColour + extraColour + "%s" + resetColour, source, "[extra] ", args);
 }
@@ -254,6 +273,47 @@ function output(col, func, tag, message)
         console.log(col, tag, func, message);
     else
         console.log(col, tag, func, message);
+}
+// ============================================================================
+//                           FUNCTION: output
+// ============================================================================
+/**
+ * 
+ * @param {String} func source of the nessge "filename.function"
+ * @param {String} tag tag "[EXTENSION]"
+ * @param {String} message message to log 
+ */
+function addToLogfile(func, tag, message)
+{
+    if (firstrun)
+    {
+        fs.unlink(logfilename, err =>
+        {
+            if (err)
+            {
+                console.error(err)
+                return
+            }
+        })
+        firstrun = false;
+    }
+    if (typeof (func) === "object")
+        func = JSON.stringify(func);
+    if (typeof (tag) === "object")
+        tag = JSON.stringify(tag);
+    if (typeof (message) === "object")
+        message = JSON.stringify(message);
+    else if (typeof (message) === "undefined")
+        message = ""
+
+    fs.appendFile(logfilename, tag + " " + func + " " + message + "\n", err =>
+    {
+        if (err)
+        {
+            console.error(err)
+            return
+        }
+    })
 }
 // ============================================================================
 //                           EXPORTS: 

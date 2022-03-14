@@ -2,16 +2,16 @@
 <%- include('../modals/extensionsettingsplaceholdermodal'); %>
 <%- include("../modals/adminmodalplaceholder.html"); %>
 <script>
-    const config = {
-        // these first two come from the extensionhelper config file
-        OUR_CHANNEL: "ADMIN_PAGE",
-        EXTENSION_NAME: "adminpage",
-    };
+
     const serverConfig = {
-        extensionname: config.EXTENSION_NAME,
-        channel: config.OUR_CHANNEL,
+        extensionname: "adminpage",
+        channel: "ADMIN_PAGE",
         logginglevel: "5"
     };
+    const localConfig =
+    {
+        heartBeatTimeout: "6000"
+    }
     // will hold the data center socket needed to send receive data
     // after refactoring the code this should hopefully not be needed anymore
     let DataCenterSocket = null;
@@ -32,22 +32,13 @@
     const adminData = {};
     adminData.extensions = {};
     // add our own extension card in to the display as we won't get a request from ourselves
-    adminData.extensions[config.EXTENSION_NAME] = { admincard: document.getElementById('adminmodalplaceholder').innerHTML };
+    adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('adminmodalplaceholder').innerHTML };
     UpdateAdminModalData();
     adminData.channellist = {};
-    console.log("Connecting...");
-    //Connect to backend when page is loaded
-    var host = '<%- host %>';
-    var port = '<%- port %>';
-    ConnectToDataCenter(host, port);
-    // we have a delay here to allow the socket to establish and allow the backend to
-    // sort out the lists etc
-    setTimeout(() =>
-    {
-        console.log("Requesting lists");
-        RequestChList();
-        RequestExtList();
-    }, 1000);
+    var host = '<%= host %>';
+    var port = '<%= port %>';
+    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+    ConnectToDataCenter(host, port)
 
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
@@ -64,7 +55,7 @@
             DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port)
         } catch (err)
         {
-            console.info("datahandler.initialise", "DataCenterSocket connection failed:", err);
+            console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
         }
     }
     // ============================================================================
@@ -77,7 +68,7 @@
     // ===========================================================================
     function onDataCenterDisconnect(reason)
     {
-        console.info("datahandler.onDataCenterDisconnect", reason);
+        console.log("datahandler.onDataCenterDisconnect", reason);
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterConnect
@@ -89,8 +80,7 @@
     // ===========================================================================
     function onDataCenterConnect()
     {
-        console.info("datahandler.onDataCenterConnect", "Registering our channel and requesting channel and extension list");
-        console.log("DataCenterSocket " + DataCenterSocket.id);
+        //console.log("datahandler.onDataCenterConnect", "Registering our channel and requesting channel and extension list");
         // DEBUGGING overwrite our config data on the server if the flag is set
         if (OverwriteDataCenterConfig)
             SaveConfigToServer();
@@ -98,18 +88,22 @@
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
                     "RequestConfig",
-                    config.EXTENSION_NAME
+                    serverConfig.extensionname
                 ));
 
         //register our channels
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "CreateChannel",
-                config.EXTENSION_NAME,
-                config.OUR_CHANNEL
+                serverConfig.extensionname,
+                serverConfig.channel
             ));
-
-
+        //Request lists once up and running, we delay a while so other extensions can load
+        setTimeout(() =>
+        {
+            RequestChList();
+            RequestExtList();
+        }, 2000);
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterMessage
@@ -126,8 +120,7 @@
         // -------------------------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-            console.info("datahandler.onDataCenterMessage", server_packet.type
-                + " for " + server_packet.to);
+            //("datahandler.onDataCenterMessage", server_packet.type + " for " + server_packet.to);
             // update our config
             if (server_packet.data != "")
                 // check it is our config
@@ -147,7 +140,7 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ChannelList")
         {
-            console.info("datahandler.onDataCenterMessage", server_packet.type + " received");
+            // console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
             adminData.channellist = server_packet.data;
             var html = "<ul>";
             for (var i = 0; i < adminData.channellist.length; i++)
@@ -163,7 +156,7 @@
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
                         "JoinChannel",
-                        config.EXTENSION_NAME,
+                        serverConfig.extensionname,
                         element
                     ));
 
@@ -174,8 +167,7 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ExtensionList")
         {
-            console.info(
-                "datahandler.onDataCenterMessage", server_packet.type + " received");
+            //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
             // we need to reload the page if we receive more than one list due to callback handler isses
             // on the form
             if (bugfix_extensionlist_count > 0)
@@ -187,38 +179,36 @@
         }
         else if (server_packet.type === "ExtensionMessage")
         {
-            decoded_packet = server_packet.data
-            console.info(".onDataCenterMessage", "ExtensionMessage ", decoded_packet.type);
+            extension_packet = server_packet.data
+            //console.log(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED ADMIN MODAL REQUEST
             // -------------------------------------------------------------------------------------------------
-            if (decoded_packet.type === "RequestAdminModalCode")
+            if (extension_packet.type === "RequestAdminModalCode")
             {
-                console.info("datahandler.onDataCenterMessage", decoded_packet.type + " from "
-                    + decoded_packet.from);
-                SendModal(decoded_packet.from, decoded_packet.data);
+                //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
+                SendModal(extension_packet.from, extension_packet.data);
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED EXTENSION MODAL CODE
             // -------------------------------------------------------------------------------------------------
-            else if (decoded_packet.type === "AdminModalCode")
+            else if (extension_packet.type === "AdminModalCode")
             {
-                console.info("datahandler.onDataCenterMessage", decoded_packet.type
-                    + " from " + decoded_packet.from);
-                addModal(decoded_packet.from, decoded_packet.data);
+                //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
+                addModal(extension_packet.from, extension_packet.data);
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
             // -------------------------------------------------------------------------------------------------
-            else if (decoded_packet.type === "AdminModalData")
+            else if (extension_packet.type === "AdminModalData")
             {
                 // check that it is ours
-                if (decoded_packet.to === serverConfig.EXTENSION_NAME)
+                if (extension_packet.to === serverConfig.extensionname)
                 {
                     // lets reset our config checkbox settings (modal will omit ones not
                     // checked in checkboxes so set them to "off" here first if you have them)
                     // set our config values to the ones in message
-                    for (const [key, value] of Object.entries(decoded_packet.data))
+                    for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
                     // save our data to the server for next time we run
                     SaveConfigToServer();
@@ -227,14 +217,32 @@
                 }
             }
             else
-                console.info(".onDataCenterMessage", "ExtensionMessage not handled ", decoded_packet.type, " from ", decoded_packet.from);
+                console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
         }
         else if (server_packet.type === "ChannelData")
         {
-            decoded_packet = server_packet.data;
-            if (decoded_packet.type === "HeartBeat")
+            // -------------------------------------------------------------------------------------------------
+            //                           HEATBEAT
+            // -------------------------------------------------------------------------------------------------
+            let extension_packet = server_packet.data;
+            if (extension_packet.type === "HeartBeat")
             {
-                //TBD
+                //check if we have this extension
+                if (typeof (adminData.extensions[extension_packet.from]) !== "undefined")
+                {
+                    //clear the previous timeout handle
+                    clearTimeout(adminData.extensions[extension_packet.from].heartBeatHandle);
+                    // setup a new timeout for this extension
+                    adminData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
+                    {
+                        heartBeatCallback(extension_packet.from)
+                    },
+                        localConfig.heartBeatTimeout);
+
+                    // set the on screen status for this extension
+                    setExtensionStatus(extension_packet.from, extension_packet.data.connected)
+
+                }
             }
             else if (server_packet.dest_channel == "TWITCH_CHAT")
             {
@@ -246,18 +254,24 @@
             }
         } else if (server_packet.type === "UnknownChannel")
         {
-            console.info(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
             //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             // need to add some sort of flood control here so we are only attempting to join one at a time
-            setTimeout(() =>
+            if (server_packet.data.message.dest_channel != "")
             {
-                sr_api.sendMessage(DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "JoinChannel",
-                        config.EXTENSION_NAME,
-                        server_packet.channel
-                    ));
-            }, 10000);
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
+                setTimeout(() =>
+                {
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            server_packet.data.message.dest_channel
+                        ));
+                }, 10000);
+            }
+            else
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet");
+
         } else if (server_packet.type === "ChannelJoined"
             || server_packet.type === "ChannelCreated"
             || server_packet.type === "ChannelLeft"
@@ -271,7 +285,18 @@
             console.warn(".onDataCenterMessage", "Unhandled message type", server_packet.type);
         displayChannelMessages(server_packet);
     }
-
+    // ============================================================================
+    //                           FUNCTION: heartBeatCallback
+    // ============================================================================
+    // Desription: started when we get a heartbeat and used to mark teh extension as down if it expires
+    // Parameters: extension name and the state (true fals to represent status)
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function heartBeatCallback(extensionname)
+    {
+        setExtensionStatus(extensionname, false);
+    }
     // ============================================================================
     //                           FUNCTION: SaveConfigToServer
     // ============================================================================
@@ -286,7 +311,7 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "SaveConfig",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
                 serverConfig,
             ));
     }
@@ -296,7 +321,7 @@
     // Desription: display message in allmessages card
     // Parameters: list of extension names
     // ----------------------------- notes ----------------------------------------
-    // There is a bug here. If the backend restarts and the admin page isn't 
+    // There is a bug here. If the backend restarts and the page isn't 
     // refreshed then any callbacks from the froms will fail. fix was to 
     // force a fresh of the page when a new extension list comes in. Not very
     // smooth :(
@@ -304,20 +329,30 @@
     function loadExtensionCards(extensions)
     {
         // First we create all the links (these may be changed below if the extension has provided a modal box)
-        var html = "<ul>";
+        //var html = "<ul>";
+        var html = "<div>";
         for (var i = 0; i < extensions.length; i++)
         {
-            // set the default link id with no href link until the extension provides one
-            html += "<li id='" + extensions[i] + "'>" + extensions[i] + "</li>";
+            // set the default list item. href link will be added if we receive a modal from them
+            //html += "<li id='" + extensions[i] + "'>"
+            //html += "<div class = 'extensioncardicon'></div>"
+            //html += extensions[i] + "</li>";
+
+            html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+            html += "<span id='" + extensions[i] + "' >"
+            html += extensions[i] + "</span></div>";
+
             // check if we have previously recorded this extension, if not we should add it
             if (!adminData.extensions[extensions[i]])
                 adminData.extensions[extensions[i]] = {};
-            // if we have had an updated list we probably need to request the
             RequestAdminModalsCode(extensions[i]);
         };
-        html += "</ul>";
+        //html += "</ul>";
+        html += "</div>";
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
+
+        //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
         // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
         for (var i = 0; i < extensions.length; i++)
             if (adminData.extensions[extensions[i]].admincard)
@@ -335,7 +370,7 @@
     function SendModal(toextension)
     {
 
-        let modalstring = adminData.extensions[config.EXTENSION_NAME].admincard;
+        let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
         // first lets update our modal to the current settings
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -348,14 +383,18 @@
                 modalstring = modalstring.replace(key + "text", value);
         }
         // send the modal data to the server
+        // send the modal data to the server
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "ExtensionMessage",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
                 sr_api.ExtensionPacket(
                     "AdminModalCode",
-                    config.EXTENSION_NAME,
-                    modalstring),
+                    serverConfig.extensionname,
+                    modalstring,
+                    "",
+                    toextension
+                ),
                 "",
                 toextension
             ));
@@ -397,7 +436,7 @@
                 event.preventDefault();
                 // if it is our own modal that has changed (another page has submitted one
                 // we need to process it ourselves first
-                if (xname == config.EXTENSION_NAME)
+                if (xname == serverConfig.extensionname)
                 {
                     processOwnModalSubmit(xname);
                     // now it is processed we can parse it and send the data out to other who
@@ -412,6 +451,77 @@
                 admincard: document.getElementById(xname).innerHTML
             }
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: setExtensionStatus
+    // ============================================================================
+    function setExtensionStatus(extension, connected)
+    {
+        if (connected == true)
+            document.getElementById(extension + "_status").style = "color:green";
+        else
+            document.getElementById(extension + "_status").style = "color:red";
+    }
+    // ============================================================================
+    //                           FUNCTION: ParseOBSScenesList
+    // ============================================================================
+    function ParseOBSScenesList(data)
+    {
+        let primaryScenes = data.main;
+        let secondaryScenes = data.secondary;
+        let restScenes = data.rest;
+        let foundmutedscene = false;
+        // remove the existing buttons
+        var element = document.getElementById("OBSButtons");
+        //remove the old buttons
+        element.textContent = ""
+        //store the data incase the user updated what they want to display
+        localConfig.OBSSceneslist = data;
+
+        // always show the primary scene list
+        if (typeof (primaryScenes) !== "undefined")
+        {
+            primaryScenes.forEach((scene) => 
+            {
+                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
+                if (scene.displayName === serverConfig.mutescene)
+                {
+                    foundmutedscene = true;
+                    addOBSMuteButton(scene.muted);
+                }
+            });
+        }
+        // if we have all or secondory selected to show then show them
+        if (typeof (secondaryScenes) !== "undefined" && (serverConfig.showallscenes === "on" || serverConfig.showsecondaryscenes === "on"))
+        {
+            secondaryScenes.forEach((scene) => 
+            {
+                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
+                if (scene.displayName === serverConfig.mutescene)
+                {
+                    foundmutedscene = true;
+                    addOBSMuteButton(scene.muted);
+                }
+            });
+        }
+        // only show remaining scenes if all is set
+        if (typeof (restScenes) !== "undefined" && serverConfig.showallscenes === "on")
+        {
+            restScenes.forEach((scene) => 
+            {
+                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current)
+                if (scene.displayName === serverConfig.mutescene)
+                {
+                    foundmutedscene = true;
+                    addOBSMuteButton(scene.muted);
+                }
+            })
+            // Add mute button
+        }
+        if (!foundmutedscene)
+            addOBSMuteButton(serverConfig.muted);
+        // check if we are live and set the colours accordingly.
+        OBSLiveCheck();
     }
     // ============================================================================
     //                      FUNCTION: parseExtensionModalData
@@ -431,10 +541,10 @@
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
-                    config.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         fieldsAsObject.modaldatatype,
-                        config.EXTENSION_NAME,
+                        serverConfig.extensionname,
                         fieldsAsObject,
                         "",
                         fieldsAsObject.extensionname)
@@ -464,7 +574,7 @@
             else if (typeof (value) == "string")
                 modalstring = modalstring.replace(key + "text", value);
         }
-        adminData.extensions[config.EXTENSION_NAME].admincard = modalstring;
+        adminData.extensions[serverConfig.extensionname].admincard = modalstring;
     }
     // ============================================================================
     //                      FUNCTION: processOwnModalSubmit
@@ -512,7 +622,7 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "SetLoggingLevel",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
                 logsetting,
             ));
     }
@@ -546,7 +656,10 @@
             username: 'wizardmitts',
             'message-type': 'chat'
                 }*/
-    // ===========================================================================
+
+    // ============================================================================
+    //                           FUNCTION: displayChatMessages
+    // ============================================================================
     function displayChatMessages(data)
     {
         let chatdata = data.data;
@@ -582,23 +695,23 @@
 
         if (data.type === "ExtensionMessage")
         {
-            let decoded_packet = data.data;
-            if (decoded_packet.type == "AdminModalCode")
-                cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + " received Admin Modal Code<BR>";
+            let extension_packet = data.data;
+            if (extension_packet.type == "AdminModalCode")
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + " received Admin Modal Code<BR>";
             else
-                cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.type + "<BR>";
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.type + "<BR>";
         }
         else if (data.type === "ChannelData")
         {
             if (data.dest_channel === "TWITCH_CHAT")
                 return; // displayed by the chat window
-            let decoded_packet = data.data;
+            let extension_packet = data.data;
             if (data.dest_channel === "STREAMLABS_ALERT")
-                cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.type + "<BR>";
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.type + "<BR>";
             else if (data.dest_channel === "DISCORD_CHAT")
-                cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.data + "<BR>";
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.data + "<BR>";
             else
-                cardref.innerHTML += msgoutput + "[" + decoded_packet.from + "]" + decoded_packet.message_type + "<BR>";
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.message_type + "<BR>";
         } else
         {
             msgoutput = msgoutput + "[" + data.from + "]" + "[" + data.type + "]:";
@@ -618,7 +731,7 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestExtensionsList",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
             ));
     }
     // ============================================================================
@@ -634,32 +747,78 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestChannelsList",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
             ));
     }
     // ============================================================================
     //                           FUNCTION: RequestAdminModalsCode
     // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
+    // Desription: Request the Admin Modal code from an extension
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
     // ===========================================================================
     function RequestAdminModalsCode(extname)
     {
-        console.log("admin:RequestAdminModalsCode ", extname);
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("ExtensionMessage",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
                 sr_api.ExtensionPacket(
                     "RequestAdminModalCode",
-                    config.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     "",
                     "",
                     extname),
                 "",
                 extname
             ));
+    }
+    // ============================================================================
+    //                           FUNCTION: CredentialsSubmit
+    // ============================================================================
+    // Desription: Credential string was submitted
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function CredentialsSubmit(event)
+    {
+        // sercurity notes.
+        event.preventDefault();
+        extname = document.getElementById("CredentialExtensionName").value;
+        credname = document.getElementById("CredentialName").value;
+        credvalue = document.getElementById("CredentialValue").value;
+
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "UpdateCredentials",
+                serverConfig.extensionname,
+                {
+                    ExtensionName: extname,
+                    CredentialName: credname,
+                    CredentialValue: credvalue
+                },
+
+            ));
+        return false;
+    }
+    // ============================================================================
+    //                           FUNCTION: StopServer
+    // ============================================================================
+    // Desription: Stops the server, server will restart if started using nodemon.
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function StopServer(event)
+    {
+        event.preventDefault();
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "StopServer",
+                serverConfig.extensionname,
+            ));
+        return false;
     }
     // ============================================================================
     //                           FUNCTION: RequestLoggingLevel
@@ -669,7 +828,7 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestLoggingLevel",
-                config.EXTENSION_NAME,
+                serverConfig.extensionname,
             ));
     }
 

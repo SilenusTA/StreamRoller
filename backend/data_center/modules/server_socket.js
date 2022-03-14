@@ -87,6 +87,7 @@ let config = {}
 function start(app, server, exts)
 {
     extensions = exts;
+    cm.initcrypto();
     config = cm.loadConfig('datacenter');
     //setup our server socket on the http server
     try
@@ -169,7 +170,6 @@ function onMessage(socket, server_packet)
     // add this socket to the extension if it doesn't already exist
     if (typeof (extensions[server_packet.from]) === undefined || !extensions[server_packet.from])
     {
-        console.log("adding ", server_packet.from)
         extensions[server_packet.from] = {};
     }
     if (typeof (extensions[server_packet.from].socket) === undefined || !extensions[server_packet.from].socket)
@@ -190,6 +190,12 @@ function onMessage(socket, server_packet)
         mh.sendConfig(socket, server_packet.from);
     else if (server_packet.type === "SaveConfig")
         mh.saveConfig(server_packet.from, server_packet.data);
+    else if (server_packet.type === "StopServer")
+        process.exit(0);
+    else if (server_packet.type === "UpdateCredentials")
+        mh.UpdateCredentials(server_packet.data);
+    else if (server_packet.type === "RequestCredentials")
+        mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "RequestExtensionsList")
         mh.sendExtensionList(socket, server_packet.from, extensions);
     else if (server_packet.type === "RequestChannelsList")

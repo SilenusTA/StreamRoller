@@ -43,6 +43,7 @@ const serverConfig = {
     enabletwitchchat: "on",
     streamername: "OldDepressedGamer"
 };
+const credentials = {};
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -99,6 +100,8 @@ function onDataCenterConnect(socket)
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -111,29 +114,36 @@ function onDataCenterConnect(socket)
 // ===========================================================================
 function onDataCenterMessage(server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "ConfigFile" && server_packet.data != "")
     {
-        if (server_packet.data != "")
+        var decoded_packet = server_packet.data;
+        // check it is our config
+        serverConfig.enabletwitchchat = "off";
+        if (server_packet.to === serverConfig.extensionname)
         {
-            var decoded_packet = server_packet.data;
-            // check it is our config
-            serverConfig.enabletwitchchat = "off";
-            if (server_packet.to === serverConfig.extensionname)
+            for (const [key, value] of Object.entries(serverConfig))
             {
-                for (const [key, value] of Object.entries(serverConfig))
-                {
-                    if (key in decoded_packet)
-                    {
-                        serverConfig[key] = server_packet.data[key];
-                    }
-                }
-                if (localConfig.status.connected)
-                    reconnectChat();
-                else
-                    connectToTwtich();
+                if (key in decoded_packet)
+                    serverConfig[key] = server_packet.data[key];
             }
+
         }
         SaveConfigToServer();
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+        // if it is empty we will use our current default and send it to the server 
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            for (const [key, value] of Object.entries(server_packet.data))
+                credentials[key] = value;
+            // start discord connection
+            if (localConfig.status.connected)
+                reconnectChat();
+            else
+                connectToTwtich();
+        }
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -372,8 +382,8 @@ import * as tmi from "tmi.js";
 
 function connectToTwtich()
 {
-    if (typeof process.env.twitchchatbot === "undefined" || typeof process.env.twitchchatoauth === "undefined" ||
-        process.env.twitchchatbot === "" || process.env.twitchchatoauth === "")
+    if (typeof credentials.twitchchatbot === "undefined" || typeof credentials.twitchchatoauth === "undefined" ||
+        credentials.twitchchatbot === "" || credentials.twitchchatoauth === "")
     {
         logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
         localConfig.twitchClient = new tmi.Client({ channels: [serverConfig.streamername] });
@@ -400,7 +410,7 @@ function connectToTwtich()
     else
     // with Oauth bot connection
     {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", process.env.twitchchatbot)
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", credentials.twitchchatbot)
         localConfig.twitchClient = new tmi.Client({
             options: { debug: false, messagesLogLevel: "info" },
             connection: {
@@ -408,8 +418,8 @@ function connectToTwtich()
                 secure: true
             },
             identity: {
-                username: process.env.twitchchatbot,//'bot-name',
-                password: process.env.twitchchatoauth//'oauth:my-bot-token'
+                username: credentials.twitchchatbot,//'bot-name',
+                password: credentials.twitchchatoauth//'oauth:my-bot-token'
             },
             channels: [serverConfig.streamername]
         });

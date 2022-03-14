@@ -60,11 +60,25 @@ function start(host, port, heartbeat)
         localConfig.heartBeatTimeout = heartbeat;
     else
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+    // ########################## SETUP DATACENTER CONNECTION ###############################
+    try
+    {
+        //use the helper to setup and register our callbacks
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "localConfig.DataCenterSocket connection failed:", err);
+        throw ("streamlabs_api_handler.js failed to connect to data socket");
+    }
+}
+// ============================================================================
+//                           FUNCTION: onStreamLabsDisconnect
+// ============================================================================
+function connectToStreamLabs(creds)
+{
     // ########################## SETUP STREAMLABS CONNECTION ###############################
-    /* add the stream token that your streamlabs chatbot uses here if not using the external file above. 
-    This can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token */
-    const SL_SOCKET_TOKEN = process.env.SL_SOCKET_TOKEN;
-    if (!process.env.SL_SOCKET_TOKEN)
+    // The token can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token 
+    if (!creds.SL_SOCKET_TOKEN)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set in environment variable");
 
     else
@@ -73,7 +87,7 @@ function start(host, port, heartbeat)
         {
             if (localConfig.ENABLE_STREAMLABS_CONNECTION)
             {
-                localConfig.StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + SL_SOCKET_TOKEN, { transports: ["websocket"] });
+                localConfig.StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + creds.SL_SOCKET_TOKEN, { transports: ["websocket"] });
                 // handlers
                 localConfig.StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
                 localConfig.StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
@@ -86,16 +100,6 @@ function start(host, port, heartbeat)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "clientio connection failed:", err);
             throw ("streamlabs_api_handler.js failed to connect to streamlabs");
         }
-    }
-    // ########################## SETUP DATACENTER CONNECTION ###############################
-    try
-    {
-        //use the helper to setup and register our callbacks
-        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
-    } catch (err)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "localConfig.DataCenterSocket connection failed:", err);
-        throw ("streamlabs_api_handler.js failed to connect to data socket");
     }
 }
 // ########################## STREAMLABS API CONNECTION #######################
@@ -178,6 +182,11 @@ function onDataCenterConnect()
             "RequestConfig",
             localConfig.EXTENSION_NAME
         ));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestCredentials",
+            serverConfig.extensionname
+        ));
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
     // start our heatbeat timer
@@ -210,6 +219,17 @@ function onDataCenterMessage(server_packet)
                     }
             }
         SaveConfigToServer();
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+        // if it is empty we will use our current default and send it to the server 
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+            // start discord connection
+            connectToStreamLabs(server_packet.data);
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                "CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "ExtensionMessage")
     {

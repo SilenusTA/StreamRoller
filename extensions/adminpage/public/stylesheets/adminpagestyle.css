@@ -7,6 +7,14 @@ body
 {
   font-family: "Audiowide-Regular";
 }
+.card-title
+{
+  font-family: "Audiowide-Regular";
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-bottom: 0px;
+}
+
 #ChatMessagesCard
 {
   font-family: sans-serif;
@@ -19,16 +27,20 @@ a
 {
   color: #1ea0d3;
 }
-.extensioncard ul
-{     
-  list-style: none !important;
-  /* Remove default bullets */
+.navbar {
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
-
-.extensioncard ul  li::before 
+.card-body{
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+.extensioncardicon
 {
-  content: "\2022";
-  /* Add content: \2022 is the CSS Code/unicode for a bullet */
   color: #1ea0d3;
   /* Change the color */
   font-weight: bold;
@@ -36,7 +48,4 @@ a
   display: inline-block;
   /* Needed to add space between the bullet and the text */
   width: 1em;
-  /* Also needed for space (tweak if needed) */
-  margin-left: -1em;
-  /* Also needed for space (tweak if needed) */
 }

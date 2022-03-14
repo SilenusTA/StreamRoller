@@ -355,7 +355,6 @@
             else
             {
                 console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
-                console.log(server_packet);
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -364,19 +363,25 @@
 
         else if (server_packet.type === "UnknownChannel")
         {
-            console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
             //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             // need to add some sort of flood control here so we are only attempting to join one at a time
-            setTimeout(() =>
+            if (server_packet.data.message.dest_channel != "")
             {
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
+                setTimeout(() =>
+                {
 
-                sr_api.sendMessage(DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "CreateChannel",
-                        serverConfig.extensionname,
-                        serverConfig.channel
-                    ));
-            }, 10000);
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            server_packet.data.message.dest_channel
+                        ));
+                }, 10000);
+            }
+            else
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet");
+
             // -------------------------------------------------------------------------------------------------
             //                           IGNORING THESE MESSAGE (to save loging them)
             // -------------------------------------------------------------------------------------------------
@@ -926,7 +931,7 @@
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
-            //lets check out settings and send out updates as required
+            //lets check our settings and send out updates as required
             if (key === "modmessage_channel")
             {
                 // udpate the server (or just refresh the value even if the same)
@@ -941,6 +946,19 @@
         //save the data to the server
         SaveConfigToServer();
     }
+    // ============================================================================
+    //                           FUNCTION: changeServerLogging
+    // ============================================================================
+    function changeServerLogging(logsetting)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "SetLoggingLevel",
+                serverConfig.extensionname,
+                logsetting,
+            ));
+    }
+
     // ============================================================================
     //                           FUNCTION: Display channel message
     // ============================================================================
@@ -971,20 +989,6 @@
                 username: 'wizardmitts',
                 'message-type': 'chat'
                 }*/
-    // ===========================================================================
-
-    // ============================================================================
-    //                           FUNCTION: changeServerLogging
-    // ============================================================================
-    function changeServerLogging(logsetting)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "SetLoggingLevel",
-                serverConfig.extensionname,
-                logsetting,
-            ));
-    }
 
     // ============================================================================
     //                           FUNCTION: displayChatMessages
