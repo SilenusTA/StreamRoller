@@ -107,7 +107,7 @@ function onDataCenterMessage(server_packet)
         // if it is empty we will use our current default and send it to the server 
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Received config");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
             for (const [key, value] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];

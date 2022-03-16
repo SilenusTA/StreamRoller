@@ -289,7 +289,7 @@ function SaveConfigToServer()
 // ============================================================================
 // Desription: receives twitch chat messages
 // ===========================================================================
-function process_chat_data(channel, tags, chatmessage, self)
+function process_chat_data(channel, tags, chatmessage)
 {
     // need to define our chat message format
     if (serverConfig.enabletwitchchat === "on")
@@ -326,11 +326,6 @@ function sendChatMessage(channel, message)
 // ============================================================================
 //                     FUNCTION: reconnectChat
 // ============================================================================
-// Desription: Changes channel/disables chat
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
 function reconnectChat()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Reconnecting chat " + serverConfig.streamername + ":" + serverConfig.enabletwitchchat);
@@ -368,9 +363,13 @@ function reconnectChat()
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
     }
 }
-
+// ============================================================================
+//                     FUNCTION: joinChatChannel
+// ============================================================================
 function joinChatChannel()
 {
+    let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
+    let chatmessagetags = { "display-name": "System" };
     if (serverConfig.enabletwitchchat === "on")
     {
         localConfig.twitchClient.join(serverConfig.streamername)
@@ -378,12 +377,15 @@ function joinChatChannel()
             {
                 localConfig.status.connected = true;
                 logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername)
+                process_chat_data(chatmessagename, chatmessagetags, "Chat channel changed to " + serverConfig.streamername)
+
             }
             )
             .catch((err) =>
             {
                 localConfig.status.connected = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+                process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                 setTimeout(() =>
                 {
                     reconnectChat()
@@ -396,6 +398,8 @@ import * as tmi from "tmi.js";
 
 function connectToTwtich()
 {
+    let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
+    let chatmessagetags = { "display-name": "System" };
     if (typeof credentials.twitchchatbot === "undefined" || typeof credentials.twitchchatoauth === "undefined" ||
         credentials.twitchchatbot === "" || credentials.twitchchatoauth === "")
     {
@@ -407,6 +411,7 @@ function connectToTwtich()
                 localConfig.status.readonly = true;
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly")
+                process_chat_data(chatmessagename, chatmessagetags, "Chat connected readonly: " + serverConfig.streamername)
             }
             )
 
@@ -415,12 +420,13 @@ function connectToTwtich()
                 localConfig.status.readonly = true;
                 localConfig.status.connected = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
+                process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
             }
             )
 
         localConfig.twitchClient.on('message', (channel, tags, message, self) =>
         {
-            process_chat_data(channel, tags, message, self);
+            process_chat_data(channel, tags, message);
         });
     }
     else
@@ -445,12 +451,14 @@ function connectToTwtich()
                 localConfig.status.readonly = false;
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
+                process_chat_data(chatmessagename, chatmessagetags, "Chat Connected to " + serverConfig.streamername)
             })
             .catch((err) => 
             {
                 localConfig.status.readonly = true;
                 localConfig.status.connected = false;
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err);
+                process_chat_data(chatmessagename, chatmessagetags, "Chat failed to connect to " + serverConfig.streamername)
             })
 
         localConfig.twitchClient.on('message', (channel, tags, message, self) =>
@@ -462,7 +470,7 @@ function connectToTwtich()
             {
                 localConfig.twitchClient.say(channel, `@${tags.username}, heya!`);
             }*/
-            process_chat_data(channel, tags, message, self);
+            process_chat_data(channel, tags, message);
         });
     }
 }

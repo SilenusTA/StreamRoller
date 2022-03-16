@@ -33,7 +33,12 @@
     {
         OBSSceneslist: {},
         obslive: false, // set on a heartbeat from obs messages
-        heartBeatTimeout: "6000"
+        heartBeatTimeout: "6000",
+        currentchatchannel: "",
+        chatMessageBuffer: [],
+        // only keep 300 messages in chat (for performance reasons)
+        chatMessageBufferMaxSize: 300,
+        mouseDown: 0
     }
 
     // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -54,7 +59,8 @@
     // This is used to refresh the page on a new extension list
     // Currently if a second list comes in the submit handlers for the forms get broken
     // and any form submitted will cause an error.
-    let bugfix_extensionlist_count = 0;
+    // possibly fixed. remove later if no issues are found
+    let bugfix_extensionlist_count = -100;
 
     //global data store for the app
     const adminData = {};
@@ -62,10 +68,11 @@
     // add our own card
 
     adminData.channellist = {};
-    //console.log(serverConfig.extensionname, "Connecting...");
     var host = '<%= host %>';
     var port = '<%= port %>';
     localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+    // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
+
     ConnectToDataCenter(host, port)
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
@@ -76,18 +83,21 @@
     // none
     // ===========================================================================
     function ConnectToDataCenter(host, port)
-    {// we set this hear as it means the page has loaded at this point 
+    {
+        // we set this hear as it means the page has loaded at this point 
         adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
         try
         {
-            //console.log(host + ":" + port)
             DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
                 host, port);
-            //console.log("connected");
         } catch (err)
         {
             console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
         }
+        //capture mose down so we can stop chat scroll when use is trying to use the scrollbar.
+        // crude but it works :D
+        document.body.onmousedown = function () { ++localConfig.mouseDown; }
+        document.body.onmouseup = function () { --localConfig.mouseDown; }
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterDisconnect
@@ -280,7 +290,7 @@
                         localConfig.heartBeatTimeout);
 
                     // set the on screen status for this extension
-                    setExtensionStatus(extension_packet.from, extension_packet.data.connected)
+                    setExtensionStatus(extension_packet.from, extension_packet.data)
 
                 }
             }
@@ -360,7 +370,6 @@
         // -------------------------------------------------------------------------------------------------
         //                           UNKNOWN CHANNEL MESSAGE RECEIVED
         // -------------------------------------------------------------------------------------------------
-
         else if (server_packet.type === "UnknownChannel")
         {
             //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
@@ -380,7 +389,7 @@
                 }, 10000);
             }
             else
-                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet");
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
 
             // -------------------------------------------------------------------------------------------------
             //                           IGNORING THESE MESSAGE (to save loging them)
@@ -582,12 +591,14 @@
     // ============================================================================
     //                           FUNCTION: setExtensionStatus
     // ============================================================================
-    function setExtensionStatus(extension, connected)
+    function setExtensionStatus(extension, status)
     {
-        if (connected == true)
-            document.getElementById(extension + "_status").style = "color:green";
-        else
+        if (!status.connected)
             document.getElementById(extension + "_status").style = "color:red";
+        else if (status.readonly)
+            document.getElementById(extension + "_status").style = "color:orange";
+        else
+            document.getElementById(extension + "_status").style = "color:green";
     }
     // ============================================================================
     //                           FUNCTION: ParseOBSScenesList
@@ -1003,6 +1014,12 @@
         var timecolor = "<span style='color: #757875'>";
         var usercolor = ""
 
+        // if we change chat channel lets clear out chat
+        if (localConfig.currentchatchannel != chatdata.channel)
+        {
+            localConfig.currentchatchannel = chatdata.channel;
+            localConfig.chatMessageBuffer = [];
+        }
         // lets sanitise the message before we add the emotes
         var element = document.createElement('div');
         element.innerText = chatdata.message
@@ -1017,8 +1034,16 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            cardref.innerHTML = cardref.innerHTML + time + ":" + chatdata.data['display-name'] + " " + message + "</span><BR>";
+            //cardref.innerHTML = cardref.innerHTML + time + ":" + chatdata.data['display-name'] + " " + message + "</span><BR>";
+            localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
+        }
+        else if (chatdata.data['display-name'] === "System")
+        {
 
+            // set the card data
+            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
+            //cardref.innerHTML = cardref.innerHTML + "<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span><BR>";
+            localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
         }
         else
         {
@@ -1033,7 +1058,8 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
+            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
+            localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
         }
         if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
         {
@@ -1041,11 +1067,19 @@
             // make it colourful
             time = timecolor + time + ":</span>";
             //console.log(time + ":" + username + " " + chatdata.message + "<BR>" + cardref.innerHTML);
-            cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
+            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
+            localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
         }
+
+        while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
+            localConfig.chatMessageBuffer.shift();
         // keep scroll at the bottom of the card
-        var cardScrollHeight = cardref.scrollHeight;
-        cardref.scrollTo(0, cardScrollHeight);
+        if (!localConfig.mouseDown)
+        {
+            cardref.innerHTML = localConfig.chatMessageBuffer.join('<BR>');
+            var cardScrollHeight = cardref.scrollHeight;
+            cardref.scrollTo(0, cardScrollHeight);
+        }
     }
     // ============================================================================
     //                           FUNCTION: addTwitchEmotes
