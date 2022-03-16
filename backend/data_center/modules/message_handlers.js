@@ -253,7 +253,7 @@ function forwardMessage(client_socket, server_packet, channels, extensions)
     }
     else
     {// broadcast (except the sender)
-        logger.warning("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:BROADCAST(Except sender):", server_packet);
         client_socket.broadcast.emit("message", server_packet);
     }
@@ -275,17 +275,20 @@ function RetrieveCredentials(from, extensions)
     let loadedCredentials = cm.loadCredentials(from);
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
         "Sending credential file", from);
-    if (loadedCredentials && loadedCredentials.ExtensionName)
+    if (loadedCredentials && loadedCredentials.ExtensionName && extensions[loadedCredentials.ExtensionName])
     {
-
         // create our message packet
         let msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, loadedCredentials, "", loadedCredentials.ExtensionName);
         extensions[loadedCredentials.ExtensionName].socket.emit("message", msg);
     }
     else
-        logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
-            "Sending credential file failed. Unknown Extension", loadedCredentials.ExtensionName);
-
+    {
+        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+            from + " No data available or ExtensionName not valid in credential file");
+        // send an empty message back so the extension can check for missin credentials
+        extensions[from].socket.emit("message",
+            sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from));
+    }
 }
 // ============================================================================
 //                           FUNCTION: broadcastMessage

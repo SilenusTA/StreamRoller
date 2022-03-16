@@ -107,7 +107,7 @@ app.use(express.static(webfiles));
 // Just some debugging code
 if (testing)
 {
-    logger.usecoloredlogs("off");
+    logger.usecoloredlogs("default");
     loadExtensions(__dirname + "/../../test-ext")
     loadExtensions(__dirname + "/../../extensions/datahandlers")
     loadExtensions(__dirname + "/../../extensions")

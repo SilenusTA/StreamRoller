@@ -33,8 +33,6 @@ const serverConfig = {
     channel: localConfig.OUR_CHANNEL,
     twitterenabled: "on"
 };
-const OverwriteDataCenterConfig = false;
-
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -84,11 +82,8 @@ function onDataCenterDisconnect(reason)
 function onDataCenterConnect(socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
-    else
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
@@ -105,8 +100,6 @@ function onDataCenterConnect(socket)
  */
 function onDataCenterMessage(server_packet)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet.type);
-
     if (server_packet.type === "ConfigFile")
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
@@ -114,21 +107,17 @@ function onDataCenterMessage(server_packet)
             for (const [key, value] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
-
             SaveConfigToServer();
-
         }
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
             // start discord connection
             connectToTwitter(server_packet.data);
         else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "CredentialsFile", "Credential file is empty");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "ExtensionMessage")
     {

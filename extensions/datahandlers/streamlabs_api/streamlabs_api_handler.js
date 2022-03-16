@@ -72,7 +72,7 @@ function start(host, port, heartbeat)
     }
 }
 // ============================================================================
-//                           FUNCTION: onStreamLabsDisconnect
+//                           FUNCTION: connectToStreamLabs
 // ============================================================================
 function connectToStreamLabs(creds)
 {
@@ -80,7 +80,6 @@ function connectToStreamLabs(creds)
     // The token can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token 
     if (!creds.SL_SOCKET_TOKEN)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set in environment variable");
-
     else
     {
         try
@@ -171,22 +170,13 @@ function onDataCenterConnect()
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterConnect", "Creating our channel");
     //register our channels
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "CreateChannel",
-            localConfig.EXTENSION_NAME,
-            localConfig.OUR_CHANNEL
-        ));
-
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+    // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "RequestConfig",
-            localConfig.EXTENSION_NAME
-        ));
+        sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
+    // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "RequestCredentials",
-            serverConfig.extensionname
-        ));
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
     // start our heatbeat timer
@@ -222,14 +212,11 @@ function onDataCenterMessage(server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            // start discord connection
             connectToStreamLabs(server_packet.data);
         else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "CredentialsFile", "Credential file is empty");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "ExtensionMessage")
     {

@@ -81,6 +81,7 @@ function onDataCenterDisconnect(reason)
 // ============================================================================
 function onDataCenterConnect()
 {
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
@@ -94,7 +95,6 @@ function onDataCenterConnect()
     clearTimeout(localConfig.heartBeatHandle);
     // start our heatbeat timer
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
-
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -105,29 +105,22 @@ function onDataCenterMessage(server_packet)
     {
         // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
         // if it is empty we will use our current default and send it to the server 
-        if (server_packet.data != "")
-
-            // check it is our config
-            if (server_packet.to === serverConfig.extensionname)
-            {
-                // we could just assign the values here (ie serverConfig = decoded_packet.message_contents)
-                // but if we change/remove an item it would never get removed from the store
-                for (const [key, value] of Object.entries(serverConfig))
-                    if (key in server_packet.data)
-                        serverConfig[key] = server_packet.data[key];
-            }
-        SaveConfigToServer();
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        {
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Received config");
+            for (const [key, value] of Object.entries(serverConfig))
+                if (key in server_packet.data)
+                    serverConfig[key] = server_packet.data[key];
+            SaveConfigToServer();
+        }
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            // start discord connection
-            connentToDiscord(server_packet.data);
+            connectToDiscord(server_packet.data);
         else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "CredentialsFile", "Credential file is empty");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -291,9 +284,9 @@ import { Client, Intents, Permissions, Guild } from "discord.js";
 //import { clearTimeout } from "timers";
 
 // ============================================================================
-//                          FUNCTION: connentToDiscord
+//                          FUNCTION: connectToDiscord
 // ============================================================================
-function connentToDiscord(credentials)
+function connectToDiscord(credentials)
 {
     try
     {

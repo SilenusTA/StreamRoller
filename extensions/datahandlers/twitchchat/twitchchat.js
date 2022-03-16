@@ -34,6 +34,7 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
+        readonly: true,
         connected: false // this is our connection indicator for discord
     },
 };
@@ -134,11 +135,21 @@ function onDataCenterMessage(server_packet)
     {
         // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
         // if it is empty we will use our current default and send it to the server 
-        if (server_packet.to === serverConfig.extensionname)
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
             for (const [key, value] of Object.entries(server_packet.data))
                 credentials[key] = value;
             // start discord connection
+            if (localConfig.status.connected)
+                reconnectChat();
+            else
+                connectToTwtich();
+        }
+        else
+        {
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty, connecting readonly");
+            // can still connect readonly
             if (localConfig.status.connected)
                 reconnectChat();
             else
@@ -288,6 +299,9 @@ function process_chat_data(channel, tags, chatmessage, self)
             message: chatmessage,
             data: tags
         };
+        if (localConfig.status.readonly)
+            data.channel = data.channel + " (Readonly)"
+
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "ChannelData",
@@ -390,6 +404,7 @@ function connectToTwtich()
         localConfig.twitchClient.connect()
             .then(() =>
             {
+                localConfig.status.readonly = true;
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly")
             }
@@ -397,6 +412,7 @@ function connectToTwtich()
 
             .catch((err) => 
             {
+                localConfig.status.readonly = true;
                 localConfig.status.connected = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
             }
@@ -426,11 +442,13 @@ function connectToTwtich()
         localConfig.twitchClient.connect()
             .then((res) =>
             {
+                localConfig.status.readonly = false;
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
             })
             .catch((err) => 
             {
+                localConfig.status.readonly = true;
                 localConfig.status.connected = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
             })
@@ -462,7 +480,10 @@ function heartBeatCallback()
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                { connected: connected },
+                {
+                    readonly: localConfig.status.readonly,
+                    connected: connected
+                },
                 serverConfig.channel),
             serverConfig.channel
         ),
