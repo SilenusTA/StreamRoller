@@ -24,11 +24,12 @@ To allow configuration of the extensions/backend and to show the status of the s
 Open a webbrowser on the server (normally localhost:3000)
 
 ## Funcionality
-1) Display StreamRoller messages from the system being sent received so you can monitor if something appears to be missing
-2) Display a list of extensions loaded and running (currently only the ones started by the server)
-3) Display a list of all channels created
-4) Loads code from extensions and added as a link to the extension name in the extension list
-5) Posts any data submitted on the extension form loaded (by clicking the link in 4) and submits it back to the extension
+1) Sets credentials for the extensions (ie security keys, passwords etc)
+2) Display StreamRoller messages from the system being sent received so you can monitor if something appears to be missing
+3) Display a list of extensions loaded and running (currently only the ones started by the server)
+4) Display a list of all channels created
+5) Loads code from extensions and added as a link to the extension name in the extension list
+6) Posts any data submitted on the extension form loaded (by clicking the link in 5) and submits it back to the extension
 
 ## Extension Developer information
 ### Message formats

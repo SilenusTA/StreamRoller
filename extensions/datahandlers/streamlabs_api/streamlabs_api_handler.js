@@ -56,6 +56,7 @@ let serverConfig = {
 // ============================================================================
 function start(host, port, heartbeat)
 {
+    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".start", "host", host, "port", port, "heartbeat", heartbeat);
     if (typeof (heartbeat) != "undefined")
         localConfig.heartBeatTimeout = heartbeat;
     else

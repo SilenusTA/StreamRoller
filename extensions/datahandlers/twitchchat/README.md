@@ -1,11 +1,12 @@
 # Twitch Chat
 ## Outgoing channel : "TWITCH_CHAT"
-# Usage
-To use credential features (writing messages, banning etc) add the following environment variables otherwise chat will be readonly
-```
-  twitchchatbot = <botname>
-  twitchchatoauth = <bot oauth token> (including the oauth: part, ie "oauth:sdfeicx345324dfsfe3242")
-```
+## Authorization fields
+#### Field 1
+- Name: twitchchatbot 
+- Value: botname
+#### Field 2
+- Name: twitchchatoauth
+- Value: bot oauth token (including the oauth: part, ie "oauth:sdfeicx345324dfsfe3242")
 
 # About
 The twitch chat extension will send out any messages sent on the channel provided in the settings (or Admin page settings box).

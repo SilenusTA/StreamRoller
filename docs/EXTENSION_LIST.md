@@ -7,3 +7,5 @@ Below is a list of links the current extensions and information on what they do 
 - [discordchat](../extensions/discordchat/README.md)
 - [streamlabs_api](../extensions/streamlabs_api/README.md)
 - [twitchchat](../extensions/twitchchat/README.md)
+- [twitter](../extensions/twitter/README.md)
+- [obs](../extensions/obs/README.md)

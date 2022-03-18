@@ -43,6 +43,7 @@ import * as logger from "../../backend/data_center/modules/logger.js";
 
 function initialise(app, host, port, heartbeat)
 {
+    logger.extra("[EXTENSION]liveportal.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     config.heartBeatTimeout = heartbeat;
     //app.use("/images/", express.static(__dirname + '/public/images'));
     app.use("/liveportal/", express.static(__dirname + '/public'));

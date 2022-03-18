@@ -146,7 +146,11 @@ function loadExtensions(extensionFolder)
                                 {
                                     extensions[file] = { initialise: module.initialise };
                                     if (typeof extensions[file].initialise === 'function')
-                                        extensions[file].initialise(app, config.HOST, config.PORT, config.heartbeat);
+                                        extensions[file].initialise(
+                                            app, config.HOST,
+                                            config.PORT,
+                                            // add a slight offset to the heartbeat so they don't all end up synced
+                                            config.heartbeat + (Math.floor(Math.random() * 100)));
                                     else
                                         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Extension module " + file + " did not export an intialise function");
                                 })

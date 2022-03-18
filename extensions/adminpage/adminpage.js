@@ -32,6 +32,7 @@ let dataCenterApp = null;
 // ============================================================================
 function initialise(app, host, port, heartbeat)
 {
+    logger.extra("[EXTENSION]adminpage.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     dataCenterApp = app;
     try
     {
