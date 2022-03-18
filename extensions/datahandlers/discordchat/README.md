@@ -1,24 +1,29 @@
 # Discord Chat
-## Outgoing channel : "DISCORD_CHAT"
+Contents
 - [Discord Chat](#discord-chat)
-  - [Outgoing channel : "DISCORD_CHAT"](#outgoing-channel--discord_chat)
 - [Setup](#setup)
+  - [Outgoing channel : "DISCORD_CHAT"](#outgoing-channel--discord_chat)
+  - [Authorization fields](#authorization-fields)
+      - [Field 1](#field-1)
 - [About](#about)
   - [Features](#features)
     - [Channel messages](#channel-messages)
     - [Requests](#requests)
   - [Discord credentials](#discord-credentials)
   - [Future ideas?!?](#future-ideas)
-
 # Setup
-```
-Note You need an environment variable, "DISCORD_TOKEN", set to your bot accounts token in order for this extension to work.
-```
+
+## Outgoing channel : "DISCORD_CHAT"
+## Authorization fields
+#### Field 1
+- Name: DISCORD_TOKEN 
+- Value: bot token
+
 # About
 ## Features
 - Send alerts to discord. This can be configured in the alerts modal. Channel to use and which alerts to send are currently available
 ### Channel messages
-All messages follow the standard server message with with the obs data within the data section.
+All messages follow the standard server message with with the message data within the data section.
 These will be broadcast on the outgoing channel
 - Discord chat messages - from the assigned channel (can be set in the admind card on the admin page)
 ### Requests

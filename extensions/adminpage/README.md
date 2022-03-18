@@ -1,5 +1,5 @@
 # Adminpage
-## Outgoing channel : none
+Contents
 - [Adminpage](#adminpage)
   - [Outgoing channel : none](#outgoing-channel--none)
   - [Purpose](#purpose)
@@ -8,7 +8,7 @@
   - [Extension Developer information](#extension-developer-information)
     - [Message formats](#message-formats)
     - [Request for your modal](#request-for-your-modal)
-    - [Responce to a modal request](#responce-to-a-modal-request)
+    - [Response to a modal request](#response-to-a-modal-request)
     - [Data returned from a modal submit](#data-returned-from-a-modal-submit)
   - [Example modal code](#example-modal-code)
     - [Description of the example](#description-of-the-example)
@@ -16,6 +16,8 @@
       - [Description](#description)
       - [Hidden fields](#hidden-fields)
       - [Extension data](#extension-data)
+
+## Outgoing channel : none
 
 The admin page extension is designed to display various information about the system and all control/settings to be issues to extensions in use
 ## Purpose
@@ -50,7 +52,7 @@ During the admin page loading it will send out a message on the system requestin
     } 
 }
 ```
-### Responce to a modal request
+### Response to a modal request
 To send code back use the following message structure.
 Note that you should add the 'destination extension name'
 ```

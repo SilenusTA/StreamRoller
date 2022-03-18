@@ -1,14 +1,38 @@
-# OBS Extension
+# OBS
+Contents
+- [OBS](#obs)
+- [Setup](#setup)
+  - [Outgoing channel : "OBS_CHANNEL"](#outgoing-channel--obs_channel)
+  - [Authorization fields](#authorization-fields)
+      - [Field 1](#field-1)
+      - [Field 2](#field-2)
+      - [Field 3](#field-3)
+  - [Current features](#current-features)
+    - [Channel messages](#channel-messages)
+    - [Requests](#requests)
+# Setup
+
 ## Outgoing channel : "OBS_CHANNEL"
-Provides connection to OBS for information and control. Allows setting of host/port/password and level of via the admin modal as well as the indicators that should be used to identify Primary and secondary scenes.
+## Authorization fields
+#### Field 1
+- Name: "obshost"
+- Value: hostname (ie localhost)
+#### Field 2
+- Name: "obsport"
+- Port to use
+
+#### Field 3
+- Name: "obspass"
+- Value: password
+
+Provides connection to OBS for information and control. 
 ## Current features
 
 ### Channel messages
-If developing the system it is recommended to 'console.log' messages to see data avalable. 
 
-All messages follw the standard server message with with the obs data within the data section.
+All messages follow the standard server message with with the obs data within the data section.
 These will be broadcast on the outgoing channel
-- "OBSStats" - heatbeat message when stream is live. Contains various information like bitrage, cpu usage, FPS etc
+- "OBSStats" - heatbeat message when stream is live. Contains various information like bitrate, cpu usage, FPS etc
 - "StreamStarted" - sent at stream start
 - "StreamStopped" - send when stream stopped
 - "SceneChanged" - when the current OBS scene is switched

@@ -26,7 +26,7 @@
     - [twitter](#twitter)
     - [obs](#obs)
   - [In progress](#in-progress)
-  - [TBD ideas for extensions](#tbd-ideas-for-extensions)
+  - [Ideas for extensions](#ideas-for-extensions)
 - [Links](#links)
   - [General links](#general-links)
   - [Extension links](#extension-links)
@@ -144,7 +144,7 @@ The live streaming portal is a webpage that you can use on your second monitor t
  
 ## In progress
 - pretty much everything currently available
-## TBD ideas for extensions
+## Ideas for extensions
 
 The current focus in on twitch streaming (although the streamlabs api currently supports other platforms as is). Other platforms will be integrated in time (Youtube etc)
 

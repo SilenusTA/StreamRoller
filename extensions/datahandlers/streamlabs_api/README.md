@@ -1,14 +1,18 @@
 # Streamlabs API
-## Outgoing channel : "STREAMLABS_ALERT"
+Contents
 - [Streamlabs API](#streamlabs-api)
   - [Outgoing channel : "STREAMLABS_ALERT"](#outgoing-channel--streamlabs_alert)
-- [Setup](#setup)
+  - [Outgoing channel : "OBS_CHANNEL"](#outgoing-channel--obs_channel)
+  - [Authorization fields](#authorization-fields)
+      - [Field 1](#field-1)
 - [About](#about)
-# Setup
-Add an environment variable with your credentials to access streamlabs api. These can be found on your streamlabs.com dasboard at Account > settings > Api settings"
-```
-Set your environment variable "SL_SOCKET_TOKEN" to your Streamlabs.com token to be able to use this extension
-```
+## Outgoing channel : "STREAMLABS_ALERT"
+## Authorization fields
+#### Field 1
+- Name: "SL_SOCKET_TOKEN"
+- Value: Socket token
+
+These can be found on your streamlabs.com dasboard at Account > settings > Api settings"
 # About
 This extension connects to the streamlabs API to retrieve live alert data so that other extensions can comsume it (ie overlays, sharing alerts on discod, twitter etc)
 

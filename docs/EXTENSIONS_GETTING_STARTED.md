@@ -2,8 +2,8 @@
 
 - [Extensions - Getting started](#extensions---getting-started)
   - [Loading the socket.io library](#loading-the-socketio-library)
-    - [Web page](#web-page)
-    - [Node.js](#nodejs)
+    - [Web page/standalone](#web-pagestandalone)
+    - [VSCode](#vscode)
   - [Using the SreamRoller API](#using-the-sreamroller-api)
   - [Getting up and running](#getting-up-and-running)
   - [Sending messages](#sending-messages)
@@ -20,26 +20,24 @@ You can write an extension on any platform or programming language that can use 
 
 The examples on this page are using javascript running as a backend started extension (ie the ones in the extensions folder). 
 
-The only additions steps needed for a standalone extension or webpage is to load the socket.io library than then you can load and use the streamroller api.
+If you want a standalone extension (normally to run on another machine) then the only additions steps needed for a standalone extension or webpage is to load the socket.io library and the streamroller api (unless you are using a new language then you will need to create the socket messages accordingly).
 
 ## Loading the socket.io library
-### Web page
+### Web page/standalone
 i.e for a standalone web page
 ```
 <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js' type='text/javascript'></script>
 <script src="/streamroller-message-api.cjs"></script>
 ```
-### Node.js
-(optional in some cases)
-
-i.e.running in VSCode.
+### VSCode
+Used by most extensions running in VSCode.
 You 'may' need install the socket library if you are not in the StreamRoller system (otherwise it should pick up the StreamRoller install)
 ```
 npm i socket.io@3.0.5
 ```
 ## Using the SreamRoller API
 
-Then to use the javascript file from the public folder
+Next is to use the javascript file from the public folder to give easier access to the system.
 
 import the api as you normally would
 ```
@@ -70,7 +68,7 @@ To send a message you use the function
 sr_api.sendMessage( socket, data );
 ```
 The socket is the return from the initial connection.
-Data is defined in the [messages](MESSAGES_DOC.md) help file.
+Data is defined in the [messages](MESSAGES_DOC.md) readme file.
 ## Messages 1 (joining a channel to receive data)
 Message have a specified format. A simple example is shown below. 
 
@@ -92,14 +90,14 @@ sr_api.sendMessage
   )
 )
 ```
-After running the above command your message handler (function 'message()' above) will get called anytime a message is sent on the "TWITCH_CHAT" channel. 
+After running the above command your message handler (function 'message()' above) will get called anytime a message is sent on the "TWITCH_CHAT" channel (and any other channel you join). 
 ## Messages 2 (sending data to an extension)
-To send a message to an extension you need to add an ExtensionPacket data structure (containing the data to send) to the sendMessage function 
+To send a message to an extension you need to add an 'ExtensionPacket' data structure (containing the data to send) in the sendMessage function 
 The format of the sr_api.ExtensionPacket is similar to the sr_api.ServerPacket.  
 ### Changing OBS scene
 In the example below we create a message to change the current OBS scene to the scene named "GameScene".
 
-We will break this one out into individual steps to make it easier to read.
+We will break this one down into individual steps to make it easier to understand each line.
 
 1) First we create our Exntension data packet. The information here is defined by the extension we are sending it to.
 
@@ -113,8 +111,8 @@ let ext_data = sr_api.ExtensionPacket
     "obs"
   )
 ```
-- In this case the "obs" extension defines the message type (to change scenes) as "ChangeScene"
-- Second we put in our extension name (so if the message needs a responce the received knows to to reply to)
+- "ChangeScene": In this case the "obs" extension defines the message type (to change scenes) as "ChangeScene"
+- Second we put in our extension name (so if the message needs a response the receiver knows to to reply to)
 - Next we have the data section (defined by the obs extension). For this message we just need a string that represents the scene name we need to change to
 - The next field is blank as we don't need a channel for this message type
 - finally we have the name of the extension we want to receive this.
@@ -126,14 +124,14 @@ let serverMsgPacket = sr_api.ServerPacket
   (
     "ExtensionMessage",
     <our extension name>,
-    ext_data,
+    <ext_object_created_above>,
     "",
     "obs"
   )
 ```
-- "ExtensionMessage" - The server data packet starts with the message type.This lets the server know it needs to forward this message on to the extension we want to process it.
+- "ExtensionMessage" - This lets the server know it needs to forward this message on to the extension we want to process it.
 - "our extension name" - We add our extension name (so the server knows where to send errors if it can't send the mssage,
-- ext_data - we then add the extension data packet we created above
+- ext_object_created_above - we then add the extension data packet we created above
 - "" - we don't need a channel here as we are sending to an extension directly rather than broadcasting this out on a channel
 - "obs" - where we want this message sent (extension name)
 
@@ -159,7 +157,7 @@ function message(server_packet)
 {
   if (server_packet.type === "ChannelData")
   {
-    if (server_packet.dest_channel == "TWITCH_CHAT")
+    if (server_packet.dest_channel === "TWITCH_CHAT")
     {
       // Get the extension data packet
       let extension_data = server_packet.data;
@@ -177,7 +175,7 @@ function message(server_packet)
 Steps in the above code:
 1) Check if we have a "ChannelData" message (ie one sent out from an extension on it's channel)
 2) Next we check the Channel it was posted on (we could have Joined multiple channels)
-3) We now need to get access to the data. The sever packets contains the extension packet so we get that
+3) We now need to get access to the data. The sever packets contains the extension packet so we get that out to make it clearer what packet we are working with
 4) console.log the extension name that sent this data
 5) Get the data from the extension packet
 6) conosle.log the username and message

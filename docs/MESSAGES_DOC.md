@@ -1,5 +1,9 @@
+# Messges (might need updating, console.log is your friend here)
+
 ## Developer Table of Contents
 
+- [Messges (might need updating, console.log is your friend here)](#messges-might-need-updating-consolelog-is-your-friend-here)
+  - [Developer Table of Contents](#developer-table-of-contents)
 - [Overview](#overview)
 - [Server Message data packets](#server-message-data-packets)
   - [Server Message Types](#server-message-types)
@@ -51,13 +55,14 @@ Note: fields with a (*) are mandatory
 Note: an empty field will default to "" if not supplied.
 
 ## Server Message Types
-There are some special message types that are used (normally during startup or error handling). These are server message/data handled by the system. see info messages for requrest from other extensions
-Most message will be of the data or info type during normal running.
+There are some special message types that are used (normally during startup or error handling). These are server message/data handled by the system.
 ### Server Message Types
 ```
   "RequestConfig"         Receive your saved config file
   "SaveConfig"            Saved your config file
-  "ConfigFile"            A message containing a config file
+  "UpdateCredentials"     Update a credential for an extension
+  "RequestCredentials"    Request the credentials for your extension
+  "CredentialsFile"       Response from the "RequestCredentials" message
   "RequestExtensionsList" Request a list of extensions using the system
   "ExtensionList"         List of extensions
   "RequestChannelsList"   Request a list of channels currently available
@@ -86,6 +91,13 @@ Additional information on data/fields needed (over the madatory message type and
 config file in response to the "RequestConfig" message above
   - The to field will contain the name of the extension it is for
   - The data field will contain the config file
+-  StopServer
+   -  none
+- UpdateCredentials
+  - A data packet containing the extensionname, key and value pair for the credential you wish to set
+- RequestCredentials
+  - none
+for the extension
 - RequestExtensionsList
   - none
 - RequestChannelsList
@@ -127,6 +139,8 @@ These are sent to an individual extension. Normally in reply to a request or err
   - This is a message sent from the server to an Extension containing it's config
   - to field indicates who it is for
   - data field contains the config
+- CredentialsFile
+  - data will contain the json object containing all credentials stored 
 - ExtensionList
   - Server sent message containing a the current list of extensions attached to the server
 - ChannelList
@@ -139,7 +153,6 @@ These are sent to an individual extension. Normally in reply to a request or err
   - data will be the channel name that was attempted to join.
 - InvalidMessage
   - Inidicates an issue with the message. Additional info will be in the data.
-
 ```
 
 ### Debug/utility functions
@@ -148,6 +161,7 @@ These are mainly used for debugging purposes
   "SetLoggingLevel"       Sets the logging level for the server
   "RequestLoggingLevel"   Request the logging level for the server
   "LoggingLevel"          Response to Set/Request logging level
+  "StopServer"            Stop the server
 ```
 - SetLoggingLevel
   - data field should contain the level to set (0-5)
