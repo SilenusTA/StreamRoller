@@ -36,15 +36,19 @@ const localConfig = {
     status: {
         readonly: true,
         connected: false // this is our connection indicator for discord
-    },
+    }
 };
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
-    streamername: "OldDepressedGamer"
+    streamername: "OldDepressedGamer",
+    chatMessageBufferMaxSize: "300",
+    chatMessageBuffer: [],
+    chatMessageBackupTimer: "60000"
 };
 const credentials = {};
+
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -118,19 +122,22 @@ function onDataCenterMessage(server_packet)
 {
     if (server_packet.type === "ConfigFile" && server_packet.data != "")
     {
-        var decoded_packet = server_packet.data;
         // check it is our config
         serverConfig.enabletwitchchat = "off";
         if (server_packet.to === serverConfig.extensionname)
         {
             for (const [key, value] of Object.entries(serverConfig))
             {
-                if (key in decoded_packet)
+                if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
             }
 
+
         }
         SaveConfigToServer();
+        // we store the chat message buffer for next time we run up so we just schedule a saveconfig ever so often
+        // should really only save it when the server shuts down but but we don't have a nice way to do that at the moment
+        SaveChatMessagesToServerScheduler();
     }
     else if (server_packet.type === "CredentialsFile")
     {
@@ -159,20 +166,20 @@ function onDataCenterMessage(server_packet)
     }
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
+        let extension_packet = server_packet.data;
         // -------------------- PROCESSING ADMIN MODALS -----------------------
-        if (decoded_packet.type === "RequestAdminModalCode")
+        if (extension_packet.type === "RequestAdminModalCode")
             SendModal(server_packet.from);
-        else if (decoded_packet.type === "AdminModalData")
+        else if (extension_packet.type === "AdminModalData")
         {
-            //console.log(decoded_packet.to, serverConfig.extensionname)
-            if (decoded_packet.to === serverConfig.extensionname)
+            //console.log(extension_packet.to, serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
             {
                 serverConfig.enabletwitchchat = "off";
                 for (const [key, value] of Object.entries(serverConfig))
-                    if (key in decoded_packet.data)
+                    if (key in extension_packet.data)
                     {
-                        serverConfig[key] = decoded_packet.data[key];
+                        serverConfig[key] = extension_packet.data[key];
                     }
                 if (localConfig.status.connected)
                     reconnectChat();
@@ -181,9 +188,13 @@ function onDataCenterMessage(server_packet)
                 SaveConfigToServer();
             }
         }
-        else if (decoded_packet.type === "SendChatMessage")
+        else if (extension_packet.type === "SendChatMessage")
         {
-            sendChatMessage(serverConfig.streamername, decoded_packet.data)
+            sendChatMessage(serverConfig.streamername, extension_packet.data)
+        }
+        else if (extension_packet.type === "RequestChatBuffer")
+        {
+            sendChatBuffer(server_packet.from)
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -221,17 +232,39 @@ function onDataCenterMessage(server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-
+// ===========================================================================
+//                           FUNCTION: sendChatBuffer
+// ===========================================================================
+/**
+ * Send our AdminModal to the extension
+ * @param {String} toExtension 
+ */
+function sendChatBuffer(toExtension)
+{
+    // send the modified modal data to the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "TwitchChatBuffer",
+                localConfig.EXTENSION_NAME,
+                serverConfig.chatMessageBuffer,
+                "",
+                toExtension,
+                localConfig.OUR_CHANNEL),
+            "",
+            toExtension
+        ));
+}
 // ===========================================================================
 //                           FUNCTION: SendModal
 // ===========================================================================
-// Desription: Send the modal code back after setting the defaults according 
-// to our server settings
-// Parameters: channel to send data to
-// ----------------------------- notes ---------------------------------------
-// none
-// ===========================================================================
-function SendModal(tochannel)
+/**
+ * Send our AdminModal to the extension
+ * @param {String} toExtension 
+ */
+function SendModal(toExtension)
 {
     // read our modal file
     fs.readFile(__dirname + '/adminmodal.html', function (err, filedata)
@@ -261,10 +294,10 @@ function SendModal(tochannel)
                         localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
-                        tochannel,
+                        toExtension,
                         localConfig.OUR_CHANNEL),
                     "",
-                    tochannel
+                    toExtension
                 ));
         }
     });
@@ -284,6 +317,13 @@ function SaveConfigToServer()
             "SaveConfig",
             localConfig.EXTENSION_NAME,
             serverConfig));
+}
+// ============================================================================
+//                     FUNCTION: process_chat_data
+// ============================================================================
+function SaveChatMessagesToServerScheduler()
+{
+    setTimeout(SaveConfigToServer, serverConfig.chatMessageBackupTimer);
 }
 // ============================================================================
 //                     FUNCTION: process_chat_data
@@ -310,6 +350,11 @@ function process_chat_data(channel, tags, chatmessage)
                 data,
                 localConfig.OUR_CHANNEL
             ));
+        // lets store the chat history
+        serverConfig.chatMessageBuffer.push(data);
+        // keep the number of chat items down to the size of the buffer.
+        while (serverConfig.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
+            serverConfig.chatMessageBuffer.shift();
     }
 }
 /**
@@ -370,16 +415,15 @@ function reconnectChat()
 function joinChatChannel()
 {
     let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
-    let chatmessagetags = { "display-name": "System" };
+    let chatmessagetags = { "display-name": "System", "emotes": "" };
     if (serverConfig.enabletwitchchat === "on")
     {
         localConfig.twitchClient.join(serverConfig.streamername)
             .then(() =>
             {
                 localConfig.status.connected = true;
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername)
-                process_chat_data(chatmessagename, chatmessagetags, "Chat channel changed to " + serverConfig.streamername)
-
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername);
+                process_chat_data(chatmessagename, chatmessagetags, "Chat channel changed to " + serverConfig.streamername);
             }
             )
             .catch((err) =>
@@ -400,7 +444,7 @@ import * as tmi from "tmi.js";
 function connectToTwtich()
 {
     let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
-    let chatmessagetags = { "display-name": "System" };
+    let chatmessagetags = { "display-name": "System", "emotes": "" };
     if (typeof credentials.twitchchatbot === "undefined" || typeof credentials.twitchchatoauth === "undefined" ||
         credentials.twitchchatbot === "" || credentials.twitchchatoauth === "")
     {
@@ -411,8 +455,8 @@ function connectToTwtich()
             {
                 localConfig.status.readonly = true;
                 localConfig.status.connected = true;
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly")
-                process_chat_data(chatmessagename, chatmessagetags, "Chat connected readonly: " + serverConfig.streamername)
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly");
+                process_chat_data(chatmessagename, chatmessagetags, "Chat connected readonly: " + serverConfig.streamername);
             }
             )
 

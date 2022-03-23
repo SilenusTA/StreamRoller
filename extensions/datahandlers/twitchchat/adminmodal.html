@@ -27,6 +27,18 @@
                 <label for="streamername" class="col-form-label">Streamer name (chatchannel to join)</label>
                 <input type="text" name="streamername" class="form-control" id="streamername" value="streamernametext">
             </div>
+            <div class="form-group">
+                <label for="chatMessageBufferMaxSize" class="col-form-label">Chat Buffer Size to save over
+                    restarts</label>
+                <input type="text" name="chatMessageBufferMaxSize" class="form-control" id="chatMessageBufferMaxSize"
+                    value="chatMessageBufferMaxSizetext">
+            </div>
+            <div class="form-group">
+                <label for="chatMessageBackupTimer" class="col-form-label">How often to save chat buffer. default 60000
+                    (1minute)</label>
+                <input type="text" name="chatMessageBackupTimer" class="form-control" id="chatMessageBackupTimer"
+                    value="chatMessageBackupTimertext">
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

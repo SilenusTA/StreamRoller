@@ -143,6 +143,7 @@
         {
             RequestChList();
             RequestExtList();
+            RequestChatBuffer("twitchchat");
         }, 2000);
 
     }
@@ -259,6 +260,13 @@
             {
                 //console.log(".onDataCenterMessage", "Scenelist received ", extension_packet.type, " parsing obs list", extension_packet.data);
                 ParseOBSScenesList(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED EXTENSION MODAL CODE
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "TwitchChatBuffer")
+            {
+                processTwitchChatBuffer(extension_packet.data);
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
@@ -450,12 +458,8 @@
         for (var i = 0; i < extensions.length; i++)
         {
             // set the default list item. href link will be added if we receive a modal from them
-            //html += "<li id='" + extensions[i] + "'>"
-            //html += "<div class = 'extensioncardicon'></div>"
-            //html += extensions[i] + "</li>";
-
             html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
-            html += "<span id='" + extensions[i] + "' >"
+            html += " <span id='" + extensions[i] + "'>"
             html += extensions[i] + "</span></div>";
 
             // check if we have previously recorded this extension, if not we should add it
@@ -1014,18 +1018,11 @@
         var timecolor = "<span style='color: #757875'>";
         var usercolor = ""
 
-        // if we change chat channel lets clear out chat
-        if (localConfig.currentchatchannel != chatdata.channel)
-        {
-            localConfig.currentchatchannel = chatdata.channel;
-            localConfig.chatMessageBuffer = [];
-        }
         // lets sanitise the message before we add the emotes
-        var element = document.createElement('div');
-        element.innerText = chatdata.message
+        var sanitiser = document.createElement('div');
+        sanitiser.innerText = chatdata.message
         // add any twitch emotes
-        let message = addTwitchEmotes(element.innerHTML, chatdata.data.emotes);
-
+        let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
         if (chatdata.data['display-name'] === "MiserableMarvin")
         {
             if (chatdata.data.mod)
@@ -1034,7 +1031,7 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + time + ":" + chatdata.data['display-name'] + " " + message + "</span><BR>";
+            //cardref.innerHTML = cardref.innerHTML + time + ":" + chatdata.data['display-name'] + " " + message + "</span>";
             localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
         }
         else if (chatdata.data['display-name'] === "System")
@@ -1042,7 +1039,7 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + "<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span><BR>";
+            //cardref.innerHTML = cardref.innerHTML + "<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>";
             localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
         }
         else
@@ -1058,7 +1055,7 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
+            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message ;
             localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
         }
         if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
@@ -1071,12 +1068,13 @@
             localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
         }
 
+        // limit chat buffer to the number of lines we want to use
         while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
             localConfig.chatMessageBuffer.shift();
-        // keep scroll at the bottom of the card
+        // keep scroll at the bottom of the card if we are not srolling with the mouse
+        cardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
         if (!localConfig.mouseDown)
         {
-            cardref.innerHTML = localConfig.chatMessageBuffer.join('<BR>');
             var cardScrollHeight = cardref.scrollHeight;
             cardref.scrollTo(0, cardScrollHeight);
         }
@@ -1213,6 +1211,45 @@
                 "RequestChannelsList",
                 serverConfig.extensionname,
             ));
+    }
+
+    // ============================================================================
+    //                           FUNCTION: RequestChatBuffer
+    // ============================================================================
+    // Desription: Sends a message to the data center to get the previous chat buffer
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function RequestChatBuffer(extname)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestChatBuffer",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    extname),
+                "",
+                extname
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: processTwitchChatBuffer
+    // ============================================================================
+    // Desription: Sends a message to the data center to get the previous chat buffer
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function processTwitchChatBuffer(chatdata)
+    {
+        chatdata.forEach(ele => 
+        {
+            displayChatMessages({ data: ele });
+        })
     }
     // ============================================================================
     //                           FUNCTION: RequestAdminModalsCode
