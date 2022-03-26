@@ -36,6 +36,7 @@
         heartBeatTimeout: "6000",
         currentchatchannel: "",
         chatMessageBuffer: [],
+        modMessageBuffer: [],
         // only keep 300 messages in chat (for performance reasons)
         chatMessageBufferMaxSize: 300,
         mouseDown: 0
@@ -266,7 +267,13 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "TwitchChatBuffer")
             {
-                processTwitchChatBuffer(extension_packet.data);
+                // recreate our buffer
+                processTwitchChatBuffer(extension_packet.data)
+                    .then(() =>
+                        // display the chat buffer
+                        displayChatMessages(extension_packet.data, false)
+
+                    )
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
@@ -1008,10 +1015,36 @@
     // ============================================================================
     //                           FUNCTION: displayChatMessages
     // ============================================================================
-    function displayChatMessages(data)
+    // Add the message to our buffer and display on screen
+    // if parse=false is passed then the buffer isn't parsed, just update the screen
+    function displayChatMessages(data, parse = true)
+    {
+        // parse the messages and add them to the buffer
+        if (parse)
+            parseChatMessages(data);
+        let chatcardref = document.getElementById("ChatMessagesCardText")
+        let modcardref = document.getElementById("ModMessagesCardText")
+        // add the buffer into the chat window
+        chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
+        modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
+
+        // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
+        if (!localConfig.mouseDown)
+        {
+            var cardScrollHeight = chatcardref.scrollHeight;
+            chatcardref.scrollTo(0, cardScrollHeight);
+            var modScrollHeight = modcardref.scrollHeight;
+            modcardref.scrollTo(0, modScrollHeight);
+
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: parseChatMessages
+    // ============================================================================
+    // updates the buffer with the messages
+    function parseChatMessages(data)
     {
         let chatdata = data.data;
-        let cardref = document.getElementById("ChatMessagesCardText")
         let today = new Date();
         let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
         // make it colourful
@@ -1022,6 +1055,8 @@
         var sanitiser = document.createElement('div');
         sanitiser.innerText = chatdata.message
         // add any twitch emotes
+        if (chatdata.data['display-name'] === "OldDepressedGamer")
+            console.log(data)
         let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
         if (chatdata.data['display-name'] === "MiserableMarvin")
         {
@@ -1031,7 +1066,6 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + time + ":" + chatdata.data['display-name'] + " " + message + "</span>";
             localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
         }
         else if (chatdata.data['display-name'] === "System")
@@ -1039,7 +1073,6 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + "<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>";
             localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
         }
         else
@@ -1055,29 +1088,21 @@
 
             // set the card data
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message ;
             localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
-        }
-        if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
-        {
-            let cardref = document.getElementById("ModMessagesCardText")
-            // make it colourful
-            time = timecolor + time + ":</span>";
-            //console.log(time + ":" + username + " " + chatdata.message + "<BR>" + cardref.innerHTML);
-            //cardref.innerHTML = cardref.innerHTML + time + ":" + username + " " + message + "<BR>";
-            localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
+
+            // add mod messages to mod card if selected
+            if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
+                localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
+
         }
 
         // limit chat buffer to the number of lines we want to use
         while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
             localConfig.chatMessageBuffer.shift();
-        // keep scroll at the bottom of the card if we are not srolling with the mouse
-        cardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
-        if (!localConfig.mouseDown)
-        {
-            var cardScrollHeight = cardref.scrollHeight;
-            cardref.scrollTo(0, cardScrollHeight);
-        }
+        // limit mod buffer to the number of lines we want to use (same as chat buffer)
+        while (localConfig.modMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
+            localConfig.modMessageBuffer.shift();
+
     }
     // ============================================================================
     //                           FUNCTION: addTwitchEmotes
@@ -1091,7 +1116,9 @@
         // ! you have to first scan through 
         // the message string and replace later
         const stringReplacements = [];
-
+        let theme = "light"
+        if (localStorage.getItem("darkmode") === "true")
+            theme = "dark"
         // iterate of emotes to access ids and positions
         Object.entries(emotes).forEach(([id, positions]) =>
         {
@@ -1102,10 +1129,10 @@
                 parseInt(start, 10),
                 parseInt(end, 10) + 1
             );
-
             stringReplacements.push({
                 stringToReplace: stringToReplace,
-                replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
+                //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
+                replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/${theme}/1.0">`
             });
         });
 
@@ -1244,12 +1271,17 @@
     // ----------------------------- notes ----------------------------------------
     // none
     // ===========================================================================
-    function processTwitchChatBuffer(chatdata)
+    async function processTwitchChatBuffer(chatdata)
     {
+        let counter = 0
+        // as we have received a bufer lets delete the old data
+        document.getElementById("ChatMessagesCardText").innerHTML = "";
+        localConfig.chatMessageBuffer = [];
         chatdata.forEach(ele => 
         {
-            displayChatMessages({ data: ele });
+            parseChatMessages({ data: ele });
         })
+        localConfig.chatMessageBuffer.push("--------- buffer loaded --------")
     }
     // ============================================================================
     //                           FUNCTION: RequestAdminModalsCode
