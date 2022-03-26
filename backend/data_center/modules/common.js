@@ -14,7 +14,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const configFilesPath = __dirname + "/../datastore/";
+const configFilesPath = __dirname + "/../configstore/";
 const credentialFilesPath = __dirname + "/../credentialstore/";
 let credentials = {};
 // ============================================================================
