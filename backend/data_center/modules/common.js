@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const configFilesPath = __dirname + "/../configstore/";
+const dataFilesPath = __dirname + "/../datastore/";
 const credentialFilesPath = __dirname + "/../credentialstore/";
 let credentials = {};
 // ============================================================================
@@ -27,11 +28,10 @@ let credentials = {};
  */
 function encrypt(text)
 {
-    //console.log("encrypt", credentials)
     let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return { iv: credentials.iv.toString('hex'), encryptedData: encrypted.toString('hex') };
+    return { iv: JSON.stringify(credentials.iv), encryptedData: encrypted.toString('hex') };
 }
 
 // ============================================================================
@@ -44,7 +44,8 @@ function encrypt(text)
  */
 function decrypt(text)
 {
-    let iv = Buffer.from(text.iv, 'hex');
+    //let iv = Buffer.from(text.iv, 'hex');
+    //let iv = JSON.parse(text.iv);
     let encryptedText = Buffer.from(text.encryptedData, 'hex');
     let decipher = crypto.createDecipheriv(credentials.algorithm, Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
     let decrypted = decipher.update(encryptedText);
@@ -57,7 +58,6 @@ function decrypt(text)
 function initcrypto()
 {
     const credfile = loadConfig("seed", credentialFilesPath)
-    //console.log("initcrypto", credfile)
     if (credfile === "")
     {
         // should create a new set on run and re-encrypt the current files but as
@@ -79,13 +79,6 @@ function initcrypto()
         credentials.key = credfile.key;
         credentials.iv = credfile.iv
     }
-
-    /*let testdata = { ExtensionName: "testcreds", id: "myid", data: "mydata" }
-    console.log("testdata pre save", testdata);
-    saveCredentials("test", testdata)
-    let loadeddata = loadCredentials(testdata.ExtensionName)
-    console.log("loadeddata ", loadeddata);
-*/
 }
 
 // ============================================================================
@@ -141,6 +134,21 @@ function saveConfig(configname, data, path = configFilesPath)
             return true;
     });
 }
+
+// ============================================================================
+//                  FUNCTION: loadData
+// ============================================================================
+function loadData(configname)
+{
+    return loadConfig(configname, dataFilesPath)
+}
+// ============================================================================
+//                  FUNCTION: saveData
+// ============================================================================
+function saveData(configname, data)
+{
+    return saveConfig(configname, data, dataFilesPath)
+}
 // ============================================================================
 //                  FUNCTION: loadCredentials
 // ============================================================================
@@ -190,4 +198,4 @@ function saveCredentials(data)
 // ============================================================================
 //                           EXPORTS: 
 // ============================================================================
-export { initcrypto, loadConfig, saveConfig, loadCredentials, saveCredentials };
+export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials };

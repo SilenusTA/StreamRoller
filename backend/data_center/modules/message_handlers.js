@@ -49,6 +49,34 @@ function saveConfig(extensionname, configdata)
     cm.saveConfig(extensionname, configdata);
 }
 // ============================================================================
+//                           FUNCTION: sendData
+// ============================================================================
+/**
+ * loads and sends the data file to the given extension
+ * @param {Socket} client_socket socket to send on
+ * @param {String} extensionname extension name
+ */
+function sendData(client_socket, extensionname)
+{
+    let loadedData = cm.loadData(extensionname);
+    logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendData",
+        "Sending data file", extensionname, loadedData);
+    let msg = sr_api.ServerPacket("DataFile", EXTENSION_NAME, loadedData, "", extensionname);
+    client_socket.emit("message", msg);
+}
+// ============================================================================
+//                           FUNCTION: saveData
+// ============================================================================
+/**
+ * save the Data file to the server store
+ * @param {String} extensionname 
+ * @param {Object} data 
+ */
+function saveData(extensionname, data)
+{
+    cm.saveData(extensionname, data);
+}
+// ============================================================================
 //                           FUNCTION: sendExtensionList
 // ============================================================================
 /**
@@ -329,6 +357,8 @@ export
 {
     sendConfig,
     saveConfig,
+    sendData,
+    saveData,
     sendExtensionList,
     sendChannelList,
     createChannel,

@@ -308,10 +308,10 @@ localConfig.obsConnection = new OBSWebSocket();
 function connectToObs(host, port, pass)
 {
     localConfig.obsConnecting = true
-    if (localConfig.obshost != "" || localConfig.obsport != "")
+    if (host != "" && port != "" && pass != "" && host != null && port != null && pass != null)
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", localConfig.host, localConfig.port, "xxxx");
-        localConfig.obsConnection.connect({ address: localConfig.obshost + ':' + localConfig.obsport, password: localConfig.obspass })
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", host, port, "xxxx");
+        localConfig.obsConnection.connect({ address: host + ':' + port, password: pass })
             .then(() =>
             {
                 // we are now connected so stop any furthur scheduling
@@ -338,7 +338,7 @@ function connectToObs(host, port, pass)
                 localConfig.obsConnecting = true
                 setTimeout(() =>
                 {
-                    connectToObs(localConfig.host, localConfig.port, localConfig.pass);
+                    connectToObs(host, port, pass);
                 }, 5000);
             })
     }
@@ -350,7 +350,7 @@ function connectToObs(host, port, pass)
         localConfig.obsConnecting = true
         setTimeout(() =>
         {
-            connectToObs(localConfig.host, localConfig.port, localConfig.pass);
+            connectToObs(host, port, pass);
         }, 10000);
     }
 

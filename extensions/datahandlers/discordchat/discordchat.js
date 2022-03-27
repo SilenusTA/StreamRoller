@@ -43,8 +43,14 @@ const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
-    discordenabled: "off"
+    discordenabled: "off",
+    chatMessageBufferMaxSize: "300",
+    chatMessageBackupTimer: "6000"
 };
+const serverData =
+{
+    chatMessageBuffer: [],
+}
 
 // ============================================================================
 //                           FUNCTION: initialise
@@ -92,6 +98,8 @@ function onDataCenterConnect()
     // Create/Join the channels we need for this
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
     // start our heatbeat timer
@@ -123,7 +131,17 @@ function onDataCenterMessage(server_packet)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
     }
-    else if (server_packet.type === "UnknownChannel")
+    else if (server_packet.type === "DataFile")
+    {
+        if (server_packet.data != "")
+        {
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+                serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
+            SaveDataToServer();
+        }
+        SaveChatMessagesToServerScheduler();
+    } else if (server_packet.type === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
@@ -139,48 +157,52 @@ function onDataCenterMessage(server_packet)
     }
     else if (server_packet.type == "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
+        let extension_packet = server_packet.data;
         // received a reqest for our admin bootstrap modal code
-        if (decoded_packet.to === serverConfig.extensionname)
+        if (extension_packet.to === serverConfig.extensionname)
         {
-            if (decoded_packet.type === "RequestAdminModalCode")
-                SendAdminModal(decoded_packet.from);
+            if (extension_packet.type === "RequestAdminModalCode")
+                SendAdminModal(extension_packet.from);
             // received data from our admin modal. A user has requested some settings be changedd
-            else if (decoded_packet.type === "AdminModalData")
+            else if (extension_packet.type === "AdminModalData")
             {
                 // set our config values to the ones in message
                 serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key, value] of Object.entries(serverConfig))
-                    if (key in decoded_packet.data)
-                        serverConfig[key] = decoded_packet.data[key];
+                    if (key in extension_packet.data)
+                        serverConfig[key] = extension_packet.data[key];
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // currently we have the same data as sent so no need to update the server page at the moment
-                SendAdminModal(decoded_packet.from);
+                SendAdminModal(extension_packet.from);
             }
-            else if (decoded_packet.type === "PostMessage")
+            else if (extension_packet.type === "PostMessage")
             {
                 if (serverConfig.discordenabled === "on")
                 {
-                    const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === decoded_packet.data.channel);
+                    const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === extension_packet.data.channel);
                     if (typeof (channel) != "undefined")
-                        channel.send(decoded_packet.data.message);
+                        channel.send(extension_packet.data.message);
                     else
                         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                            "Failed to find discord channel to send to", decoded_packet.data.channel);
+                            "Failed to find discord channel to send to", extension_packet.data.channel);
                 }
                 else
                 {
                     logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                        "Not posting to Discord as extension is turned off ", decoded_packet.data.message);
+                        "Not posting to Discord as extension is turned off ", extension_packet.data.message);
                 }
             }
-            else if (decoded_packet.type === "ChangeListeningChannel")
+            else if (extension_packet.type === "RequestChatBuffer")
             {
-                serverConfig.monitoring_channel = decoded_packet.data;
+                sendChatBuffer(server_packet.from)
+            }
+            else if (extension_packet.type === "ChangeListeningChannel")
+            {
+                serverConfig.monitoring_channel = extension_packet.data;
                 SaveConfigToServer();
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", decoded_packet.data);
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", extension_packet.data);
             }
             else
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -214,7 +236,31 @@ function onDataCenterMessage(server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-
+// ===========================================================================
+//                           FUNCTION: sendChatBuffer
+// ===========================================================================
+/**
+ * Send our AdminModal to the extension
+ * @param {String} toExtension 
+ */
+function sendChatBuffer(toExtension)
+{
+    // send the modified modal data to the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "DiscordChatBuffer",
+                localConfig.EXTENSION_NAME,
+                serverData.chatMessageBuffer,
+                "",
+                toExtension,
+                localConfig.OUR_CHANNEL),
+            "",
+            toExtension
+        ));
+}
 // ===========================================================================
 //                           FUNCTION: SendAdminModal
 // ===========================================================================
@@ -274,6 +320,33 @@ function SaveConfigToServer()
             serverConfig.extensionname,
             serverConfig));
 }
+// ============================================================================
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+// Desription:save data on backend data store
+// Parameters: none
+// ----------------------------- notes ----------------------------------------
+// none
+// ===========================================================================
+function SaveDataToServer()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            localConfig.EXTENSION_NAME,
+            serverData));
+}
+// ============================================================================
+//                     FUNCTION: SaveChatMessagesToServerScheduler
+// ============================================================================
+function SaveChatMessagesToServerScheduler()
+{
+    SaveDataToServer()
+    // clear any previous timeout
+    clearTimeout(localConfig.saveDataHandle)
+    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer)
+
+}
 // ############################################################################
 //                          Discord server code
 // ############################################################################
@@ -296,6 +369,10 @@ function connectToDiscord(credentials)
         {
             localConfig.status.connected = true;
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
+            //let messagedata = { name: message.author.username, message: message.content }
+            process_chat_data({ author: { username: "System" }, content: "Connected to Discord" });
+            //process_chat_data(localConfig.discordClient.user.tag, chatmessagetags, "Chat Connected to " + serverConfig.streamername)
+
         });
         // Authenticate the discord client to start it up
         if (!process.env.DISCORD_TOKEN)
@@ -370,25 +447,32 @@ function discordMessageHandler(message)
         logger.log(message.user);
         console.log(message.member);
         console.log(message.author.username);*/
-        let messagedata = { name: message.author.username, message: message.content }
+        console.log(message)
+        process_chat_data(message)
 
-        // Send the message received out on our streamroller "DISCORD_CHAT" channel for other extensions to use if needed
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket("ChannelData",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "DiscordModChat",
-                    serverConfig.extensionname,
-                    messagedata,
-                    serverConfig.channel),
-                serverConfig.channel
-            ),
-        );
     }
 };
 
-
-
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function process_chat_data(message)
+{
+    let messagedata = { name: message.author.username, message: message.content }
+    serverData.chatMessageBuffer.push(messagedata);
+    // Send the message received out on our streamroller "DISCORD_CHAT" channel for other extensions to use if needed
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "DiscordModChat",
+                serverConfig.extensionname,
+                messagedata,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================

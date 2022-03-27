@@ -145,6 +145,7 @@
             RequestChList();
             RequestExtList();
             RequestChatBuffer("twitchchat");
+            RequestChatBuffer("discordchat");
         }, 2000);
 
     }
@@ -263,7 +264,7 @@
                 ParseOBSScenesList(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED EXTENSION MODAL CODE
+            //                   RECEIVED Twitch chat buffer
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "TwitchChatBuffer")
             {
@@ -271,7 +272,20 @@
                 processTwitchChatBuffer(extension_packet.data)
                     .then(() =>
                         // display the chat buffer
-                        displayChatMessages(extension_packet.data, false)
+                        displayChatMessages(extension_packet.data)
+
+                    )
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED Discord chat buffer
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "DiscordChatBuffer")
+            {
+                // recreate our buffer
+                processDiscordChatBuffer(extension_packet.data)
+                    .then(() =>
+                        // display the chat buffer
+                        displayChatMessages(extension_packet.data)
 
                     )
             }
@@ -319,6 +333,7 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "TWITCH_CHAT")
             {
+                parseTwitchChatMessage(server_packet);
                 displayChatMessages(server_packet);
             }
             // -------------------------------------------------------------------------------------------------
@@ -326,7 +341,9 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "DISCORD_CHAT")
             {
-                displayDiscordMessages(server_packet);
+                parseDiscordChatMessage(server_packet);
+                //displayDiscordMessages(server_packet);
+                displayChatMessages(server_packet);
             }
             // -------------------------------------------------------------------------------------------------
             //                           OBS_CHANNEL
@@ -1015,15 +1032,24 @@
     // ============================================================================
     //                           FUNCTION: displayChatMessages
     // ============================================================================
-    // Add the message to our buffer and display on screen
+    // display buffers on screen
     // if parse=false is passed then the buffer isn't parsed, just update the screen
-    function displayChatMessages(data, parse = true)
+    function displayChatMessages(data)
     {
         // parse the messages and add them to the buffer
-        if (parse)
-            parseChatMessages(data);
+        //        if (parse)
+        //            parseTwitchChatMessages(data.data);
         let chatcardref = document.getElementById("ChatMessagesCardText")
         let modcardref = document.getElementById("ModMessagesCardText")
+
+        // limit chat buffer to the number of lines we want to use
+        while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
+            localConfig.chatMessageBuffer.shift();
+
+        // limit chat buffer to the number of lines we want to use
+        while (localConfig.modMessageBuffer.length > localConfig.modMessageBufferMaxSize)
+            localConfig.modMessageBuffer.shift();
+
         // add the buffer into the chat window
         chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
         modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
@@ -1039,12 +1065,53 @@
         }
     }
     // ============================================================================
-    //                           FUNCTION: parseChatMessages
+    //                           FUNCTION: processTwitchChatBuffer
+    // ============================================================================
+    // Desription: Processes a message from the data center with the previous chat buffer
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    async function processTwitchChatBuffer(chatdata)
+    {
+        let counter = 0
+        // as we have received a bufer lets delete the old data
+        document.getElementById("ChatMessagesCardText").innerHTML = "";
+        localConfig.chatMessageBuffer = [];
+        chatdata.forEach(ele => 
+        {
+            parseTwitchChatMessage(ele);
+        })
+        localConfig.chatMessageBuffer.push("--------- buffer loaded --------");
+
+    }
+    // ============================================================================
+    //                           FUNCTION: processDiscordChatBuffer
+    // ============================================================================
+    // Desription: Processes a message from the data center with the previous chat buffer
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    async function processDiscordChatBuffer(chatdata)
+    {
+        let counter = 0
+        // as we have received a bufer lets delete the old data
+        document.getElementById("ModMessagesCardText").innerHTML = "";
+        localConfig.modMessageBuffer = [];
+        chatdata.forEach(ele => 
+        {
+            parseDiscordChatMessage(ele);
+        })
+        localConfig.modMessageBuffer.push("--------- buffer loaded --------");
+    }
+    // ============================================================================
+    //                           FUNCTION: parseTwitchChatMessage
     // ============================================================================
     // updates the buffer with the messages
-    function parseChatMessages(data)
+    function parseTwitchChatMessage(chatdata)
     {
-        let chatdata = data.data;
+        //let chatdata = data.data;
         let today = new Date();
         let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
         // make it colourful
@@ -1055,8 +1122,6 @@
         var sanitiser = document.createElement('div');
         sanitiser.innerText = chatdata.message
         // add any twitch emotes
-        if (chatdata.data['display-name'] === "OldDepressedGamer")
-            console.log(data)
         let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
         if (chatdata.data['display-name'] === "MiserableMarvin")
         {
@@ -1095,18 +1160,70 @@
                 localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
 
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: parseDiscordChatMessage
+    // ============================================================================
+    // updates the buffer with the messages
+    function parseDiscordChatMessage(chatdata)
+    {
+        //let chatdata = data.data;
+        let today = new Date();
+        let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
+        // make it colourful
+        let timecolor = "<span style='color: #757875'>";
+        let usercolor = ""
+        // https://cdn.discordapp.com/emojis/634006521180717067
+        let message = parseDiscordEmojis(chatdata.message);
+        // lets sanitise the message before we add the emotes
+        var sanitiser = document.createElement('div');
+        if (chatdata.name === "System")
+            localConfig.modMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.name + " " + message + "</span>");
+        else
+        {
+            usercolor = "<span style='color: #6f42c1'>";
+            let username = usercolor + ' ' + chatdata.name + "&gt</span>";
+            time = timecolor + time + ":</span>";
 
-        // limit chat buffer to the number of lines we want to use
-        while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
-            localConfig.chatMessageBuffer.shift();
-        // limit mod buffer to the number of lines we want to use (same as chat buffer)
-        while (localConfig.modMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
-            localConfig.modMessageBuffer.shift();
+            localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
 
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: addDiscordEmotes
+
+    // ============================================================================
+    function parseDiscordEmojis(message)
+    {
+        let index = message.indexOf('<');
+        let is, ie, emoji = 0;
+        let msg = message;
+        let newmessage = ""
+        if (msg.indexOf('<') == -1)
+            return message;
+
+        // check if we have emoji. this should really be a bit better, ie a patternmatch (in the form of <name:id>)
+        while (msg.indexOf('<') > 0)
+        {
+            //log the start of the possible emoji
+            index = msg.indexOf('<');
+            // get the start of the id
+            is = msg.indexOf(':', index + 2);
+            // get the end of the id string
+            ie = msg.indexOf('>', index)
+            // get the first part of the message (up to the next emoji)
+            newmessage = newmessage + msg.slice(0, index);
+            // get the emoji
+            emoji = msg.slice(is + 1, ie);
+            // remove the message up to the emoji
+            msg = msg.slice(ie + 1); // skip past the first '<:'
+            // add the emoji to the message
+            newmessage = newmessage + "<img src='https://cdn.discordapp.com/emojis/" + emoji + "' width='25' height='25'>";
+        }
+        return newmessage;
     }
     // ============================================================================
     //                           FUNCTION: addTwitchEmotes
-    // adds emotes to the message string
     // ============================================================================
     function addTwitchEmotes(message, emotes)
     {
@@ -1148,27 +1265,7 @@
 
         return messageHTML;
     }
-    // ============================================================================
-    //                           FUNCTION: displayDiscordMessages
-    // ============================================================================
-    // Desription: display message in allmessages card
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // ===========================================================================
-    function displayDiscordMessages(data)
-    {
-        let moddata = data.data;
-        let cardref = document.getElementById("ModMessagesCardText")
-        let today = new Date();
-        let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
-        // make it colourful
-        var timecolor = "<span style='color: #757875'>";
-        var usercolor = "<span style='color: green'>";
 
-        let username = usercolor + ' ' + moddata.data.name + "&gt</span>";
-        time = timecolor + time + ":</span>";
-        cardref.innerHTML = time + ":" + username + " " + moddata.data.message + "<BR>" + cardref.innerHTML;
-    }
     // ============================================================================
     //                           FUNCTION:DisplayAlertMessages
     // ============================================================================
@@ -1262,26 +1359,6 @@
                 "",
                 extname
             ));
-    }
-    // ============================================================================
-    //                           FUNCTION: processTwitchChatBuffer
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the previous chat buffer
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    async function processTwitchChatBuffer(chatdata)
-    {
-        let counter = 0
-        // as we have received a bufer lets delete the old data
-        document.getElementById("ChatMessagesCardText").innerHTML = "";
-        localConfig.chatMessageBuffer = [];
-        chatdata.forEach(ele => 
-        {
-            parseChatMessages({ data: ele });
-        })
-        localConfig.chatMessageBuffer.push("--------- buffer loaded --------")
     }
     // ============================================================================
     //                           FUNCTION: RequestAdminModalsCode

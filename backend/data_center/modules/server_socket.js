@@ -190,6 +190,10 @@ function onMessage(socket, server_packet)
         mh.sendConfig(socket, server_packet.from);
     else if (server_packet.type === "SaveConfig")
         mh.saveConfig(server_packet.from, server_packet.data);
+    else if (server_packet.type === "RequestData")
+        mh.sendData(socket, server_packet.from);
+    else if (server_packet.type === "SaveData")
+        mh.saveData(server_packet.from, server_packet.data);
     else if (server_packet.type === "StopServer")
         process.exit(0);
     else if (server_packet.type === "UpdateCredentials")

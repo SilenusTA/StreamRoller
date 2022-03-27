@@ -1,4 +1,4 @@
 {
-    "ignore": ["datastore/*","configstore/*","credentialstore/*"],
+    "ignore": ["datastore/*","configstore/*"],
     "ext": "js, json, html,ejs,cjs,mjs"
 }

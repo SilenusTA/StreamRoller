@@ -33,6 +33,7 @@ const localConfig = {
     channelConnectionAttempts: 20,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
+    saveDataHandle: null,
     status: {
         readonly: true,
         connected: false // this is our connection indicator for discord
@@ -44,9 +45,12 @@ const serverConfig = {
     enabletwitchchat: "on",
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
-    chatMessageBuffer: [],
-    chatMessageBackupTimer: "60000"
+    chatMessageBackupTimer: "6000"
 };
+const serverData =
+{
+    chatMessageBuffer: [],
+}
 const credentials = {};
 
 // ============================================================================
@@ -108,6 +112,9 @@ function onDataCenterConnect(socket)
         sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
+    clearTimeout(localConfig.heartBeatHandle);
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -120,23 +127,21 @@ function onDataCenterConnect(socket)
 // ===========================================================================
 function onDataCenterMessage(server_packet)
 {
-    if (server_packet.type === "ConfigFile" && server_packet.data != "")
+    //console.log(server_packet)
+    if (server_packet.type === "ConfigFile")
     {
         // check it is our config
         serverConfig.enabletwitchchat = "off";
-        if (server_packet.to === serverConfig.extensionname)
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
             }
-
-
         }
         SaveConfigToServer();
-        // we store the chat message buffer for next time we run up so we just schedule a saveconfig ever so often
-        // should really only save it when the server shuts down but but we don't have a nice way to do that at the moment
+        // restart the sceduler in case we changed the values
         SaveChatMessagesToServerScheduler();
     }
     else if (server_packet.type === "CredentialsFile")
@@ -164,6 +169,17 @@ function onDataCenterMessage(server_packet)
                 connectToTwtich();
         }
     }
+    else if (server_packet.type === "DataFile")
+    {
+        if (server_packet.data != "")
+        {
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+                serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
+            SaveDataToServer();
+        }
+        SaveChatMessagesToServerScheduler();
+    }
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
@@ -186,6 +202,8 @@ function onDataCenterMessage(server_packet)
                 else
                     connectToTwtich();
                 SaveConfigToServer();
+                // restart the sceduler in case we changed it
+                SaveChatMessagesToServerScheduler();
             }
         }
         else if (extension_packet.type === "SendChatMessage")
@@ -249,7 +267,7 @@ function sendChatBuffer(toExtension)
             sr_api.ExtensionPacket(
                 "TwitchChatBuffer",
                 localConfig.EXTENSION_NAME,
-                serverConfig.chatMessageBuffer,
+                serverData.chatMessageBuffer,
                 "",
                 toExtension,
                 localConfig.OUR_CHANNEL),
@@ -305,11 +323,6 @@ function SendModal(toExtension)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
-// Desription:save config on backend data store
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
 function SaveConfigToServer()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -319,11 +332,31 @@ function SaveConfigToServer()
             serverConfig));
 }
 // ============================================================================
-//                     FUNCTION: process_chat_data
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+// Desription:save data on backend data store
+// Parameters: none
+// ----------------------------- notes ----------------------------------------
+// none
+// ===========================================================================
+function SaveDataToServer()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            localConfig.EXTENSION_NAME,
+            serverData));
+}
+// ============================================================================
+//                     FUNCTION: SaveChatMessagesToServerScheduler
 // ============================================================================
 function SaveChatMessagesToServerScheduler()
 {
-    setTimeout(SaveConfigToServer, serverConfig.chatMessageBackupTimer);
+    SaveDataToServer()
+    // clear any previous timeout
+    clearTimeout(localConfig.saveDataHandle)
+    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer)
+
 }
 // ============================================================================
 //                     FUNCTION: process_chat_data
@@ -351,10 +384,10 @@ function process_chat_data(channel, tags, chatmessage)
                 localConfig.OUR_CHANNEL
             ));
         // lets store the chat history
-        serverConfig.chatMessageBuffer.push(data);
+        serverData.chatMessageBuffer.push(data);
         // keep the number of chat items down to the size of the buffer.
-        while (serverConfig.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
-            serverConfig.chatMessageBuffer.shift();
+        while (serverData.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
+            serverData.chatMessageBuffer.shift();
     }
 }
 /**
