@@ -71,7 +71,9 @@ At it's current stage the use case for this software to be run in a controlled e
 Login/users and SSL security will be added later
 
 # Installing
+Note for streaming: Additional sofware needed. The free broadcasting software [OBS Studio](https://obsproject.com/) is required. Also an overlay for your stream is recommended to show alers etc. There is a small overlay demo version included to show how to trigger alerts using StreamRoller to provide the data.
 
+Currently (as we are using StreamLabsAPI) you will receive alerts for both Twitch and Youtube (untested but you should also provide info for Mixer, facebook, Trovo and TikTok)
 ## Step 1: Install node
 Streamroller needs the [node.js](https://nodejs.org/en/download/) webserver to run. It is recommended to use [VSCode](https://code.visualstudio.com/download) to modify/change/add extra features. This VSCode editor provides a lot of nice features for development.
 ## Step 2: Download Streamroller
