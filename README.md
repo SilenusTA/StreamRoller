@@ -151,7 +151,7 @@ The current focus in on twitch streaming (although the streamlabs api currently 
 - Twitch pub/sub: to allow twitch control (setting title, category, bannign users etc)
 - IRC chatbot: one bot that will work with all the chat extension to provide a single moderator bot for all chat channels (discord/twitch/youtube/facebook etc)
 - NDI stream extension to allow easy integration of external video feeds
-
+- chat auto language conversion.
 note: suggestions welcome for this list
 # Links
 

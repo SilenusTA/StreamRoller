@@ -126,13 +126,20 @@ function loadConfig(configname, path = configFilesPath)
  */
 function saveConfig(configname, data, path = configFilesPath)
 {
-    fs.writeFileSync(path + configname + ".json", JSON.stringify(data), function (err)
+    try
     {
-        if (err)
-            return false;
-        else
-            return true;
-    });
+        fs.writeFileSync(path + configname + ".json", JSON.stringify(data), function (err)
+        {
+            if (err)
+                return false;
+            else
+                return true;
+        });
+    }
+    catch (err)
+    {
+        console.log("saveConfig failed,", err.message)
+    }
 }
 
 // ============================================================================

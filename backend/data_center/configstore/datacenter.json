@@ -1,1 +1,1 @@
-{"name":"StreamRoller","extensionname":"datacenter","SYSTEM_LOGGING_TAG":"DATA-CENTER","HOST":"http://localhost","PORT":3000,"logginglevel":"0","heartbeat":5000,"apiVersion":"0.2"}
+{"name":"StreamRoller","extensionname":"datacenter","SYSTEM_LOGGING_TAG":"DATA-CENTER","HOST":"http://localhost","PORT":3000,"logginglevel":"3","heartbeat":5000,"apiVersion":"0.2"}
