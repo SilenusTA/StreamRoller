@@ -384,7 +384,10 @@
                 {
                     localConfig.obslive = true;
                     OBSLiveCheck();
-                    postMessageToTwitter("Were up and running at http://twitch.tv/OldDepressedGamer why not pop in and say hi. Sent from StreamRoller");
+                    // send tweet to say we are live
+                    postMessageToTwitter();
+
+
                 }
                 else if (extension_packet.type === "StreamStopped")
                 {
@@ -1531,8 +1534,27 @@
     // ============================================================================
     //                           FUNCTION: postMessageToTwitter
     // ============================================================================
-    function postMessageToTwitter(msg)
+    function postMessageToTwitter()
     {
+
+        let msg = "We're live twitch.tv/OldDepressedGamer. ";
+        let msg_hi = "Come say Hi! ";
+        let msg_end = "Sent from StreamRoller";
+        let msg_fact = "";
+
+        if (localConfig.randomFact !== "")
+            msg_fact = "FOTD:" + localConfig.randomFact + " ";
+
+        if (((msg.length - 12) + msg_hi.length + msg_fact.length + msg_end.length) < 281)
+            msg = msg + msg_hi + msg_fact + msg_end;
+        else if (((msg.length - 12) + msg_fact.length + msg_end.length) < 281)
+            msg = msg + msg_fact + msg_end;
+        else if (((msg.length - 12) + msg_hi.length + msg_end.length) < 281)
+            msg = msg + msg_hi + msg_end;
+
+        console.log("postMessageToTwitter: ", msg)
+        console.log("msg.length ", msg.length)
+
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
@@ -1627,7 +1649,6 @@
     // ============================================================================
     function processRandomFact(data)
     {
-        // store for use when posting to twitter later when stream starts.
-        console.log("processRandomFact:", data);
+        localConfig.randomFact = data;
     }
 </script>
