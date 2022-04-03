@@ -26,7 +26,7 @@
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
-import * as sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 // config is used for non changing data. 
 import { config } from "./config.js";
@@ -71,13 +71,14 @@ const OverwriteDataCenterConfig = true;
 // this funcion is required by the backend to start the extensions.
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-function initialise(app, host, port)
+function initialise(app, host, port, heartbeat)
 {
     try
     {
         // start the socket connection by using the extensionhelper setupConnection function. we give it our callbaks to 
         // use to process messages 
-        config.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+        config.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+            onDataCenterDisconnect, host, port);
     } catch (err)
     {
         // using the logger module to log message to the console. message generally take the format of

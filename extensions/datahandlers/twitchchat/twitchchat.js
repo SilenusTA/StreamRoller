@@ -380,7 +380,12 @@ function process_chat_data(channel, tags, chatmessage)
             sr_api.ServerPacket(
                 "ChannelData",
                 localConfig.EXTENSION_NAME,
-                data,
+                sr_api.ExtensionPacket(
+                    "ChatMessage",
+                    localConfig.EXTENSION_NAME,
+                    data,
+                    localConfig.OUR_CHANNEL
+                ),
                 localConfig.OUR_CHANNEL
             ));
         // lets store the chat history
@@ -536,7 +541,8 @@ function connectToTwtich()
                 localConfig.status.readonly = true;
                 localConfig.status.connected = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err);
-                process_chat_data(chatmessagename, chatmessagetags, "Chat failed to connect to " + serverConfig.streamername)
+                process_chat_data(chatmessagename, chatmessagetags, "Chat failed to connect to " + serverConfig.streamername + " with user: " + credentials.twitchchatbot)
+                process_chat_data(chatmessagename, chatmessagetags, "Please check your settings on the admin page.")
             })
 
         localConfig.twitchClient.on('message', (channel, tags, message, self) =>

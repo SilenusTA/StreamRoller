@@ -246,7 +246,8 @@
             }
             else if (server_packet.dest_channel == "TWITCH_CHAT")
             {
-                displayChatMessages(server_packet);
+                if (extension_packet.type === "ChatMessage")
+                    displayChatMessages(extension_packet);
             } else
             {
                 //log messages to screen

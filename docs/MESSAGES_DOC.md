@@ -63,6 +63,8 @@ There are some special message types that are used (normally during startup or e
   "UpdateCredentials"     Update a credential for an extension
   "RequestCredentials"    Request the credentials for your extension
   "CredentialsFile"       Response from the "RequestCredentials" message
+  "RequestData"           Request data file for extension
+  "SaveData"              Save extension data
   "RequestExtensionsList" Request a list of extensions using the system
   "ExtensionList"         List of extensions
   "RequestChannelsList"   Request a list of channels currently available
@@ -102,6 +104,10 @@ for the extension
   - none
 - RequestChannelsList
   - none
+- RequestData
+  - none
+- SaveData
+  - data field contains data to save.
 - CreateChannel
   - data field to contain string of channel name 
 - JoinChannel
@@ -199,10 +205,10 @@ The main differences between the server packet and extension packet are
     
     {
       type      : "ExtensionMessage"
-      from      : "demoextension"
+      from      : "randomfact"
       data      : {
                     type : "AdminModalCode"
-                    from : "demoextension"
+                    from : "randomfact"
                     data : "..."
                   }
     to          : "adminpage"
