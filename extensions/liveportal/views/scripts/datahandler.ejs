@@ -1,612 +1,725 @@
 <script src="/streamroller-message-api.cjs"></script>
 <%- include('../modals/extensionsettingsplaceholdermodal'); %>
-<%- include("../modals/liveportalmodalplaceholder.html"); %>
-<script>
-    const serverConfig = {
-        // extensions vars
-        extensionname: "liveportal",
-        channel: "LIVE_PORTAL",
-        logginglevel: 0,
-        // obs settings
-        showsecondaryscenes: "on",
-        showallscenes: "on",
-        mutescene: "",
-        muted: false,
-        // chat window settings
-        modchattomodwindow: "on",
-        // discord settings
-        modmessage_channel: "stream-mod-messages", // discord channel
-        donations_channel: "announcements", // discord channel
-        // alerts posting to discord
-        follows: "off",
-        raids: "off",
-        hosts: "off",
-        subs: "off",
-        resubs: "off",
-        giftsubs: "off",
-        cloudbotredemption: "off",
-        merch: "off",
-        bits: "off",
-        donations: "off"
-    };
-    const localConfig =
-    {
-        OBSSceneslist: {},
-        obslive: false, // set on a heartbeat from obs messages
-        heartBeatTimeout: "6000",
-        currentchatchannel: "",
-        chatMessageBuffer: [],
-        modMessageBuffer: [],
-        // only keep 300 messages in chat (for performance reasons)
-        chatMessageBufferMaxSize: 300,
-        mouseDown: 0,
-        randomFact: ""
-    }
+    <%- include("../modals/liveportalmodalplaceholder.html"); %>
+        <script>
+            const serverConfig = {
+                // extensions vars
+                extensionname: "liveportal",
+                channel: "LIVE_PORTAL",
+                logginglevel: 0,
+                // obs settings
+                showsecondaryscenes: "on",
+                showallscenes: "on",
+                mutescene: "",
+                muted: false,
+                // chat window settings
+                modchattomodwindow: "on",
+                // discord settings
+                modmessage_channel: "stream-mod-messages", // discord channel
+                donations_channel: "announcements", // discord channel
+                // alerts posting to discord
+                follows: "off",
+                raids: "off",
+                hosts: "off",
+                subs: "off",
+                resubs: "off",
+                giftsubs: "off",
+                cloudbotredemption: "off",
+                merch: "off",
+                bits: "off",
+                donations: "off"
+            };
+            const localConfig =
+            {
+                OBSSceneslist: {},
+                obslive: false, // set on a heartbeat from obs messages
+                heartBeatTimeout: "6000",
+                currentchatchannel: "",
+                chatMessageBuffer: [],
+                modMessageBuffer: [],
+                // only keep 300 messages in chat (for performance reasons)
+                chatMessageBufferMaxSize: 300,
+                mouseDown: 0,
+                randomFact: ""
+            }
 
-    // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
-    // during development you may find your server data gets messed up if changing it often.
-    // while uncommented your data will not presist and be overwritten by the above config
-    // every time the server runs up.
+            // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
+            // during development you may find your server data gets messed up if changing it often.
+            // while uncommented your data will not presist and be overwritten by the above config
+            // every time the server runs up.
 
-    const OverwriteDataCenterConfig = false;
+            const OverwriteDataCenterConfig = false;
 
-    // will hold the data center socket needed to send receive data
-    // after refactoring the code this should hopefully not be needed anymore
-    let DataCenterSocket = null;
+            // will hold the data center socket needed to send receive data
+            // after refactoring the code this should hopefully not be needed anymore
+            let DataCenterSocket = null;
 
 
-    // truncates long log messages for easier reading. 
-    const LOGGING_MAX_MESSAGE_LENGTH = 200
+            // truncates long log messages for easier reading. 
+            const LOGGING_MAX_MESSAGE_LENGTH = 200
 
-    // This is used to refresh the page on a new extension list
-    // Currently if a second list comes in the submit handlers for the forms get broken
-    // and any form submitted will cause an error.
-    // possibly fixed. remove later if no issues are found
-    let bugfix_extensionlist_count = -100;
+            // This is used to refresh the page on a new extension list
+            // Currently if a second list comes in the submit handlers for the forms get broken
+            // and any form submitted will cause an error.
+            // possibly fixed. remove later if no issues are found
+            let bugfix_extensionlist_count = -100;
 
-    //global data store for the app
-    const adminData = {};
-    adminData.extensions = {};
-    // add our own card
+            //global data store for the app
+            const adminData = {};
+            adminData.extensions = {};
+            // add our own card
 
-    adminData.channellist = {};
-    var host = '<%= host %>';
-    var port = '<%= port %>';
-    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
-    // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
+            adminData.channellist = {};
+            var host = '<%= host %>';
+            var port = '<%= port %>';
+            localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+            // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
 
-    ConnectToDataCenter(host, port)
-    // ============================================================================
-    //                           FUNCTION: ConnectToDataCenter
-    // ============================================================================
-    // Desription: Connect to the data center socket
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function ConnectToDataCenter(host, port)
-    {
-        // we set this hear as it means the page has loaded at this point 
-        adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
-        try
-        {
-            DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
-                host, port);
-        } catch (err)
-        {
-            console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
-        }
-        //capture mose down so we can stop chat scroll when use is trying to use the scrollbar.
-        // crude but it works :D
-        document.body.onmousedown = function () { ++localConfig.mouseDown; }
-        document.body.onmouseup = function () { --localConfig.mouseDown; }
-    }
-    // ============================================================================
-    //                           FUNCTION: onDataCenterDisconnect
-    // ============================================================================
-    // Desription: Received disconnect message
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function onDataCenterDisconnect(reason)
-    {
-        console.log("datahandler.onDataCenterDisconnect", reason);
-    }
-    // ============================================================================
-    //                           FUNCTION: onDataCenterConnect
-    // ============================================================================
-    // Desription: Received connect message
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function onDataCenterConnect(socket)
-    {
-        // DEBUGGING overwrite our config data on the server if the flag is set
-        if (OverwriteDataCenterConfig)
-            SaveConfigToServer();
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestConfig",
-                serverConfig.extensionname
-            ));
-
-        //register our channels
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "CreateChannel",
-                serverConfig.extensionname,
-                serverConfig.channel
-            ));
-
-        //Request lists once up and running, we delay a while so other extensions can load
-        setTimeout(() =>
-        {
-            RequestChList();
-            RequestExtList();
-            RequestRandomFact();
-            RequestChatBuffer("twitchchat");
-            RequestChatBuffer("discordchat");
-        }, 2000);
-
-    }
-    // ============================================================================
-    //                           FUNCTION: onDataCenterMessage
-    // ============================================================================
-    // Desription: Received message
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function onDataCenterMessage(server_packet)
-    {
-        // -------------------------------------------------------------------------------------------------
-        //                  RECEIVED CONFIG
-        // -------------------------------------------------------------------------------------------------
-        if (server_packet.type === "ConfigFile")
-        {
-            //console.log("datahandler.onDataCenterMessage", server_packet.type + " for " + server_packet.to);
-            // update our config
-            if (server_packet.data != "")
-                // check it is our config
-                if (server_packet.to === serverConfig.extensionname)
+            ConnectToDataCenter(host, port)
+            // ============================================================================
+            //                           FUNCTION: ConnectToDataCenter
+            // ============================================================================
+            // Desription: Connect to the data center socket
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function ConnectToDataCenter(host, port)
+            {
+                // we set this hear as it means the page has loaded at this point 
+                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
+                try
                 {
-                    for (const [key, value] of Object.entries(serverConfig))
-                        if (key in server_packet.data)
-                            serverConfig[key] = server_packet.data[key];
-                    // update our modal to match the new data
-                    UpdateAdminModalData();
-                    //update the logging on the server
+                    DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+                        host, port);
+                } catch (err)
+                {
+                    console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
+                }
+                //capture mose down so we can stop chat scroll when use is trying to use the scrollbar.
+                // crude but it works :D
+                document.body.onmousedown = function () { ++localConfig.mouseDown; }
+                document.body.onmouseup = function () { --localConfig.mouseDown; }
+            }
+            // ============================================================================
+            //                           FUNCTION: onDataCenterDisconnect
+            // ============================================================================
+            // Desription: Received disconnect message
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function onDataCenterDisconnect(reason)
+            {
+                console.log("datahandler.onDataCenterDisconnect", reason);
+            }
+            // ============================================================================
+            //                           FUNCTION: onDataCenterConnect
+            // ============================================================================
+            // Desription: Received connect message
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function onDataCenterConnect(socket)
+            {
+                // DEBUGGING overwrite our config data on the server if the flag is set
+                if (OverwriteDataCenterConfig)
                     SaveConfigToServer();
-                }
-        }
-        // -------------------------------------------------------------------------------------------------
-        //                  RECEIVED CHANNEL LIST
-        // -------------------------------------------------------------------------------------------------
-        else if (server_packet.type === "ChannelList")
-        {
-            //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
-            adminData.channellist = server_packet.data;
-            adminData.channellist.forEach(element =>
-            {
-                if (element != serverConfig.channel)
-                    sr_api.sendMessage(DataCenterSocket,
-                        sr_api.ServerPacket(
-                            "JoinChannel",
-                            serverConfig.extensionname,
-                            element
-                        ));
-            });
-        }
-        // -------------------------------------------------------------------------------------------------
-        //                   RECEIVED EXTENSION LIST
-        // -------------------------------------------------------------------------------------------------
-        else if (server_packet.type === "ExtensionList")
-        {
-            //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
-            // we need to reload the page if we receive more than one list due to callback handler isses
-            // on the form
-            if (bugfix_extensionlist_count > 0)
-                location.reload();
-            else
-                bugfix_extensionlist_count++;
-            //load extension cards
-            loadExtensionCards(server_packet.data);
-            if (server_packet.data.includes("obs"))
-            {
-                RequestOBSScenes("obs");
-            }
-        }
-        else if (server_packet.type === "ExtensionMessage")
-        {
-            let extension_packet = server_packet.data;
-            //console.log(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED ADMIN MODAL REQUEST
-            // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type === "RequestAdminModalCode")
-            {
-                //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
-                SendModal(extension_packet.from, extension_packet.data);
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED EXTENSION MODAL CODE
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "AdminModalCode")
-            {
-                //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
-                addModal(extension_packet.from, extension_packet.data);
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "AdminModalData")
-            {
-                // check that it is ours
-                if (extension_packet.to === serverConfig.extensionname)
-                {
-                    // lets reset our config checkbox settings (modal will omit ones not
-                    // checked in checkboxes so set them to "off" here first if you have them)
-                    // set our config values to the ones in message
-                    for (const [key, value] of Object.entries(extension_packet.data))
-                        serverConfig[key] = value;
-                    // save our data to the server for next time we run
-                    SaveConfigToServer();
-                    //lets update our modal
-                    UpdateAdminModalData();
-                }
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Scenes list from OBS
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "SceneList")
-            {
-                //console.log(".onDataCenterMessage", "Scenelist received ", extension_packet.type, " parsing obs list", extension_packet.data);
-                ParseOBSScenesList(extension_packet.data)
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Twitch chat buffer
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "TwitchChatBuffer")
-            {
-                // recreate our buffer
-                processTwitchChatBuffer(extension_packet.data)
-                    .then(() =>
-                        // display the chat buffer
-                        displayChatMessages(extension_packet.data)
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "RequestConfig",
+                        serverConfig.extensionname
+                    ));
 
-                    )
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Discord chat buffer
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "DiscordChatBuffer")
-            {
-                // recreate our buffer
-                processDiscordChatBuffer(extension_packet.data)
-                    .then(() =>
-                        // display the chat buffer
-                        displayChatMessages(extension_packet.data)
+                //register our channels
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "CreateChannel",
+                        serverConfig.extensionname,
+                        serverConfig.channel
+                    ));
 
-                    )
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Discord chat buffer
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "RandomFact")
-            {
-                processRandomFact(extension_packet.data);
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Unhandled extension message
-            // -------------------------------------------------------------------------------------------------
-            else
-                console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
-        }
-        // -------------------------------------------------------------------------------------------------
-        //                   RECEIVED CHANNEL DATA
-        // -------------------------------------------------------------------------------------------------
-        else if (server_packet.type === "ChannelData")
-        {
-            // -------------------------------------------------------------------------------------------------
-            //                           HEATBEAT
-            // -------------------------------------------------------------------------------------------------
-            let extension_packet = server_packet.data;
-            if (extension_packet.type === "HeartBeat")
-            {
-                //check if we have this extension
-                if (typeof (adminData.extensions[extension_packet.from]) !== "undefined")
-                {
-                    //clear the previous timeout handle
-                    clearTimeout(adminData.extensions[extension_packet.from].heartBeatHandle);
-                    // setup a new timeout for this extension
-                    adminData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
-                    {
-                        heartBeatCallback(extension_packet.from)
-                    },
-                        localConfig.heartBeatTimeout);
-
-                    // set the on screen status for this extension
-                    setExtensionStatus(extension_packet.from, extension_packet.data)
-
-                }
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           STREAMLABS_ALERT
-            // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel === "STREAMLABS_ALERT")
-                ProcessStreamAlert(server_packet);
-            // -------------------------------------------------------------------------------------------------
-            //                           TWITCH_CHAT
-            // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "TWITCH_CHAT")
-            {
-                if (extension_packet.type === "ChatMessage")
-                {
-                    parseTwitchChatMessage(extension_packet.data);
-                    displayChatMessages(extension_packet);
-                }
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           DISCORD_CHAT
-            // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "DISCORD_CHAT")
-            {
-                parseDiscordChatMessage(server_packet.data.data);
-                //displayDiscordMessages(server_packet);
-                displayChatMessages(server_packet);
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           OBS_CHANNEL
-            // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "OBS_CHANNEL")
-            {
-                if (extension_packet.type === "ScenesList")
-                    ParseOBSScenesList(extension_packet.data)
-                else if (extension_packet.type === "SceneChanged")
-                {
-                    localConfig.OBSSceneslist.current = extension_packet.data;
-                    ParseOBSScenesList(localConfig.OBSSceneslist);
-                }
-                else if (extension_packet.type === "OBSStats")
-                {
-                    // need to check in case we missed the start message (stream already running when we load the page)
-                    if (!localConfig.obslive)
-                    {
-                        localConfig.obslive = true;
-                        OBSLiveCheck();
-                    }
-
-                    ProcessOBSStats(extension_packet.data);
-                }
-                else if (extension_packet.type === "StreamStarted")
-                {
-                    localConfig.obslive = true;
-                    OBSLiveCheck();
-                    // send tweet to say we are live
-                    postMessageToTwitter();
-
-
-                }
-                else if (extension_packet.type === "StreamStopped")
-                {
-                    localConfig.obslive = false;
-                    OBSLiveCheck();
-                }
-                else if (extension_packet.type === "MuteStatus")
-                {
-                    if (extension_packet.data.scene === serverConfig.mutescene)
-                    {
-                        serverConfig.muted = extension_packet.data.muted
-                        addOBSMuteButton(serverConfig.muted)
-                        OBSLiveCheck();
-                    }
-                }
-                else
-                    console.log(".onDataCenterMessage", "OBS_CHANNEL message ignored ", extension_packet.type, " from ", extension_packet.from);
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           UNHANDLED CHANNEL DATA
-            // -------------------------------------------------------------------------------------------------
-            else
-            {
-                console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
-            }
-        }
-        // -------------------------------------------------------------------------------------------------
-        //                           UNKNOWN CHANNEL MESSAGE RECEIVED
-        // -------------------------------------------------------------------------------------------------
-        else if (server_packet.type === "UnknownChannel")
-        {
-            //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
-            // need to add some sort of flood control here so we are only attempting to join one at a time
-            if (server_packet.data.message.dest_channel != "")
-            {
-                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
+                //Request lists once up and running, we delay a while so other extensions can load
                 setTimeout(() =>
                 {
+                    RequestChList();
+                    RequestExtList();
+                    RequestRandomFact();
+                    RequestChatBuffer("twitchchat");
+                    RequestChatBuffer("discordchat");
+                }, 2000);
 
-                    sr_api.sendMessage(DataCenterSocket,
-                        sr_api.ServerPacket(
-                            "JoinChannel",
-                            serverConfig.extensionname,
-                            server_packet.data.message.dest_channel
-                        ));
-                }, 10000);
             }
-            else
-                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
-
-            // -------------------------------------------------------------------------------------------------
-            //                           IGNORING THESE MESSAGE (to save loging them)
-            // -------------------------------------------------------------------------------------------------
-        } else if (server_packet.type === "ChannelJoined"
-            || server_packet.type === "ChannelCreated"
-            || server_packet.type === "ChannelLeft"
-            || server_packet.type === "LoggingLevel"
-        )
-        {
-            // just a blank handler for items we are not using to avoid message from the catchall
-        }
-        // ------------------------------------------------ unknown message type received -----------------------------------------------
-        else
-            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
-    }
-    // ============================================================================
-    //                           FUNCTION: heartBeatCallback
-    // ============================================================================
-    // Desription: started when we get a heartbeat and used to mark teh extension as down if it expires
-    // Parameters: extension name and the state (true fals to represent status)
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function heartBeatCallback(extensionname)
-    {
-        setExtensionStatus(extensionname, false);
-    }
-    // ============================================================================
-    //                           FUNCTION: SaveConfigToServer
-    // ============================================================================
-    function SaveConfigToServer()
-    {
-        // saves our serverConfig to the server so we can load it again next time we startup
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "SaveConfig",
-                serverConfig.extensionname,
-                serverConfig,
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: loadExtensionCards
-    // ============================================================================
-    // Desription: display message in allmessages card
-    // Parameters: list of extension names
-    // ----------------------------- notes ----------------------------------------
-    // There is a bug here. If the backend restarts and the page isn't 
-    // refreshed then any callbacks from the froms will fail. fix was to 
-    // force a fresh of the page when a new extension list comes in. Not very
-    // smooth :(
-    // ===========================================================================
-    function loadExtensionCards(extensions)
-    {
-        // First we create all the links (these may be changed below if the extension has provided a modal box)
-        //var html = "<ul>";
-        var html = "<div>";
-        for (var i = 0; i < extensions.length; i++)
-        {
-            // set the default list item. href link will be added if we receive a modal from them
-            html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
-            html += " <span id='" + extensions[i] + "'>"
-            html += extensions[i] + "</span></div>";
-
-            // check if we have previously recorded this extension, if not we should add it
-            if (!adminData.extensions[extensions[i]])
-                adminData.extensions[extensions[i]] = {};
-            RequestAdminModalsCode(extensions[i]);
-        };
-        //html += "</ul>";
-        html += "</div>";
-        document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
-        document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
-
-        //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
-        // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
-        for (var i = 0; i < extensions.length; i++)
-            if (adminData.extensions[extensions[i]].admincard)
-                addModal(extensions[i], adminData.extensions[extensions[i]].admincard)
-    }
-    // ===========================================================================
-    //                           FUNCTION: SendModal
-    // ===========================================================================
-    // Desription: Send the modal code back after setting the defaults according 
-    // to our server settings
-    // Parameters: channel to send data to
-    // ----------------------------- notes ---------------------------------------
-    // none
-    // ===========================================================================
-    function SendModal(toextension)
-    {
-
-        let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
-        // first lets update our modal to the current settings
-        for (const [key, value] of Object.entries(serverConfig))
-        {
-            // true values represent a checkbox so replace the "[key]checked" values with checked
-            if (value === "on")
+            // ============================================================================
+            //                           FUNCTION: onDataCenterMessage
+            // ============================================================================
+            // Desription: Received message
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function onDataCenterMessage(server_packet)
             {
-                modalstring = modalstring.replace(key + "checked", "checked");
-            }   //value is a string then we need to replace the text
-            else if (typeof (value) == "string")
-                modalstring = modalstring.replace(key + "text", value);
-        }
-        // send the modal data to the server
-        // send the modal data to the server
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "AdminModalCode",
-                    serverConfig.extensionname,
-                    modalstring,
-                    "",
-                    toextension
-                ),
-                "",
-                toextension
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: addModal
-    // ============================================================================
-    // Desription: Add the admin code from the extension to the link
-    // Parameters: 
-    //          xname - name of extension
-    //          data  - data to add
-    // ----------------------------- notes ----------------------------------------
-    // None
-    // ===========================================================================
-    function addModal(xname, data)
-    {
-        // only update modals if we have received the extension name from the server
-        if (adminData.extensions[xname])
-        {
-            let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
-            // grab the <li> element for this extension
-            let extLiTag = document.getElementById(xname);
-            // remove the previous event listener (if there was one)
-            $('#' + xname + "_modal").off('submit');
-            //set the element contents to a blank extension placeholder
-            // if we have already set this element to the placeholder page we don't want to do it again
-            // otherwise it will replace the submit callback and throw an error when updated a second time.
-            if (extLiTag.innerHTML === xname)
-                extLiTag.innerHTML = modalbox.innerHTML;
-            // setup the link to show the dialog
-            extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_modal";
-            extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
-            extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal";
-            // set the data from the extension
-            document.getElementById(xname + "_modal").innerHTML = data;
-            // add a callback handle
-            $('#' + xname + "_modal").on('submit', function (event)
-            {
-                event.preventDefault();
-                // if it is our own modal that has changed (another page has submitted one
-                // we need to process it ourselves first
-                if (xname == serverConfig.extensionname)
+                // -------------------------------------------------------------------------------------------------
+                //                  RECEIVED CONFIG
+                // -------------------------------------------------------------------------------------------------
+                if (server_packet.type === "ConfigFile")
                 {
-                    // process this data oursleves first
-                    processOwnModalSubmit(xname);
-                    // now it is processed we can parse it and send the data out to other who
-                    // migh have it on their page
-                    parseExtensionModalData(xname);
-                    // As we have some updateded data we need to make sure that we refresh ourselves in case
-                    // we have changed some settings (ie buttons to be shown)
-                    ParseOBSScenesList(localConfig.OBSSceneslist);
-                    // send the obs message with the settings just in case they had changed or just to refresh them
-                    /*sr_api.sendMessage(DataCenterSocket,
+                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " for " + server_packet.to);
+                    // update our config
+                    if (server_packet.data != "")
+                        // check it is our config
+                        if (server_packet.to === serverConfig.extensionname)
+                        {
+                            for (const [key, value] of Object.entries(serverConfig))
+                                if (key in server_packet.data)
+                                    serverConfig[key] = server_packet.data[key];
+                            // update our modal to match the new data
+                            UpdateAdminModalData();
+                            //update the logging on the server
+                            SaveConfigToServer();
+                        }
+                }
+                // -------------------------------------------------------------------------------------------------
+                //                  RECEIVED CHANNEL LIST
+                // -------------------------------------------------------------------------------------------------
+                else if (server_packet.type === "ChannelList")
+                {
+                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
+                    adminData.channellist = server_packet.data;
+                    adminData.channellist.forEach(element =>
+                    {
+                        if (element != serverConfig.channel)
+                            sr_api.sendMessage(DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "JoinChannel",
+                                    serverConfig.extensionname,
+                                    element
+                                ));
+                    });
+                }
+                // -------------------------------------------------------------------------------------------------
+                //                   RECEIVED EXTENSION LIST
+                // -------------------------------------------------------------------------------------------------
+                else if (server_packet.type === "ExtensionList")
+                {
+                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
+                    // we need to reload the page if we receive more than one list due to callback handler isses
+                    // on the form
+                    if (bugfix_extensionlist_count > 0)
+                        location.reload();
+                    else
+                        bugfix_extensionlist_count++;
+                    //load extension cards
+                    loadExtensionCards(server_packet.data);
+                    if (server_packet.data.includes("obs"))
+                    {
+                        RequestOBSScenes("obs");
+                    }
+                }
+                else if (server_packet.type === "ExtensionMessage")
+                {
+                    let extension_packet = server_packet.data;
+                    //console.log(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED ADMIN MODAL REQUEST
+                    // -------------------------------------------------------------------------------------------------
+                    if (extension_packet.type === "RequestAdminModalCode")
+                    {
+                        //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
+                        SendModal(extension_packet.from, extension_packet.data);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED EXTENSION MODAL CODE
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "AdminModalCode")
+                    {
+                        //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
+                        addModal(extension_packet.from, extension_packet.data);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "AdminModalData")
+                    {
+                        // check that it is ours
+                        if (extension_packet.to === serverConfig.extensionname)
+                        {
+                            // lets reset our config checkbox settings (modal will omit ones not
+                            // checked in checkboxes so set them to "off" here first if you have them)
+                            // set our config values to the ones in message
+                            for (const [key, value] of Object.entries(extension_packet.data))
+                                serverConfig[key] = value;
+                            // save our data to the server for next time we run
+                            SaveConfigToServer();
+                            //lets update our modal
+                            UpdateAdminModalData();
+                        }
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Scenes list from OBS
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "SceneList")
+                    {
+                        //console.log(".onDataCenterMessage", "Scenelist received ", extension_packet.type, " parsing obs list", extension_packet.data);
+                        ParseOBSScenesList(extension_packet.data)
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Twitch chat buffer
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "TwitchChatBuffer")
+                    {
+                        // recreate our buffer
+                        processTwitchChatBuffer(extension_packet.data)
+                            .then(() =>
+                                // display the chat buffer
+                                displayChatMessages(extension_packet.data)
+
+                            )
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Discord chat buffer
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "DiscordChatBuffer")
+                    {
+                        // recreate our buffer
+                        processDiscordChatBuffer(extension_packet.data)
+                            .then(() =>
+                                // display the chat buffer
+                                displayChatMessages(extension_packet.data)
+
+                            )
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Discord chat buffer
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "RandomFact")
+                    {
+                        processRandomFact(extension_packet.data);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Unhandled extension message
+                    // -------------------------------------------------------------------------------------------------
+                    else
+                        console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+                }
+                // -------------------------------------------------------------------------------------------------
+                //                   RECEIVED CHANNEL DATA
+                // -------------------------------------------------------------------------------------------------
+                else if (server_packet.type === "ChannelData")
+                {
+                    // -------------------------------------------------------------------------------------------------
+                    //                           HEATBEAT
+                    // -------------------------------------------------------------------------------------------------
+                    let extension_packet = server_packet.data;
+                    if (extension_packet.type === "HeartBeat")
+                    {
+                        //check if we have this extension
+                        if (typeof (adminData.extensions[extension_packet.from]) !== "undefined")
+                        {
+                            //clear the previous timeout handle
+                            clearTimeout(adminData.extensions[extension_packet.from].heartBeatHandle);
+                            // setup a new timeout for this extension
+                            adminData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
+                            {
+                                heartBeatCallback(extension_packet.from)
+                            },
+                                localConfig.heartBeatTimeout);
+
+                            // set the on screen status for this extension
+                            setExtensionStatus(extension_packet.from, extension_packet.data)
+
+                        }
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                           STREAMLABS_ALERT
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel === "STREAMLABS_ALERT")
+                        ProcessStreamAlert(server_packet);
+                    // -------------------------------------------------------------------------------------------------
+                    //                           TWITCH_CHAT
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel == "TWITCH_CHAT")
+                    {
+                        if (extension_packet.type === "ChatMessage")
+                        {
+                            parseTwitchChatMessage(extension_packet.data);
+                            displayChatMessages(extension_packet);
+                        }
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                           DISCORD_CHAT
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel == "DISCORD_CHAT")
+                    {
+                        parseDiscordChatMessage(server_packet.data.data);
+                        //displayDiscordMessages(server_packet);
+                        displayChatMessages(server_packet);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                           OBS_CHANNEL
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel == "OBS_CHANNEL")
+                    {
+                        if (extension_packet.type === "ScenesList")
+                            ParseOBSScenesList(extension_packet.data)
+                        else if (extension_packet.type === "SceneChanged")
+                        {
+                            localConfig.OBSSceneslist.current = extension_packet.data;
+                            ParseOBSScenesList(localConfig.OBSSceneslist);
+                        }
+                        else if (extension_packet.type === "OBSStats")
+                        {
+                            // need to check in case we missed the start message (stream already running when we load the page)
+                            if (!localConfig.obslive)
+                            {
+                                localConfig.obslive = true;
+                                OBSLiveCheck();
+                            }
+
+                            ProcessOBSStats(extension_packet.data);
+                        }
+                        else if (extension_packet.type === "StreamStarted")
+                        {
+                            localConfig.obslive = true;
+                            OBSLiveCheck();
+                            // send tweet to say we are live
+                            postMessageToTwitter();
+
+
+                        }
+                        else if (extension_packet.type === "StreamStopped")
+                        {
+                            localConfig.obslive = false;
+                            OBSLiveCheck();
+                        }
+                        else if (extension_packet.type === "MuteStatus")
+                        {
+                            if (extension_packet.data.scene === serverConfig.mutescene)
+                            {
+                                serverConfig.muted = extension_packet.data.muted
+                                addOBSMuteButton(serverConfig.muted)
+                                OBSLiveCheck();
+                            }
+                        }
+                        else
+                            console.log(".onDataCenterMessage", "OBS_CHANNEL message ignored ", extension_packet.type, " from ", extension_packet.from);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                           UNHANDLED CHANNEL DATA
+                    // -------------------------------------------------------------------------------------------------
+                    else
+                    {
+                        console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
+                    }
+                }
+                // -------------------------------------------------------------------------------------------------
+                //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+                // -------------------------------------------------------------------------------------------------
+                else if (server_packet.type === "UnknownChannel")
+                {
+                    //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+                    // need to add some sort of flood control here so we are only attempting to join one at a time
+                    if (server_packet.data.message.dest_channel != "")
+                    {
+                        console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
+                        setTimeout(() =>
+                        {
+
+                            sr_api.sendMessage(DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "JoinChannel",
+                                    serverConfig.extensionname,
+                                    server_packet.data.message.dest_channel
+                                ));
+                        }, 10000);
+                    }
+                    else
+                        console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
+
+                    // -------------------------------------------------------------------------------------------------
+                    //                           IGNORING THESE MESSAGE (to save loging them)
+                    // -------------------------------------------------------------------------------------------------
+                } else if (server_packet.type === "ChannelJoined"
+                    || server_packet.type === "ChannelCreated"
+                    || server_packet.type === "ChannelLeft"
+                    || server_packet.type === "LoggingLevel"
+                )
+                {
+                    // just a blank handler for items we are not using to avoid message from the catchall
+                }
+                // ------------------------------------------------ unknown message type received -----------------------------------------------
+                else
+                    console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
+            }
+            // ============================================================================
+            //                           FUNCTION: heartBeatCallback
+            // ============================================================================
+            // Desription: started when we get a heartbeat and used to mark teh extension as down if it expires
+            // Parameters: extension name and the state (true fals to represent status)
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function heartBeatCallback(extensionname)
+            {
+                setExtensionStatus(extensionname, false);
+            }
+            // ============================================================================
+            //                           FUNCTION: SaveConfigToServer
+            // ============================================================================
+            function SaveConfigToServer()
+            {
+                // saves our serverConfig to the server so we can load it again next time we startup
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "SaveConfig",
+                        serverConfig.extensionname,
+                        serverConfig,
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: loadExtensionCards
+            // ============================================================================
+            // Desription: display message in allmessages card
+            // Parameters: list of extension names
+            // ----------------------------- notes ----------------------------------------
+            // There is a bug here. If the backend restarts and the page isn't 
+            // refreshed then any callbacks from the froms will fail. fix was to 
+            // force a fresh of the page when a new extension list comes in. Not very
+            // smooth :(
+            // ===========================================================================
+            function loadExtensionCards(extensions)
+            {
+                // First we create all the links (these may be changed below if the extension has provided a modal box)
+                //var html = "<ul>";
+                var html = "<div>";
+                for (var i = 0; i < extensions.length; i++)
+                {
+                    // set the default list item. href link will be added if we receive a modal from them
+                    html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                    html += " <span id='" + extensions[i] + "'>"
+                    html += extensions[i] + "</span></div>";
+
+                    // check if we have previously recorded this extension, if not we should add it
+                    if (!adminData.extensions[extensions[i]])
+                        adminData.extensions[extensions[i]] = {};
+                    RequestAdminModalsCode(extensions[i]);
+                };
+                //html += "</ul>";
+                html += "</div>";
+                document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
+                document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
+
+                //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
+                // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
+                for (var i = 0; i < extensions.length; i++)
+                    if (adminData.extensions[extensions[i]].admincard)
+                        addModal(extensions[i], adminData.extensions[extensions[i]].admincard)
+            }
+            // ===========================================================================
+            //                           FUNCTION: SendModal
+            // ===========================================================================
+            // Desription: Send the modal code back after setting the defaults according 
+            // to our server settings
+            // Parameters: channel to send data to
+            // ----------------------------- notes ---------------------------------------
+            // none
+            // ===========================================================================
+            function SendModal(toextension)
+            {
+
+                let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
+                // first lets update our modal to the current settings
+                for (const [key, value] of Object.entries(serverConfig))
+                {
+                    // true values represent a checkbox so replace the "[key]checked" values with checked
+                    if (value === "on")
+                    {
+                        modalstring = modalstring.replace(key + "checked", "checked");
+                    }   //value is a string then we need to replace the text
+                    else if (typeof (value) == "string")
+                        modalstring = modalstring.replace(key + "text", value);
+                }
+                // send the modal data to the server
+                // send the modal data to the server
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "AdminModalCode",
+                            serverConfig.extensionname,
+                            modalstring,
+                            "",
+                            toextension
+                        ),
+                        "",
+                        toextension
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: addModal
+            // ============================================================================
+            // Desription: Add the admin code from the extension to the link
+            // Parameters: 
+            //          xname - name of extension
+            //          data  - data to add
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function addModal(xname, data)
+            {
+                // only update modals if we have received the extension name from the server
+                if (adminData.extensions[xname])
+                {
+                    let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
+                    // grab the <li> element for this extension
+                    let extLiTag = document.getElementById(xname);
+                    // remove the previous event listener (if there was one)
+                    $('#' + xname + "_modal").off('submit');
+                    //set the element contents to a blank extension placeholder
+                    // if we have already set this element to the placeholder page we don't want to do it again
+                    // otherwise it will replace the submit callback and throw an error when updated a second time.
+                    if (extLiTag.innerHTML === xname)
+                        extLiTag.innerHTML = modalbox.innerHTML;
+                    // setup the link to show the dialog
+                    extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_modal";
+                    extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
+                    extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal";
+                    // set the data from the extension
+                    document.getElementById(xname + "_modal").innerHTML = data;
+                    // add a callback handle
+                    $('#' + xname + "_modal").on('submit', function (event)
+                    {
+                        event.preventDefault();
+                        // if it is our own modal that has changed (another page has submitted one
+                        // we need to process it ourselves first
+                        if (xname == serverConfig.extensionname)
+                        {
+                            // process this data oursleves first
+                            processOwnModalSubmit(xname);
+                            // now it is processed we can parse it and send the data out to other who
+                            // migh have it on their page
+                            parseExtensionModalData(xname);
+                            // As we have some updateded data we need to make sure that we refresh ourselves in case
+                            // we have changed some settings (ie buttons to be shown)
+                            ParseOBSScenesList(localConfig.OBSSceneslist);
+                            // send the obs message with the settings just in case they had changed or just to refresh them
+                            /*sr_api.sendMessage(DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "ExtensionMessage",
+                                    serverConfig.extensionname,
+                                    sr_api.ExtensionPacket(
+                                        "ChangeScene",
+                                        serverConfig.extensionname,
+                                        scenename,
+                                        "",
+                                        "obs"
+                                    ),
+                                    "",
+                                    "obs"
+                                )
+                            )*/
+                        }
+                        else
+                            parseExtensionModalData(xname);
+                        return false;
+                    });
+
+                    adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
+
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: setExtensionStatus
+            // ============================================================================
+            function setExtensionStatus(extension, status)
+            {
+                if (!status.connected)
+                    document.getElementById(extension + "_status").style = "color:red";
+                else if (status.readonly)
+                    document.getElementById(extension + "_status").style = "color:orange";
+                else
+                    document.getElementById(extension + "_status").style = "color:green";
+            }
+            // ============================================================================
+            //                           FUNCTION: ParseOBSScenesList
+            // ============================================================================
+            function ParseOBSScenesList(data)
+            {
+                let primaryScenes = data.main;
+                let secondaryScenes = data.secondary;
+                let restScenes = data.rest;
+                let foundmutedscene = false;
+                // remove the existing buttons
+                var element = document.getElementById("OBSButtons");
+                //remove the old buttons
+                element.textContent = ""
+                //store the data incase the user updated what they want to display
+                localConfig.OBSSceneslist = data;
+
+                // always show the primary scene list
+                if (typeof (primaryScenes) !== "undefined")
+                {
+                    primaryScenes.forEach((scene) => 
+                    {
+                        addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
+                        if (scene.displayName === serverConfig.mutescene)
+                        {
+                            foundmutedscene = true;
+                            addOBSMuteButton(scene.muted);
+                        }
+                    });
+                }
+                // if we have all or secondory selected to show then show them
+                if (typeof (secondaryScenes) !== "undefined" && (serverConfig.showallscenes === "on" || serverConfig.showsecondaryscenes === "on"))
+                {
+                    secondaryScenes.forEach((scene) => 
+                    {
+                        addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
+                        if (scene.displayName === serverConfig.mutescene)
+                        {
+                            foundmutedscene = true;
+                            addOBSMuteButton(scene.muted);
+                        }
+                    });
+                }
+                // only show remaining scenes if all is set
+                if (typeof (restScenes) !== "undefined" && serverConfig.showallscenes === "on")
+                {
+                    restScenes.forEach((scene) => 
+                    {
+                        addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current)
+                        if (scene.displayName === serverConfig.mutescene)
+                        {
+                            foundmutedscene = true;
+                            addOBSMuteButton(scene.muted);
+                        }
+                    })
+                    // Add mute button
+                }
+                if (!foundmutedscene)
+                    addOBSMuteButton(serverConfig.muted);
+                // check if we are live and set the colours accordingly.
+                OBSLiveCheck();
+            }
+            // ============================================================================
+            //                           FUNCTION: addOBSSceneButton
+            // ============================================================================
+            function addOBSSceneButton(element, displayname, scenename, current)
+            {
+                button = document.createElement('input');
+                button.type = 'button';
+                button.value = displayname;
+                if (scenename === current)
+                    button.classList = "btn btn-success";
+                else
+                    button.classList = "btn btn-secondary";
+                button.addEventListener('click', function ()
+                {
+                    event.preventDefault();
+                    sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
                             "ExtensionMessage",
                             serverConfig.extensionname,
@@ -620,1035 +733,930 @@
                             "",
                             "obs"
                         )
-                    )*/
-                }
-                else
-                    parseExtensionModalData(xname);
-                return false;
-            });
+                    )
+                    return false;
+                }, false);
 
-            adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
-
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: setExtensionStatus
-    // ============================================================================
-    function setExtensionStatus(extension, status)
-    {
-        if (!status.connected)
-            document.getElementById(extension + "_status").style = "color:red";
-        else if (status.readonly)
-            document.getElementById(extension + "_status").style = "color:orange";
-        else
-            document.getElementById(extension + "_status").style = "color:green";
-    }
-    // ============================================================================
-    //                           FUNCTION: ParseOBSScenesList
-    // ============================================================================
-    function ParseOBSScenesList(data)
-    {
-        let primaryScenes = data.main;
-        let secondaryScenes = data.secondary;
-        let restScenes = data.rest;
-        let foundmutedscene = false;
-        // remove the existing buttons
-        var element = document.getElementById("OBSButtons");
-        //remove the old buttons
-        element.textContent = ""
-        //store the data incase the user updated what they want to display
-        localConfig.OBSSceneslist = data;
-
-        // always show the primary scene list
-        if (typeof (primaryScenes) !== "undefined")
-        {
-            primaryScenes.forEach((scene) => 
-            {
-                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
-                if (scene.displayName === serverConfig.mutescene)
-                {
-                    foundmutedscene = true;
-                    addOBSMuteButton(scene.muted);
-                }
-            });
-        }
-        // if we have all or secondory selected to show then show them
-        if (typeof (secondaryScenes) !== "undefined" && (serverConfig.showallscenes === "on" || serverConfig.showsecondaryscenes === "on"))
-        {
-            secondaryScenes.forEach((scene) => 
-            {
-                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current);
-                if (scene.displayName === serverConfig.mutescene)
-                {
-                    foundmutedscene = true;
-                    addOBSMuteButton(scene.muted);
-                }
-            });
-        }
-        // only show remaining scenes if all is set
-        if (typeof (restScenes) !== "undefined" && serverConfig.showallscenes === "on")
-        {
-            restScenes.forEach((scene) => 
-            {
-                addOBSSceneButton(element, scene.displayName, scene.sceneName, data.current)
-                if (scene.displayName === serverConfig.mutescene)
-                {
-                    foundmutedscene = true;
-                    addOBSMuteButton(scene.muted);
-                }
-            })
-            // Add mute button
-        }
-        if (!foundmutedscene)
-            addOBSMuteButton(serverConfig.muted);
-        // check if we are live and set the colours accordingly.
-        OBSLiveCheck();
-    }
-    // ============================================================================
-    //                           FUNCTION: addOBSSceneButton
-    // ============================================================================
-    function addOBSSceneButton(element, displayname, scenename, current)
-    {
-        button = document.createElement('input');
-        button.type = 'button';
-        button.value = displayname;
-        if (scenename === current)
-            button.classList = "btn btn-success";
-        else
-            button.classList = "btn btn-secondary";
-        button.addEventListener('click', function ()
-        {
-            event.preventDefault();
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "ChangeScene",
-                        serverConfig.extensionname,
-                        scenename,
-                        "",
-                        "obs"
-                    ),
-                    "",
-                    "obs"
-                )
-            )
-            return false;
-        }, false);
-
-        element.appendChild(button);
-    }
-    // ============================================================================
-    //                           FUNCTION: addOBSMuteButton
-    // ============================================================================
-    function addOBSMuteButton(muted)
-    {
-        button = document.createElement('input');
-        button.type = 'button';
-        button.value = "Mute";
-        if (muted)
-            button.classList += "btn btn-danger";
-        else
-            button.classList += "btn btn-secondary";
-        button.addEventListener('click', function ()
-        {
-            event.preventDefault();
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "ToggleMute",
-                        serverConfig.extensionname,
-                        serverConfig.mutescene,
-                        "",
-                        "obs"
-                    ),
-                    "",
-                    "obs"
-                )
-            )
-            return false;
-        }, false);
-
-        //remove the old button
-        document.getElementById("OBSMute").textContent = ""
-        // add the new one
-        document.getElementById("OBSMute").appendChild(button);
-    }
-    // ============================================================================
-    //                           FUNCTION: SaveConfigToServer
-    // ============================================================================
-    function OBSLiveCheck()
-    {
-        let livebackbround = document.getElementById("OBSControllsCard");
-        // check if we are live
-        if (localConfig.obslive)
-        {
-            // currently set to live so lets set the background to green
-            // remove the normal colors
-            livebackbround.classList.remove('bg-light');
-            livebackbround.classList.remove('text-light');
-            livebackbround.classList.remove('bg-dark');
-            livebackbround.classList.remove('text-dark');
-            livebackbround.style["background-color"] = "#013301";
-            livebackbround.style["color"] = "white";
-            // remove any previous colours for the background
-        }
-        else
-        {
-            // not live anymore so set the background back to normal
-            document.getElementById("OBSRate").innerHTML = ""
-            document.getElementById("OBSStrain").style.removeProperty("background-color")
-            // background is set in the navbar partial code and uses local storage. should probably update this and move it here
-            if (localStorage.getItem("darkmode") === "true")
-            {
-                livebackbround.classList.remove('bg-light');
-                livebackbround.classList.remove('text-dark');
-                livebackbround.classList.add('bg-dark');
-                livebackbround.classList.add('text-light');
+                element.appendChild(button);
             }
-            else
+            // ============================================================================
+            //                           FUNCTION: addOBSMuteButton
+            // ============================================================================
+            function addOBSMuteButton(muted)
             {
-                livebackbround.classList.remove('bg-dark');
-                livebackbround.classList.remove('text-light');
-                livebackbround.classList.add('bg-light');
-                livebackbround.classList.add('text-dark');
+                button = document.createElement('input');
+                button.type = 'button';
+                button.value = "Mute";
+                if (muted)
+                    button.classList += "btn btn-danger";
+                else
+                    button.classList += "btn btn-secondary";
+                button.addEventListener('click', function ()
+                {
+                    event.preventDefault();
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "ExtensionMessage",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "ToggleMute",
+                                serverConfig.extensionname,
+                                serverConfig.mutescene,
+                                "",
+                                "obs"
+                            ),
+                            "",
+                            "obs"
+                        )
+                    )
+                    return false;
+                }, false);
+
+                //remove the old button
+                document.getElementById("OBSMute").textContent = ""
+                // add the new one
+                document.getElementById("OBSMute").appendChild(button);
             }
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: ProcessOBSStats
-    // ============================================================================
-    // Desription:save config on backend data store
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // 
-    /*{
-  "averageFrameTime": 24.81013,
-  "bytesPerSec": 60795,
-  "cpuUsage": 18.0699481865285,
-  "freeDiskSpace": 348106.8203125,
-  "kbitsPerSec": 474,
-  "memoryUsage": 468.78125,
-  "numDroppedFrames": 0,
-  "numTotalFrames": 44,
-  "outputSkippedFrames": 0,
-  "outputTotalFrames": 57,
-  "previewOnly": false,
-  "recordingPaused": false,
-  "renderMissedFrames": 4,
-  "renderTotalFrames": 2932,
-  "replayBufferActive": false,
-  "streamTimecode": "00:00:01.466",
-  "totalStreamTime": 1,
-  "updateType": "StreamStatus"
-  */
-
-    // ===========================================================================
-    function ProcessOBSStats(data)
-    {
-        let rate = data.kbitsPerSec;
-        let strain = data.strain; // red/green/amber icon needed
-        var straincolor = (255 / 1 * strain);
-        var tm = new Date(1000 * data.totalStreamTime).toISOString().substr(11, 8);
-        // saves our serverConfig to the server so we can load it again next time we startup
-        //document.getElementById("OBSInfo").innerHTML = "<div id="OBSInfo">Uptime 00:02:21 2610 kb/s strain:0</div>"
-        document.getElementById("OBSUptime").innerHTML = tm;
-        document.getElementById("OBSRate").innerHTML = rate + " kb/s";
-
-        let missedframes = data.renderMissedFrames;
-        let skippedframes = data.outputSkippedFrames;
-        let droppedframes = data.numDroppedFrames;
-
-        // add coloring if we drop too many frames and we also truncat the numbers if over 10k
-        if (missedframes > 1000)
-        {
-            if (missedframes > 10000)
-                missedframes = (~~(missedframes / 1000)) + "k"
-            missedframes = "<span style='color:red'>" + missedframes + "</span>";
-        }
-        else if (missedframes > 0)
-            missedframes = "<span style='color:orange'>" + missedframes + "</span>";
-        if (skippedframes > 1000)
-        {
-            if (skippedframes > 10000)
-                skippedframes = (~~(skippedframes / 1000)) + "k"
-            skippedframes = "<span style='color:red'>" + skippedframes + "</span>";
-        }
-        else if (skippedframes > 0)
-            skippedframes = "<span style='color:orange'>" + skippedframes + "</span>";
-        if (droppedframes > 1000)
-        {
-            if (droppedframes > 10000)
-                droppedframes = (~~(droppedframes / 1000)) + "k"
-            droppedframes = "<span style='color:red'>" + droppedframes + "</span>";
-        }
-        else if (droppedframes > 0)
-            droppedframes = "<span style='color:orange'>" + droppedframes + "</span>";
-
-        // note the double not (~) removes the decimal part more efficiently than the match.trunc fungion
-        if (data.renderTotalFrames > 1000)
-            document.getElementById("OBSRender").innerHTML = missedframes + "/" + (~~(data.renderTotalFrames / 1000)) + "k";
-        else
-            document.getElementById("OBSRender").innerHTML = missedframes + "/" + data.renderTotalFrames;
-        if (data.outputTotalFrames > 1000)
-            document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + (~~(data.outputTotalFrames / 1000)) + "k";
-        else
-            document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + data.outputTotalFrames;
-        if (data.numTotalFrames > 1000)
-            document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + (~~(data.numTotalFrames / 1000)) + "k";
-        else
-            document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + data.numTotalFrames;
-
-        document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
-    }
-    // ============================================================================
-    //                      FUNCTION: parseExtensionModalData
-    // ============================================================================
-    // Desription: This function will retireve the data from the modal and 
-    // send the push the data out so others can update theirs to reflect the change
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // None
-    // ===========================================================================
-    function parseExtensionModalData(extension)
-    {
-        let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
-        // convert our array of objects into a more usable objet
-        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        //console.log(fieldsAsObject);
-        if (fieldsAsObject.extensionname)
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        fieldsAsObject.modaldatatype,
-                        serverConfig.extensionname,
-                        fieldsAsObject,
-                        "",
-                        fieldsAsObject.extensionname),
-                    "",
-                    fieldsAsObject.extensionname
-                ));
-
-    }
-    // ============================================================================
-    //                      FUNCTION: UpdateAdminModalData
-    // ============================================================================
-    // Desription: Update our own modal if our config has changed
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // 
-    // ===========================================================================
-    function UpdateAdminModalData()
-    {
-        //get the updated dom we just changed and change the rest using sting replace
-        let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
-        for (const [key, value] of Object.entries(serverConfig))
-        {
-            // checkboxes
-            if (value === "on")
-                modalstring = modalstring.replace(key + "checked", "checked");
-            // replace text strings
-            else if (typeof (value) == "string")
-                modalstring = modalstring.replace(key + "text", value);
-        }
-        adminData.extensions[serverConfig.extensionname].admincard = modalstring;
-        // Update the OBS channel list as we might have changed what we want to show
-        ParseOBSScenesList(localConfig.OBSSceneslist);
-    }
-    // ============================================================================
-    //                      FUNCTION: processOwnModalSubmit
-    // ============================================================================
-    // Desription: This function will retireve the data from the modal and 
-    // send save it in the serverConfig after we hit the submit button
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // None
-    // ===========================================================================
-    function processOwnModalSubmit(name)
-    {
-        // get the modal data as an array
-        let fieldsAsArray = $('#' + name + "_modal").serializeArray();
-        // convert our array of objects into a more usable object
-        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        if (fieldsAsObject.logginglevel != "null" && serverConfig.logginglevel != fieldsAsObject.logginglevel)
-        {
-            // change server logging level
-            changeServerLogging(fieldsAsObject.logginglevel);
-            // change our logging level (probably should be a separate option)
-            G_LOGLEVEL = fieldsAsObject.logginglevel;
-        }
-        // loop though our keys and set them to match what is in the modal
-        for (const [key, value] of Object.entries(serverConfig))
-        {
-            //lets check our settings and send out updates as required
-            if (key === "modmessage_channel")
+            // ============================================================================
+            //                           FUNCTION: SaveConfigToServer
+            // ============================================================================
+            function OBSLiveCheck()
             {
-                // udpate the server (or just refresh the value even if the same)
-                changeDiscordListeningChannel(serverConfig[key]);
-                serverConfig[key] = fieldsAsObject[key];
-            }
-            if (value === "on" && !fieldsAsObject[key])
-                serverConfig[key] = "off";
-            if (key in fieldsAsObject)
-                serverConfig[key] = fieldsAsObject[key];
-        }
-        //save the data to the server
-        SaveConfigToServer();
-    }
-    // ============================================================================
-    //                           FUNCTION: changeServerLogging
-    // ============================================================================
-    function changeServerLogging(logsetting)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "SetLoggingLevel",
-                serverConfig.extensionname,
-                logsetting,
-            ));
-    }
-
-    // ============================================================================
-    //                           FUNCTION: Display channel message
-    // ============================================================================
-    // Desription: display message in allmessages card
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    /*  data currently available from a tag.
-          tags {
-                'badge-info': null,
-                badges: null,
-                'client-nonce': 'fbd0d5f051f84cde74c882b377509a8c',
-                color: '#00FF7F',
-                'display-name': 'wizardmitts',
-                emotes: null,
-                'first-msg': false,
-                flags: null,
-                id: '826cc240-67d5-45f3-a0cd-4ea792a96e50',
-                mod: false,
-                'room-id': '81687332',
-                subscriber: false,
-                'tmi-sent-ts': '1644530043690',
-                turbo: false,
-                'user-id': '141477605',
-                'user-type': null,
-                'emotes-raw': null,
-                'badge-info-raw': null,
-                'badges-raw': null,
-                username: 'wizardmitts',
-                'message-type': 'chat'
-                }*/
-
-    // ============================================================================
-    //                           FUNCTION: displayChatMessages
-    // ============================================================================
-    // display buffers on screen
-    // if parse=false is passed then the buffer isn't parsed, just update the screen
-    function displayChatMessages(data)
-    {
-        // parse the messages and add them to the buffer
-        //        if (parse)
-        //            parseTwitchChatMessages(data.data);
-        let chatcardref = document.getElementById("ChatMessagesCardText")
-        let modcardref = document.getElementById("ModMessagesCardText")
-
-        // limit chat buffer to the number of lines we want to use
-        while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
-            localConfig.chatMessageBuffer.shift();
-
-        // limit chat buffer to the number of lines we want to use
-        while (localConfig.modMessageBuffer.length > localConfig.modMessageBufferMaxSize)
-            localConfig.modMessageBuffer.shift();
-
-        // add the buffer into the chat window
-        chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
-        modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
-
-        // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
-        if (localConfig.mouseDown < 1)
-        {
-            var cardScrollHeight = chatcardref.scrollHeight;
-            chatcardref.scrollTo(0, cardScrollHeight);
-            var modScrollHeight = modcardref.scrollHeight;
-            modcardref.scrollTo(0, modScrollHeight);
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: processTwitchChatBuffer
-    // ============================================================================
-    // Desription: Processes a message from the data center with the previous chat buffer
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    async function processTwitchChatBuffer(chatdata)
-    {
-        let counter = 0
-        // as we have received a bufer lets delete the old data
-        document.getElementById("ChatMessagesCardText").innerHTML = "";
-        localConfig.chatMessageBuffer = [];
-        chatdata.forEach(ele => 
-        {
-            parseTwitchChatMessage(ele);
-        })
-        localConfig.chatMessageBuffer.push("--------- buffer loaded --------");
-
-    }
-    // ============================================================================
-    //                           FUNCTION: processDiscordChatBuffer
-    // ============================================================================
-    // Desription: Processes a message from the data center with the previous chat buffer
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    async function processDiscordChatBuffer(chatdata)
-    {
-        let counter = 0
-        // as we have received a bufer lets delete the old data
-        document.getElementById("ModMessagesCardText").innerHTML = "";
-        localConfig.modMessageBuffer = [];
-        chatdata.forEach(ele => 
-        {
-            parseDiscordChatMessage(ele);
-        })
-        localConfig.modMessageBuffer.push("--------- buffer loaded --------");
-    }
-    // ============================================================================
-    //                           FUNCTION: parseTwitchChatMessage
-    // ============================================================================
-    // updates the buffer with the messages
-    function parseTwitchChatMessage(chatdata)
-    {
-        //let chatdata = data.data;
-        let today = new Date();
-        let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
-        // make it colourful
-        var timecolor = "<span style='color: #757875'>";
-        var usercolor = ""
-
-        // lets sanitise the message before we add the emotes
-        var sanitiser = document.createElement('div');
-        sanitiser.innerText = chatdata.message
-        // add any twitch emotes
-        let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
-        if (chatdata.data['display-name'] === "MiserableMarvin")
-        {
-            if (chatdata.data.mod)
-                usercolor = "<img src='liveportal/images/badge_mod.png'>";
-            time = timecolor + time + ":";
-
-            // set the card data
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
-        }
-        else if (chatdata.data['display-name'] === "System")
-        {
-
-            // set the card data
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
-        }
-        else
-        {
-            if (chatdata.data.mod)
-                usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
-            else if (chatdata.data.color === null)
-                usercolor = "<span style='color: #6f42c1'>";
-            else
-                usercolor = "<span style='color: " + chatdata.data.color + "'>";
-            let username = usercolor + ' ' + chatdata.data['display-name'] + "&gt</span>";
-            time = timecolor + time + ":</span>";
-
-            // set the card data
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-            localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
-
-            // add mod messages to mod card if selected
-            if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
-                localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
-
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: parseDiscordChatMessage
-    // ============================================================================
-    // updates the buffer with the messages
-    function parseDiscordChatMessage(chatdata)
-    {
-        //let chatdata = data.data;
-        let today = new Date();
-        let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
-        // make it colourful
-        let timecolor = "<span style='color: #757875'>";
-        let usercolor = ""
-        // https://cdn.discordapp.com/emojis/634006521180717067
-        let message = parseDiscordEmojis(chatdata.message);
-        // lets sanitise the message before we add the emotes
-        var sanitiser = document.createElement('div');
-        if (chatdata.name === "System")
-            localConfig.modMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.name + " " + message + "</span>");
-        else
-        {
-            usercolor = "<span style='color: #6f42c1'>";
-            let username = usercolor + ' ' + chatdata.name + "&gt</span>";
-            time = timecolor + time + ":</span>";
-
-            localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
-
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: addDiscordEmotes
-
-    // ============================================================================
-    function parseDiscordEmojis(message)
-    {
-        let index = message.indexOf('<');
-        let is, ie, emoji = 0;
-        let msg = message;
-        let newmessage = ""
-        if (msg.indexOf('<') == -1)
-            return message;
-
-        // check if we have emoji. this should really be a bit better, ie a patternmatch (in the form of <name:id>)
-        while (msg.indexOf('<') > 0)
-        {
-            //log the start of the possible emoji
-            index = msg.indexOf('<');
-            // get the start of the id
-            is = msg.indexOf(':', index + 2);
-            // get the end of the id string
-            ie = msg.indexOf('>', index)
-            // get the first part of the message (up to the next emoji)
-            newmessage = newmessage + msg.slice(0, index);
-            // get the emoji
-            emoji = msg.slice(is + 1, ie);
-            // remove the message up to the emoji
-            msg = msg.slice(ie + 1); // skip past the first '<:'
-            // add the emoji to the message
-            newmessage = newmessage + "<img src='https://cdn.discordapp.com/emojis/" + emoji + "' width='25' height='25'>";
-        }
-        return newmessage;
-    }
-    // ============================================================================
-    //                           FUNCTION: addTwitchEmotes
-    // ============================================================================
-    function addTwitchEmotes(message, emotes)
-    {
-        if (!emotes) return message;
-
-        // store all emote keywords
-        // ! you have to first scan through 
-        // the message string and replace later
-        const stringReplacements = [];
-        let theme = "light"
-        if (localStorage.getItem("darkmode") === "true")
-            theme = "dark"
-        // iterate of emotes to access ids and positions
-        Object.entries(emotes).forEach(([id, positions]) =>
-        {
-            // use only the first position to find out the emote key word
-            const position = positions[0];
-            const [start, end] = position.split("-");
-            const stringToReplace = message.substring(
-                parseInt(start, 10),
-                parseInt(end, 10) + 1
-            );
-            stringReplacements.push({
-                stringToReplace: stringToReplace,
-                //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
-                replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/${theme}/1.0">`
-            });
-        });
-
-        // generate HTML and replace all emote keywords with image elements
-        const messageHTML = stringReplacements.reduce(
-            (acc, { stringToReplace, replacement }) =>
-            {
-                // obs browser doesn't seam to know about replaceAll
-                return acc.split(stringToReplace).join(replacement);
-            },
-            message
-        );
-
-        return messageHTML;
-    }
-
-    // ============================================================================
-    //                           FUNCTION:DisplayAlertMessages
-    // ============================================================================
-    // Desription: display alerts
-    // Parameters: alert message
-    // ----------------------------- notes ----------------------------------------
-    // None
-    // ===========================================================================
-    function DisplayAlertMessages(message)
-    {
-        let cardref = document.getElementById("AlertCardText");
-        cardref.innerHTML = cardref.innerHTML + message
-        // keep scroll at the bottom of the card
-        var cardScrollHeight = cardref.scrollHeight;
-        cardref.scrollTo(0, cardScrollHeight);
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestExtList
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function RequestExtList()
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestExtensionsList",
-                serverConfig.extensionname,
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestOBSScenes
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function RequestOBSScenes(to)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "RequestScenes",
-                    serverConfig.extensionname,
-                ),
-                "",
-                to,
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestChList
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the list of channels
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function RequestChList()
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestChannelsList",
-                serverConfig.extensionname,
-            ));
-    }
-
-    // ============================================================================
-    //                           FUNCTION: RequestChatBuffer
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the previous chat buffer
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function RequestChatBuffer(extname)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "RequestChatBuffer",
-                    serverConfig.extensionname,
-                    "",
-                    "",
-                    extname),
-                "",
-                extname
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestAdminModalsCode
-    // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
-    function RequestAdminModalsCode(extname)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "RequestAdminModalCode",
-                    serverConfig.extensionname,
-                    "",
-                    "",
-                    extname),
-                "",
-                extname
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestLoggingLevel
-    // ============================================================================
-    function RequestLoggingLevel()
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestLoggingLevel",
-                serverConfig.extensionname,
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: process_stream_alert
-    // ============================================================================
-    function ProcessStreamAlert(server_packet)
-    {
-        //console.log("ProcessStreamAlert ", server_packet);
-        let alertdata = server_packet.data;
-        // display the alert
-
-        let alertcontents = alertdata.message[0];
-        let messagetxt = "Thankyou ";
-        let alerttext = "";
-        switch (alertdata.type)
-        {
-            case "follow":
-                messagetxt += alertcontents.name + " for the follow."
-                if (serverConfig.follows === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Follow: " + alertcontents.name + "</div>";
-                DisplayAlertMessages(alerttext);
-                break;
-            case "raid":
-                messagetxt += alertcontents.name + " for the raid " + alertcontents.raiders + " raiders."
-                if (serverConfig.raids === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-success'>Raid: " + alertcontents.name + " " + alertcontents.raiders + "</div>";
-                DisplayAlertMessages(alerttext);
-                break;
-            case "host":
-                messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
-                if (serverConfig.hosts === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-success'>Host: " + alertcontents.name + " " + alertcontents.viewers + "</div>";
-                DisplayAlertMessages(alerttext);
-                break;
-            case "donation":
-                if (alertcontents.message === null)
-                    messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive.'
+                let livebackbround = document.getElementById("OBSControllsCard");
+                // check if we are live
+                if (localConfig.obslive)
+                {
+                    // currently set to live so lets set the background to green
+                    // remove the normal colors
+                    livebackbround.classList.remove('bg-light');
+                    livebackbround.classList.remove('text-light');
+                    livebackbround.classList.remove('bg-dark');
+                    livebackbround.classList.remove('text-dark');
+                    livebackbround.style["background-color"] = "#013301";
+                    livebackbround.style["color"] = "white";
+                    // remove any previous colours for the background
+                }
                 else
-                    messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive. "' + alertcontents.message + '"'
-                if (serverConfig.donations === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-danger'>Donation: " + alertcontents.name + "  " + alertcontents.formatted_amount + ' "' + alertcontents.message + '"</div>';
-                DisplayAlertMessages(alerttext);
-                break;
-            case "bits":
-                if (alertcontents.message === null)
-                    messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits.'
-                else
-                    messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits. "' + alertcontents.message + '"'
-                if (serverConfig.bits === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-danger'>Bits: " + alertcontents.name + " " + alertcontents.amount + ' bits. "' + alertcontents.message + '"</div>';
-                DisplayAlertMessages(alerttext);
-                break;
-            case "subscription":
-                let submessage = alertcontents.message;
-                if (submessage === null)
-                    submessage = ""
-                if (alertcontents.months === 1)
-                    messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + submessage + '"'
-                else
-                    messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + submessage + '"'
-                if (serverConfig.subs === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-primary'>Subscription: " + alertcontents.name + " " + alertcontents.months + 'm "' + submessage + '"</div>';
-                DisplayAlertMessages(alerttext);
-                break;
-            case "resub":
-                if (alertcontents.message === null)
-                    messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + ').'
-                else
-                    messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + '). "' + alertcontents.message + '"'
-                if (serverConfig.resubs === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-primary'>Resub: " + alertcontents.name + " " + alertcontents.months + 'm (' + alertcontents.streak_months + '). "' + alertcontents.message + '"</div>';
-                DisplayAlertMessages(alerttext);
-                break;
-            case "prime_sub_gift":
-                messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
-                if (serverConfig.giftsubs === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-danger'>GiftSub: " + alertcontents.name + " to " + alertcontents.to + "</div>"
-                DisplayAlertMessages(alerttext);
-                break;
-            case "merch":
-                messagetxt += alertcontents.from + " purchacing my merch. Hope you enjoy the " + alertcontents.product + ". " + alertcontents.imageHref
-                if (serverConfig.merch === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Merch: " + alertcontents.name + "  " + alertcontents.product + "</div>"
-                DisplayAlertMessages(alerttext);
-                break;
-            case "loyalty_store_redemption":
-                messagetxt += alertcontents.from + " for using the your channel points for " + alertcontents.product + ". " + alertcontents.imageHref
-                if (serverConfig.cloudbotredemption === "on")
-                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Loyalty: " + alertcontents.name + " " + alertcontents.product + "</div>"
-                DisplayAlertMessages(alerttext);
-                break;
-        }
-    }
-    // ============================================================================
-    //                           FUNCTION: PostMessageToDiscord
-    // ============================================================================
-    function PostMessageToDiscord(msg, channel)
-    {
-        //console.log("Posting messaage to discord, ", msg, channel)
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "PostMessage",
-                    serverConfig.extensionname,
+                {
+                    // not live anymore so set the background back to normal
+                    document.getElementById("OBSRate").innerHTML = ""
+                    document.getElementById("OBSStrain").style.removeProperty("background-color")
+                    // background is set in the navbar partial code and uses local storage. should probably update this and move it here
+                    if (localStorage.getItem("darkmode") === "true")
                     {
-                        message: msg,
-                        channel: channel
+                        livebackbround.classList.remove('bg-light');
+                        livebackbround.classList.remove('text-dark');
+                        livebackbround.classList.add('bg-dark');
+                        livebackbround.classList.add('text-light');
+                    }
+                    else
+                    {
+                        livebackbround.classList.remove('bg-dark');
+                        livebackbround.classList.remove('text-light');
+                        livebackbround.classList.add('bg-light');
+                        livebackbround.classList.add('text-dark');
+                    }
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: ProcessOBSStats
+            // ============================================================================
+            // Desription:save config on backend data store
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // 
+            /*{
+          "averageFrameTime": 24.81013,
+          "bytesPerSec": 60795,
+          "cpuUsage": 18.0699481865285,
+          "freeDiskSpace": 348106.8203125,
+          "kbitsPerSec": 474,
+          "memoryUsage": 468.78125,
+          "numDroppedFrames": 0,
+          "numTotalFrames": 44,
+          "outputSkippedFrames": 0,
+          "outputTotalFrames": 57,
+          "previewOnly": false,
+          "recordingPaused": false,
+          "renderMissedFrames": 4,
+          "renderTotalFrames": 2932,
+          "replayBufferActive": false,
+          "streamTimecode": "00:00:01.466",
+          "totalStreamTime": 1,
+          "updateType": "StreamStatus"
+          */
+
+            // ===========================================================================
+            function ProcessOBSStats(data)
+            {
+                let rate = data.kbitsPerSec;
+                let strain = data.strain; // red/green/amber icon needed
+                var straincolor = (255 / 1 * strain);
+                var tm = new Date(1000 * data.totalStreamTime).toISOString().substr(11, 8);
+                // saves our serverConfig to the server so we can load it again next time we startup
+                //document.getElementById("OBSInfo").innerHTML = "<div id="OBSInfo">Uptime 00:02:21 2610 kb/s strain:0</div>"
+                document.getElementById("OBSUptime").innerHTML = tm;
+                document.getElementById("OBSRate").innerHTML = rate + " kb/s";
+
+                let missedframes = data.renderMissedFrames;
+                let skippedframes = data.outputSkippedFrames;
+                let droppedframes = data.numDroppedFrames;
+
+                // add coloring if we drop too many frames and we also truncat the numbers if over 10k
+                if (missedframes > 1000)
+                {
+                    if (missedframes > 10000)
+                        missedframes = (~~(missedframes / 1000)) + "k"
+                    missedframes = "<span style='color:red'>" + missedframes + "</span>";
+                }
+                else if (missedframes > 0)
+                    missedframes = "<span style='color:orange'>" + missedframes + "</span>";
+                if (skippedframes > 1000)
+                {
+                    if (skippedframes > 10000)
+                        skippedframes = (~~(skippedframes / 1000)) + "k"
+                    skippedframes = "<span style='color:red'>" + skippedframes + "</span>";
+                }
+                else if (skippedframes > 0)
+                    skippedframes = "<span style='color:orange'>" + skippedframes + "</span>";
+                if (droppedframes > 1000)
+                {
+                    if (droppedframes > 10000)
+                        droppedframes = (~~(droppedframes / 1000)) + "k"
+                    droppedframes = "<span style='color:red'>" + droppedframes + "</span>";
+                }
+                else if (droppedframes > 0)
+                    droppedframes = "<span style='color:orange'>" + droppedframes + "</span>";
+
+                // note the double not (~) removes the decimal part more efficiently than the match.trunc fungion
+                if (data.renderTotalFrames > 1000)
+                    document.getElementById("OBSRender").innerHTML = missedframes + "/" + (~~(data.renderTotalFrames / 1000)) + "k";
+                else
+                    document.getElementById("OBSRender").innerHTML = missedframes + "/" + data.renderTotalFrames;
+                if (data.outputTotalFrames > 1000)
+                    document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + (~~(data.outputTotalFrames / 1000)) + "k";
+                else
+                    document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + data.outputTotalFrames;
+                if (data.numTotalFrames > 1000)
+                    document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + (~~(data.numTotalFrames / 1000)) + "k";
+                else
+                    document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + data.numTotalFrames;
+
+                document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
+            }
+            // ============================================================================
+            //                      FUNCTION: parseExtensionModalData
+            // ============================================================================
+            // Desription: This function will retireve the data from the modal and 
+            // send the push the data out so others can update theirs to reflect the change
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function parseExtensionModalData(extension)
+            {
+                let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
+                // convert our array of objects into a more usable objet
+                var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+                //console.log(fieldsAsObject);
+                if (fieldsAsObject.extensionname)
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "ExtensionMessage",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                fieldsAsObject.modaldatatype,
+                                serverConfig.extensionname,
+                                fieldsAsObject,
+                                "",
+                                fieldsAsObject.extensionname),
+                            "",
+                            fieldsAsObject.extensionname
+                        ));
+
+            }
+            // ============================================================================
+            //                      FUNCTION: UpdateAdminModalData
+            // ============================================================================
+            // Desription: Update our own modal if our config has changed
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // 
+            // ===========================================================================
+            function UpdateAdminModalData()
+            {
+                //get the updated dom we just changed and change the rest using sting replace
+                let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
+                for (const [key, value] of Object.entries(serverConfig))
+                {
+                    // checkboxes
+                    if (value === "on")
+                        modalstring = modalstring.replace(key + "checked", "checked");
+                    // replace text strings
+                    else if (typeof (value) == "string")
+                        modalstring = modalstring.replace(key + "text", value);
+                }
+                adminData.extensions[serverConfig.extensionname].admincard = modalstring;
+                // Update the OBS channel list as we might have changed what we want to show
+                ParseOBSScenesList(localConfig.OBSSceneslist);
+            }
+            // ============================================================================
+            //                      FUNCTION: processOwnModalSubmit
+            // ============================================================================
+            // Desription: This function will retireve the data from the modal and 
+            // send save it in the serverConfig after we hit the submit button
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function processOwnModalSubmit(name)
+            {
+                // get the modal data as an array
+                let fieldsAsArray = $('#' + name + "_modal").serializeArray();
+                // convert our array of objects into a more usable object
+                var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+                if (fieldsAsObject.logginglevel != "null" && serverConfig.logginglevel != fieldsAsObject.logginglevel)
+                {
+                    // change server logging level
+                    changeServerLogging(fieldsAsObject.logginglevel);
+                    // change our logging level (probably should be a separate option)
+                    G_LOGLEVEL = fieldsAsObject.logginglevel;
+                }
+                // loop though our keys and set them to match what is in the modal
+                for (const [key, value] of Object.entries(serverConfig))
+                {
+                    //lets check our settings and send out updates as required
+                    if (key === "modmessage_channel")
+                    {
+                        // udpate the server (or just refresh the value even if the same)
+                        changeDiscordListeningChannel(serverConfig[key]);
+                        serverConfig[key] = fieldsAsObject[key];
+                    }
+                    if (value === "on" && !fieldsAsObject[key])
+                        serverConfig[key] = "off";
+                    if (key in fieldsAsObject)
+                        serverConfig[key] = fieldsAsObject[key];
+                }
+                //save the data to the server
+                SaveConfigToServer();
+            }
+            // ============================================================================
+            //                           FUNCTION: changeServerLogging
+            // ============================================================================
+            function changeServerLogging(logsetting)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "SetLoggingLevel",
+                        serverConfig.extensionname,
+                        logsetting,
+                    ));
+            }
+
+            // ============================================================================
+            //                           FUNCTION: Display channel message
+            // ============================================================================
+            // Desription: display message in allmessages card
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            /*  data currently available from a tag.
+                  tags{
+                        "type": "ChannelData",
+                        "from": "twitchchat",
+                        "dest_channel": "TWITCH_CHAT",
+                        "data": {
+                            "channel": "#olddepressedgamer",
+                            "message": "test for badges",
+                            "data": {
+                                "badge-info": {
+                                    "subscriber": "40"
+                                },
+                                "badges": {
+                                    "broadcaster": "1",
+                                    "subscriber": "3012"
+                                },
+                                "color": "#8A2BE2",
+                                "display-name": "OldDepressedGamer",
+                                "emote-sets": "0,19313,1454048,1454049,1454050,300374282,300548761,390077889,461451828,472873131,477339272,488737509,537206155,564265402,592920959,610186276",
+                                "mod": false,
+                                "subscriber": true,
+                                "user-type": null,
+                                "badge-info-raw": "subscriber/40",
+                                "badges-raw": "broadcaster/1,subscriber/3012",
+                                "username": "olddepressedgamer",
+                                "emotes": {},
+                                "emotes-raw": null,
+                                "message-type": "chat"
+                            }
+                        },
+                        "version": "0.2"
+                    }*/
+
+            // ============================================================================
+            //                           FUNCTION: displayChatMessages
+            // ============================================================================
+            // display buffers on screen
+            // if parse=false is passed then the buffer isn't parsed, just update the screen
+            function displayChatMessages(data)
+            {
+                // parse the messages and add them to the buffer
+                //        if (parse)
+                //            parseTwitchChatMessages(data.data);
+                let chatcardref = document.getElementById("ChatMessagesCardText")
+                let modcardref = document.getElementById("ModMessagesCardText")
+
+                // limit chat buffer to the number of lines we want to use
+                while (localConfig.chatMessageBuffer.length > localConfig.chatMessageBufferMaxSize)
+                    localConfig.chatMessageBuffer.shift();
+
+                // limit chat buffer to the number of lines we want to use
+                while (localConfig.modMessageBuffer.length > localConfig.modMessageBufferMaxSize)
+                    localConfig.modMessageBuffer.shift();
+
+                // add the buffer into the chat window
+                chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
+                modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
+
+                // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
+                if (localConfig.mouseDown < 1)
+                {
+                    var cardScrollHeight = chatcardref.scrollHeight;
+                    chatcardref.scrollTo(0, cardScrollHeight);
+                    var modScrollHeight = modcardref.scrollHeight;
+                    modcardref.scrollTo(0, modScrollHeight);
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: processTwitchChatBuffer
+            // ============================================================================
+            // Desription: Processes a message from the data center with the previous chat buffer
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            async function processTwitchChatBuffer(chatdata)
+            {
+                let counter = 0
+                // as we have received a bufer lets delete the old data
+                document.getElementById("ChatMessagesCardText").innerHTML = "";
+                localConfig.chatMessageBuffer = [];
+                chatdata.forEach(ele => 
+                {
+                    parseTwitchChatMessage(ele);
+                })
+                localConfig.chatMessageBuffer.push("--------- buffer loaded --------");
+
+            }
+            // ============================================================================
+            //                           FUNCTION: processDiscordChatBuffer
+            // ============================================================================
+            // Desription: Processes a message from the data center with the previous chat buffer
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            async function processDiscordChatBuffer(chatdata)
+            {
+                let counter = 0
+                // as we have received a bufer lets delete the old data
+                document.getElementById("ModMessagesCardText").innerHTML = "";
+                localConfig.modMessageBuffer = [];
+                chatdata.forEach(ele => 
+                {
+                    parseDiscordChatMessage(ele);
+                })
+                localConfig.modMessageBuffer.push("--------- buffer loaded --------");
+            }
+            // ============================================================================
+            //                           FUNCTION: parseTwitchChatMessage
+            // ============================================================================
+            // updates the buffer with the messages
+            function parseTwitchChatMessage(chatdata)
+            {
+                //let chatdata = data.data;
+                let today = new Date();
+                let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
+                // make it colourful
+                var timecolor = "<span style='color: #757875'>";
+                var usercolor = ""
+
+                // lets sanitise the message before we add the emotes
+                var sanitiser = document.createElement('div');
+                sanitiser.innerText = chatdata.message
+                // add any twitch emotes
+                let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
+                if (chatdata.data['display-name'] === "MiserableMarvin")
+                {
+                    if (chatdata.data.mod)
+                        usercolor = "<img src='liveportal/images/badge_mod.png'>";
+                    time = timecolor + time + ":";
+
+                    // set the card data
+                    document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
+                    localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
+                }
+                else if (chatdata.data['display-name'] === "System")
+                {
+
+                    // set the card data
+                    document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
+                    localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
+                }
+                else
+                {
+                    if (chatdata.data.mod)
+                        usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
+                    else if (chatdata.data.color === null)
+                        usercolor = "<span style='color: #6f42c1'>";
+                    else
+                        usercolor = "<span style='color: " + chatdata.data.color + "'>";
+                    let username = usercolor + ' ' + chatdata.data['display-name'] + "&gt</span>";
+                    time = timecolor + time + ":</span>";
+
+                    // set the card data
+                    document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
+                    localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
+
+                    // add mod messages to mod card if selected
+                    if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
+                        localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
+
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: parseDiscordChatMessage
+            // ============================================================================
+            // updates the buffer with the messages
+            function parseDiscordChatMessage(chatdata)
+            {
+                //let chatdata = data.data;
+                let today = new Date();
+                let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
+                // make it colourful
+                let timecolor = "<span style='color: #757875'>";
+                let usercolor = ""
+                // https://cdn.discordapp.com/emojis/634006521180717067
+                let message = parseDiscordEmojis(chatdata.message);
+                // lets sanitise the message before we add the emotes
+                var sanitiser = document.createElement('div');
+                if (chatdata.name === "System")
+                    localConfig.modMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.name + " " + message + "</span>");
+                else
+                {
+                    usercolor = "<span style='color: #6f42c1'>";
+                    let username = usercolor + ' ' + chatdata.name + "&gt</span>";
+                    time = timecolor + time + ":</span>";
+
+                    localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
+
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: addDiscordEmotes
+
+            // ============================================================================
+            function parseDiscordEmojis(message)
+            {
+                let index = message.indexOf('<');
+                let is, ie, emoji = 0;
+                let msg = message;
+                let newmessage = ""
+                if (msg.indexOf('<') == -1)
+                    return message;
+
+                // check if we have emoji. this should really be a bit better, ie a patternmatch (in the form of <name:id>)
+                while (msg.indexOf('<') > 0)
+                {
+                    //log the start of the possible emoji
+                    index = msg.indexOf('<');
+                    // get the start of the id
+                    is = msg.indexOf(':', index + 2);
+                    // get the end of the id string
+                    ie = msg.indexOf('>', index)
+                    // get the first part of the message (up to the next emoji)
+                    newmessage = newmessage + msg.slice(0, index);
+                    // get the emoji
+                    emoji = msg.slice(is + 1, ie);
+                    // remove the message up to the emoji
+                    msg = msg.slice(ie + 1); // skip past the first '<:'
+                    // add the emoji to the message
+                    newmessage = newmessage + "<img src='https://cdn.discordapp.com/emojis/" + emoji + "' width='25' height='25'>";
+                }
+                return newmessage;
+            }
+            // ============================================================================
+            //                           FUNCTION: addTwitchEmotes
+            // ============================================================================
+            function addTwitchEmotes(message, emotes)
+            {
+                if (!emotes) return message;
+
+                // store all emote keywords
+                // ! you have to first scan through 
+                // the message string and replace later
+                const stringReplacements = [];
+                let theme = "light"
+                if (localStorage.getItem("darkmode") === "true")
+                    theme = "dark"
+                // iterate of emotes to access ids and positions
+                Object.entries(emotes).forEach(([id, positions]) =>
+                {
+                    // use only the first position to find out the emote key word
+                    const position = positions[0];
+                    const [start, end] = position.split("-");
+                    const stringToReplace = message.substring(
+                        parseInt(start, 10),
+                        parseInt(end, 10) + 1
+                    );
+                    stringReplacements.push({
+                        stringToReplace: stringToReplace,
+                        //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
+                        replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/${theme}/1.0">`
+                    });
+                });
+
+                // generate HTML and replace all emote keywords with image elements
+                const messageHTML = stringReplacements.reduce(
+                    (acc, { stringToReplace, replacement }) =>
+                    {
+                        // obs browser doesn't seam to know about replaceAll
+                        return acc.split(stringToReplace).join(replacement);
                     },
-                    "",
-                    "discordchat"),
-                "",
-                "discordchat"
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: postMessageToTwitter
-    // ============================================================================
-    function postMessageToTwitter()
-    {
+                    message
+                );
 
-        let msg = "We're live twitch.tv/OldDepressedGamer. ";
-        let msg_hi = "Come say Hi! ";
-        let msg_end = "Sent from StreamRoller";
-        let msg_fact = "";
+                return messageHTML;
+            }
 
-        if (localConfig.randomFact !== "")
-            msg_fact = "FOTD:" + localConfig.randomFact + " ";
+            // ============================================================================
+            //                           FUNCTION:DisplayAlertMessages
+            // ============================================================================
+            // Desription: display alerts
+            // Parameters: alert message
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function DisplayAlertMessages(message)
+            {
+                let cardref = document.getElementById("AlertCardText");
+                cardref.innerHTML = cardref.innerHTML + message
+                // keep scroll at the bottom of the card
+                var cardScrollHeight = cardref.scrollHeight;
+                cardref.scrollTo(0, cardScrollHeight);
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestExtList
+            // ============================================================================
+            // Desription: Sends a message to the data center to get the list of extensions
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestExtList()
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "RequestExtensionsList",
+                        serverConfig.extensionname,
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestOBSScenes
+            // ============================================================================
+            // Desription: Sends a message to the data center to get the list of extensions
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestOBSScenes(to)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestScenes",
+                            serverConfig.extensionname,
+                        ),
+                        "",
+                        to,
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestChList
+            // ============================================================================
+            // Desription: Sends a message to the data center to get the list of channels
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestChList()
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "RequestChannelsList",
+                        serverConfig.extensionname,
+                    ));
+            }
 
-        if (((msg.length - 12) + msg_hi.length + msg_fact.length + msg_end.length) < 281)
-            msg = msg + msg_hi + msg_fact + msg_end;
-        else if (((msg.length - 12) + msg_fact.length + msg_end.length) < 281)
-            msg = msg + msg_fact + msg_end;
-        else if (((msg.length - 12) + msg_hi.length + msg_end.length) < 281)
-            msg = msg + msg_hi + msg_end;
+            // ============================================================================
+            //                           FUNCTION: RequestChatBuffer
+            // ============================================================================
+            // Desription: Sends a message to the data center to get the previous chat buffer
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestChatBuffer(extname)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestChatBuffer",
+                            serverConfig.extensionname,
+                            "",
+                            "",
+                            extname),
+                        "",
+                        extname
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestAdminModalsCode
+            // ============================================================================
+            // Desription: Sends a message to the data center to get the list of extensions
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestAdminModalsCode(extname)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestAdminModalCode",
+                            serverConfig.extensionname,
+                            "",
+                            "",
+                            extname),
+                        "",
+                        extname
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestLoggingLevel
+            // ============================================================================
+            function RequestLoggingLevel()
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "RequestLoggingLevel",
+                        serverConfig.extensionname,
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: process_stream_alert
+            // ============================================================================
+            function ProcessStreamAlert(server_packet)
+            {
+                //console.log("ProcessStreamAlert ", server_packet);
+                let alertdata = server_packet.data;
+                // display the alert
 
-        console.log("postMessageToTwitter: ", msg)
-        console.log("msg.length ", msg.length)
+                let alertcontents = alertdata.message[0];
+                let messagetxt = "Thankyou ";
+                let alerttext = "";
+                switch (alertdata.type)
+                {
+                    case "follow":
+                        messagetxt += alertcontents.name + " for the follow."
+                        if (serverConfig.follows === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-secondary'>Follow: " + alertcontents.name + "</div>";
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "raid":
+                        messagetxt += alertcontents.name + " for the raid " + alertcontents.raiders + " raiders."
+                        if (serverConfig.raids === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-success'>Raid: " + alertcontents.name + " " + alertcontents.raiders + "</div>";
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "host":
+                        messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
+                        if (serverConfig.hosts === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-success'>Host: " + alertcontents.name + " " + alertcontents.viewers + "</div>";
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "donation":
+                        if (alertcontents.message === null)
+                            messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive.'
+                        else
+                            messagetxt += alertcontents.from + " for the " + alertcontents.formatted_amount + ' donation and helping keep the stream alive. "' + alertcontents.message + '"'
+                        if (serverConfig.donations === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-danger'>Donation: " + alertcontents.name + "  " + alertcontents.formatted_amount + ' "' + alertcontents.message + '"</div>';
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "bits":
+                        if (alertcontents.message === null)
+                            messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits.'
+                        else
+                            messagetxt += alertcontents.name + " for the " + alertcontents.amount + ' bits. "' + alertcontents.message + '"'
+                        if (serverConfig.bits === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-danger'>Bits: " + alertcontents.name + " " + alertcontents.amount + ' bits. "' + alertcontents.message + '"</div>';
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "subscription":
+                        let submessage = alertcontents.message;
+                        if (submessage === null)
+                            submessage = ""
+                        if (alertcontents.months === 1)
+                            messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + submessage + '"'
+                        else
+                            messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + submessage + '"'
+                        if (serverConfig.subs === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-primary'>Subscription: " + alertcontents.name + " " + alertcontents.months + 'm "' + submessage + '"</div>';
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "resub":
+                        if (alertcontents.message === null)
+                            messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + ').'
+                        else
+                            messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subcriptions (with a streak of ' + alertcontents.streak_months + '). "' + alertcontents.message + '"'
+                        if (serverConfig.resubs === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-primary'>Resub: " + alertcontents.name + " " + alertcontents.months + 'm (' + alertcontents.streak_months + '). "' + alertcontents.message + '"</div>';
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "prime_sub_gift":
+                        messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
+                        if (serverConfig.giftsubs === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-danger'>GiftSub: " + alertcontents.name + " to " + alertcontents.to + "</div>"
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "merch":
+                        messagetxt += alertcontents.from + " purchacing my merch. Hope you enjoy the " + alertcontents.product + ". " + alertcontents.imageHref
+                        if (serverConfig.merch === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-secondary'>Merch: " + alertcontents.name + "  " + alertcontents.product + "</div>"
+                        DisplayAlertMessages(alerttext);
+                        break;
+                    case "loyalty_store_redemption":
+                        messagetxt += alertcontents.from + " for using the your channel points for " + alertcontents.product + ". " + alertcontents.imageHref
+                        if (serverConfig.cloudbotredemption === "on")
+                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                        alerttext = "<div class='text-secondary'>Loyalty: " + alertcontents.name + " " + alertcontents.product + "</div>"
+                        DisplayAlertMessages(alerttext);
+                        break;
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: PostMessageToDiscord
+            // ============================================================================
+            function PostMessageToDiscord(msg, channel)
+            {
+                //console.log("Posting messaage to discord, ", msg, channel)
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "PostMessage",
+                            serverConfig.extensionname,
+                            {
+                                message: msg,
+                                channel: channel
+                            },
+                            "",
+                            "discordchat"),
+                        "",
+                        "discordchat"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: postMessageToTwitter
+            // ============================================================================
+            function postMessageToTwitter()
+            {
 
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "PostTweet",
-                    serverConfig.extensionname,
-                    msg,
-                    "",
-                    "twitter"),
-                "",
-                "twitter"
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: postMessageToTwitch
-    // ============================================================================
-    function postMessageToTwitch(msg)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "SendChatMessage",
-                    serverConfig.extensionname,
-                    msg,
-                    "",
-                    "twitchchat"),
-                "",
-                "twitchchat"
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: changeDiscordListeningChannel
-    // ============================================================================
-    function changeDiscordListeningChannel(channel)
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "ChangeListeningChannel",
-                    serverConfig.extensionname,
-                    channel,
-                    "",
-                    "discordchat"),
-                "",
-                "discordchat"
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: chatInput
-    // ============================================================================
-    function chatInput(event)
-    {
-        event.preventDefault();
-        //console.log("ChattInput")
-        //console.log(document.getElementById("chatInputText").value)
-        postMessageToTwitch(document.getElementById("chatInputText").value)
-        document.getElementById("chatInputText").value = ""
-    }
-    // ============================================================================
-    //                           FUNCTION: modInput
-    // ============================================================================
-    function modInput(event)
-    {
-        event.preventDefault();
-        //console.log("modtInput")
-        //console.log(document.getElementById("modInputText").value)
-        PostMessageToDiscord(document.getElementById("modInputText").value, serverConfig.modmessage_channel);
-        document.getElementById("modInputText").value = ""
-    }
-    // ============================================================================
-    //                           FUNCTION: RequestRandomFact
-    // ============================================================================
-    function RequestRandomFact()
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "RequestRandomFact",
-                    serverConfig.extensionname,
-                    "",
-                    "",
-                    "randomfact"),
-                "",
-                "randomfact"
-            ));
-    }
-    // ============================================================================
-    //                           FUNCTION: processRandomFact
-    // ============================================================================
-    function processRandomFact(data)
-    {
-        localConfig.randomFact = data;
-    }
-</script>
+                let msg = "We're live twitch.tv/OldDepressedGamer ";
+                let msg_hi = "Come say Hi! ";
+                let msg_end = "Sent from StreamRoller";
+                let msg_fact = "";
+
+                if (localConfig.randomFact !== "")
+                    msg_fact = "FOTD:" + localConfig.randomFact + " ";
+
+                if (((msg.length - 12) + msg_hi.length + msg_fact.length + msg_end.length) < 281)
+                    msg = msg + msg_hi + msg_fact + msg_end;
+                else if (((msg.length - 12) + msg_fact.length + msg_end.length) < 281)
+                    msg = msg + msg_fact + msg_end;
+                else if (((msg.length - 12) + msg_hi.length + msg_end.length) < 281)
+                    msg = msg + msg_hi + msg_end;
+
+                console.log("postMessageToTwitter: ", msg)
+                console.log("msg.length ", msg.length)
+
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "PostTweet",
+                            serverConfig.extensionname,
+                            msg,
+                            "",
+                            "twitter"),
+                        "",
+                        "twitter"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: postMessageToTwitch
+            // ============================================================================
+            function postMessageToTwitch(msg)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "SendChatMessage",
+                            serverConfig.extensionname,
+                            msg,
+                            "",
+                            "twitchchat"),
+                        "",
+                        "twitchchat"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: changeDiscordListeningChannel
+            // ============================================================================
+            function changeDiscordListeningChannel(channel)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "ChangeListeningChannel",
+                            serverConfig.extensionname,
+                            channel,
+                            "",
+                            "discordchat"),
+                        "",
+                        "discordchat"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: chatInput
+            // ============================================================================
+            function chatInput(event)
+            {
+                event.preventDefault();
+                //console.log("ChattInput")
+                //console.log(document.getElementById("chatInputText").value)
+                postMessageToTwitch(document.getElementById("chatInputText").value)
+                document.getElementById("chatInputText").value = ""
+            }
+            // ============================================================================
+            //                           FUNCTION: modInput
+            // ============================================================================
+            function modInput(event)
+            {
+                event.preventDefault();
+                //console.log("modtInput")
+                //console.log(document.getElementById("modInputText").value)
+                PostMessageToDiscord(document.getElementById("modInputText").value, serverConfig.modmessage_channel);
+                document.getElementById("modInputText").value = ""
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestRandomFact
+            // ============================================================================
+            function RequestRandomFact()
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestRandomFact",
+                            serverConfig.extensionname,
+                            "",
+                            "",
+                            "randomfact"),
+                        "",
+                        "randomfact"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: processRandomFact
+            // ============================================================================
+            function processRandomFact(data)
+            {
+                localConfig.randomFact = data;
+            }
+        </script>
