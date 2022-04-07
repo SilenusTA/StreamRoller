@@ -492,19 +492,21 @@
             function loadExtensionCards(extensions)
             {
                 // First we create all the links (these may be changed below if the extension has provided a modal box)
-                //var html = "<ul>";
                 var html = "<div>";
                 for (var i = 0; i < extensions.length; i++)
                 {
-                    // set the default list item. href link will be added if we receive a modal from them
-                    html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                    // if we have an extension and it is set to display
+                    if (!adminData.extensions[extensions[i]])
+                    {
+                        adminData.extensions[extensions[i]] = {};
+                        adminData.extensions[extensions[i]].display = false;
+                        RequestAdminModalsCode(extensions[i]);
+                    }
+
+                    html += "<div id='" + extensions[i] + "_display' style='display: none;' > <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
                     html += " <span id='" + extensions[i] + "'>"
                     html += extensions[i] + "</span></div>";
 
-                    // check if we have previously recorded this extension, if not we should add it
-                    if (!adminData.extensions[extensions[i]])
-                        adminData.extensions[extensions[i]] = {};
-                    RequestAdminModalsCode(extensions[i]);
                 };
                 //html += "</ul>";
                 html += "</div>";
@@ -576,6 +578,7 @@
                     let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
                     // grab the <li> element for this extension
                     let extLiTag = document.getElementById(xname);
+                    document.getElementById(xname + "_display").style.display = "";
                     // remove the previous event listener (if there was one)
                     $('#' + xname + "_modal").off('submit');
                     //set the element contents to a blank extension placeholder
@@ -636,12 +639,13 @@
             // ============================================================================
             function setExtensionStatus(extension, status)
             {
-                if (!status.connected)
+                if (!status.connected || status == "false")
                     document.getElementById(extension + "_status").style = "color:red";
                 else if (status.readonly)
                     document.getElementById(extension + "_status").style = "color:orange";
                 else
                     document.getElementById(extension + "_status").style = "color:green";
+                document.getElementById(extension + "_display").style.display = "";
             }
             // ============================================================================
             //                           FUNCTION: ParseOBSScenesList
