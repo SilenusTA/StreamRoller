@@ -1153,7 +1153,7 @@
 
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    localConfig.chatMessageBuffer.push(time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
+                    localConfig.chatMessageBuffer.push(time + chatdata.data['display-name'] + " " + message + "</span>");
                 }
                 else if (chatdata.data['display-name'] === "System")
                 {
@@ -1175,11 +1175,11 @@
 
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    localConfig.chatMessageBuffer.push(time + ":" + username + " " + message);
+                    localConfig.chatMessageBuffer.push(time + username + " " + message);
 
                     // add mod messages to mod card if selected
                     if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
-                        localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
+                        localConfig.modMessageBuffer.push(time + username + " " + message);
 
                 }
             }
