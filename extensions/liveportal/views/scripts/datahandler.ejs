@@ -1082,13 +1082,15 @@
                 modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
 
                 // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
+                setTimeout(()=>  {
                 if (localConfig.mouseDown < 1)
                 {
-                    var cardScrollHeight = chatcardref.scrollHeight;
-                    chatcardref.scrollTo(0, cardScrollHeight);
-                    var modScrollHeight = modcardref.scrollHeight;
-                    modcardref.scrollTo(0, modScrollHeight);
+                    var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
+                    document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight);
+                    var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
+                    document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight);
                 }
+            },100);
             }
             // ============================================================================
             //                           FUNCTION: processTwitchChatBuffer
@@ -1447,6 +1449,7 @@
                             PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                         alerttext = "<div class='text-success'>Raid: " + alertcontents.name + " " + alertcontents.raiders + "</div>";
                         DisplayAlertMessages(alerttext);
+                        postMessageToTwitch("!so " + alertcontents.name)
                         break;
                     case "host":
                         messagetxt += alertcontents.name + " for the host with " + alertcontents.viewers + " viewers."
