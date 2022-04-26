@@ -8,6 +8,12 @@
                 channel: "LIVE_PORTAL",
                 logginglevel: 0,
                 // obs settings
+                defaultscenes: {
+                    Start: { title: "Start", scenename: "##Starting Soon" },
+                    Live: { title: "Live", scenename: "##Game" },
+                    Intermission: { title: "Intermission", scenename: "##Intermission" },
+                    End: { title: "End", scenename: "##StreamEnd" },
+                },
                 showsecondaryscenes: "on",
                 showallscenes: "on",
                 mutescene: "",
@@ -40,7 +46,10 @@
                 // only keep 300 messages in chat (for performance reasons)
                 chatMessageBufferMaxSize: 300,
                 mouseDown: 0,
-                randomFact: ""
+                randomFact: "",
+                twitchRandomFactHandle: null,
+                timers: [],
+                factofthedaytimeout: 1800000
             }
 
             // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -150,6 +159,10 @@
                     RequestChatBuffer("discordchat");
                 }, 2000);
 
+                // setup gimeout for facts on stream
+                if (localConfig.factofthedaytimeout > 0)
+                    twitchFactOfTheDay();
+
             }
             // ============================================================================
             //                           FUNCTION: onDataCenterMessage
@@ -236,7 +249,8 @@
                     else if (extension_packet.type === "AdminModalCode")
                     {
                         //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
-                        addModal(extension_packet.from, extension_packet.data);
+                        if (extension_packet.to === serverConfig.extensionname)
+                            addModal(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
@@ -356,6 +370,14 @@
                         parseDiscordChatMessage(server_packet.data.data);
                         //displayDiscordMessages(server_packet);
                         displayChatMessages(server_packet);
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                           DISCORD_CHAT
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel == "TIMERS")
+                    {
+                        processTimers(extension_packet.data);
+                        UpdateOBSDefaultButtons();
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                           OBS_CHANNEL
@@ -648,6 +670,22 @@
                 document.getElementById(extension + "_display").style.display = "";
             }
             // ============================================================================
+            //                           FUNCTION: UpdateOBSDefaultButtons
+            // ============================================================================
+            function UpdateOBSDefaultButtons()
+            {
+                //Start: { title: "Start", scenename: "##Starting Soon" }
+                var element = document.getElementById("OBSDefaultButtons");
+                element.textContent = "";
+                for (const [key, value] of Object.entries(serverConfig.defaultscenes))
+                {
+                    if (value.title === "Start" && localConfig.timers.StartCountdownTimer != undefined && localConfig.timers.StartCountdownTimer > 0)
+                        addOBSSceneButton(element, localConfig.timers.StartCountdownTimer + "s", value.scenename, localConfig.OBSSceneslist.current)
+                    else
+                        addOBSSceneButton(element, value.title, value.scenename, localConfig.OBSSceneslist.current)
+                }
+            }
+            // ============================================================================
             //                           FUNCTION: ParseOBSScenesList
             // ============================================================================
             function ParseOBSScenesList(data)
@@ -662,6 +700,8 @@
                 element.textContent = ""
                 //store the data incase the user updated what they want to display
                 localConfig.OBSSceneslist = data;
+                // update default buttons
+                UpdateOBSDefaultButtons();
 
                 // always show the primary scene list
                 if (typeof (primaryScenes) !== "undefined")
@@ -1082,15 +1122,16 @@
                 modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
 
                 // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
-                setTimeout(()=>  {
-                if (localConfig.mouseDown < 1)
+                setTimeout(() =>
                 {
-                    var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
-                    document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight);
-                    var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
-                    document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight);
-                }
-            },100);
+                    if (localConfig.mouseDown < 1)
+                    {
+                        var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
+                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight);
+                        var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
+                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight);
+                    }
+                }, 200);
             }
             // ============================================================================
             //                           FUNCTION: processTwitchChatBuffer
@@ -1665,5 +1706,33 @@
             function processRandomFact(data)
             {
                 localConfig.randomFact = data;
+            }
+            // ============================================================================
+            //                           FUNCTION: processTimers
+            // ============================================================================
+            function processTimers(data)
+            {
+                localConfig.timers[data.timername] = data.timerdata
+            }
+
+            // ============================================================================
+            //                           FUNCTION: twitchFactOfTheDay
+            // ============================================================================
+            function twitchFactOfTheDay()
+            {
+                console.log(localConfig.factofthedaytimeout)
+                console.log("handle", localConfig.twitchRandomFactHandle)
+                if (localConfig.twitchRandomFactHandle != null)
+                    clearTimeout(localConfig.twitchRandomFactHandle);
+
+                localConfig.twitchRandomFactHandle = setTimeout(function ()
+                {
+                    console.log(("Random Fact: " + localConfig.randomFact, localConfig.factofthedaytimeout));
+                    postMessageToTwitch("Random Fact: " + localConfig.randomFact)
+                    RequestRandomFact();
+                    twitchFactOfTheDay();
+                },
+                    localConfig.factofthedaytimeout
+                )
             }
         </script>

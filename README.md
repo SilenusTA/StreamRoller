@@ -146,6 +146,8 @@ The live streaming portal is a webpage that you can use on your second monitor t
  
 ## In progress
 - pretty much everything currently available
+## TBD
+- AdminModals need to be resent out to all when an update is received. ie if live portal is used then other pages with the Modals need to get updated somehow.
 ## Ideas for extensions
 
 The current focus in on twitch streaming (although the streamlabs api currently supports other platforms as is). Other platforms will be integrated in time (Youtube etc)
@@ -154,6 +156,8 @@ The current focus in on twitch streaming (although the streamlabs api currently 
 - IRC chatbot: one bot that will work with all the chat extension to provide a single moderator bot for all chat channels (discord/twitch/youtube/facebook etc)
 - NDI stream extension to allow easy integration of external video feeds
 - chat auto language conversion.
+- TextToSpeech for chat. So us streamers don't have to focus on chat all the time :P
+- Chat audio feedback. This will play sounds based on chat. ie laugh track, applause based on the % of people posting emotes.
 note: suggestions welcome for this list
 # Links
 

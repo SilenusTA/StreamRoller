@@ -243,6 +243,7 @@ function requestRandomFact(from)
         }).on('end', function ()
         {
             var body = Buffer.concat(bodyChunks);
+            //console.log(JSON.parse(body))
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",

@@ -60,7 +60,7 @@ const serverConfig = {
 // while uncommented your data will not presist and be overwritten by the above config
 // every time the server runs up.
 
-const OverwriteDataCenterConfig = true;
+const OverwriteDataCenterConfig = false;
 
 // ============================================================================
 //                           FUNCTION: initialise
@@ -126,10 +126,9 @@ function onDataCenterConnect(socket)
     // DEBUGGING overwrite our config data on the server if the flag is set
     if (OverwriteDataCenterConfig)
         SaveConfigToServer();
-    else
-        // Save our config to the server
-        sr_api.sendMessage(config.DataCenterSocket,
-            sr_api.ServerPacket("SaveConfig", config.EXTENSION_NAME, serverConfig));
+    // Request our config from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
 
     // Create a channel for messages to be sent out on
     sr_api.sendMessage(config.DataCenterSocket,
@@ -222,11 +221,8 @@ function onDataCenterMessage(server_packet)
                 // Update our saved data to the server for next time we run.
                 // this is also the point were you make changes based on the settings the user has changed
                 SaveConfigToServer();
-                // currently we have the same data as sent so no need to update the admin page at the moment
-                // if you wish to do verification at this point and reject some of the data then you need to send the updated modal
-                // back (ie with the checkboxes changed etc)
-                // note the SendAdminModal function will update the admin page to match what is in our current settings
-                // SendAdminModal(server_packet.channel);
+                // the SendAdminModal function will update the admin page to match what is in our current settings
+                // SendAdminModal(server_packet.join);
             }
         }
         else
@@ -270,7 +266,6 @@ function onDataCenterMessage(server_packet)
         || server_packet.type === "ChannelCreated"
         || server_packet.type === "ChannelLeft"
         || server_packet.type === "LoggingLevel"
-        || server_packet.type === "ExtensionMessage"
     )
     {
 
