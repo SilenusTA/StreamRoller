@@ -251,7 +251,7 @@ function onDataCenterMessage(server_packet)
     else if (server_packet.type === "ChannelData")
     {
         // first we check which channel the message came in on
-        if (server_packet.channel === "STREAMLABS_ALERT")
+        if (server_packet.dest_channel === "STREAMLABS_ALERT")
             // do something with the data
             process_stream_alert(server_packet);
         else

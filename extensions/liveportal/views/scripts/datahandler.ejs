@@ -352,6 +352,11 @@
                     else if (server_packet.dest_channel === "STREAMLABS_ALERT")
                         ProcessStreamAlert(server_packet);
                     // -------------------------------------------------------------------------------------------------
+                    //                           STREAMLABS_ALERT
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.dest_channel === "CHATMOOD_CHANNEL")
+                        console.log(extension_packet.data)
+                    // -------------------------------------------------------------------------------------------------
                     //                           TWITCH_CHAT
                     // -------------------------------------------------------------------------------------------------
                     else if (server_packet.dest_channel == "TWITCH_CHAT")
@@ -680,7 +685,12 @@
                 for (const [key, value] of Object.entries(serverConfig.defaultscenes))
                 {
                     if (value.title === "Start" && localConfig.timers.StartCountdownTimer != undefined && localConfig.timers.StartCountdownTimer > 0)
-                        addOBSSceneButton(element, localConfig.timers.StartCountdownTimer + "s", value.scenename, localConfig.OBSSceneslist.current)
+                    {
+                        let minutes = Math.floor(localConfig.timers.StartCountdownTimer / 60);
+                        let seconds = localConfig.timers.StartCountdownTimer - (minutes * 60);
+                        //addOBSSceneButton(element, localConfig.timers.StartCountdownTimer + "s", value.scenename, localConfig.OBSSceneslist.current)
+                        addOBSSceneButton(element, minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'), value.scenename, localConfig.OBSSceneslist.current)
+                    }
                     else
                         addOBSSceneButton(element, value.title, value.scenename, localConfig.OBSSceneslist.current)
                 }
@@ -1121,15 +1131,15 @@
                 chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
                 modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
 
-                // prevent auto scrolling if mouse key is pressed (ie user is scrolling chat)
+                // prevent auto scrolling if mouse key is pressed (ie user is wding chat)
                 setTimeout(() =>
                 {
                     if (localConfig.mouseDown < 1)
                     {
                         var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
-                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight);
+                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight + 100);
                         var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
-                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight);
+                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 100);
                     }
                 }, 200);
             }
@@ -1734,5 +1744,43 @@
                 },
                     localConfig.factofthedaytimeout
                 )
+            }
+
+
+            // test purposes only. 
+            // can be sent from browser console.
+            function testChatMessage(user, message)
+            {
+                // fake twitch chat message
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ChannelData",
+                        "twitchchat",
+                        sr_api.ExtensionPacket(
+                            "ChatMessage",
+                            "twitchchat",
+                            {
+                                channel: '#olddepressedgamer',
+                                message: message,
+                                data: {
+                                    'badge-info': { subscriber: '40' },
+                                    badges: { broadcaster: '1', subscriber: '3012' },
+                                    color: '#8A2BE2',
+                                    'display-name': user,
+                                    'emote-sets': '0,19313,1454048,1454049,1454050,300374282,300548761,390077889,461451828,472873131,477339272,488737509,537206155,564265402,592920959,610186276',
+                                    mod: false,
+                                    subscriber: true,
+                                    'user-type': null,
+                                    'badge-info-raw': 'subscriber/40',
+                                    'badges-raw': 'broadcaster/1,subscriber/3012',
+                                    username: user,
+                                    emotes: {},
+                                    'emotes-raw': null,
+                                    'message-type': 'chat'
+                                }
+                            },
+                            'TWITCH_CHAT'
+                        ),
+                        'TWITCH_CHAT'
+                    ));
             }
         </script>

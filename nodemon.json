@@ -1,7 +1,8 @@
 {
     "ignore": [
         "datastore/*",
-        "configstore/*"
+        "configstore/*",
+        "test-ext/*"
     ],
     "ext": "js, json, html,ejs,cjs,mjs"
 }

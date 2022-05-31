@@ -12,4 +12,4 @@ php/
 test-ext/
 credentialstore/
 datastore/
-timerfiles/
+tempfiles/
