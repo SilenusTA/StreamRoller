@@ -1,0 +1,20 @@
+{
+  "name": "sraudio",
+  "version": "1.0.0",
+  "description": "audio handler for StreamRoller",
+  "main": "",
+  "type": "module",
+  "author": "Twitch/OldDepressedGamer",
+  "license": "ISC",
+  "dependencies": {
+    "naudiodon": "^2.3.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SilenusTA/StreamRoller.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SilenusTA/StreamRoller/issues"
+  },
+  "homepage": "https://github.com/SilenusTA/StreamRoller#readme"
+}
