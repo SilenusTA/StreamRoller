@@ -401,7 +401,7 @@
                             // need to check in case we missed the start message (stream already running when we load the page)
                             if (!localConfig.obslive)
                             {
-                                localConfig.obslive = true;
+                                localConfig.obslive = extension_packet.obslive;
                                 OBSLiveCheck();
                             }
 
@@ -413,8 +413,6 @@
                             OBSLiveCheck();
                             // send tweet to say we are live
                             postMessageToTwitter();
-
-
                         }
                         else if (extension_packet.type === "StreamStopped")
                         {
@@ -425,6 +423,7 @@
                         {
                             if (extension_packet.data.scene === serverConfig.mutescene)
                             {
+                                console.log(extension_packet.data)
                                 serverConfig.muted = extension_packet.data.muted
                                 addOBSMuteButton(serverConfig.muted)
                                 OBSLiveCheck();
@@ -853,7 +852,6 @@
                 else
                 {
                     // not live anymore so set the background back to normal
-                    document.getElementById("OBSRate").innerHTML = ""
                     document.getElementById("OBSStrain").style.removeProperty("background-color")
                     // background is set in the navbar partial code and uses local storage. should probably update this and move it here
                     if (localStorage.getItem("darkmode") === "true")
@@ -903,60 +901,65 @@
             // ===========================================================================
             function ProcessOBSStats(data)
             {
-                let rate = data.kbitsPerSec;
-                let strain = data.strain; // red/green/amber icon needed
-                var straincolor = (255 / 1 * strain);
-                var tm = new Date(1000 * data.totalStreamTime).toISOString().substr(11, 8);
-                // saves our serverConfig to the server so we can load it again next time we startup
-                //document.getElementById("OBSInfo").innerHTML = "<div id="OBSInfo">Uptime 00:02:21 2610 kb/s strain:0</div>"
-                document.getElementById("OBSUptime").innerHTML = tm;
-                document.getElementById("OBSRate").innerHTML = rate + " kb/s";
+                if(localConfig.obslive)
+                    {
+                    //let rate = data.outputBytes;
+                    let strain = data.outputCongestion; // red/green/amber icon needed
+                    var straincolor = (255 / 1 * strain);
+                    var Uptime = "";
 
-                let missedframes = data.renderMissedFrames;
-                let skippedframes = data.outputSkippedFrames;
-                let droppedframes = data.numDroppedFrames;
+                    // saves our serverConfig to the server so we can load it again next time we startup
+                    if(data.totalStreamTime>0)
+                    {
+                    hour = Math.floor((data.totalStreamTime/1000/3600) << 0) 
+                    min = Math.floor((data.totalStreamTime/1000/60) << 0)
+                    sec = Math.floor((data.totalStreamTime/1000) % 60);
+                    if (hour > 0)
+                        Uptime = "Uptime:<BR>" + hour 
+                    else 
+                        Uptime = "Uptime:<BR>" + hour + ":" + min + ":" + sec
+                    }
 
-                // add coloring if we drop too many frames and we also truncat the numbers if over 10k
-                if (missedframes > 1000)
-                {
-                    if (missedframes > 10000)
-                        missedframes = (~~(missedframes / 1000)) + "k"
-                    missedframes = "<span style='color:red'>" + missedframes + "</span>";
+                    document.getElementById("OBSUptime").innerHTML = Uptime;
+                    //document.getElementById("OBSRate").innerHTML = "Rate:<BR>" + rate + " kb/s";
+
+                    let missedframes = data.renderSkippedFrames;
+                    let skippedframes = data.outputSkippedFrames;
+                    // add coloring if we drop too many frames and we also truncat the numbers if over 10k
+                    if (missedframes > 1000)
+                    {
+                        if (missedframes > 10000)
+                            missedframestxt = (~~(missedframes / 1000)) + "k"
+                        missedframestxt = "<span style='color:red'>Render errors:<BR>" + missedframestxt + "</span>";
+                    }
+                    else if (missedframes > 0)
+                        missedframestxt = "<span style='color:orange'>Render errors:<BR>" + missedframes + "</span>";
+                    else
+                        missedframestxt = "<span style='color:green'>Render errors:<BR>" + missedframes + "</span>";
+
+                    if (skippedframes > 1000)
+                    {
+                        if (skippedframes > 10000)
+                            skippedframestxt = (~~(skippedframes / 1000)) + "k"
+                        skippedframestxt = "<span style='color:red'>Network frames errors:<BR>" + skippedframestxt + "</span>";
+                    }
+                    else if (skippedframes > 0)
+                        skippedframestxt = "<span style='color:orange'>Network frames errors:<BR>" + skippedframes + "</span>";
+                    else
+                        skippedframestxt = "<span style='color:green'>Network frames errors:<BR>" + skippedframes + "</span>";
+
+                    // note the double not (~) removes the decimal part more efficiently than the match.trunc fungion
+                    if (data.renderTotalFrames > 1000)
+                        document.getElementById("OBSRender").innerHTML = missedframestxt + "/" + (~~(data.renderTotalFrames / 1000)) + "k";
+                    else
+                        document.getElementById("OBSRender").innerHTML = missedframestxt + "/" + data.renderTotalFrames;
+                    if (data.outputTotalFrames > 1000)
+                        document.getElementById("OBSNetwork").innerHTML = skippedframestxt + "/" + (~~(data.outputTotalFrames / 1000)) + "k";
+                    else
+                        document.getElementById("OBSNetwork").innerHTML = skippedframestxt + "/" + data.outputTotalFrames;
+                
+                    document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
                 }
-                else if (missedframes > 0)
-                    missedframes = "<span style='color:orange'>" + missedframes + "</span>";
-                if (skippedframes > 1000)
-                {
-                    if (skippedframes > 10000)
-                        skippedframes = (~~(skippedframes / 1000)) + "k"
-                    skippedframes = "<span style='color:red'>" + skippedframes + "</span>";
-                }
-                else if (skippedframes > 0)
-                    skippedframes = "<span style='color:orange'>" + skippedframes + "</span>";
-                if (droppedframes > 1000)
-                {
-                    if (droppedframes > 10000)
-                        droppedframes = (~~(droppedframes / 1000)) + "k"
-                    droppedframes = "<span style='color:red'>" + droppedframes + "</span>";
-                }
-                else if (droppedframes > 0)
-                    droppedframes = "<span style='color:orange'>" + droppedframes + "</span>";
-
-                // note the double not (~) removes the decimal part more efficiently than the match.trunc fungion
-                if (data.renderTotalFrames > 1000)
-                    document.getElementById("OBSRender").innerHTML = missedframes + "/" + (~~(data.renderTotalFrames / 1000)) + "k";
-                else
-                    document.getElementById("OBSRender").innerHTML = missedframes + "/" + data.renderTotalFrames;
-                if (data.outputTotalFrames > 1000)
-                    document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + (~~(data.outputTotalFrames / 1000)) + "k";
-                else
-                    document.getElementById("OBSEncoder").innerHTML = skippedframes + "/" + data.outputTotalFrames;
-                if (data.numTotalFrames > 1000)
-                    document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + (~~(data.numTotalFrames / 1000)) + "k";
-                else
-                    document.getElementById("OBSNetwork").innerHTML = droppedframes + "/" + data.numTotalFrames;
-
-                document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
             }
             // ============================================================================
             //                      FUNCTION: parseExtensionModalData

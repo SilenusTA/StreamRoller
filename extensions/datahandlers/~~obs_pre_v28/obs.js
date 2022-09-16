@@ -17,51 +17,41 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
-import * as fs from "fs";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import * as logger from '../../../backend/data_center/modules/logger.js';
+import sr_api from '../../../backend/data_center/public/streamroller-message-api.cjs';
+import * as fs from 'fs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let streamlabsChannelConnectionAttempts = 0;
 // local config
 const localConfig = {
-    OUR_CHANNEL: "OBS_CHANNEL",
-    EXTENSION_NAME: "obs",
-    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    OUR_CHANNEL: 'OBS_CHANNEL',
+    EXTENSION_NAME: 'obs',
+    SYSTEM_LOGGING_TAG: '[EXTENSION]',
     DataCenterSocket: null,
     obsConnection: null,
     obsConnecting: false,
     channelConnectionAttempts: 20,
     OBSAvailableScenes: null,
-    sceneList: { current: "", main: [], secondary: [], rest: [] },
+    sceneList: { current: '', main: [], secondary: [], rest: [] },
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
         connected: false, // are we connected to obs
-        currentscene: ""
+        currentscene: ''
     },
-    streamStats: {
-        renderSkippedFrames: 0,
-        renderTotalFrames: 0,
-        outputBytes: 0,
-        outputDuration: 0,
-        outputCongestion: 0,
-        outputSkippedFrames: 0,
-        outputTotalFrames: 0
-
-    },
-    obshost: "localhost",
-    obsport: "4445",
-    obspass: "pass"
+    obshost: 'localhost',
+    obsport: '4445',
+    obspass: 'pass'
 };
 //sever config (stuff we want to save over runs)
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    obsenable: "on",
-    mainsceneselector: "##",
-    secondarysceneselector: "**",
+    obsenable: 'on',
+    mainsceneselector: '##',
+    secondarysceneselector: '**',
 
 
 };
@@ -74,20 +64,20 @@ const serverConfig = {
  * @param {String} host 
  * @param {String} port 
  */
-function initialise (app, host, port, heartbeat)
+function initialise(app, host, port, heartbeat)
 {
-    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeat", heartbeat);
-    if (typeof (heartbeat) != "undefined")
+    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.initialise', 'host', host, 'port', port, 'heartbeat', heartbeat);
+    if (typeof (heartbeat) != 'undefined')
         localConfig.heartBeatTimeout = heartbeat;
     else
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.initialise', 'DataCenterSocket no heatbeat passed:', heartbeat);
 
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "connection failed:", err.message);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.initialise', 'connection failed:', err);
     }
 }
 
@@ -98,24 +88,24 @@ function initialise (app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect (reason)
+function onDataCenterDisconnect(reason)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterDisconnect', reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-function onDataCenterConnect ()
+function onDataCenterConnect()
 {
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+        sr_api.ServerPacket('RequestConfig', serverConfig.extensionname));
     // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+        sr_api.ServerPacket('RequestCredentials', serverConfig.extensionname));
     // Create/Join the channels we need for this
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+        sr_api.ServerPacket('CreateChannel', serverConfig.extensionname, serverConfig.channel)
     );
 
     // clear the previous timeout if we have one
@@ -130,22 +120,22 @@ function onDataCenterConnect ()
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage (server_packet)
+function onDataCenterMessage(server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === 'ConfigFile')
     {
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.data != '' && server_packet.to === serverConfig.extensionname)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
-            for (const [key] of Object.entries(serverConfig))
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage', 'Received config');
+            for (const [key, value] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
             SaveConfigToServer();
         }
     }
-    else if (server_packet.type === "CredentialsFile")
+    else if (server_packet.type === 'CredentialsFile')
     {
-        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != '')
             if (localConfig.obsConnecting == false)
             {
                 localConfig.obsConnecting = true
@@ -155,20 +145,20 @@ function onDataCenterMessage (server_packet)
                 connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
             }
             else
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                    serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage',
+                    serverConfig.extensionname + ' CredentialsFile', 'Credential file is empty');
     }
-    else if (server_packet.type === "ExtensionMessage")
+    else if (server_packet.type === 'ExtensionMessage')
     {
         let decoded_packet = server_packet.data
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", decoded_packet.type);
-        if (decoded_packet.type === "RequestAdminModalCode")
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage ExtensionMessage', decoded_packet.type);
+        if (decoded_packet.type === 'RequestAdminModalCode')
             SendAdminModal(decoded_packet.from);
-        else if (decoded_packet.type === "AdminModalData")
+        else if (decoded_packet.type === 'AdminModalData')
         {
             if (decoded_packet.to === serverConfig.extensionname)
             {
-                serverConfig.obsenable = "off";
+                serverConfig.obsenable = 'off';
                 for (const [key, value] of Object.entries(decoded_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
@@ -176,67 +166,68 @@ function onDataCenterMessage (server_packet)
                 sendScenes();
             }
         }
-        else if (decoded_packet.type === "RequestScenes")
+        else if (decoded_packet.type === 'RequestScenes')
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "SceneList",
+                sr_api.ServerPacket
+                    ('ExtensionMessage',
                         serverConfig.extensionname,
-                        localConfig.sceneList,
-                        "",
+                        sr_api.ExtensionPacket(
+                            'SceneList',
+                            serverConfig.extensionname,
+                            localConfig.sceneList,
+                            '',
+                            server_packet.from
+                        ),
+                        '',
                         server_packet.from
-                    ),
-                    "",
-                    server_packet.from
-                )
+                    )
             )
         }
-        else if (decoded_packet.type === "ChangeScene")
+        else if (decoded_packet.type === 'ChangeScene')
             changeScene(decoded_packet.data);
-        else if (decoded_packet.type === "ToggleMute")
+        else if (decoded_packet.type === 'ToggleMute')
             ToggleMute(decoded_packet.data)
         else
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage', 'unhandled ExtensionMessage ', server_packet);
     }
-    else if (server_packet.type === "UnknownChannel")
+    else if (server_packet.type === 'UnknownChannel')
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage UnknownChannel', server_packet);
         if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage', 'Channel ' + server_packet.data + ' doesn\'t exist, scheduling rejoin');
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", serverConfig.extensionname, server_packet.data
+                        'JoinChannel', serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
     }    // we have received data from a channel we are listening to
-    else if (server_packet.type === "ChannelData")
+    else if (server_packet.type === 'ChannelData')
     {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage', 'received message from unhandled channel ', server_packet.dest_channel);
     }
-    else if (server_packet.type === "InvalidMessage")
+    else if (server_packet.type === 'InvalidMessage')
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-            "InvalidMessage ", server_packet.data.error, server_packet);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage',
+            'InvalidMessage ', server_packet.data.error, server_packet);
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "LoggingLevel"
+    else if (server_packet.type === 'ChannelJoined'
+        || server_packet.type === 'ChannelCreated'
+        || server_packet.type === 'ChannelLeft'
+        || server_packet.type === 'LoggingLevel'
     )
     {
-        //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", server_packet.type);
+        //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage Not handling', server_packet.type);
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.data.error);
+            '.onDataCenterMessage', 'Unhandled message type', server_packet.data.error);
 }
 
 // ===========================================================================
@@ -249,10 +240,10 @@ function onDataCenterMessage (server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendAdminModal(tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + "/obsadminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + '/obsadminmodal.html', function (err, filedata)
     {
         if (err)
             throw err;
@@ -261,27 +252,27 @@ function SendAdminModal (tochannel)
             let modalstring = filedata.toString();
             for (const [key, value] of Object.entries(serverConfig))
             {
-                if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                if (value === 'on')
+                    modalstring = modalstring.replace(key + 'checked', 'checked');
                 // replace text strings
-                else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                else if (typeof (value) == 'string')
+                    modalstring = modalstring.replace(key + 'text', value);
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
-                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    'ExtensionMessage', // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        'AdminModalCode', // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
-                        "",
+                        '',
                         tochannel,
                         serverConfig.channel
                     ),
-                    "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    '',
+                    tochannel // in this case we only need the 'to' channel as we will send only to the requester
                 ))
         }
     });
@@ -292,11 +283,11 @@ function SendAdminModal (tochannel)
 /**
  * savel config file to the server
  */
-function SaveConfigToServer ()
+function SaveConfigToServer()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
-        "SaveConfig",
+        'SaveConfig',
         serverConfig.extensionname,
         serverConfig))
 }
@@ -306,7 +297,7 @@ function SaveConfigToServer ()
 //                             OBS websockets
 // ============================================================================
 // ############################################################################
-import OBSWebSocket from "obs-websocket-js";
+import OBSWebSocket from 'obs-websocket-js';
 localConfig.obsConnection = new OBSWebSocket();
 // ============================================================================
 //                           FUNCTION: onOBSScenes
@@ -314,28 +305,21 @@ localConfig.obsConnection = new OBSWebSocket();
 /**
  * connects to the obs server
  */
-function connectToObs (host, port, pass)
+function connectToObs(host, port, pass)
 {
     localConfig.obsConnecting = true
-    if (host != "" && port != "" && pass != "" && host != null && port != null && pass != null)
+    if (host != '' && port != '' && pass != '' && host != null && port != null && pass != null)
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", host, port, "xxxx");
-        localConfig.obsConnection.connect("ws://" + host + ":" + port, pass)
-            .then(data =>
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.connectToObs', host, port, 'xxxx');
+        localConfig.obsConnection.connect({ address: host + ':' + port, password: pass })
+            .then(() =>
             {
                 // we are now connected so stop any furthur scheduling
                 localConfig.obsConnecting = false
                 localConfig.status.connected = true;
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", "OBS Connected (v" + data.obsWebSocketVersion + ")");
-                return localConfig.obsConnection.call("GetCurrentProgramScene", null)
-                    .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "GetCurrentProgramScene failed", err.message); });
-
-            })
-            .then(data =>
-            {
-                localConfig.sceneList.current = data.currentProgramSceneName;
-                return localConfig.obsConnection.call("GetSceneList")
-                    .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "GetSceneList failed", err.message); });
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.connectToObs', 'OBS Connected');
+                OBSRequest('GetCurrentScene', null);
+                return localConfig.obsConnection.send('GetSceneList');
             })
             .then(data =>
             {
@@ -344,13 +328,13 @@ function connectToObs (host, port, pass)
                     processOBSSceneList(data.scenes);
                     sendScenes();
                 }
-                catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs create scenes list", err.message); }
+                catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.connectToObs create scenes list', err); }
             })
             .catch((err) =>
             {
                 localConfig.status.connected = false;
                 //Need to setup a reschedule if we have a connection failure
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", err.message);
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.connectToObs ', 'Failed to connect to OBS, scheduling reconnect', err);
                 localConfig.obsConnecting = true
                 setTimeout(() =>
                 {
@@ -362,7 +346,7 @@ function connectToObs (host, port, pass)
     {
         localConfig.status.connected = false;
         //Need to setup a reschedule if we have a connection failure
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, missing credentials obshost or obsport");
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.connectToObs ', 'Failed to connect to OBS, missing credentials obshost or obsport');
         localConfig.obsConnecting = true
         setTimeout(() =>
         {
@@ -372,6 +356,35 @@ function connectToObs (host, port, pass)
 
 }
 
+// ============================================================================
+//                           FUNCTION: OBSRequest
+// ============================================================================
+/**
+ * Make an OBS request using the data provided
+ * @param {String} request request string
+ * @param {Object} data extra data for the request
+ * @param {Function} callback called back with the data
+ */
+function OBSRequest(request, data)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBSRequest', request, data);
+    try { localConfig.obsConnection.sendCallback(request, data, OBSRequestCallback); }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, '.OBSRequest failed', request, data, err);
+    }
+}
+function OBSRequestCallback(err, data)
+{
+    if (err != null)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, 'OBSRequestCallBack', err.status, err.error);
+    }
+    if (data != null)
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, 'OBSRequestCallBack', data);
+    else
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, 'OBSRequestCallBack null data callback');
+}
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
 // ============================================================================
@@ -451,39 +464,42 @@ Stats message
  * process a new list of scenes from OBS
  * @param {Scenes} scenes 
  */
-function processOBSSceneList (scenes)
+function processOBSSceneList(scenes)
 {
     try
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".processOBSSceneList", scenes);
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.processOBSSceneList', scenes);
         localConfig.OBSAvailableScenes = scenes;
         localConfig.sceneList.main = [];
         localConfig.sceneList.secondary = [];
         localConfig.sceneList.rest = [];
         scenes.forEach(scene =>
         {
-            if (scene.sceneName !== "currentProgramSceneName:")
+            if (scene !== 'current')
             {
-                if (scene.sceneName.startsWith(serverConfig.mainsceneselector))
+                if (scene.name.startsWith(serverConfig.mainsceneselector))
                     localConfig.sceneList.main.push({
-                        displayName: scene.sceneName.replace(serverConfig.mainsceneselector, ""),
-                        sceneName: scene.sceneName
+                        displayName: scene.name.replace(serverConfig.mainsceneselector, ''),
+                        sceneName: scene.name,
+                        muted: scene.muted
                     }
                     )
-                else if (scene.sceneName.startsWith(serverConfig.secondarysceneselector))
+                else if (scene.name.startsWith(serverConfig.secondarysceneselector))
                     localConfig.sceneList.secondary.push(
                         {
-                            displayName: scene.sceneName.replace(serverConfig.secondarysceneselector, ""),
-                            sceneName: scene.sceneName,
+                            displayName: scene.name.replace(serverConfig.secondarysceneselector, ''),
+                            sceneName: scene.name,
+                            muted: scene.muted
                         }
                     )
                 else
-                    localConfig.sceneList.rest.push({ displayName: scene.sceneName, sceneName: scene.sceneName, muted: scene.muted })
+                    localConfig.sceneList.rest.push({ displayName: scene.name, sceneName: scene.name, muted: scene.muted })
             }
 
 
         })
-    } catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".processOBSSceneList", "Failed to process scene list", err.message); }
+    }
+    catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.processOBSSceneList', 'Failed ot process scene list', err); }
 }
 
 // ============================================================================
@@ -493,65 +509,45 @@ function processOBSSceneList (scenes)
  * Change to the scene named in the paramert
  * @param {String} scene 
  */
-function changeScene (scene)
+function changeScene(scene)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
-    localConfig.obsConnection.call("SetCurrentProgramScene", { sceneName: scene })
-        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene ", "SetCurrentProgramScene failed", err.message); });
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.changeScene', ' request come in. changing to ', scene);
+    OBSRequest('SetCurrentScene', { 'scene-name': scene })
 }
 
 // ============================================================================
 //                           FUNCTION: Callback Handlers
 // ============================================================================
-localConfig.obsConnection.on("StreamStateChanged", data => { onStreamStatus(data); });
-localConfig.obsConnection.on("GetVersion", data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'GetVersion' received", data) });
-localConfig.obsConnection.on("CurrentProgramSceneChanged", data => { onSwitchedScenes(data) });
-localConfig.obsConnection.on("SceneListChanged", data => { onScenesListChanged(data) });
-localConfig.obsConnection.on("InputMuteStateChanged", data => { onSourceMuteStateChanged(data) });
+localConfig.obsConnection.on('StreamStatus', data => { onStreamStatus(data); });
+localConfig.obsConnection.on('GetVersion', data => { logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBS \'GetVersion\' received', data) });
+localConfig.obsConnection.on('SwitchScenes', data => { onSwitchedScenes(data) });
+localConfig.obsConnection.on('StreamStarted', data => { onStreamStarted(data) });
+localConfig.obsConnection.on('StreamStopped', data => { onStreamStopped(data) });
+localConfig.obsConnection.on('ScenesChanged', data => { onScenesListChanged(data) });
+localConfig.obsConnection.on('CurrentScene', data => { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBS \'CurrentScene\' received', data) });
+localConfig.obsConnection.on('SourceMuteStateChanged', data => { onSourceMuteStateChanged(data) });
 
 // ============================================================================
 //                           FUNCTION: obs error
 // ============================================================================
-localConfig.obsConnection.on("error", err => 
+localConfig.obsConnection.on('error', err => 
 {
     localConfig.status.connected = false;
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS error message received", err.message);
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBS error message received', err);
 });
 
 // ============================================================================
 //                           FUNCTION: onStreamStatus
 // ============================================================================
-function onStreamStatus (data)
+function onStreamStatus(data)
 {
-    // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
     localConfig.status.connected = true;
-    //if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED")
-    if (data.outputActive)
-    {
-        localConfig.streamStats.obslive = true;
-        StreamStarted()
-    }
-    else
-    //if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STOPPED")
-    {
-        localConfig.streamStats.obslive = false;
-        StreamStopped()
-    }
-}
-// ============================================================================
-//                           FUNCTION: sendStreamStats
-// ============================================================================
-function sendStreamStats (data)
-{
-    // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
-    localConfig.status.connected = true;
-
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "ChannelData",
+            'ChannelData',
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "OBSStats",
+                'OBSStats',
                 serverConfig.extensionname,
                 data,
                 serverConfig.channel
@@ -560,83 +556,88 @@ function sendStreamStats (data)
     )
 }
 // ============================================================================
-//                           FUNCTION: onScenesListChanged
+//                           FUNCTION: onScenesChanged
 // ============================================================================
-function onScenesListChanged (data)
+function onScenesListChanged(data)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onScenesListChanged", "OBS scenes list has changed");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onScenesListChanged', 'OBS scenes list has changed');
     processOBSSceneList(data.scenes);
     // send the scenes list on our channel
     sendScenes();
 }
+
+
 // ============================================================================
-//                           FUNCTION: onSwitchedScenes
+//                           FUNCTION: onSceneChanged
 // ============================================================================
 /**
  * handles onSceneChanged callback
  * @param {Scene} scene 
  */
-function onSwitchedScenes (scene)
+function onSwitchedScenes(scene)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onSwitchedScenes', 'OBS scene changed ', scene);
     localConfig.sceneList.current = scene;
     // send the information out on our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "SceneChanged",
+        sr_api.ServerPacket
+            ('ChannelData',
                 serverConfig.extensionname,
-                scene.sceneName,
-                serverConfig.channel
-            ),
-            serverConfig.channel)
+                sr_api.ExtensionPacket(
+                    'SceneChanged',
+                    serverConfig.extensionname,
+                    scene.sceneName,
+                    serverConfig.channel
+                ),
+                serverConfig.channel)
     )
 
 }
 // ============================================================================
-//                           FUNCTION: StreamStopped
+//                           FUNCTION: onStreamStopped
 // ============================================================================
 /**
  * Called when the stream is stopped
  * @param {Object} data 
  */
-function StreamStopped ()
+function onStreamStopped(data)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStopped");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.StreamStopped', data);
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "StreamStopped",
+        sr_api.ServerPacket
+            ('ChannelData',
                 serverConfig.extensionname,
-                "StreamStopped",
-                serverConfig.channel),
-            serverConfig.channel
-        ));
+                sr_api.ExtensionPacket(
+                    'StreamStopped',
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel),
+                serverConfig.channel
+            ));
 }
 // ============================================================================
-//                           FUNCTION: StreamStarted
+//                           FUNCTION: onStreamStarted
 // ============================================================================
 /**
  * Called when the stream is started
  * @param {Object} data 
  */
-function StreamStarted ()
+function onStreamStarted(data)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStarted");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.StreamStarted', data);
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "StreamStarted",
+        sr_api.ServerPacket
+            ('ChannelData',
                 serverConfig.extensionname,
-                "StreamStarted",
-                serverConfig.channel),
-            serverConfig.channel
-        ));
+                sr_api.ExtensionPacket(
+                    'StreamStarted',
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel),
+                serverConfig.channel
+            ));
 }
 // ============================================================================
 //                           FUNCTION: onOBSScenes
@@ -644,18 +645,18 @@ function StreamStarted ()
 /**
  * Called with a list of scene (triggered by the get scenes call)
  */
-function sendScenes ()
+function sendScenes()
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSScenes");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBSScenes');
     // lets add the deliminatores we currently are using before sending it out
     localConfig.sceneList.mainsceneselector = serverConfig.mainsceneselector;
     localConfig.sceneList.secondarysceneselector = serverConfig.secondarysceneselector;
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "ChannelData",
+            'ChannelData',
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "ScenesList",
+                'ScenesList',
                 serverConfig.extensionname,
                 localConfig.sceneList,
                 serverConfig.channel
@@ -666,31 +667,29 @@ function sendScenes ()
 // ============================================================================
 //                           FUNCTION: ToggleMute
 // ============================================================================
-function ToggleMute (input)
+function ToggleMute(input)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "ToggleMute", input)
-    localConfig.obsConnection.call("ToggleInputMute", { inputName: input })
-        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "ToggleInputMute failed", err.message); });
-    localConfig.obsConnection.call("GetInputMute", { inputName: input })
-        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "GetInputMute failed", err.message); });
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, 'ToggleMute', input)
+    OBSRequest('ToggleMute', { source: input });
+    OBSRequest('GetMute', { source: input });
 }
 // ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
 // ============================================================================
-function onSourceMuteStateChanged (data)
+function onSourceMuteStateChanged(data)
 {
-    logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'SourceMuteStateChanged' received", data)
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBS \'SourceMuteStateChanged\' received', data)
     sr_api.sendMessage(
         localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "ChannelData",
+            'ChannelData',
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "MuteStatus",
+                'MuteStatus',
                 serverConfig.extensionname,
                 {
-                    scene: data.inputName,
-                    muted: data.inputMuted
+                    scene: data.sourceName,
+                    muted: data.muted
                 },
                 serverConfig.channel),
             serverConfig.channel
@@ -699,63 +698,30 @@ function onSourceMuteStateChanged (data)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function heartBeatCallback ()
+function heartBeatCallback()
 {
-    try
+    if (localConfig.obsConnection._connected == false)
     {
-
-        if (localConfig.status.connected == false)
+        localConfig.status.connected = localConfig.obsConnection._connected;
+        // if we are not currently trying to connect we need to start the scheduler again
+        if (localConfig.obsConnecting == false)
         {
-            // if we are not currently trying to connect we need to start the scheduler again
-            if (localConfig.obsConnecting == false)
-            {
-                localConfig.obsConnecting = true;
-                connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
-            }
+            localConfig.obsConnecting = true;
+            connectToObs(localConfig.obshost, localConfig.obs, localConfig.obspass);
         }
-        localConfig.obsConnection.call("GetStats").then(data =>
-        {
-            localConfig.streamStats.renderSkippedFrames = data.renderSkippedFrames;
-            localConfig.streamStats.renderTotalFrames = data.renderTotalFrames;
-        })
-            .catch(err =>
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
-                if (err.message === "Not connected")
-                    localConfig.status.connected = false;
-            });
 
-        localConfig.obsConnection.call("GetOutputStatus", { outputName: "adv_stream" }).then(data =>
-        {
-            localConfig.streamStats.obslive = data.outputActive;
-            localConfig.streamStats.outputBytes = data.outputBytes;
-            localConfig.streamStats.totalStreamTime = data.outputDuration;
-            localConfig.streamStats.outputCongestion = data.outputCongestion
-            localConfig.streamStats.outputSkippedFrames = data.outputSkippedFrames;
-            localConfig.streamStats.outputTotalFrames = data.outputTotalFrames;
-            sendStreamStats(localConfig.streamStats)
-        })
-            .catch(err =>
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", err.message);
-            }
-            )
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket("ChannelData",
+    }
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket('ChannelData',
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                'HeartBeat',
                 serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "HeartBeat",
-                    serverConfig.extensionname,
-                    localConfig.status,
-                    serverConfig.channel),
-                serverConfig.channel
-            ),
-        );
-    }
-    catch (err)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "callback failed:", err.message);
-    }
+                localConfig.status,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================

@@ -26,8 +26,8 @@ const config = {
     heartBeatTimeout: 5000
 };
 import express from "express";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import * as logger from "../../backend/data_center/modules/logger.js";
 
@@ -41,21 +41,21 @@ import * as logger from "../../backend/data_center/modules/logger.js";
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
 
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]liveportal.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     config.heartBeatTimeout = heartbeat;
     //app.use("/images/", express.static(__dirname + '/public/images'));
-    app.use("/liveportal/", express.static(__dirname + '/public'));
-    config.dataCenterApp = app;
+    app.use("/liveportal/", express.static(__dirname + "/public"));
+    config.dataCenterApp = app
 
     try
     {
-        config.dataCenterApp.get('/liveportal', function (req, res)
+        config.dataCenterApp.get("/liveportal", function (req, res)
         {
 
             // we will store our global data in app.data so we need to pass this to any new page
-            res.render(__dirname + '/views/pages/index',
+            res.render(__dirname + "/views/pages/index",
                 {
 
                     host: host,

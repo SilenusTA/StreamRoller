@@ -19,8 +19,8 @@
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // declare our stream references
 
@@ -58,7 +58,7 @@ const serverData =
 /**
  * maddatory function so that the backend can start us up
  */
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
 
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeat", heartbeat);
@@ -79,14 +79,14 @@ function initialise(app, host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-function onDataCenterConnect()
+function onDataCenterConnect ()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // Request our config from the server
@@ -108,7 +108,7 @@ function onDataCenterConnect()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
@@ -117,7 +117,7 @@ function onDataCenterMessage(server_packet)
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
-            for (const [key, value] of Object.entries(serverConfig))
+            for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
             SaveConfigToServer();
@@ -169,7 +169,7 @@ function onDataCenterMessage(server_packet)
                 // set our config values to the ones in message
                 serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
-                for (const [key, value] of Object.entries(serverConfig))
+                for (const [key] of Object.entries(serverConfig))
                     if (key in extension_packet.data)
                         serverConfig[key] = extension_packet.data[key];
                 // save our data to the server for next time we run
@@ -179,6 +179,8 @@ function onDataCenterMessage(server_packet)
             }
             else if (extension_packet.type === "PostMessage")
             {
+                console.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".onDataCenterMessage", "Posting Message", extension_packet.data)
                 if (serverConfig.discordenabled === "on")
                 {
                     const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === extension_packet.data.channel);
@@ -243,7 +245,7 @@ function onDataCenterMessage(server_packet)
  * Send our AdminModal to the extension
  * @param {String} toExtension 
  */
-function sendChatBuffer(toExtension)
+function sendChatBuffer (toExtension)
 {
     // send the modified modal data to the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -268,9 +270,9 @@ function sendChatBuffer(toExtension)
  * Send our AdminModal to whoever requested it
  * @param {String} extensionname 
  */
-function SendAdminModal(extensionname)
+function SendAdminModal (extensionname)
 {
-    fs.readFile(__dirname + '/adminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + "/adminmodal.html", function (err, filedata)
     {
         if (err)
             throw err;
@@ -312,7 +314,7 @@ function SendAdminModal(extensionname)
 /**
  * save our config to the server
  */
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -328,7 +330,7 @@ function SaveConfigToServer()
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function SaveDataToServer()
+function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -339,7 +341,7 @@ function SaveDataToServer()
 // ============================================================================
 //                     FUNCTION: SaveChatMessagesToServerScheduler
 // ============================================================================
-function SaveChatMessagesToServerScheduler()
+function SaveChatMessagesToServerScheduler ()
 {
     SaveDataToServer()
     // clear any previous timeout
@@ -360,7 +362,7 @@ import { Client, Intents, Permissions, Guild } from "discord.js";
 // ============================================================================
 //                          FUNCTION: connectToDiscord
 // ============================================================================
-function connectToDiscord(credentials)
+function connectToDiscord (credentials)
 {
     try
     {
@@ -403,7 +405,7 @@ function connectToDiscord(credentials)
 // ============================================================================
 //                          FUNCTION: discordDisconnectHandler
 // ============================================================================
-function discordDisconnectHandler(message)
+function discordDisconnectHandler (message)
 {
     localConfig.status.connected = false;
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordDisconnectHandler", "Discord Error ", message);
@@ -411,7 +413,7 @@ function discordDisconnectHandler(message)
 // ============================================================================
 //                          FUNCTION: discordErrorHandler
 // ============================================================================
-function discordErrorHandler(message)
+function discordErrorHandler (message)
 {
     localConfig.status.connected = false;
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordErrorHandler", "Discord Error ", message);
@@ -419,7 +421,7 @@ function discordErrorHandler(message)
 // ============================================================================
 //                          FUNCTION: discordErrorHandler
 // ============================================================================
-function discordReconnectHandler(message)
+function discordReconnectHandler (message)
 {
     localConfig.status.connected = true;
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discordReconnectHandler", "Discord Reconnected ");
@@ -428,7 +430,7 @@ function discordReconnectHandler(message)
 // ============================================================================
 //                          FUNCTION: discordMessageHandler
 // ============================================================================
-function discordMessageHandler(message)
+function discordMessageHandler (message)
 {
     // stop bot responding to other bots
     if (message.author.bot) return;
@@ -451,12 +453,12 @@ function discordMessageHandler(message)
         process_chat_data(message)
 
     }
-};
+}
 
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function process_chat_data(message)
+function process_chat_data (message)
 {
     let messagedata = { name: message.author.username, message: message.content }
     serverData.chatMessageBuffer.push(messagedata);
@@ -476,7 +478,7 @@ function process_chat_data(message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function heartBeatCallback()
+function heartBeatCallback ()
 {
     let connected = localConfig.status.connected
 

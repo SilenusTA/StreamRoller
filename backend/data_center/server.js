@@ -18,7 +18,7 @@ import * as cm from "./modules/common.js";
 import * as logger from "./modules/logger.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 // load our config settings
-let config = cm.loadConfig('datacenter');
+let config = cm.loadConfig("datacenter");
 // check we have a config. if this is a new instance the we need to create a config
 if (config === "")
 {
@@ -40,8 +40,8 @@ console.log("serverSettings: ", config);
 //                          IMPORTS/VARIABLES
 // ============================================================================
 // fix for ES6 not having the __dirname var
-import { dirname } from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 import express from "express";
 import http from "http";
 import * as fs from "fs";
@@ -55,20 +55,19 @@ server.listen(config.PORT);
 const extensions = [];
 // used to import extra extensions during testing
 const testing = 0;
-process.title = config.name;
 
 // ============================================================================
 //                          EXPRESS
 // ============================================================================
 // we are currently using ejs. This 
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 // set our static routes
 // server public files (just dump them all in here for now. need a better structure)
 app.use(express.static(__dirname + "/public"));
 // set th e default page
-app.get('/', function (req, res)
+app.get("/", function (req, res)
 {
-    res.render(__dirname + '/../../extensions/liveportal/views/pages/index', {
+    res.render(__dirname + "/../../extensions/liveportal/views/pages/index", {
         host: config.HOST,
         port: config.PORT,
         heartbeat: config.heartbeat
@@ -88,10 +87,10 @@ app.get('/', function (req, res)
 // #### Maybe this is passed in or setup on the admin page #####
 // ### This is only here as my overly was writting using php ###
 // #############################################################
-import { execPHP } from './execphp.js';
-execPHP.phpFolder = __dirname + '/../../../ODGOverlay';
-var webfiles = __dirname + '/../../../ODGOverlay';
-app.use('*.php', function (request, response, next)
+import { execPHP } from "./execphp.js";
+execPHP.phpFolder = __dirname + "/../../../ODGOverlay";
+var webfiles = __dirname + "/../../../ODGOverlay";
+app.use("*.php", function (request, response, next)
 {
     execPHP.parseFile(request.originalUrl, function (phpResult)
     {
@@ -119,7 +118,7 @@ else
     loadExtensions(__dirname + "/../../extensions")
 }
 
-function loadExtensions(extensionFolder)
+function loadExtensions (extensionFolder)
 {
     fs.readdir(extensionFolder, (err, files) =>
     {
@@ -145,7 +144,7 @@ function loadExtensions(extensionFolder)
                                 .then(module =>
                                 {
                                     extensions[file] = { initialise: module.initialise };
-                                    if (typeof extensions[file].initialise === 'function')
+                                    if (typeof extensions[file].initialise === "function")
                                         extensions[file].initialise(
                                             app, config.HOST,
                                             config.PORT,

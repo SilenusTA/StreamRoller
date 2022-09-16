@@ -8,12 +8,12 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import { TwitterClient } from 'twitter-api-client';
+import { TwitterClient } from "twitter-api-client";
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     OUR_CHANNEL: "TWITTER_CHANNEL",
@@ -42,7 +42,7 @@ const serverConfig = {
  * @param {String} host 
  * @param {String} port 
  */
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeat", heartbeat);
     if (typeof (heartbeat) != "undefined")
@@ -66,7 +66,7 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     // do something here when disconnt happens if you want to handle them
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
@@ -80,7 +80,7 @@ function onDataCenterDisconnect(reason)
  * Connection message handler
  * @param {*} socket 
  */
-function onDataCenterConnect(socket)
+function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -99,13 +99,13 @@ function onDataCenterConnect(socket)
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            for (const [key, value] of Object.entries(serverConfig))
+            for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
             SaveConfigToServer();
@@ -143,14 +143,14 @@ function onDataCenterMessage(server_packet)
                 if (serverConfig.twitterenabled != "off")
                     tweetmessage(decoded_packet.data)
                 else
-                    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
         } else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverlocalConfig.extensionname + ".onDataCenterMessage",
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", server_packet);
     }
     else if (server_packet.type === "UnknownChannel")
     {
-        if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
+        if (channelConnectionAttempts++ < localConfig.channelConnectionAttempts)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
@@ -183,7 +183,7 @@ function onDataCenterMessage(server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-function connectToTwitter(creds)
+function connectToTwitter (creds)
 {
     try
     {
@@ -212,10 +212,10 @@ function connectToTwitter(creds)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal(tochannel)
+function SendAdminModal (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + '/twitteradminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + "/twitteradminmodal.html", function (err, filedata)
     {
         if (err)
             throw err;
@@ -253,7 +253,7 @@ function SendAdminModal(tochannel)
 /**
  * Sends our config to the server to be saved for next time we run
  */
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
@@ -269,7 +269,7 @@ function SaveConfigToServer()
  * tweet a message
  * @param {String} message 
  */
-function tweetmessage(message)
+function tweetmessage (message)
 {
     try
     {
@@ -295,7 +295,7 @@ function tweetmessage(message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function heartBeatCallback()
+function heartBeatCallback ()
 {
     let status = false;
     if (serverConfig.twitterenabled == "on" && localConfig.status.connected)

@@ -13,8 +13,8 @@ import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import portAudio from "naudiodon";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const localConfig = {
     DataCenterSocket: null,
@@ -35,7 +35,7 @@ const OverwriteDataCenterConfig = false;
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     try
     {
@@ -54,7 +54,7 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
@@ -63,9 +63,10 @@ function onDataCenterDisconnect(reason)
 // ============================================================================
 /**
  * Connection message handler
- * @param {*} socket 
+ * @param {*} _socket 
  */
-function onDataCenterConnect(socket)
+
+function onDataCenterConnect (socket)
 {
     logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     if (OverwriteDataCenterConfig)
@@ -75,6 +76,7 @@ function onDataCenterConnect(socket)
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT"));
     //https://github.com/Streampunk/naudiodon
     // microsoft sound mapper is the default device
+    /*
     console.log("###############################################################################")
     console.log("###############################################################################")
     console.log("###############################################################################")
@@ -85,6 +87,7 @@ function onDataCenterConnect(socket)
     console.log("###############################################################################")
     console.log("###############################################################################")
     console.log(portAudio.getHostAPIs())
+    */
     portAudio.getDevices().forEach((dev) =>
     {
         //console.log(dev)
@@ -97,10 +100,26 @@ function onDataCenterConnect(socket)
     })
     localConfig.audioDevOut.forEach((dev) =>
     {
-        console.log(">> ", dev.hostAPIName, dev.name, dev.defaultSampleRate)
-        //console.log(">> ", dev)
+        //console.log(">> ", dev.hostAPIName, dev.name, dev.defaultSampleRate)
+        console.log(">> ", dev)
     }
     )
+    // test audio output
+    /*var ao = new portAudio.AudioIO({
+      outOptions: {
+        channelCount: 2,
+        sampleFormat: portAudio.SampleFormat24Bit,
+        sampleRate: 44100,
+        deviceId: 47, // Use -1 or omit the deviceId to select the default device
+        closeOnError: true // Close the stream if an audio error is detected, if set false then just log the error
+      }
+    });
+    
+    var rs = fs.createReadStream('extensions/datahandlers/sraudio/test.mp3');
+    rs.pipe(ao);
+    ao.start();
+    */
+
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -114,7 +133,7 @@ function onDataCenterConnect(socket)
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     //logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
 
@@ -130,7 +149,7 @@ function onDataCenterMessage(server_packet)
             // we could just assign the values here (ie serverConfig = decoded_packet.data)
             // but if we change/remove an item it would never get removed from the store.
             // we will update any fields we have that are in the message passed to us
-            for (const [key, value] of Object.entries(serverConfig))
+            for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                     serverConfig[key] = server_packet.data[key];
 
@@ -241,10 +260,10 @@ function onDataCenterMessage(server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal(tochannel)
+function SendAdminModal (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + '/sraudioadminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + "/sraudioadminmodal.html", function (err, filedata)
     {
         if (err)
             throw err;
@@ -297,13 +316,12 @@ function SendAdminModal(tochannel)
 /**
  * Sends our config to the server to be saved for next time we run
  */
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
-    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
-        ("SaveConfig",
-            serverConfig.extensionname,
-            serverConfig))
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket("SaveConfig",
+        serverConfig.extensionname,
+        serverConfig))
 }
 // ============================================================================
 //                                  EXPORTS
