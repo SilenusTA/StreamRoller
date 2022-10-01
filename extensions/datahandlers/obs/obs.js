@@ -712,34 +712,39 @@ function heartBeatCallback ()
                 localConfig.obsConnecting = true;
                 connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
             }
-        }
-        localConfig.obsConnection.call("GetStats").then(data =>
+        } else
         {
-            localConfig.streamStats.renderSkippedFrames = data.renderSkippedFrames;
-            localConfig.streamStats.renderTotalFrames = data.renderTotalFrames;
-        })
-            .catch(err =>
+            localConfig.obsConnection.call("GetStats").then(data =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
-                if (err.message === "Not connected")
-                    localConfig.status.connected = false;
-            });
+                localConfig.streamStats.renderSkippedFrames = data.renderSkippedFrames;
+                localConfig.streamStats.renderTotalFrames = data.renderTotalFrames;
+            })
+                .catch(err =>
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
+                    if (err.message === "Not connected")
+                        localConfig.status.connected = false;
+                });
 
-        localConfig.obsConnection.call("GetOutputStatus", { outputName: "adv_stream" }).then(data =>
-        {
-            localConfig.streamStats.obslive = data.outputActive;
-            localConfig.streamStats.outputBytes = data.outputBytes;
-            localConfig.streamStats.totalStreamTime = data.outputDuration;
-            localConfig.streamStats.outputCongestion = data.outputCongestion
-            localConfig.streamStats.outputSkippedFrames = data.outputSkippedFrames;
-            localConfig.streamStats.outputTotalFrames = data.outputTotalFrames;
-            sendStreamStats(localConfig.streamStats)
-        })
-            .catch(err =>
+            localConfig.obsConnection.call("GetOutputStatus", { outputName: "adv_stream" }).then(data =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", err.message);
-            }
-            )
+                localConfig.streamStats.obslive = data.outputActive;
+                localConfig.streamStats.outputBytes = data.outputBytes;
+                localConfig.streamStats.totalStreamTime = data.outputDuration;
+                localConfig.streamStats.outputCongestion = data.outputCongestion
+                localConfig.streamStats.outputSkippedFrames = data.outputSkippedFrames;
+                localConfig.streamStats.outputTotalFrames = data.outputTotalFrames;
+                sendStreamStats(localConfig.streamStats)
+            })
+                .catch(err =>
+                {
+                    if (err.message.startsWith("No output was found"))
+                        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", "adv_stream not found, is OBS streaming?");
+                    else
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", err.message);
+                }
+                )
+        }
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,

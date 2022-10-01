@@ -1,1 +1,1 @@
-{"extensionname":"timers","channel":"TIMERS","TimerName":"StartCountdownTimer","TimerMessage":"Starting in","Timeout":"600"}
+{"extensionname":"timers","channel":"TIMERS","TimerName":"StartCountdownTimer","TimerMessage":"Starting in","Timeout":"600","modalcodetype":"AdminModalCode","modaldatatype":"AdminModalData"}
