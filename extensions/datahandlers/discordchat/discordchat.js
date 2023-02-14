@@ -128,8 +128,12 @@ function onDataCenterMessage (server_packet)
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
             connectToDiscord(server_packet.data);
         else
+        {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page." , "\nExtension:" + serverConfig.extensionname, "\nName: DISCORD_TOKEN");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    serverConfig.extensionname + " CredentialsFile", "Set " , "Extension to '" + serverConfig.extensionname, "', Name to 'DISCORD_TOKEN'", " and add your token to the 'Value' Field");
+        }
     }
     else if (server_packet.type === "DataFile")
     {
