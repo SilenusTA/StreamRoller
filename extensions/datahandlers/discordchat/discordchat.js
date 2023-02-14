@@ -381,10 +381,10 @@ function connectToDiscord (credentials)
 
         });
         // Authenticate the discord client to start it up
-        if (!process.env.DISCORD_TOKEN)
+        if (!credentials.DISCORD_TOKEN)
         {
             localConfig.status.connected = false;
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set");
         }
         else
         {
@@ -394,10 +394,10 @@ function connectToDiscord (credentials)
 
 
         }
-        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
-        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
-        localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
-        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
+        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("error", (message) => discordErrorHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(serverConfig.extensionname + ":" + message));
     }
     catch (err)
     {
