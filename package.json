@@ -17,6 +17,7 @@
     "debug": "^4.3.3",
     "express": "^4.17.3",
     "nodemon": "^2.0.15",
+    "openai": "^3.1.0",
     "request": "^2.88.2"
   },
   "directories": {
