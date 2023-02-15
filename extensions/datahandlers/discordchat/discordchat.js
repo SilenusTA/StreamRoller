@@ -128,8 +128,12 @@ function onDataCenterMessage (server_packet)
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
             connectToDiscord(server_packet.data);
         else
+        {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page." , "\nExtension:" + serverConfig.extensionname, "\nName: DISCORD_TOKEN");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    serverConfig.extensionname + " CredentialsFile", "Set " , "Extension to '" + serverConfig.extensionname, "', Name to 'DISCORD_TOKEN'", " and add your token to the 'Value' Field");
+        }
     }
     else if (server_packet.type === "DataFile")
     {
@@ -377,10 +381,10 @@ function connectToDiscord (credentials)
 
         });
         // Authenticate the discord client to start it up
-        if (!process.env.DISCORD_TOKEN)
+        if (!credentials.DISCORD_TOKEN)
         {
             localConfig.status.connected = false;
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set in environment variable");
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set");
         }
         else
         {
@@ -390,10 +394,10 @@ function connectToDiscord (credentials)
 
 
         }
-        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
-        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
-        localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
-        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
+        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("error", (message) => discordErrorHandler(serverConfig.extensionname + ":" + message));
+        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(serverConfig.extensionname + ":" + message));
     }
     catch (err)
     {
