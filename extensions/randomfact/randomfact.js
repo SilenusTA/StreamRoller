@@ -21,8 +21,8 @@ import https from "https"
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 // these lines are a fix so that ES6 has access to dirname etc
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const localConfig = {
@@ -182,18 +182,19 @@ function onDataCenterMessage (server_packet)
  */
 function process_chat_command (data)
 {
+    let Buffer = "";
     if (data.message === "!randomfact")
     {
-        var options = { host: 'uselessfacts.jsph.pl', path: '/random.json?language=en', };
+        var options = { host: "uselessfacts.jsph.pl", path: "/random.json?language=en", };
         var req = https.get(options, function (res)
         {
             //console.log('STATUS: ' + res.statusCode);
             //console.log('HEADERS: ' + JSON.stringify(res.headers));
             var bodyChunks = [];
-            res.on('data', function (chunk)
+            res.on("data", function (chunk)
             {
                 bodyChunks.push(chunk);
-            }).on('end', function ()
+            }).on("end", function ()
             {
                 var body = Buffer.concat(bodyChunks);
                 sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -213,7 +214,7 @@ function process_chat_command (data)
 
             })
         });
-        req.on('error', function (e)
+        req.on("error", function (e)
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".requestRandomFact", "Error getting quote", e.message);
@@ -232,19 +233,20 @@ function process_chat_command (data)
 function requestRandomFact (from)
 {
     var body = "";
-    var options = { host: 'uselessfacts.jsph.pl', path: '/api/v2/facts/random?language=en', };
+    let Buffer = "";
+    var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
     try
     {
         var req = https.get(options, function (res)
         {
-            console.log("from:", from);
+            /*console.log("from:", from);
             console.log('STATUS: ' + res.statusCode);
-            console.log('HEADERS: ' + JSON.stringify(res.headers));
+            console.log('HEADERS: ' + JSON.stringify(res.headers));*/
             var bodyChunks = [];
-            res.on('data', function (chunk)
+            res.on("data", function (chunk)
             {
                 bodyChunks.push(chunk);
-            }).on('end', function ()
+            }).on("end", function ()
             {
 
                 body = Buffer.concat(bodyChunks);
@@ -264,9 +266,9 @@ function requestRandomFact (from)
                         from
                     ));
             })
-            console.log("body:", body)
+            //console.log("body:", body)
         });
-        req.on('error', function (e)
+        req.on("error", function (e)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".requestRandomFact", "Error getting quote", e.message);

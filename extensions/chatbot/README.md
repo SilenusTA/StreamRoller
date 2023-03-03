@@ -8,6 +8,7 @@ Contents
 ## Description
 This is a chatbot that uses the openAI ChatGPT to make a chatbot that responds to the conversations in chat. 
 The extension runs off the twitchchat extension by monitoring the "TWITCH_CHAT" channel for it's messages
+It will send any response back to the twitchchat extension for posting back into chat
 
 ## Features
 The bot will run on a timer every few seconds (can be set in the config) and monitors x number of messages before sending these to chatGPT to be processed. The return is sent to the twitchchat extension to post the response
