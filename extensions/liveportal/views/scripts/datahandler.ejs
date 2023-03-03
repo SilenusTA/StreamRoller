@@ -95,8 +95,6 @@
             // ===========================================================================
             function ConnectToDataCenter(host, port)
             {
-                // we set this hear as it means the page has loaded at this point 
-                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
                 try
                 {
                     DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
@@ -120,6 +118,8 @@
             // ===========================================================================
             function onDataCenterDisconnect(reason)
             {
+                adminData.extensions = {};
+                adminData.channellist = {};
                 console.log("datahandler.onDataCenterDisconnect", reason);
             }
             // ============================================================================
@@ -132,6 +132,9 @@
             // ===========================================================================
             function onDataCenterConnect(socket)
             {
+                // we set this hear as it means the page has loaded at this point 
+                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
+
                 // DEBUGGING overwrite our config data on the server if the flag is set
                 if (OverwriteDataCenterConfig)
                     SaveConfigToServer();
@@ -423,7 +426,6 @@
                         {
                             if (extension_packet.data.scene === serverConfig.mutescene)
                             {
-                                console.log(extension_packet.data)
                                 serverConfig.muted = extension_packet.data.muted
                                 addOBSMuteButton(serverConfig.muted)
                                 OBSLiveCheck();
@@ -521,7 +523,7 @@
                 var html = "<div>";
                 for (var i = 0; i < extensions.length; i++)
                 {
-                    // if we have an extension and it is set to display
+                    // if we have an extension and it is set to displayaddModal
                     if (!adminData.extensions[extensions[i]])
                     {
                         adminData.extensions[extensions[i]] = {};
@@ -1648,7 +1650,8 @@
                         sr_api.ExtensionPacket(
                             "SendChatMessage",
                             serverConfig.extensionname,
-                            msg,
+                            // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                            {account : "OldDepressedGamer",message : msg},
                             "",
                             "twitchchat"),
                         "",

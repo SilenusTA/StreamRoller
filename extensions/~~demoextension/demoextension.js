@@ -25,7 +25,7 @@
 // ============================================================================
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
-// extension helper provides some functions to save you having to write them.
+// messaging api provides some functions to make sending messages easier.
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 // config is used for non changing data. 
@@ -36,7 +36,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // we use this to count how many attempts have been made to connect to a channel
 // we should have a counter for each channel we wish to join.
-let streamlabsChannelConnectionAttempts = 0;
+let STREAMLABS_ALERT_ConnectionAttempts = 0;
 
 
 // serverConfig is how we store our data that is needed to persist
@@ -71,7 +71,7 @@ const OverwriteDataCenterConfig = false;
 // this funcion is required by the backend to start the extensions.
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     try
     {
@@ -98,9 +98,9 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
-    // do something here when disconnt happens if you want to handle them
+    // do something here when disconnects happens if you want to handle them
     logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
@@ -118,7 +118,7 @@ function onDataCenterDisconnect(reason)
  * Connection message handler
  * @param {*} socket 
  */
-function onDataCenterConnect(socket)
+function onDataCenterConnect (socket)
 {
     // log a message for debugging purposes. Once you have your extension up and running
     // please delete any spurious messages like this to save on the spam in the log window
@@ -157,7 +157,7 @@ function onDataCenterConnect(socket)
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     //logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
 
@@ -234,7 +234,7 @@ function onDataCenterMessage(server_packet)
     else if (server_packet.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
-        if (streamlabsChannelConnectionAttempts++ < config.channelConnectionAttempts)
+        if (STREAMLABS_ALERT_ConnectionAttempts++ < config.STREAMLABS_ALERT_ConnectionAttempts)
         {
             logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
@@ -262,10 +262,13 @@ function onDataCenterMessage(server_packet)
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
+    else if (server_packet.type === "LoggingLevel")
+    {
+        logger.setLoggingLevel(server_packet.data)
+    }
     else if (server_packet.type === "ChannelJoined"
         || server_packet.type === "ChannelCreated"
         || server_packet.type === "ChannelLeft"
-        || server_packet.type === "LoggingLevel"
     )
     {
 
@@ -289,7 +292,7 @@ function onDataCenterMessage(server_packet)
  * Just a function to log data from the streamlabs api messages
  * @param {String} server_packet 
  */
-function process_stream_alert(server_packet)
+function process_stream_alert (server_packet)
 {
     // for this type of message we need to know the format of the data packet. 
     //and do something usefull with it 
@@ -312,7 +315,7 @@ function process_stream_alert(server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal(tochannel)
+function SendAdminModal (tochannel)
 {
     // read our modal file
     fs.readFile(__dirname + '/demoextensionadminmodal.html', function (err, filedata)
@@ -368,7 +371,7 @@ function SendAdminModal(tochannel)
 /**
  * Sends our config to the server to be saved for next time we run
  */
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(config.DataCenterSocket, sr_api.ServerPacket

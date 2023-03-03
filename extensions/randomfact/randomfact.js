@@ -43,7 +43,7 @@ const serverConfig = {
  * @param {String} host 
  * @param {String} port 
  */
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     try
     {
@@ -61,7 +61,7 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     // do something here when disconnt happens if you want to handle them
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
@@ -81,7 +81,7 @@ function onDataCenterDisconnect(reason)
  * Connection message handler
  * @param {*} socket 
  */
-function onDataCenterConnect(socket)
+function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // not using a channel yet. might add one we want to randomly send out facts later. For now we just receive and respond to
@@ -102,7 +102,7 @@ function onDataCenterConnect(socket)
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
 
@@ -180,7 +180,7 @@ function onDataCenterMessage(server_packet)
  * Just a function to log data from the streamlabs api messages
  * @param {String} server_packet 
  */
-function process_chat_command(data)
+function process_chat_command (data)
 {
     if (data.message === "!randomfact")
     {
@@ -229,42 +229,56 @@ function process_chat_command(data)
  * sends a random fact to the extension
  * @param {String} from 
  */
-function requestRandomFact(from)
+function requestRandomFact (from)
 {
-    var options = { host: 'uselessfacts.jsph.pl', path: '/random.json?language=en', };
-    var req = https.get(options, function (res)
+    var body = "";
+    var options = { host: 'uselessfacts.jsph.pl', path: '/api/v2/facts/random?language=en', };
+    try
     {
-        //console.log('STATUS: ' + res.statusCode);
-        //console.log('HEADERS: ' + JSON.stringify(res.headers));
-        var bodyChunks = [];
-        res.on('data', function (chunk)
+        var req = https.get(options, function (res)
         {
-            bodyChunks.push(chunk);
-        }).on('end', function ()
-        {
-            var body = Buffer.concat(bodyChunks);
-            //console.log(JSON.parse(body))
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "RandomFact",
+            console.log("from:", from);
+            console.log('STATUS: ' + res.statusCode);
+            console.log('HEADERS: ' + JSON.stringify(res.headers));
+            var bodyChunks = [];
+            res.on('data', function (chunk)
+            {
+                bodyChunks.push(chunk);
+            }).on('end', function ()
+            {
+
+                body = Buffer.concat(bodyChunks);
+
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage",
                         serverConfig.extensionname,
-                        JSON.parse(body).text,
+                        sr_api.ExtensionPacket(
+                            "RandomFact",
+                            serverConfig.extensionname,
+                            JSON.parse(body).text,
+                            "",
+                            from
+                        ),
                         "",
                         from
-                    ),
-                    "",
-                    from
-                ));
-        })
-    });
-    req.on('error', function (e)
+                    ));
+            })
+            console.log("body:", body)
+        });
+        req.on('error', function (e)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".requestRandomFact", "Error getting quote", e.message);
+        });
+    }
+    catch (e)
     {
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".requestRandomFact", "Error getting quote", e.message);
-    });
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".requestRandomFact", body);
+    }
 
 }
 
