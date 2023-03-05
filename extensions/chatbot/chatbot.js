@@ -51,8 +51,6 @@ const localConfig = {
     // are we currently running (ie time has expired and chatbot started)
     running: false,
     chatTimerHandle: null,
-    // setup the personality of the chatbot
-    chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram? CHATBOTNAME: This again? There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for? CHATBOTNAME: Was Google too busy? Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly? CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life? CHATBOTNAME: How would I know, I have no life.",
     // openAI settings. we use different settings for a question to the general bot responses
     settings: {
         chatmodel: {
@@ -83,7 +81,10 @@ const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     chatbotenabled: "on",  // example of a checkbox. "on" or "off"
-    chatbotname: "CHATBOTNAME" // example of a text field
+    chatbotname: "CHATBOTNAME", // example of a text field
+    // setup the personality of the chatbot
+    chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram? CHATBOTNAME: This again? There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for? CHATBOTNAME: Was Google too busy? Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly? CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life? CHATBOTNAME: How would I know, I have no life.",
+
 };
 //debug setting to overwrite the stored data with the serverConfig above. 
 const OverwriteDataCenterConfig = false;
@@ -208,7 +209,6 @@ function onDataCenterMessage (server_packet)
         logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
         setTimeout(() =>
         {
-            console.log("reconnecting to ", server_packet)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
@@ -234,12 +234,12 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            localConfig.openAIKey = server_packet.data.openAIkey;
+                localConfig.openAIKey = server_packet.data.openAIkey;
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.", "\nExtension:" + serverConfig.extensionname, "\nName: openAIkey");
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, "', Name to 'openAIkey'", " and add your token to the 'Value' Field");
         }
     }
@@ -353,7 +353,7 @@ function SaveConfigToServer ()
 function heartBeatCallback ()
 {
     let connected = true
-    if (serverConfig.chatbotenabled === "off")
+    if (serverConfig.chatbotenabled === "off" || localConfig.OpenAPIHandle === null)
         connected = false;
     else
         connected = true
@@ -387,7 +387,8 @@ function processChatMessage (chatdata)
         startProcessing()
         return;
     }
-    else if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()))
+    else if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()) ||
+    chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase()))
     {
         let question = chatdata.message.toLowerCase().replace(localConfig.querytag.toLowerCase(), "").trim()
         //console.log("******* CHATBOT Question asked in chat *******");
@@ -414,7 +415,7 @@ function processChatMessage (chatdata)
     {
         // only get to here if we have enough messages and everything is set to enabled
         history_string = "You: " + localConfig.chatHistory.join("\nYou: ")
-        callOpenAI(localConfig.chatBotPersonality + "\n" + history_string, localConfig.settings.chatmodel)
+        callOpenAI(serverConfig.chatBotPersonality + "\n" + history_string, localConfig.settings.chatmodel)
 
     }
 }
@@ -426,9 +427,8 @@ async function callOpenAI (history_string, modelToUse)
 {
     try
     {
-        if (serverConfig.chatbotenabled === "on")
+        if (serverConfig.chatbotenabled === "on" && localConfig.openAIKey)
         {
-            //if (localConfig.OpenAPIHandle === null)
             localConfig.OpenAPIHandle = new OpenAIApi(new Configuration(
                 {
                     apiKey: localConfig.openAIKey
@@ -471,20 +471,21 @@ async function callOpenAI (history_string, modelToUse)
         }
         else
         {
-            if (localConfig.OpenAPIHandle === null)
-                localConfig.OpenAPIHandle = new OpenAIApi(new Configuration(
-                    {
-                        apiKey: localConfig.openAIKey,
-                    }));
-
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
+            if (localConfig.openAIKey === null)
+            {
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
+        
+            }
+            else if (localConfig.OpenAPIHandle === null)
+            {
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
+            }
         }
         localConfig.running = false
         startChatbotTimer()
     } catch (err)
     {
-        console.log(err)
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "openAI error:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "openAI error:", err.message);
     }
 }
 // ============================================================================
@@ -624,7 +625,7 @@ function changeBotName ()
 {
     localConfig.querytag = localConfig.querytag.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
     localConfig.starttag = localConfig.starttag.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
-    localConfig.chatBotPersonality = localConfig.chatBotPersonality.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
+    serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
     localConfig.quiz_history_test.forEach(
         (element, index) => 
         {

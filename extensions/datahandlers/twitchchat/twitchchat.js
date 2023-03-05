@@ -465,12 +465,14 @@ function sendChatMessage (channel, data)
 {
     let sent = false
     let account = null;
-    if (data.account === "bot" || localConfig.usernames.bot.name == data.account)
+    try
+    {
+    if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
         account = "bot"
-    else if (data.account === "user" || localConfig.usernames.user.name == data.account)
+    else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
         account = "user"
 
-    if (account)
+    if (account && localConfig.twitchClient[account].connection)
     {
         localConfig.twitchClient[account].connection.say(channel, data.message)
             .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
@@ -479,8 +481,13 @@ function sendChatMessage (channel, data)
     }
     if (!sent)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say, couldn't send message. user not found", data.account)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME , "Twitch.say, couldn't send message. user not available", data.account)
     }
+}
+catch (e)
+{
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME , "Twitch.say error", e.message)
+}
 }
 // ############################# IRC Client #########################################
 // ============================================================================
