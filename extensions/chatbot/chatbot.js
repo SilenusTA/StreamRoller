@@ -462,9 +462,10 @@ async function callOpenAI (history_string, modelToUse)
                 let chatMessageToPost = response.data.choices[response.data.choices.length - 1].text.trim("?").trim("\n").trim()
 
                 localConfig.chatHistory.push(chatMessageToPost)
+
                 if (chatMessageToPost.toLowerCase().indexOf(localConfig.querytag.toLowerCase()) == -1 ||
                     chatMessageToPost.toLowerCase().indexOf(localConfig.starttag.toLowerCase()) == -1)
-                    postMessageToTwitch(chatMessageToPost)
+                    postMessageToTwitch(chatMessageToPost.replace(serverConfig.chatbotname + ":", "").trim())
                 else
                     console.log("CHATBOT: ERROR openAI returned the querytag in its message")
             }
