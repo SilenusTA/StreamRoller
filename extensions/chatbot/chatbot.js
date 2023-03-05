@@ -234,7 +234,7 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-                localConfig.openAIKey = server_packet.data.openAIkey;
+            localConfig.openAIKey = server_packet.data.openAIkey;
         else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -353,7 +353,7 @@ function SaveConfigToServer ()
 function heartBeatCallback ()
 {
     let connected = true
-    if (serverConfig.chatbotenabled === "off" || localConfig.OpenAPIHandle === null)
+    if (serverConfig.chatbotenabled === "off")
         connected = false;
     else
         connected = true
@@ -388,7 +388,7 @@ function processChatMessage (chatdata)
         return;
     }
     else if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()) ||
-    chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase()))
+        chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase()))
     {
         let question = chatdata.message.toLowerCase().replace(localConfig.querytag.toLowerCase(), "").trim()
         //console.log("******* CHATBOT Question asked in chat *******");
@@ -472,14 +472,9 @@ async function callOpenAI (history_string, modelToUse)
         else
         {
             if (localConfig.openAIKey === null)
-            {
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
-        
-            }
             else if (localConfig.OpenAPIHandle === null)
-            {
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
-            }
         }
         localConfig.running = false
         startChatbotTimer()
