@@ -377,7 +377,7 @@ function processChatMessage (chatdata)
 {
     let history_string = "";
     // ignore messages from the bot or specified users
-    if (chatdata.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname) != -1
+    if (chatdata.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
         || chatdata.data["display-name"].toLowerCase().indexOf("system") != -1)
         return;
     // check if we are triggering chatbot from a chat message
@@ -465,7 +465,7 @@ async function callOpenAI (history_string, modelToUse)
 
                 if (chatMessageToPost.toLowerCase().indexOf(localConfig.querytag.toLowerCase()) == -1 ||
                     chatMessageToPost.toLowerCase().indexOf(localConfig.starttag.toLowerCase()) == -1)
-                    postMessageToTwitch(chatMessageToPost.replace(serverConfig.chatbotname + ":", "").trim())
+                    postMessageToTwitch(chatMessageToPost.toLowerCase().replace(serverConfig.chatbotname.toLowerCase() + ":", "").trim())
                 else
                     console.log("CHATBOT: ERROR openAI returned the querytag in its message")
             }
