@@ -1142,9 +1142,9 @@
                     if (localConfig.mouseDown < 1)
                     {
                         var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
-                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight + 100);
+                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight + 1000);
                         var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
-                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 100);
+                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 1000);
                     }
                 }, 200);
             }
@@ -1490,6 +1490,7 @@
                 let alertcontents = alertdata.message[0];
                 let messagetxt = "Thankyou ";
                 let alerttext = "";
+                console.log(alertdata.type)
                 switch (alertdata.type)
                 {
                     case "follow":
@@ -1535,17 +1536,29 @@
                         DisplayAlertMessages(alerttext);
                         break;
                     case "subscription":
-                        let submessage = alertcontents.message;
-                        if (submessage === null)
-                            submessage = ""
-                        if (alertcontents.months === 1)
-                            messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + submessage + '"'
+                        console.log(alertcontents)
+                        if (alertcontents.type === "subgift" && alertcontents.gifter != null)
+                        {
+                            messagetxt += alertcontents.name + " was gifted a sub from " + alertcontents.gifter
+                            if (serverConfig.subs === "on")
+                                PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                            alerttext = "<div class='text-secondary'>&nbsp&nbsp&nbsp" + alertcontents.name + '</div>';
+                            DisplayAlertMessages(alerttext);
+                        }
                         else
-                            messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + submessage + '"'
-                        if (serverConfig.subs === "on")
-                            PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                        alerttext = "<div class='text-primary'>Subscription: " + alertcontents.name + " " + alertcontents.months + 'm "' + submessage + '"</div>';
-                        DisplayAlertMessages(alerttext);
+                        {
+                            let submessage = alertcontents.message;
+                            if (submessage === null)
+                            submessage = ""
+                            if (alertcontents.months === 1)
+                                messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + submessage + '"'
+                            else
+                                messagetxt += alertcontents.name + " for " + alertcontents.months + ' months of subscriptions. "' + submessage + '"'
+                            if (serverConfig.subs === "on")
+                                PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                            alerttext = "<div class='text-primary'>Subscription: " + alertcontents.name + " " + alertcontents.months + 'm "' + submessage + '"</div>';
+                            DisplayAlertMessages(alerttext);
+                        }
                         break;
                     case "resub":
                         if (alertcontents.message === null)
@@ -1557,11 +1570,13 @@
                         alerttext = "<div class='text-primary'>Resub: " + alertcontents.name + " " + alertcontents.months + 'm (' + alertcontents.streak_months + '). "' + alertcontents.message + '"</div>';
                         DisplayAlertMessages(alerttext);
                         break;
-                    case "prime_sub_gift":
-                        messagetxt += alertcontents.from + " for the gift sub to " + alertcontents.to
+                    case "subMysteryGift":
+                        console.log(alertcontents)
+                        messagetxt += alertcontents.gifter + " for the "+ alertcontents.amount + " gifted subs"
+                        postMessageToTwitch(messagetxt)
                         if (serverConfig.giftsubs === "on")
                             PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                        alerttext = "<div class='text-danger'>GiftSub: " + alertcontents.name + " to " + alertcontents.to + "</div>"
+                        alerttext = "<div class='text-danger'>GiftSub: " + alertcontents.gifter + " gifted " + alertcontents.amount + " subs</div>"
                         DisplayAlertMessages(alerttext);
                         break;
                     case "merch":
@@ -1651,7 +1666,7 @@
                             "SendChatMessage",
                             serverConfig.extensionname,
                             // need to read accounts from twitchchat ext and give an option to chose who to send the message as
-                            {account : "OldDepressedGamer",message : msg},
+                            {account : "user",message : msg},
                             "",
                             "twitchchat"),
                         "",

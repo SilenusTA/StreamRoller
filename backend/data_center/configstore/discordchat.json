@@ -1,1 +1,1 @@
-{"extensionname":"discordchat","channel":"DISCORD_CHAT","monitoring_channel":"stream-mod-messages","discordenabled":"on","chatMessageBufferMaxSize":"300","chatMessageBackupTimer":"6000"}
+{"extensionname":"discordchat","channel":"DISCORD_CHAT","monitoring_channel":"stream-mod-messages","discordenabled":"off","chatMessageBufferMaxSize":"300","chatMessageBackupTimer":"6000"}

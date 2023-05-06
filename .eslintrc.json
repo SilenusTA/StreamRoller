@@ -9,14 +9,13 @@
         "sourceType": "module"
     },
     "rules": {
-      "no-unused-vars": "off"
+      "no-unused-vars": "off",
+      "no-unexpected-multiline": "off"
     },
     "overrides": [
     {
-      "files": [ "./**/*.js" ],
-      "rules": {
-        "quotes": [ 2, "double" ]
-      }
+      "files": [ "./**/*.js" ]
+      
     }
   ],
   "ignorePatterns": ["node_modules", "src/frontend/generated/*"]

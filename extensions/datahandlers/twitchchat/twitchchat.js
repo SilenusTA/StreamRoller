@@ -56,9 +56,11 @@ const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
+    updateUserList: "on",
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
     chatMessageBackupTimer: "6000"
+
 };
 const serverData =
 {
@@ -174,7 +176,6 @@ function onDataCenterMessage (server_packet)
                 localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
                 localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
             }
-
             // start connection
             for (const [key, value] of Object.entries(localConfig.usernames))
             {
@@ -219,7 +220,9 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
+                // need to update these manually as the web page does not send unchecked box values
                 serverConfig.enabletwitchchat = "off";
+                serverConfig.updateUserList = "off";
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in extension_packet.data)
                     {
@@ -308,13 +311,20 @@ function sendChatBuffer (toExtension)
 //                           FUNCTION: sendAccountNames
 // ===========================================================================
 /**
- * Send our AdminModal to the extension
  * @param {String} toExtension 
  */
 function sendAccountNames (toExtension)
 {
-    if (typeof localConfig.usernames.bot !== "undefined"
-        || typeof localConfig.usernames.user !== "undefined")
+    // TBD create list from available names otherwise we need to supply both names
+    let usrlist = {}
+    let countusers = 0
+    for (const id in localConfig.usernames)
+    {
+        usrlist[id] = localConfig.usernames[id]["name"];
+        countusers++;
+    }
+
+    if (countusers > 0)
     {
         // send the modified modal data to the server
         sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -324,10 +334,7 @@ function sendAccountNames (toExtension)
                 sr_api.ExtensionPacket(
                     "UserAccountNames",
                     localConfig.EXTENSION_NAME,
-                    {
-                        bot: localConfig.usernames["bot"]["name"],
-                        user: localConfig.usernames["user"]["name"]
-                    },
+                    usrlist,
                     "",
                     toExtension,
                     localConfig.OUR_CHANNEL),
@@ -434,6 +441,7 @@ function process_chat_data (channel, tags, chatmessage)
             message: chatmessage,
             data: tags
         };
+        // set the channel name
         if (localConfig.twitchClient["user"].state.readonly)
             data.channel = data.channel + " (Readonly)"
 
@@ -451,6 +459,9 @@ function process_chat_data (channel, tags, chatmessage)
             ));
         // lets store the chat history
         serverData.chatMessageBuffer.push(data);
+        //update the user data (ie last seen etc)
+        if (serverConfig.updateUserList === "on")
+            updateUserList(data)
         // keep the number of chat items down to the size of the buffer.
         while (serverData.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
             serverData.chatMessageBuffer.shift();
@@ -467,27 +478,27 @@ function sendChatMessage (channel, data)
     let account = null;
     try
     {
-    if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
-        account = "bot"
-    else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
-        account = "user"
+        if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
+            account = "bot"
+        else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
+            account = "user"
 
-    if (account && localConfig.twitchClient[account].connection)
-    {
-        localConfig.twitchClient[account].connection.say(channel, data.message)
-            .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
-            .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say error", e) })
-        sent = true;
+        if (account && localConfig.twitchClient[account].connection)
+        {
+            localConfig.twitchClient[account].connection.say(channel, data.message)
+                .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
+                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say error", e) })
+            sent = true;
+        }
+        if (!sent)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch.say, couldn't send message. user not available", data.account)
+        }
     }
-    if (!sent)
+    catch (e)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME , "Twitch.say, couldn't send message. user not available", data.account)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch.say error", e.message)
     }
-}
-catch (e)
-{
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME , "Twitch.say error", e.message)
-}
 }
 // ############################# IRC Client #########################################
 // ============================================================================
@@ -646,6 +657,34 @@ function chatLogin (account)
         });
     }
 }
+// ============================================================================
+//                           FUNCTION: updateUserList
+// ============================================================================
+function updateUserList (data)
+{
+    // DEBUG
+
+    sr_api.sendMessage
+        (
+            localConfig.DataCenterSocket,
+            sr_api.ServerPacket
+                (
+                    "ExtensionMessage",
+                    localConfig.EXTENSION_NAME,
+                    sr_api.ExtensionPacket
+                        (
+                            "UpdateUserData",
+                            localConfig.EXTENSION_NAME,
+                            { username: data.data["display-name"], platform: "twitch" },
+                            "",
+                            "users"
+                        ),
+                    "",
+                    "users"
+                )
+        )
+}
+
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================

@@ -28,26 +28,44 @@ import * as logger from "../../backend/data_center/modules/logger.js";
 // messaging api provides some functions to make sending messages easier.
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-// config is used for non changing data. 
-import { config } from "./config.js";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // we use this to count how many attempts have been made to connect to a channel
 // we should have a counter for each channel we wish to join.
-let STREAMLABS_ALERT_ConnectionAttempts = 0;
+let connectionAttempts =
+    [{ "STREAMLABS_ALERT_ConnectionAttempts": 0 }]
 
+
+
+const localConfig = {
+    // settings for how we connect to the backend server
+    // normally localhost unless running the extension remotely
+    // what we want to call our channel so that others can see the data we post
+    OUR_CHANNEL: "DEMOEXT_CHANNEL",
+    // this must match the folder and file name of the extension
+    EXTENSION_NAME: "demoextension",
+    // logging tag used so we can easily work out what part of the system the 
+    // console log data is from
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    // This will store our socket connection to the StreamRoller backend
+    // this socket is used to send data for others to use and receive
+    // data for you to use in your extension
+    DataCenterSocket: null,
+    // how many times will we attempt to register for a channel if it hasn't been created yet
+    MAX_CONNECTION_ATTEMPTS: 5
+};
 
 // serverConfig is how we store our data that is needed to persist
 // accross a restart or changed via a webpage (ie the admin or live 
 // pages that the backend server gives access to in the browser)
 const serverConfig = {
-    // add our name so we can tell if we receive this config from the server
-    extensionname: config.EXTENSION_NAME,
+    // add our name so we can tell if we receive this localConfig from the server
+    extensionname: localConfig.EXTENSION_NAME,
     // the channel name this extension will use for sending/receiving data.
     // this is also used in the admin modal code
-    channel: config.OUR_CHANNEL,
+    channel: localConfig.OUR_CHANNEL,
     // these are fields we will use in our bit of the admin page code (the modal)
     // good to store them so that we can keep the page up to date when 
     // we send it back
@@ -59,7 +77,6 @@ const serverConfig = {
 // during development you may find your server data gets messed up if changing it often.
 // while uncommented your data will not presist and be overwritten by the above config
 // every time the server runs up.
-
 const OverwriteDataCenterConfig = false;
 
 // ============================================================================
@@ -77,7 +94,7 @@ function initialise (app, host, port, heartbeat)
     {
         // start the socket connection by using the extensionhelper setupConnection function. we give it our callbaks to 
         // use to process messages 
-        config.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
     } catch (err)
     {
@@ -87,7 +104,7 @@ function initialise (app, host, port, heartbeat)
         // i.e.
         // log("[EXTENSION]demoextension.initialise","Something happened"
         // there are log,info,warn and err functions to use
-        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
 }
 
@@ -101,7 +118,7 @@ function initialise (app, host, port, heartbeat)
 function onDataCenterDisconnect (reason)
 {
     // do something here when disconnects happens if you want to handle them
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -122,7 +139,7 @@ function onDataCenterConnect (socket)
 {
     // log a message for debugging purposes. Once you have your extension up and running
     // please delete any spurious messages like this to save on the spam in the log window
-    logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
     // DEBUGGING overwrite our config data on the server if the flag is set
     if (OverwriteDataCenterConfig)
         SaveConfigToServer();
@@ -131,8 +148,8 @@ function onDataCenterConnect (socket)
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
 
     // Create a channel for messages to be sent out on
-    sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", config.EXTENSION_NAME, config.OUR_CHANNEL)
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
     );
 
     // register here for any channels you want to listen to. this example is going to listen on the 
@@ -140,8 +157,8 @@ function onDataCenterConnect (socket)
     // NOTE: you will need to monitor for failed connections later and setup a scheduler to re-register
     // this can happen if during startup you faster than the extension that creates this channel and it
     // doesn't exist yet.
-    sr_api.sendMessage(config.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", config.EXTENSION_NAME, "STREAMLABS_ALERT")
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "STREAMLABS_ALERT")
     );
 
 }
@@ -159,7 +176,7 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    //logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
+    //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
 
     // if we have requested our stored data we will receive a 'ConfigFile' type of packet
     if (server_packet.type === "ConfigFile")
@@ -226,7 +243,7 @@ function onDataCenterMessage (server_packet)
             }
         }
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     // looks like a channel we requested to join isn't available. Maybe the extension hasn't started up yet so lets just set a timer
@@ -234,16 +251,16 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
-        if (STREAMLABS_ALERT_ConnectionAttempts++ < config.STREAMLABS_ALERT_ConnectionAttempts)
+        if (connectionAttempts.STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
         {
-            logger.info(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             setTimeout(() =>
             {
                 // resent the register command to see if the extension is up and running yet
-                sr_api.sendMessage(config.DataCenterSocket,
+                sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", config.EXTENSION_NAME, server_packet.data
+                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
                     ));
             }, 5000);
         }
@@ -255,11 +272,11 @@ function onDataCenterMessage (server_packet)
             // do something with the data
             process_stream_alert(server_packet);
         else
-            logger.log(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
     else if (server_packet.type === "InvalidMessage")
     {
-        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
     else if (server_packet.type === "LoggingLevel")
@@ -276,7 +293,7 @@ function onDataCenterMessage (server_packet)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
@@ -296,7 +313,7 @@ function process_stream_alert (server_packet)
 {
     // for this type of message we need to know the format of the data packet. 
     //and do something usefull with it 
-    logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".process_stream_alert", "empty function");
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".process_stream_alert", "empty function");
 
 }
 // ===========================================================================
@@ -347,17 +364,17 @@ function SendAdminModal (tochannel)
                     modalstring = modalstring.replace(key + "text", value);
             }
             // send the modified modal data to the server
-            sr_api.sendMessage(config.DataCenterSocket,
+            sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    config.EXTENSION_NAME,
+                    localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
                         "AdminModalCode", // message type
-                        config.EXTENSION_NAME, //our name
+                        localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
                         tochannel,
-                        config.OUR_CHANNEL
+                        localConfig.OUR_CHANNEL
                     ),
                     "",
                     tochannel // in this case we only need the "to" channel as we will send only to the requester
@@ -374,9 +391,9 @@ function SendAdminModal (tochannel)
 function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
-    sr_api.sendMessage(config.DataCenterSocket, sr_api.ServerPacket
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
         ("SaveConfig",
-            config.EXTENSION_NAME,
+            localConfig.EXTENSION_NAME,
             serverConfig))
 }
 // ============================================================================

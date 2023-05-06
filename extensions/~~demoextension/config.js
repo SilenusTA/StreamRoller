@@ -26,5 +26,5 @@ export const config = {
     // data for you to use in your extension
     DataCenterSocket: null,
     // how many times will we attempt to register for a channel if it hasn't been created yet
-    STREAMLABS_ALERT_ConnectionAttempts: 20
+    MAX_CONNECTION_ATTEMPTS: 5
 };

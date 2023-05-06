@@ -66,7 +66,8 @@ const localConfig = {
             max_tokens: 60
         }
     },
-
+    //used to prefix GPT messages with a twitch icon to show what it is
+    bot_icon: "olddepMarv ",
     // depreciated (doesn't work well enough scoring answers)
     quiz_history_test: ["Ask me a Hard Quiz question",
         "You: Question",
@@ -83,7 +84,7 @@ const serverConfig = {
     chatbotenabled: "on",  // example of a checkbox. "on" or "off"
     chatbotname: "CHATBOTNAME", // example of a text field
     // setup the personality of the chatbot
-    chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram? CHATBOTNAME: This again? There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for? CHATBOTNAME: Was Google too busy? Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly? CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life? CHATBOTNAME: How would I know, I have no life.",
+    chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram\n CHATBOTNAME: This again\n There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for\n CHATBOTNAME: Was Google too busy\n Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly\n CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life\n CHATBOTNAME: How would I know, I have no life.",
 
 };
 //debug setting to overwrite the stored data with the serverConfig above. 
@@ -407,15 +408,17 @@ function processChatMessage (chatdata)
     }
 
     // add message to history and return if not enough data yet
-    localConfig.chatHistory.push("You: " + chatdata.message)
+    //console.log("chatdata:", chatdata)
+    //console.log(chatdata.data.username + ": " + chatdata.message)
+    localConfig.chatHistory.push(chatdata.data.username + ": " + chatdata.message)
     localConfig.chatMessageCount++;
     if (localConfig.chatMessageCount < localConfig.chatMessageMaxLines)
         return;
     else
     {
         // only get to here if we have enough messages and everything is set to enabled
-        history_string = "You: " + localConfig.chatHistory.join("\nYou: ")
-        callOpenAI(serverConfig.chatBotPersonality + "\n" + history_string, localConfig.settings.chatmodel)
+        //history_string = "You: " + localConfig.chatHistory.join("\nYou: ")
+        callOpenAI(serverConfig.chatBotPersonality + "\n" + localConfig.chatHistory.join("\n"), localConfig.settings.chatmodel)
 
     }
 }
@@ -461,6 +464,7 @@ async function callOpenAI (history_string, modelToUse)
                 console.log(response.data)
                 let chatMessageToPost = response.data.choices[response.data.choices.length - 1].text.trim("?").trim("\n").trim()
 
+                //chatMessageToPost = chatMessageToPost.replace(serverConfig.chatbotname, "")
                 localConfig.chatHistory.push(chatMessageToPost)
 
                 if (chatMessageToPost.toLowerCase().indexOf(localConfig.querytag.toLowerCase()) == -1 ||
@@ -568,6 +572,7 @@ async function processChatQuiz (chatdata)
 // ============================================================================
 function postMessageToTwitch (msg)
 {
+    msg = localConfig.bot_icon + msg
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,

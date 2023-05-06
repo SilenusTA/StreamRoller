@@ -1,1 +1,1 @@
-{"extensionname":"twitchchat","channel":"TWITCH_CHAT","enabletwitchchat":"on","streamername":"OldDepressedGamer","chatMessageBufferMaxSize":"300","chatMessageBackupTimer":"60000"}
+{"extensionname":"twitchchat","channel":"TWITCH_CHAT","enabletwitchchat":"off","updateUserList":"on","streamername":"OldDepressedGamer","chatMessageBufferMaxSize":"300","chatMessageBackupTimer":"60000"}
