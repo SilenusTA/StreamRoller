@@ -137,7 +137,8 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestAdminModalCode")
         {
-            SendAdminModal(extension_packet.from);
+            // adminmodel code not yet updated
+            //SendAdminModal(extension_packet.from);
 
         }
         else if (extension_packet.type === "AdminModalData")
