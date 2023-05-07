@@ -66,10 +66,6 @@ const localConfig = {
             max_tokens: 60
         }
     },
-    //used to prefix GPT messages with a twitch icon to show what it is
-    bot_icon: "olddepMarv ",
-    //bot_icon: "MechaRobot ",
-
     // depreciated (doesn't work well enough scoring answers)
     quiz_history_test: ["Ask me a Hard Quiz question",
         "You: Question",
@@ -85,6 +81,9 @@ const serverConfig = {
     channel: localConfig.OUR_CHANNEL,
     chatbotenabled: "on",  // example of a checkbox. "on" or "off"
     chatbotname: "CHATBOTNAME", // example of a text field
+    //used to prefix GPT messages with a twitch icon to show what it is
+    boticon: "olddepMarv",
+    //boticon: "MechaRobot ",
     // setup the personality of the chatbot
     chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram\n CHATBOTNAME: This again\n There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for\n CHATBOTNAME: Was Google too busy\n Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly\n CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life\n CHATBOTNAME: How would I know, I have no life.",
     //credentials variable names to use (in credentials modal)
@@ -516,7 +515,8 @@ async function callOpenAI (history_string, modelToUse)
             // not using this currently but left while we tune it as we might need it
             // use this to exclude certain chat messages from being posted back to chat.
             // we contine on the next chat message
-            if (response.data.choices[0].text.startsWith("#########"))
+            if (response.data.choices[0].text.startsWith("#########")
+                || response.data.choices[0].text.trim() == "")
             {
                 console.log("CHATBOT: Ignoring OpenAI response")
                 console.log(response.data)
@@ -636,7 +636,7 @@ async function processChatQuiz (chatdata)
 // ============================================================================
 function postMessageToTwitch (msg)
 {
-    msg = localConfig.bot_icon + msg
+    msg = serverConfig.boticon + " " + msg
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,
