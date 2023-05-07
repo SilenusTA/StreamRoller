@@ -1,1 +1,1 @@
-{"extensionname":"discordchat","channel":"DISCORD_CHAT","monitoring_channel":"stream-mod-messages","discordenabled":"off","chatMessageBufferMaxSize":"300","chatMessageBackupTimer":"6000"}
+{"extensionname":"discordchat","channel":"DISCORD_CHAT","monitoring_channel":"stream-mod-messages","discordenabled":"on","discordMessageBufferMaxSize":"300","discordMessageBackupTimer":"6000","credentialscount":"1","cred1name":"DISCORD_TOKEN","cred1value":""}

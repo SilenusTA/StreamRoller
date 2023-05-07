@@ -44,12 +44,17 @@ const serverConfig = {
     channel: localConfig.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
     discordenabled: "off",
-    chatMessageBufferMaxSize: "300",
-    chatMessageBackupTimer: "6000"
+    discordMessageBufferMaxSize: "300",
+    discordMessageBackupTimer: "6000",
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "1",
+    cred1name: "DISCORD_TOKEN",
+    cred1value: ""
 };
+const OverwriteDataCenterConfig = false;
 const serverData =
 {
-    chatMessageBuffer: [],
+    discordMessageBuffer: [],
 }
 
 // ============================================================================
@@ -88,6 +93,8 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 function onDataCenterConnect ()
 {
+    if (OverwriteDataCenterConfig)
+        SaveConfigToServer();
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -141,7 +148,12 @@ function onDataCenterMessage (server_packet)
         {
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
-                serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
+            {
+                if (server_packet.data == {})
+                    serverData.discordMessageBuffer = [];
+                else
+                    serverData.discordMessageBuffer = server_packet.data.discordMessageBuffer;
+            }
             SaveDataToServer();
         }
         SaveChatMessagesToServerScheduler();
@@ -167,6 +179,8 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.type === "RequestAdminModalCode")
                 SendAdminModal(extension_packet.from);
+            else if (extension_packet.type === "RequestCredentialsModalsCode")
+                SendCredentialsModal(extension_packet.from);
             // received data from our admin modal. A user has requested some settings be changedd
             else if (extension_packet.type === "AdminModalData")
             {
@@ -246,7 +260,7 @@ function onDataCenterMessage (server_packet)
 //                           FUNCTION: sendChatBuffer
 // ===========================================================================
 /**
- * Send our AdminModal to the extension
+ * Send our chat buffer to the extension
  * @param {String} toExtension 
  */
 function sendChatBuffer (toExtension)
@@ -259,7 +273,7 @@ function sendChatBuffer (toExtension)
             sr_api.ExtensionPacket(
                 "DiscordChatBuffer",
                 localConfig.EXTENSION_NAME,
-                serverData.chatMessageBuffer,
+                serverData.discordMessageBuffer,
                 "",
                 toExtension,
                 localConfig.OUR_CHANNEL),
@@ -276,7 +290,7 @@ function sendChatBuffer (toExtension)
  */
 function SendAdminModal (extensionname)
 {
-    fs.readFile(__dirname + "/adminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/discordadminmodal.html", function (err, filedata)
     {
         if (err)
             throw err;
@@ -300,6 +314,54 @@ function SendAdminModal (extensionname)
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "AdminModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
+
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/discordcredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
                         serverConfig.extensionname,
                         modalstring,
                         "",
@@ -350,7 +412,7 @@ function SaveChatMessagesToServerScheduler ()
     SaveDataToServer()
     // clear any previous timeout
     clearTimeout(localConfig.saveDataHandle)
-    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer)
+    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.discordMessageBackupTimer)
 
 }
 // ############################################################################
@@ -453,7 +515,7 @@ function discordMessageHandler (message)
         logger.log(message.user);
         console.log(message.member);
         console.log(message.author.username);*/
-        console.log(message)
+        //console.log("discordMessageHandler: ", message)
         process_chat_data(message)
 
     }
@@ -465,7 +527,7 @@ function discordMessageHandler (message)
 function process_chat_data (message)
 {
     let messagedata = { name: message.author.username, message: message.content }
-    serverData.chatMessageBuffer.push(messagedata);
+    serverData.discordMessageBuffer.push(messagedata);
     // Send the message received out on our streamroller "DISCORD_CHAT" channel for other extensions to use if needed
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",

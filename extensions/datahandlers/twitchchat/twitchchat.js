@@ -59,9 +59,20 @@ const serverConfig = {
     updateUserList: "on",
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
-    chatMessageBackupTimer: "6000"
-
+    chatMessageBackupTimer: "6000",
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "4",
+    cred1name: "twitchchatbot",
+    cred1value: "",
+    cred2name: "twitchchatbotoauth",
+    cred2value: "",
+    cred3name: "twitchchatuser",
+    cred3value: "",
+    cred4name: "twitchchatuseroauth",
+    cred4value: ""
 };
+//debug setting to overwrite the stored data with the serverConfig above. 
+const OverwriteDataCenterConfig = false;
 const serverData =
 {
     chatMessageBuffer: [],
@@ -119,6 +130,8 @@ function onDataCenterDisconnect (reason)
 // ===========================================================================
 function onDataCenterConnect (socket)
 {
+    if (OverwriteDataCenterConfig)
+        SaveConfigToServer();
     // create our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
@@ -215,7 +228,9 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         // -------------------- PROCESSING ADMIN MODALS -----------------------
         if (extension_packet.type === "RequestAdminModalCode")
-            SendModal(server_packet.from);
+            SendAdminModal(server_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+            SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "AdminModalData")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -344,16 +359,16 @@ function sendAccountNames (toExtension)
     }
 }
 // ===========================================================================
-//                           FUNCTION: SendModal
+//                           FUNCTION: SendAdminModal
 // ===========================================================================
 /**
  * Send our AdminModal to the extension
  * @param {String} toExtension 
  */
-function SendModal (toExtension)
+function SendAdminModal (toExtension)
 {
     // read our modal file
-    fs.readFile(__dirname + "/adminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/twitchchatadminmodal.html", function (err, filedata)
     {
         if (err)
             throw err;
@@ -385,6 +400,53 @@ function SendModal (toExtension)
                     "",
                     toExtension
                 ));
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/twitchchatcredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
         }
     });
 }
@@ -576,7 +638,7 @@ import * as tmi from "tmi.js";
 function connectToTwtich (account)
 {
     // check for readonly user account login (bot doesn't get logged in if no credentials set)
-    if (account === "user" &&
+    if (account === "user" && serverConfig.enabletwitchchat == "on" &&
         (typeof localConfig.usernames.user["name"] === "undefined" || typeof localConfig.usernames.user["oauth"] === "undefined" ||
             localConfig.usernames.user["name"] === "" || localConfig.usernames.user["oauth"] === ""))
     {
@@ -591,12 +653,11 @@ function connectToTwtich (account)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Chat connected readonly: " + serverConfig.streamername);
             }
             )
-
             .catch((err) => 
             {
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = false;
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Failed to join " + serverConfig.streamername)
             }
             )
@@ -606,18 +667,20 @@ function connectToTwtich (account)
             process_chat_data(channel, tags, message);
         });
     }
-    else
+    else if (serverConfig.enabletwitchchat == "on")
     // connect with Oauth connection
     {
         chatLogin(account);
     }
+    else
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "twitch chat currently set to off")
 }
 // ============================================================================
 //                           FUNCTION: chatLogin
 // ============================================================================
 function chatLogin (account)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting with OAUTH for ", localConfig.usernames.bot["name"])
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames.bot["name"])
     localConfig.twitchClient[account].connection = new tmi.Client({
         options: { debug: false, messagesLogLevel: "info" },
         connection: {
@@ -631,24 +694,24 @@ function chatLogin (account)
         channels: [serverConfig.streamername]
     });
 
-    // we don't want to receive message for the bot accounts, the user account login will be used to display chat
+
     localConfig.twitchClient[account].connection.connect()
         .then((res) =>
         {
             localConfig.twitchClient[account].state.readonly = false;
             localConfig.twitchClient[account].state.connected = true;
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected with OAUTH")
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Twitch chat client connected with OAUTH")
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, account + ": " + localConfig.usernames[account]["name"] + " connected to " + serverConfig.streamername)
         })
         .catch((err) => 
         {
             localConfig.twitchClient[account].state.readonly = true;
             localConfig.twitchClient[account].state.connected = false;
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Chat failed to connect to " + serverConfig.streamername + " with user: " + localConfig.usernames.bot["name"])
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Please check your settings on the admin page.")
         })
-
+    // we don't want to receive message for the bot accounts, the user account login will be used to display chat
     if (account === "user")
     {
         localConfig.twitchClient[account].connection.on("message", (channel, tags, message, self) =>

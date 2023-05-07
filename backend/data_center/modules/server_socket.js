@@ -84,7 +84,7 @@ let config = {}
  * @param {Object} server
  * @param {Array} exts 
  */
-function start(app, server, exts)
+function start (app, server, exts)
 {
     extensions = exts;
     cm.initcrypto();
@@ -117,7 +117,7 @@ function start(app, server, exts)
  * receives connect messages
  * @param {Socket} socket socket received on
  */
-function onConnect(socket)
+function onConnect (socket)
 {
     //logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onConnect", socket.id);
     socket.emit("connected", socket.id);
@@ -130,7 +130,7 @@ function onConnect(socket)
  * @param {Socket} socket 
  * @param {string} reason 
  */
-function onDisconnect(socket, reason)
+function onDisconnect (socket, reason)
 {
     logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onDisconnect", reason, socket.id);
 }
@@ -142,7 +142,7 @@ function onDisconnect(socket, reason)
  * @param {Socket} socket 
  * @param {Object} server_packet 
  */
-function onMessage(socket, server_packet)
+function onMessage (socket, server_packet)
 {
     //console.log(("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet))
     logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet);
@@ -197,7 +197,11 @@ function onMessage(socket, server_packet)
     else if (server_packet.type === "StopServer")
         process.exit(0);
     else if (server_packet.type === "UpdateCredentials")
+    {
         mh.UpdateCredentials(server_packet.data);
+        //resend new credentials to extension
+        mh.RetrieveCredentials(server_packet.data.ExtensionName, extensions);
+    }
     else if (server_packet.type === "RequestCredentials")
         mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "RequestExtensionsList")

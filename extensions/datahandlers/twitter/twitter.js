@@ -28,11 +28,23 @@ const localConfig = {
         connected: false // this is our connection indicator for discord
     },
 };
+let channelConnectionAttempts = 0;
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    twitterenabled: "on"
+    twitterenabled: "on",
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "4",
+    cred1name: "twitterAPIkey",
+    cred1value: "",
+    cred2name: "twitterAPISecret",
+    cred2value: "",
+    cred3name: "twitterAccessToken",
+    cred3value: "",
+    cred4name: "TwitterAccessTokenSecret",
+    cred4value: ""
 };
+const OverwriteDataCenterConfig = false;
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -118,35 +130,37 @@ function onDataCenterMessage (server_packet)
             connectToTwitter(server_packet.data);
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set " , "Extension to '" + serverConfig.extensionname, " Add the following fields: 'twitterAPIkey', 'twitterAPISecret','twitterAccessToken','TwitterAccessTokenSecret'");
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, " Add the following fields: 'twitterAPIkey', 'twitterAPISecret','twitterAccessToken','TwitterAccessTokenSecret'");
         }
-            
+
     }
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
-        if (decoded_packet.type === "RequestAdminModalCode")
-            SendAdminModal(decoded_packet.from);
-        else if (decoded_packet.type === "AdminModalData")
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestAdminModalCode")
+            SendAdminModal(extension_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+            SendCredentialsModal(extension_packet.from);
+        else if (extension_packet.type === "AdminModalData")
         {
             // check that it was our modal
-            if (decoded_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
                 serverConfig.twitterenabled = "off";
-                for (const [key, value] of Object.entries(decoded_packet.data))
+                for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
             }
         }
-        else if (decoded_packet.type === "PostTweet")
+        else if (extension_packet.type === "PostTweet")
         {
             // check this was sent to us 
-            if (decoded_packet.to === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
                 if (serverConfig.twitterenabled != "off")
-                    tweetmessage(decoded_packet.data)
+                    tweetmessage(extension_packet.data)
                 else
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
         } else
@@ -249,6 +263,53 @@ function SendAdminModal (tochannel)
                     "",
                     tochannel // in this case we only need the "to" channel as we will send only to the requester
                 ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/twittercredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
         }
     });
 }

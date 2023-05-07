@@ -28,7 +28,7 @@ const EXTENSION_NAME = "datacenter";
  * @param {Socket} client_socket socket to send on
  * @param {String} extensionname extension name
  */
-function sendConfig(client_socket, extensionname)
+function sendConfig (client_socket, extensionname)
 {
     let loadedConfig = cm.loadConfig(extensionname);
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendConfig",
@@ -44,7 +44,7 @@ function sendConfig(client_socket, extensionname)
  * @param {String} extensionname 
  * @param {Object} configdata 
  */
-function saveConfig(extensionname, configdata)
+function saveConfig (extensionname, configdata)
 {
     cm.saveConfig(extensionname, configdata);
 }
@@ -56,7 +56,7 @@ function saveConfig(extensionname, configdata)
  * @param {Socket} client_socket socket to send on
  * @param {String} extensionname extension name
  */
-function sendData(client_socket, extensionname)
+function sendData (client_socket, extensionname)
 {
     let loadedData = cm.loadData(extensionname);
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendData",
@@ -72,7 +72,7 @@ function sendData(client_socket, extensionname)
  * @param {String} extensionname 
  * @param {Object} data 
  */
-function saveData(extensionname, data)
+function saveData (extensionname, data)
 {
     cm.saveData(extensionname, data);
 }
@@ -85,7 +85,7 @@ function saveData(extensionname, data)
  * @param {String} extensionname extension name to send to
  * @param {Object} extensions Extensions to send
  */
-function sendExtensionList(clientsocket, extensionname, extensions)
+function sendExtensionList (clientsocket, extensionname, extensions)
 {
     let names = [];
     for (const [key, value] of Object.entries(extensions))
@@ -105,7 +105,7 @@ function sendExtensionList(clientsocket, extensionname, extensions)
  * @param {String} extensionname extension name to send to
  * @param {Array} channels channels
  */
-function sendChannelList(socket, extensionname, channels)
+function sendChannelList (socket, extensionname, channels)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendChannelList", "Sending CannelsList to " + extensionname);
     let msg = sr_api.ServerPacket("ChannelList", EXTENSION_NAME, channels, "", extensionname);
@@ -123,11 +123,11 @@ function sendChannelList(socket, extensionname, channels)
  * @param {Array} channels 
  * @param {String} extensionname 
  */
-function createChannel(server_socket, client_socket, channel_to_create, channels, extensionname)
+function createChannel (server_socket, client_socket, channel_to_create, channels, extensionname)
 {
     if (channels.includes(channel_to_create))
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "] message_handlers.createChannel:",
+        logger.info("[" + SYSTEM_LOGGING_TAG + "] message_handlers.createChannel:",
             "Channel " + channel_to_create + " exists. Joining existing channel instead " + extensionname);
         client_socket.join(channel_to_create);
         server_socket.emit("message",
@@ -156,7 +156,7 @@ function createChannel(server_socket, client_socket, channel_to_create, channels
  * @param {Array} channels 
  * @param {String} extensionname 
  */
-function joinChannel(server_socket, client_socket, channel_to_join, channels, extensionname)
+function joinChannel (server_socket, client_socket, channel_to_join, channels, extensionname)
 {
     if (channels.includes(channel_to_join))
     {
@@ -185,14 +185,14 @@ function joinChannel(server_socket, client_socket, channel_to_join, channels, ex
  * @param {String} extensionname name of extension
  * @param {String} channel_to_leave channel to leave
  */
-function leaveChannel(client_socket, extensionname, channel_to_leave)
+function leaveChannel (client_socket, extensionname, channel_to_leave)
 {
     try
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.leaveChannel Extension:"
             + extensionname + " leaving " + channel_to_leave);
         client_socket.leave(channel_to_leave);
-        server_socket.to(channel_to_leave).emit('ChannelLeft', extensionname);
+        //server_socket.to(channel_to_leave).emit('ChannelLeft', extensionname);
     } catch (e)
     {
         logger.err("[" + SYSTEM_LOGGING_TAG + "] message_handlers.leaveChannel Extension:"
@@ -208,7 +208,7 @@ function leaveChannel(client_socket, extensionname, channel_to_leave)
  * @param {Socket} server_socket server socket
  * @param {String} level level to set
  */
-function setLoggingLevel(server_socket, level)
+function setLoggingLevel (server_socket, level)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.setLoggingLevel",
         "setting logging to " + level);
@@ -224,10 +224,10 @@ function setLoggingLevel(server_socket, level)
  * send out the logging level
  * @param {Socket} client_socket socket who asked for the information
  */
-function sendLoggingLevel(client_socket)
+function sendLoggingLevel (client_socket)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendLoggingLevel",
-        "setting logging to " + level);
+        "setting logging to " + logger.getLoggingLevel());
     let msg = sr_api.ServerPacket("LoggingLevel",
         EXTENSION_NAME, logger.getLoggingLevel());
     client_socket.emit("message", msg);
@@ -243,7 +243,7 @@ function sendLoggingLevel(client_socket)
  * @param {Array} channels 
  * @param {Object} extensions 
  */
-function forwardMessage(client_socket, server_packet, channels, extensions)
+function forwardMessage (client_socket, server_packet, channels, extensions)
 {
     // check if we tried to send to an invalid channel or extension name
     // check for a 'to' field but no valid socket registered for it
@@ -289,7 +289,7 @@ function forwardMessage(client_socket, server_packet, channels, extensions)
 // ============================================================================
 //                           FUNCTION: UpdateCredentials
 // ============================================================================
-function UpdateCredentials(server_packet)
+function UpdateCredentials (server_packet)
 {
     cm.saveCredentials(server_packet);
 }
@@ -297,7 +297,7 @@ function UpdateCredentials(server_packet)
 // ============================================================================
 //                           FUNCTION: RetrieveCredentials
 // ============================================================================
-function RetrieveCredentials(from, extensions)
+function RetrieveCredentials (from, extensions)
 {
 
     let loadedCredentials = cm.loadCredentials(from);
@@ -311,8 +311,8 @@ function RetrieveCredentials(from, extensions)
     }
     else
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
-            from + " No data available or ExtensionName not valid in credential file");
+        logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+            from + " No data Credentials available or ExtensionName not valid in credential file");
         // send an empty message back so the extension can check for missin credentials
         extensions[from].socket.emit("message",
             sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from));
@@ -326,7 +326,7 @@ function RetrieveCredentials(from, extensions)
  * @param {serverSocket} server_socket 
  * @param {object} server_packet 
  */
-function broadcastMessage(server_socket, server_packet)
+function broadcastMessage (server_socket, server_packet)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.broadcastMessage",
         "Destination:BROADCAST(Except sender)", server_packet.type, server_packet.from);
@@ -341,7 +341,7 @@ function broadcastMessage(server_socket, server_packet)
  * @param {String} error 
  * @param {Object} data 
  */
-function errorMessage(client_socket, error, data)
+function errorMessage (client_socket, error, data)
 {
     logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.errorMessage",
         error, data);

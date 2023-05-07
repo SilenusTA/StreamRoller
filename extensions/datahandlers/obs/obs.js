@@ -32,6 +32,7 @@ const localConfig = {
     DataCenterSocket: null,
     obsConnection: null,
     obsConnecting: false,
+    obsTimeoutHandle: null,
     channelConnectionAttempts: 20,
     OBSAvailableScenes: null,
     sceneList: { current: "", main: [], secondary: [], rest: [] },
@@ -52,19 +53,26 @@ const localConfig = {
 
     },
     obshost: "localhost",
-    obsport: "4445",
-    obspass: "pass"
+    obsport: "4444",
+    obspass: ""
 };
 //sever config (stuff we want to save over runs)
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    obsenable: "on",
+    enableobs: "off",
     mainsceneselector: "##",
     secondarysceneselector: "**",
-
-
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "3",
+    cred1name: "obshost",
+    cred1value: "localhost",
+    cred2name: "obsport",
+    cred2value: "4444",
+    cred3name: "obspass",
+    cred3value: "",
 };
+const OverwriteDataCenterConfig = false;
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -107,6 +115,8 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 function onDataCenterConnect ()
 {
+    if (OverwriteDataCenterConfig)
+        SaveConfigToServer();
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
@@ -145,38 +155,55 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            if (localConfig.obsConnecting == false)
-            {
-                localConfig.obsConnecting = true
-                localConfig.obshost = server_packet.data.obshost;
-                localConfig.obsport = server_packet.data.obsport;
-                localConfig.obspass = server_packet.data.obspass;
-                connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
-            }
-            else
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                    serverConfig.extensionname + " CredentialsFile", "Credential file is empty");
+        if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
+        {
+            localConfig.obshost = server_packet.data.obshost;
+            localConfig.obsport = server_packet.data.obsport;
+            localConfig.obspass = server_packet.data.obspass;
+            if (localConfig.obsConnecting == false && serverConfig.enableobs == "on")
+                connectToObs();
+        }
     }
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", decoded_packet.type);
-        if (decoded_packet.type === "RequestAdminModalCode")
-            SendAdminModal(decoded_packet.from);
-        else if (decoded_packet.type === "AdminModalData")
+        let extension_packet = server_packet.data
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
+        if (extension_packet.type === "RequestAdminModalCode")
+            SendAdminModal(extension_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+            SendCredentialsModal(extension_packet.from);
+        else if (extension_packet.type === "AdminModalData")
         {
-            if (decoded_packet.to === serverConfig.extensionname)
+            // if we have enabled/disabled obs connection
+            if (serverConfig.enableobs != extension_packet.data.enableobs)
             {
-                serverConfig.obsenable = "off";
-                for (const [key, value] of Object.entries(decoded_packet.data))
+                //we are currently enabled so lets disconnect
+                if (serverConfig.enableobs == "on")
+                {
+                    serverConfig.enableobs = "off";
+                    clearTimeout(localConfig.obsTimeoutHandle)
+                    disconnectObs()
+                }
+                //currently disabled so connect to obs
+                else
+                {
+                    serverConfig.enableobs = "on";
+                    localConfig.obsConnecting = true
+                    connectToObs();
+                }
+            }
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                serverConfig.enableobs = "off";
+                for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
-                processOBSSceneList(localConfig.OBSAvailableScenes);
+                if (localConfig.OBSAvailableScenes != null)
+                    processOBSSceneList(localConfig.OBSAvailableScenes);
                 sendScenes();
             }
         }
-        else if (decoded_packet.type === "RequestScenes")
+        else if (extension_packet.type === "RequestScenes")
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
@@ -193,10 +220,10 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
-        else if (decoded_packet.type === "ChangeScene")
-            changeScene(decoded_packet.data);
-        else if (decoded_packet.type === "ToggleMute")
-            ToggleMute(decoded_packet.data)
+        else if (extension_packet.type === "ChangeScene")
+            changeScene(extension_packet.data);
+        else if (extension_packet.type === "ToggleMute")
+            ToggleMute(extension_packet.data)
         else
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
     }
@@ -286,6 +313,53 @@ function SendAdminModal (tochannel)
         }
     });
 }
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/obscredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -309,18 +383,18 @@ function SaveConfigToServer ()
 import OBSWebSocket from "obs-websocket-js";
 localConfig.obsConnection = new OBSWebSocket();
 // ============================================================================
-//                           FUNCTION: onOBSScenes
+//                           FUNCTION: connectToObs
 // ============================================================================
 /**
  * connects to the obs server
  */
-function connectToObs (host, port, pass)
+function connectToObs ()
 {
-    localConfig.obsConnecting = true
-    if (host != "" && port != "" && pass != "" && host != null && port != null && pass != null)
+    if (localConfig.obshost != "" && localConfig.obsport != "" && localConfig.obspass != "" && localConfig.obshost != null && localConfig.obsport != null && localConfig.obspass != null &&
+        serverConfig.enableobs == "on" && localConfig.status.connected == false)
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", host, port, "xxxx");
-        localConfig.obsConnection.connect("ws://" + host + ":" + port, pass)
+        localConfig.obsConnecting = true
+        localConfig.obsConnection.connect("ws://" + localConfig.obshost + ":" + localConfig.obsport, localConfig.obspass)
             .then(data =>
             {
                 // we are now connected so stop any furthur scheduling
@@ -352,26 +426,56 @@ function connectToObs (host, port, pass)
                 //Need to setup a reschedule if we have a connection failure
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", err.message);
                 localConfig.obsConnecting = true
-                setTimeout(() =>
+                clearTimeout(localConfig.obsTimeoutHandle)
+                localConfig.obsTimeoutHandle = setTimeout(() =>
                 {
-                    connectToObs(host, port, pass);
+                    connectToObs();
                 }, 5000);
             })
     }
     else
     {
         localConfig.status.connected = false;
-        //Need to setup a reschedule if we have a connection failure
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, missing credentials obshost or obsport");
-        localConfig.obsConnecting = true
-        setTimeout(() =>
+        if (serverConfig.enableobs == "off")
         {
-            connectToObs(host, port, pass);
-        }, 10000);
+            logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", " Trying to connect while turned off by user");
+        }
+        else if (localConfig.obshost == "" || localConfig.obsport == "" || localConfig.obspass == ""
+            || localConfig.obshost == null || localConfig.obsport == null || localConfig.obspass == null)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, missing credentials");
+        }
+        else
+        {
+            if (localConfig.status.connected == true)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS (already connected?)");
+            else
+            {
+                //Need to setup a reschedule if we have a connection failure
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "FAILED: check code logic, shouldn't reach this point");
+                localConfig.obsConnecting = true
+                clearTimeout(localConfig.obsTimeoutHandle)
+                localConfig.obsTimeoutHandle = setTimeout(() =>
+                {
+                    connectToObs();
+                }, 10000);
+            }
+        }
     }
 
 }
+// ============================================================================
+//                           FUNCTION: disconnectObs
+// ============================================================================
+/**
+ * disconnect obs
+ */
+function disconnectObs ()
+{
+    localConfig.obsConnection.disconnect();
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".disconnectObs ", "disconnected from OBS");
 
+}
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers
 // ============================================================================
@@ -397,7 +501,7 @@ An OBS scene will contain the following
       x: 705,
       y: 0
     },
-
+ 
 Stats message
 {
   'average-frame-time': 1.452454,
@@ -441,8 +545,8 @@ Stats message
   totalStreamTime: 1524,
   updateType: 'StreamStatus'
 }
-
-
+ 
+ 
 */
 // ============================================================================
 //                           FUNCTION: processOBSSceneList
@@ -646,7 +750,6 @@ function StreamStarted ()
  */
 function sendScenes ()
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBSScenes");
     // lets add the deliminatores we currently are using before sending it out
     localConfig.sceneList.mainsceneselector = serverConfig.mainsceneselector;
     localConfig.sceneList.secondarysceneselector = serverConfig.secondarysceneselector;
@@ -704,15 +807,22 @@ function heartBeatCallback ()
     try
     {
 
-        if (localConfig.status.connected == false)
+        // if we are not currently trying to connect  and we are enabled we need to start the scheduler again
+        if (localConfig.status.connected == false && serverConfig.enableobs == "on")
         {
-            // if we are not currently trying to connect we need to start the scheduler again
+
             if (localConfig.obsConnecting == false)
             {
                 localConfig.obsConnecting = true;
                 connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
             }
-        } else
+
+        }
+        else if (serverConfig.enableobs == "off")
+        {
+            logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "OBS turned off, skipping reconnect?");
+        }
+        else
         {
             localConfig.obsConnection.call("GetStats").then(data =>
             {
@@ -739,7 +849,7 @@ function heartBeatCallback ()
                 .catch(err =>
                 {
                     if (err.message.startsWith("No output was found"))
-                        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", "adv_stream not found, is OBS streaming?");
+                        logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", "adv_stream not found, is OBS streaming?");
                     else
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetOutputStatus:", err.message);
                 }

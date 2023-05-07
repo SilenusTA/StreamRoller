@@ -68,6 +68,8 @@ const localConfig = {
     },
     //used to prefix GPT messages with a twitch icon to show what it is
     bot_icon: "olddepMarv ",
+    //bot_icon: "MechaRobot ",
+
     // depreciated (doesn't work well enough scoring answers)
     quiz_history_test: ["Ask me a Hard Quiz question",
         "You: Question",
@@ -85,7 +87,10 @@ const serverConfig = {
     chatbotname: "CHATBOTNAME", // example of a text field
     // setup the personality of the chatbot
     chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram\n CHATBOTNAME: This again\n There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for\n CHATBOTNAME: Was Google too busy\n Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly\n CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life\n CHATBOTNAME: How would I know, I have no life.",
-
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "1",
+    cred1name: "openAIkey",
+    cred1value: ""
 };
 //debug setting to overwrite the stored data with the serverConfig above. 
 const OverwriteDataCenterConfig = false;
@@ -166,8 +171,6 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
-
     if (server_packet.type === "ConfigFile")
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
@@ -183,6 +186,10 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestAdminModalCode")
             SendAdminModal(extension_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+        {
+            SendCredentialsModal(extension_packet.from);
+        }
         else if (extension_packet.type === "UserAccountNames")
         {
             // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
@@ -334,6 +341,53 @@ function SendAdminModal (tochannel)
         }
     });
 }
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/chatbotcredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -437,7 +491,7 @@ async function callOpenAI (history_string, modelToUse)
                     apiKey: localConfig.openAIKey
                 }));
 
-            console.log("#'#'#'#'#'#'#' CHATBOT: sending to OpenAI: #'#'#'#'#'#'#' ")
+            console.log("#'#'#'#'#'#'#' CHATBOT: sending following to OpenAI: #'#'#'#'#'#'#' ")
             console.log(history_string)
             const response = await localConfig.OpenAPIHandle.createCompletion(
                 {
@@ -447,8 +501,18 @@ async function callOpenAI (history_string, modelToUse)
                     top_p: modelToUse.top_p,
                     max_tokens: modelToUse.max_tokens
                     //stop: ["Human:", "AI:"]
-                });
+                })
+                .catch((err) => 
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                }
+                )
 
+            if (!response)
+            {
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce")
+                return
+            }
             // not using this currently but left while we tune it as we might need it
             // use this to exclude certain chat messages from being posted back to chat.
             // we contine on the next chat message
@@ -476,10 +540,10 @@ async function callOpenAI (history_string, modelToUse)
         }
         else
         {
-            if (localConfig.openAIKey === null)
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
-            else if (localConfig.OpenAPIHandle === null)
+            if (serverConfig.chatbotenabled === "off")
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
+            else if (!localConfig.openAIKey)
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
         }
         localConfig.running = false
         startChatbotTimer()

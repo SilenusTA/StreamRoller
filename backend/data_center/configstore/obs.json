@@ -1,1 +1,1 @@
-{"extensionname":"obs","channel":"OBS_CHANNEL","obsenable":"off","mainsceneselector":"##","secondarysceneselector":"**"}
+{"extensionname":"obs","channel":"OBS_CHANNEL","enableobs":"on","mainsceneselector":"##","secondarysceneselector":"**","credentialscount":"3","cred1name":"obshost","cred1value":"localhost","cred2name":"obsport","cred2value":"4444","cred3name":"obspass","cred3value":""}

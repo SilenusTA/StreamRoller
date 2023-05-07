@@ -5,15 +5,18 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <p>Credentials required (set on admin page): "obshost", "obsport", "obspass"</p>
-            <p>Output channel: "OBS_CHANNEL"</p>
-            </p>
             <div class="form-group invisible">
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
                     tabindex="-1" />
                 <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
                 <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="enableobs" type="checkbox" id="enableobs" enableobschecked>
+                    <label class="form-check-label" for="enableobs">Enable/Disable</label>
+                </div>
             </div>
             <div class="form-group row">
                 <label for="mainsceneselector" class="col-sm-3 col-form-label">Main Scene Identifier</label>

@@ -1,1 +1,1 @@
-{"extensionname":"twitter","channel":"TWITTER_CHANNEL","twitterenabled":"off"}
+{"extensionname":"twitter","channel":"TWITTER_CHANNEL","twitterenabled":"on","credentialscount":"4","cred1name":"twitterAPIkey","cred1value":"","cred2name":"twitterAPISecret","cred2value":"","cred3name":"twitterAccessToken","cred3value":"","cred4name":"TwitterAccessTokenSecret","cred4value":""}

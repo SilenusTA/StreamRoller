@@ -1,6 +1,7 @@
 <script src="/streamroller-message-api.cjs"></script>
-<%- include('../modals/extensionsettingsplaceholdermodal'); %>
 <%- include("../modals/adminmodalplaceholder.html"); %>
+<%- include("../modals/settingsplaceholdermodal"); %>
+<%- include("../modals/credentialsplaceholdermodal"); %>
 <script>
 
     const serverConfig = {
@@ -193,10 +194,12 @@
             //                   RECEIVED EXTENSION MODAL CODE
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "AdminModalCode")
-            {
-                //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
-                addModal(extension_packet.from, extension_packet.data);
-            }
+                addModal(extension_packet.from, extension_packet.data,"SettingsPlaceholder","admincard");
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED EXTENSION MODAL CODE
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "CredentialsModalCode")
+                addModal(extension_packet.from, extension_packet.data,"CredentialsPlaceholder","credentialscard");
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
             // -------------------------------------------------------------------------------------------------
@@ -212,6 +215,7 @@
                         serverConfig[key] = value;
                     // save our data to the server for next time we run
                     SaveConfigToServer();
+                    changeServerLogging(serverConfig.logginglevel)
                     //lets update our modal
                     UpdateAdminModalData();
                 }
@@ -329,20 +333,15 @@
     // ===========================================================================
     function loadExtensionCards(extensions)
     {
+        
+        extensions.sort()
         // First we create all the links (these may be changed below if the extension has provided a modal box)
-        //var html = "<ul>";
         var html = "<div>";
         for (var i = 0; i < extensions.length; i++)
         {
-            // set the default list item. href link will be added if we receive a modal from them
-            //html += "<li id='" + extensions[i] + "'>"
-            //html += "<div class = 'extensioncardicon'></div>"
-            //html += extensions[i] + "</li>";
-
             html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
-            html += "<span id='" + extensions[i] + "' >"
+            html += "<span id='" + extensions[i]  + "_admincard' >"
             html += extensions[i] + "</span></div>";
-
             // check if we have previously recorded this extension, if not we should add it
             if (!adminData.extensions[extensions[i]])
                 adminData.extensions[extensions[i]] = {};
@@ -350,14 +349,42 @@
         };
         //html += "</ul>";
         html += "</div>";
-        document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
-        document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-        //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
+        // create our Settings list element
+        document.getElementById("SettingsListCard").getElementsByClassName("card-title")[0].innerHTML = "Settings Links";
+        document.getElementById("SettingsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
+
         // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
         for (var i = 0; i < extensions.length; i++)
             if (adminData.extensions[extensions[i]].admincard)
-                addModal(extensions[i], adminData.extensions[extensions[i]].admincard)
+                addModal(extensions[i], adminData.extensions[extensions[i]].admincard,"SettingsPlaceholder","admincard")
+
+
+        /*
+                    CREDENTIALS CARDS
+        */
+        var html = "<div>";
+        for (var i = 0; i < extensions.length; i++)
+        {
+            html += "<div><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+            html += "<span id='" + extensions[i] + "_credentialscard' >"
+            html += extensions[i] + "</span></div>";
+            // check if we have previously recorded this extension, if not we should add it
+            if (!adminData.extensions[extensions[i]])
+                adminData.extensions[extensions[i]] = {};
+            RequestCredentialsModalsCode(extensions[i]);
+        };
+        //html += "</ul>";
+        html += "</div>";
+        // create our Credentials list element
+        document.getElementById("CredentialsListCard").getElementsByClassName("card-title")[0].innerHTML = "Credentials links";
+        document.getElementById("CredentialsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
+
+        // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
+        for (var i = 0; i < extensions.length; i++)
+            if (adminData.extensions[extensions[i]].credentialscard)
+                addModal(extensions[i], adminData.extensions[extensions[i]].credentialscard,"SettingsPlaceholder","credentialscard")
+
     }
     // ===========================================================================
     //                           FUNCTION: SendModal
@@ -407,50 +434,55 @@
     // Parameters: 
     //          xname - name of extension
     //          data  - data to add
+    //          placeholdername - name of tag to use as the placeholder
+    //          cardtype - used to create the array item name in adminData.extensions[x][cardtype]
     // ----------------------------- notes ----------------------------------------
     // None
     // ===========================================================================
-    function addModal(xname, data)
+    function addModal(xname, data, placeholdername, cardtype)
     {
         // only update modals if we have received the extension name from the server
         if (adminData.extensions[xname])
         {
-            let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
+            let modalbox = document.getElementById(placeholdername).children[0];
             // grab the <li> element for this extension
-            let extLiTag = document.getElementById(xname);
+            let extLiTag = document.getElementById(xname + "_" + cardtype);
+
+            
             // remove the previous event listener (if there was one)
-            $('#' + xname + "_modal").off('submit');
+            $('#' + xname + "_modal_" + cardtype).off('submit');
             //set the element contents to a blank extension placeholder
             // if we have already set this element to the placeholder page we don't want to do it again
             // otherwise it will replace the submit callback and throw an error when updated a second time.
             if (extLiTag.innerHTML === xname)
                 extLiTag.innerHTML = modalbox.innerHTML;
             // setup the link to show the dialog
-            extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_modal";
+            extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_modal_" + cardtype;
             extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
-            extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal";
+            extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal_" + cardtype ;
             // set the data from the extension
-            document.getElementById(xname + "_modal").innerHTML = data;
-            // add a callback handle
-            $('#' + xname + "_modal").on('submit', function (event)
+            document.getElementById(xname + "_modal_" + cardtype).innerHTML = data;
+            // add a callback handle if we are not a credentias modal (this will be done inside the modal using CredentialsSubmit() function)
+            if (cardtype !="credentialscard")
             {
-                event.preventDefault();
-                // if it is our own modal that has changed (another page has submitted one
-                // we need to process it ourselves first
-                if (xname == serverConfig.extensionname)
+                $('#' + xname + "_modal_" + cardtype).on('submit', function (event)
                 {
-                    processOwnModalSubmit(xname);
-                    // now it is processed we can parse it and send the data out to other who
-                    // migh have it on their page
-                    parseExtensionModalData(xname);
-                }
-                else
-                    parseExtensionModalData(xname);
-                return false;
-            });
-            adminData.extensions[xname] = {
-                admincard: document.getElementById(xname).innerHTML
+                    event.preventDefault();
+                    // if it is our own modal that has changed (another page has submitted one
+                    // we need to process it ourselves first
+                    if (xname == serverConfig.extensionname)
+                    {
+                        processOwnModalSubmit(xname);
+                        // now it is processed we can parse it and send the data out to other who
+                        // migh have it on their page
+                        parseExtensionModalData(xname);
+                    }
+                    else
+                        parseExtensionModalData(xname);
+                    return false;
+                });
             }
+            adminData.extensions[xname][cardtype] = document.getElementById(xname + "_" + cardtype).innerHTML
         }
     }
     // ============================================================================
@@ -535,7 +567,7 @@
     // ===========================================================================
     function parseExtensionModalData(extension)
     {
-        let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
+        let fieldsAsArray = $('#' + extension + "_modal_admincard").serializeArray();
         // convert our array of objects into a more usable objet
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
         if (fieldsAsObject.extensionname)
@@ -548,8 +580,8 @@
                         serverConfig.extensionname,
                         fieldsAsObject,
                         "",
-                        fieldsAsObject.extensionname)
-                    , "",
+                        fieldsAsObject.extensionname),
+                     "",
                     fieldsAsObject.extensionname
                 ));
 
@@ -589,11 +621,11 @@
     function processOwnModalSubmit(name)
     {
         // get the modal data as an array
-        let fieldsAsArray = $('#' + name + "_modal").serializeArray();
+        let fieldsAsArray = $('#' + name + "_modal_admincard").serializeArray();
         // convert our array of objects into a more usable object
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        // if we have changed hte logging level let us set that now
-        if (fieldsAsObject.logginglevel != "null" && serverConfig.logginglevel != fieldsAsObject.logginglevel)
+
+        if (fieldsAsObject.logginglevel != "null")
         {
             // change server logging level
             changeServerLogging(fieldsAsObject.logginglevel);
@@ -700,19 +732,26 @@
             if (extension_packet.type == "AdminModalCode")
                 cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + " received Admin Modal Code<BR>";
             else
-                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.type + "<BR>";
+                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "] " + extension_packet.type + "<BR>";
         }
         else if (data.type === "ChannelData")
         {
-            if (data.dest_channel === "TWITCH_CHAT")
-                return; // displayed by the chat window
-            let extension_packet = data.data;
-            if (data.dest_channel === "STREAMLABS_ALERT")
-                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.type + "<BR>";
-            else if (data.dest_channel === "DISCORD_CHAT")
-                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.data + "<BR>";
+            if(data.data.type === "HeartBeat")
+            {
+                // ignore heartbeat messages
+            }
             else
-                cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + extension_packet.message_type + "<BR>";
+            {
+                if (data.dest_channel === "TWITCH_CHAT")
+                    return; // displayed by the chat window
+                let extension_packet = data.data;
+                if (data.dest_channel === "STREAMLABS_ALERT")
+                    cardref.innerHTML += msgoutput + "[" + extension_packet.from + "] " + extension_packet.type + "<BR>";
+                else if (data.dest_channel === "DISCORD_CHAT")
+                    cardref.innerHTML += msgoutput + "[" + extension_packet.from + "] " + extension_packet.data + "<BR>";
+                else
+                    cardref.innerHTML += msgoutput + "[" + extension_packet.from + "] " + extension_packet.type + "<BR>";
+            }
         } else
         {
             msgoutput = msgoutput + "[" + data.from + "]" + "[" + data.type + "]:";
@@ -775,6 +814,29 @@
             ));
     }
     // ============================================================================
+    //                           FUNCTION: RequestCredentialsModalsCode
+    // ============================================================================
+    // Desription: Request the Admin Modal code from an extension
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function RequestCredentialsModalsCode(extname)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestCredentialsModalsCode",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    extname),
+                "",
+                extname
+            ));
+    }
+    // ============================================================================
     //                           FUNCTION: CredentialsSubmit
     // ============================================================================
     // Desription: Credential string was submitted
@@ -786,21 +848,30 @@
     {
         // sercurity notes.
         event.preventDefault();
-        extname = document.getElementById("CredentialExtensionName").value;
-        credname = document.getElementById("CredentialName").value;
-        credvalue = document.getElementById("CredentialValue").value;
 
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "UpdateCredentials",
-                serverConfig.extensionname,
-                {
-                    ExtensionName: extname,
-                    CredentialName: credname,
-                    CredentialValue: credvalue
-                },
+        //let fieldsAsArray = $('#' + name + "_modal").serializeArray();
+        let fieldsAsArray = $(event.srcElement).serializeArray();
+        // convert our array of objects into a more usable object
+        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+        
+        for(i=1 ; i <= fieldsAsObject.credentialscount ;  i++)
+        {
+            if (fieldsAsObject["cred" + i + "name"] != "null" && fieldsAsObject["cred" + i + "value"] != "null" &&
+            fieldsAsObject["cred" + i + "name"] != "" && fieldsAsObject["cred" + i + "value"] != "")
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "UpdateCredentials",
+                        serverConfig.extensionname,
+                        {
+                            ExtensionName: fieldsAsObject.extensionname,
+                            CredentialName: fieldsAsObject["cred" + i + "name"],
+                            CredentialValue: fieldsAsObject["cred" + i + "value"]
+                        },
 
-            ));
+                    ));
+            }
+        }
         return false;
     }
     // ============================================================================

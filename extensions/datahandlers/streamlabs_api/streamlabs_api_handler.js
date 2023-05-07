@@ -48,13 +48,17 @@ let localConfig = {
 let serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    enabled: "off"
+    enabled: "off",
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "1",
+    cred1name: "SL_SOCKET_TOKEN",
+    cred1value: "",
 };
 
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
-function start(host, port, heartbeat)
+function start (host, port, heartbeat)
 {
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".start", "host", host, "port", port, "heartbeat", heartbeat);
     if (typeof (heartbeat) != "undefined")
@@ -75,12 +79,12 @@ function start(host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: connectToStreamLabs
 // ============================================================================
-function connectToStreamLabs(creds)
+function connectToStreamLabs (creds)
 {
     // ########################## SETUP STREAMLABS CONNECTION ###############################
     // The token can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token 
     if (!creds.SL_SOCKET_TOKEN)
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set in environment variable");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set");
     else
     {
         try
@@ -95,9 +99,13 @@ function connectToStreamLabs(creds)
             }
             else
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "Streamlabs disabled in config");
+            if (localConfig.StreamLabsSocket == "false")
+            {
+                console.log("connectToStreamLabs: failed to connect")
+            }
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "clientio connection failed:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectToStreamLabs", "clientio connection failed:", err);
             throw ("streamlabs_api_handler.js failed to connect to streamlabs");
         }
     }
@@ -106,7 +114,7 @@ function connectToStreamLabs(creds)
 // ============================================================================
 //                           FUNCTION: onStreamLabsDisconnect
 // ============================================================================
-function onStreamLabsDisconnect(reason)
+function onStreamLabsDisconnect (reason)
 {
     localConfig.status.connected = false;
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsDisconnect", reason);
@@ -118,12 +126,13 @@ function onStreamLabsDisconnect(reason)
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onStreamLabsConnect()
+function onStreamLabsConnect ()
 {
     localConfig.status.connected = true;
     // start our heatbeat timer
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsConnect", "streamlabs api socket connected");
 }
+
 // ============================================================================
 //                           FUNCTION: onStreamLabsEvent
 // ============================================================================
@@ -131,7 +140,7 @@ function onStreamLabsConnect()
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onStreamLabsEvent(data)
+function onStreamLabsEvent (data)
 {
     logger.info(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "received message: ", data);
     // Send this data to the channel for this
@@ -143,8 +152,6 @@ function onStreamLabsEvent(data)
                 data,
                 localConfig.OUR_CHANNEL
             ));
-    else
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "serverConfig is set to off");
 }
 // ########################## DATACENTER CONNECTION #######################
 // ============================================================================
@@ -154,7 +161,7 @@ function onStreamLabsEvent(data)
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterDisconnect", reason);
 }
@@ -165,7 +172,7 @@ function onDataCenterDisconnect(reason)
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onDataCenterConnect()
+function onDataCenterConnect ()
 {
     //store our Id for futre reference
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterConnect", "Creating our channel");
@@ -190,7 +197,7 @@ function onDataCenterConnect()
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
@@ -201,7 +208,7 @@ function onDataCenterMessage(server_packet)
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
             {
-                // we could just assign the values here (ie serverConfig = decoded_packet.message_contents)
+                // we could just assign the values here (ie serverConfig = extension_packet.message_contents)
                 // but if we change/remove an item it would never get removed from the store
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in server_packet.data)
@@ -219,32 +226,34 @@ function onDataCenterMessage(server_packet)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set " , "Extension to '" + serverConfig.extensionname, " Add the following fields: 'SL_SOCKET_TOKEN'");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, " Add the following fields: 'SL_SOCKET_TOKEN'");
         }
 
     }
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
+        let extension_packet = server_packet.data;
         // received a reqest for our admin bootstrap modal code
-        if (decoded_packet.type === "RequestAdminModalCode")
-            SendModal(decoded_packet.from);
+        if (extension_packet.type === "RequestAdminModalCode")
+            SendAdminModal(extension_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+            SendCredentialsModal(extension_packet.from);
         // received data from our admin modal. A user has requested some settings be changedd
-        else if (decoded_packet.type === "AdminModalData")
+        else if (extension_packet.type === "AdminModalData")
         {
-            if (decoded_packet.to === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
             {
                 // lets reset our config checkbox settings (modal will omit ones not checked)
                 serverConfig.enabled = "off";
                 // set our config values to the ones in message
                 for (const [key, value] of Object.entries(serverConfig))
-                    if (key in decoded_packet.data)
-                        serverConfig[key] = decoded_packet.data[key];
+                    if (key in extension_packet.data)
+                        serverConfig[key] = extension_packet.data[key];
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // currently we have the same data as sent so no need to update the server page at the moment
-                // SendModal(server_packet.channel);
+                // SendAdminModal(server_packet.channel);
             }
         }
 
@@ -290,7 +299,7 @@ function onDataCenterMessage(server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ============================================================================
-//                           FUNCTION: SendModal
+//                           FUNCTION: SendAdminModal
 // ============================================================================
 // Desription: Send the modal code back after setting the defaults according 
 // to our server settings
@@ -298,9 +307,9 @@ function onDataCenterMessage(server_packet)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function SendModal(toextension)
+function SendAdminModal (toextension)
 {
-    fs.readFile(__dirname + '/adminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + '/streamlabs_apiadminmodal.html', function (err, filedata)
     {
         if (err)
             throw err;
@@ -336,6 +345,53 @@ function SendModal(toextension)
     });
 
 }
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/streamlabs_apicredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                {
+                    modalstring = modalstring.replace(key + "text", value);
+                }
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -344,7 +400,7 @@ function SendModal(toextension)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -357,7 +413,7 @@ function SaveConfigToServer()
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function heartBeatCallback()
+function heartBeatCallback ()
 {
     let connected = localConfig.status.connected
     if (serverConfig.enabled === "off")

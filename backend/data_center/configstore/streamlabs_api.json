@@ -1,1 +1,1 @@
-{"extensionname":"streamlabs_api","channel":"STREAMLABS_ALERT","enabled":"off"}
+{"extensionname":"streamlabs_api","channel":"STREAMLABS_ALERT","enabled":"on","credentialscount":"1","cred1name":"SL_SOCKET_TOKEN","cred1value":""}

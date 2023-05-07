@@ -268,6 +268,8 @@
                             // set our config values to the ones in message
                             for (const [key, value] of Object.entries(extension_packet.data))
                                 serverConfig[key] = value;
+                            
+                            changeServerLogging(serverConfig.logginglevel)
                             // save our data to the server for next time we run
                             SaveConfigToServer();
                             //lets update our modal
@@ -519,6 +521,7 @@
             // ===========================================================================
             function loadExtensionCards(extensions)
             {
+                extensions.sort()
                 // First we create all the links (these may be changed below if the extension has provided a modal box)
                 var html = "<div>";
                 for (var i = 0; i < extensions.length; i++)
@@ -1034,7 +1037,7 @@
                 let fieldsAsArray = $('#' + name + "_modal").serializeArray();
                 // convert our array of objects into a more usable object
                 var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-                if (fieldsAsObject.logginglevel != "null" && serverConfig.logginglevel != fieldsAsObject.logginglevel)
+                if (fieldsAsObject.logginglevel != "null")
                 {
                     // change server logging level
                     changeServerLogging(fieldsAsObject.logginglevel);
