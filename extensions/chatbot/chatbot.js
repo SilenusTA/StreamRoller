@@ -444,7 +444,12 @@ function processChatMessage (chatdata)
     else if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()) ||
         chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase()))
     {
-        let question = chatdata.message.toLowerCase().replace(localConfig.querytag.toLowerCase(), "").trim()
+        let question = "";
+        if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()))
+            question = chatdata.message.toLowerCase().replace(localConfig.querytag.toLowerCase(), "").trim()
+        else
+            question = chatdata.message.toLowerCase().replace("hey chatbot", "").trim()
+
         //console.log("******* CHATBOT Question asked in chat *******");
         //console.log(question);
         callOpenAI(question, localConfig.settings.questionmodel)
