@@ -11,5 +11,6 @@ tmp/
 php/
 test-ext/
 credentialstore/
+configstore/
 datastore/
 tempfiles/
