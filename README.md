@@ -80,7 +80,7 @@ Currently (as we are using StreamLabsAPI) you will receive alerts for both Twitc
 ## Step 1: Install node
 Streamroller needs the [node.js](https://nodejs.org/en/download/) webserver installed to run. It is recommended to use [VSCode](https://code.visualstudio.com/download) to modify/change/add extra features. This VSCode editor provides a lot of nice features for development.
 ## Step 2: Download Streamroller
-Grab a copy of this repo and store it somewhere 
+Grab a copy of this repo and unzip it somewhere ([Streamroller Download](https://github.com/SilenusTA/StreamRoller/archive/refs/heads/master.zip))
 ## Step 3: Intstall
 cd into the StreamRoller directory and run the following commands
 
@@ -106,17 +106,13 @@ Note: Credentials are set through the admin webpage http://localhost:3000/adminp
 
 If connecting to twitch/discord/youtube etc you will need to configure your login credentials/tokens etc as required by the extensions
 
-Most extensions require these keys/tokens to be set from the admin page of streamroller in the following format (note you may need to restart the StreamRoller service when changing them depending on the extension, most shouldn't need a restart though)
+Most extensions require these keys/tokens to be set from the admin settings popup for each extension (note you may need to restart the StreamRoller service when changing them depending on the extension, most shouldn't need a restart though)
 
-First check the extension readme file for the required credentials needed. ie for twitter you need 4 keys twitterAPIkey twitterAPISecret, 
-twitterAccessToken, TwitterAccessTokenSecret
+To add credentials enter them on the admin page by clicking on the extension you wish to authorize.
 
-To add these enter them on the admin page (case sensitive).
-1) Extension: The name of the extension this credential belongs to. ie twitchchat
-2) Name: The key name, ie twitterAPIkey
-3) Value: the value for the key.
+<img src="docs/images/credentials_1.png" alt="admin page" width="600">
 
-![screenshot](docs/images/credentials.png)
+<img src="docs/images/credentials_2.png" alt="admin page" width="600">
 
 # Current Functionality
 At the time of writing the system has twitchchat, discord, twitter, streamlabs (for alerts etc) and obs datahandling extensions, a chatbot and demo overlay (if you want to use the system for your overlay). These extensions sit behind an API so that controller extensions like the existing Adminpage web page/Live Portal web page/and demo obs overlay files can easily send and received whatever messages they wish. 

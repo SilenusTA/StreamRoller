@@ -14,19 +14,20 @@
         <h1>Admin</h1>
         <!--Row with two equal columns-->
         <div class="row border bg-light">
-            <!-- DataCenter message scrollable box -->
-            <div class="col-md-8 border bg-light">
-                DataCenter messages
-                <%- include('../cards/MessagesCard'); %>
-            </div>
-            <div class="col-md-4 border bg-light">Channels and Extensions
-                <%- include('../cards/SettingsListCard'); %>
+            <div class="col-md-6 border bg-light">
                 <%- include('../cards/CredentialsListCard'); %>
-                <%- include('../cards/ChannelsListCard'); %> 
+            </div>
+            <div class="col-md-6 border bg-light">
+                <%- include('../cards/SettingsListCard'); %>
             </div>
         </div>
+        
+        <div class="col border bg-light" style="display: none; visibility: hidden;">DataCenter messages
         <div class="row border bg-light">Chat
             <%- include('../cards/ChatMessagesCard'); %>
+        </div>
+            <%- include('../cards/MessagesCard'); %>
+            <%- include('../cards/ChannelsListCard'); %> 
         </div>
         <!-- end container -->
     </main>

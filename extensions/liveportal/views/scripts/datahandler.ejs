@@ -534,7 +534,7 @@
                         RequestAdminModalsCode(extensions[i]);
                     }
 
-                    html += "<div id='" + extensions[i] + "_display' style='display: none;' > <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                    html += "<div  id='" + extensions[i] +"_visibility_admincard' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
                     html += " <span id='" + extensions[i] + "'>"
                     html += extensions[i] + "</span></div>";
 
@@ -660,7 +660,7 @@
                             parseExtensionModalData(xname);
                         return false;
                     });
-
+                    document.getElementById(xname + "_visibility_admincard").style.display="block"
                     adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
 
                 }
