@@ -9,6 +9,15 @@
         <form>
             <div id="ChatMessagesCardText" style="overflow-y: auto; height: 350px;"></div>
             <div id="ChatMessageGroup" class="input-group">
+                <div id="ChatMessageDropdown" class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="chatuserselect" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                        No Users
+                    </button>
+                    <ul id="chatuserchattername" class="dropdown-menu" aria-labelledby="chatuserselect">
+    
+                    </ul>
+                </div>
                 <input id="chatInputText" class="form-control card bg-light text-dark border-secondary" type="text"
                     placeholder="">
                 <span class="input-group-btn">

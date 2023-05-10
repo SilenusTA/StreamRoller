@@ -9,76 +9,105 @@
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
-    // Switch colour schemes from dark to light. Only works on elements with the classes ...
-    //  *-light, *.light, *-dark, *.dark and body tags light, dark
-    if (localStorage.getItem("darkmode") == null)
-        localStorage.setItem('darkmode', "false");
-    else
-        if (localStorage.getItem("darkmode") === "true")
-            toggleDarkMode();
-
+    let modeDark = localStorage.getItem("darkmode")
+    // check for no stored value
+    if(!modeDark)
+        modeDark="false";
+    window.onload = setDarkMode(modeDark)
+    
+    // on click handler for switching dark mode
     $('.darkswitch').click(() =>
     {
-        toggleDarkMode();
-        if (localStorage.getItem("darkmode") === "true")
-            localStorage.setItem('darkmode', "false");
+        if(modeDark == "true")
+            modeDark = "false"
         else
-            localStorage.setItem('darkmode', "true")
+            modeDark = "true"
+        localStorage.setItem('darkmode', modeDark);
+        setDarkMode(modeDark);
     });
+
     // ============================================================================
-    //                           FUNCTION: toggleDarkMode
+    //                           FUNCTION: refreshDarkMode
     // ============================================================================
-    // Desription: toggles the page into dark/light mode
+    // Desription: refreshes the current mode (used whan page is dynamically updated)
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
-    // ===========================================================================
-    function toggleDarkMode()
+    // ============================================================================
+    function refreshDarkMode()
     {
+        setDarkMode(localStorage.getItem("darkmode"))
+    }
+    // ============================================================================
+    //                           FUNCTION: setDarkMode
+    // ============================================================================
+    // Desription: sets the LightDark mode theme
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ============================================================================
+    function setDarkMode(modeDark)
+    {
+        // both arrays need to match up elements in the same indix. ie index 2 should be bg-dark and bg-light to allow swapping
+        let darkclasses = ['dark','bg-dark','navbar-dark','text-light'];
+        let lightclasses = ['light','bg-light','navbar-light','text-dark'];
+        
+        // get all the dark and light class items
         $([".light [class*='-light']", ".dark [class*='-dark']"]).each((i, ele) =>
         {
+            //for each item in the class ...
             $(ele).each(function ()
             {
-                let classes = "";
+                let tag = ""; // class we are currently working on
+                let newclasses = ""; // list of new classes to replace the existing ones
+                let match = null // gets set to a new class if we have found a light/dark class
                 for (i = 0; i < $(this)[0].classList.length; i++)
                 {
-                    switch ($(this)[0].classList[i].toString())
+                    match = null
+                    tag = $(this)[0].classList[i].toString()
+                    // if in dark mode
+                    if(modeDark=="true")
                     {
-                        case 'light':
-                            classes = classes + " dark";
-                            break;
-                        case 'bg-light':
-                            classes = classes + " bg-dark";
-                            break;
-                        case 'navbar-light':
-                            classes = classes + " navbar-dark";
-                            break;
-                        case 'text-light':
-                            classes = classes + " text-dark";
-                            break;
-                        case 'dark':
-                            classes = classes + " light";
-                            break;
-                        case 'bg-dark':
-                            classes = classes + " bg-light";
-                            break;
-                        case 'navbar-dark':
-                            classes = classes + " navbar-light";
-                            break;
-                        case 'text-dark':
-                            classes = classes + " text-light";
-                            break;
-                        default:
-                            classes = classes + " " + $(this)[0].classList[i].toString();
+                        lightclasses.forEach((element,index,arr) =>
+                        {
+                            if(element == tag)
+                                match=darkclasses[index]
+                        })
+                        if (match)
+                            newclasses = newclasses + " " + match;
                     }
+                    // if in light mode
+                    else
+                    {
+                        darkclasses.forEach((element,index,arr) =>
+                        {
+                            if(element == tag)
+                                match=lightclasses[index]
+                        })
+                        if (match)
+                            newclasses = newclasses + " " + match;
+                    }
+                    // if the tag didn't match just copy the original tag
+                    if(!match)
+                        newclasses = newclasses + " " + $(this)[0].classList[i].toString();
                 }
-
-                $(this)[0].classList.value = classes;
+                // change the classlist to the new modified oen
+                $(this)[0].classList.value = newclasses;
             })
         });
-        $('body').toggleClass('light dark');
-        $('body').toggleClass('bg-light bg-dark');
-        $('body').toggleClass('text-light text-dark');
-
+        
+        // set the body tags (these don't get read by the above code)
+        if(modeDark=="true")
+        {
+            $('body').addClass('dark').removeClass('light');
+            $('body').addClass('bg-dark').removeClass('bg-light');
+            $('body').addClass('text-light').removeClass('text-dark');
+        }
+        else
+        {
+            $('body').addClass('light').removeClass('dark');
+            $('body').addClass('bg-light').removeClass('bg-dark');
+            $('body').addClass('text-dark').removeClass('text-light');
+        }
     }
 </script>

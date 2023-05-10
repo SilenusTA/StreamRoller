@@ -33,7 +33,8 @@
                 cloudbotredemption: "off",
                 merch: "off",
                 bits: "off",
-                donations: "off"
+                donations: "off",
+                chatAsUsername : "user"
             };
             const localConfig =
             {
@@ -158,6 +159,7 @@
                     RequestChList();
                     RequestExtList();
                     RequestRandomFact();
+                    RequestTwitchAccountNames("twitchchat");
                     RequestChatBuffer("twitchchat");
                     RequestChatBuffer("discordchat");
                 }, 2000);
@@ -296,6 +298,13 @@
                                 displayChatMessages(extension_packet.data)
 
                             )
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Twitch chat buffer
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "UserAccountNames")
+                    {
+                        processTwitchAccountNames(extension_packet)
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED Discord chat buffer
@@ -594,7 +603,7 @@
             // ============================================================================
             //                           FUNCTION: addModal
             // ============================================================================
-            // Desription: Add the admin code from the extension to the link
+            // Desription: Add the modal code from the extension to the link
             // Parameters: 
             //          xname - name of extension
             //          data  - data to add
@@ -609,7 +618,7 @@
                     let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
                     // grab the <li> element for this extension
                     let extLiTag = document.getElementById(xname);
-                    document.getElementById(xname + "_display").style.display = "";
+                    document.getElementById(xname + "_visibility_admincard").style.display = "";
                     // remove the previous event listener (if there was one)
                     $('#' + xname + "_modal").off('submit');
                     //set the element contents to a blank extension placeholder
@@ -639,22 +648,6 @@
                             // As we have some updateded data we need to make sure that we refresh ourselves in case
                             // we have changed some settings (ie buttons to be shown)
                             ParseOBSScenesList(localConfig.OBSSceneslist);
-                            // send the obs message with the settings just in case they had changed or just to refresh them
-                            /*sr_api.sendMessage(DataCenterSocket,
-                                sr_api.ServerPacket(
-                                    "ExtensionMessage",
-                                    serverConfig.extensionname,
-                                    sr_api.ExtensionPacket(
-                                        "ChangeScene",
-                                        serverConfig.extensionname,
-                                        scenename,
-                                        "",
-                                        "obs"
-                                    ),
-                                    "",
-                                    "obs"
-                                )
-                            )*/
                         }
                         else
                             parseExtensionModalData(xname);
@@ -664,6 +657,9 @@
                     adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
 
                 }
+                // need to update the mode in case we have received a light mode 
+                // modal and we are in dark mode
+                refreshDarkMode();
             }
             // ============================================================================
             //                           FUNCTION: setExtensionStatus
@@ -676,7 +672,7 @@
                     document.getElementById(extension + "_status").style = "color:orange";
                 else
                     document.getElementById(extension + "_status").style = "color:green";
-                document.getElementById(extension + "_display").style.display = "";
+                document.getElementById(extension + "_visibility_admincard").style.display = "";
             }
             // ============================================================================
             //                           FUNCTION: UpdateOBSDefaultButtons
@@ -1164,6 +1160,7 @@
                 let counter = 0
                 // as we have received a bufer lets delete the old data
                 document.getElementById("ChatMessagesCardText").innerHTML = "";
+                
                 localConfig.chatMessageBuffer = [];
                 chatdata.forEach(ele => 
                 {
@@ -1171,6 +1168,58 @@
                 })
                 localConfig.chatMessageBuffer.push("--------- buffer loaded --------");
 
+            }
+            // ============================================================================
+            //                           FUNCTION: processTwitchAccountNames
+            // ============================================================================
+            // Desription: Processes a message from the data center with the previous chat buffer
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            async function processTwitchAccountNames(extension_packet)
+            {
+                // as we have received a bufer lets delete the old data
+                let newchatternames = ""
+                // if we have a username set in our config and that is in the current list of names lets use that one
+                if(serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
+                {
+                    document.getElementById("chatuserselect").innerHTML = serverConfig.chatAsUsername;
+                }
+                // if we don't have a valid username then use the first one in the list passed in
+                else if(extension_packet.data && extension_packet.data[0])
+                {
+                    document.getElementById("chatuserselect").innerHTML = extension_packet.data[0];
+                    serverConfig.chatAsUsername = extension_packet.data[0];
+                }
+                else
+                    document.getElementById("chatuserselect").innerHTML= "Select a User to chat as";
+
+                twitchnamedropdowns = document.getElementById("chatuserchattername");
+                for (const [key, value] of Object.entries(extension_packet.data)) 
+                {
+                    newchatternames += "<li><a id='"+value+"_user_select' class='dropdown-item' href='#' value="+value+" onClick='userDropdownChanged( this )'>"+value+"</a></li>"
+                }
+                twitchnamedropdowns.innerHTML = newchatternames
+
+            }
+             // ============================================================================
+            //                           FUNCTION: userDropdownChanged
+            // ============================================================================
+            // Desription: user has changed the account in the twitch chat box
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function userDropdownChanged(e)
+            {
+                document.getElementById("chatuserselect").innerHTML = e.innerHTML;
+                // if we have changed users update the config to remember it
+                if(serverConfig.chatAsUsername != e.innerHTML)
+                {
+                    serverConfig.chatAsUsername = e.innerHTML;
+                    SaveConfigToServer()
+                }
             }
             // ============================================================================
             //                           FUNCTION: processDiscordChatBuffer
@@ -1423,7 +1472,6 @@
                         serverConfig.extensionname,
                     ));
             }
-
             // ============================================================================
             //                           FUNCTION: RequestChatBuffer
             // ============================================================================
@@ -1439,6 +1487,29 @@
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
                             "RequestChatBuffer",
+                            serverConfig.extensionname,
+                            "",
+                            "",
+                            extname),
+                        "",
+                        extname
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: RequestTwitchAccountNames
+            // ============================================================================
+            // Desription: Get our usernames from the twitch extension (so we can post as them)
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestTwitchAccountNames(extname)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestAccountNames",
                             serverConfig.extensionname,
                             "",
                             "",
@@ -1669,12 +1740,12 @@
                             "SendChatMessage",
                             serverConfig.extensionname,
                             // need to read accounts from twitchchat ext and give an option to chose who to send the message as
-                            {account : "user",message : msg},
+                            {account : serverConfig.chatAsUsername ,message : msg},
                             "",
                             "twitchchat"),
                         "",
                         "twitchchat"
-                    ));
+                    ));         
             }
             // ============================================================================
             //                           FUNCTION: changeDiscordListeningChannel

@@ -3,43 +3,105 @@
     <div class="modal-content bg-light text-dark">
         <div class="modal-header">
             <h5 class="modal-title">Chatbot Settings</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close bg-light" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <p>Chatbot adds AI responces to the bot (add openAIkey and key name to use on the admin page for this extension "chatbot")
-            </p>
             <div class="form-group invisible">
-                <!-- name of the extension. used to allow the web page to know who to send the data back to -->
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
                     tabindex="-1" />
-                <!-- type of code that this form is fore. This is defined by the webpage that will request and use this
-                modal to display data. When a modal is requested (for this one the message is RequestAdminModal) this
-                is the message type that needs to be sent back with this file as the data field -->
                 <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
-                <!-- This is the message type that the webpage will send when it processes the data from a form submit
-                on this page. The message will be sent to the extension name above, with the message type shown here and 
-                the form data in the data field of the message -->
                 <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
-                <!-- This is the channel to be sent on. not currently used in this form submit as it is sent to the 
-                extension name socket directly but might be used in future so for now it is left here -->
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
+            
+            <p>Chatbot is a ChatGPT powered chatbot that can be asked questions or just hang out in chat talking with users. 
+            </p>
+            
             <!-- fields for user interaction -->
+            <!-- enable/disable chatbot -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled" chatbotenabledchecked>
-                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot</label>
+                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot (joins in the conversation in chat)</label>
                 </div>
             </div>
             <div class="form-group">
-                <label for="boticon" class="col-form-label">emote that is used at the start of each opanAI responce in chat</label>
-                <input type="text" name="boticon" class="form-control" id="boticon"
-                    value="boticontext">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled" questionbotenabledchecked>
+                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot (chat can ask questions directly)</label>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="chatBotPersonality" class="col-form-label">Chatbot personality. Use 'CHATBOTNAME' for the bot name. This will be replaced with the bot name that is used in the chat extension</label>
-                <input type="text" name="chatBotPersonality" class="form-control" id="chatBotPersonality"
-                    value="chatBotPersonalitytext">
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="chatbotquerytag" class="">message to directly ask a question in chat</label>
+                    <input type="text" name="chatbotquerytag"  id="chatbotquerytag" value="chatbotquerytagtext">
+                </div>
+            </div>
+            
+            <hr>
+            <h5 class="modal-title">Activity level (how much the bot responds)</h5>
+            Timeout for bot.
+            <br>A random time will be selected between min and max, after chatting the bot will sleep for this random amount of time.
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="chatbotTimerMin" class="">Min (minutes) : </label>
+                    <input type="text" name="chatbotTimerMin"  id="chatbotTimerMin" value="chatbotTimerMintext">
+                    <label for="chatbotTimerMax" class=""> Max (minutes) : </label>
+                    <input type="text" name="chatbotTimerMax" id="chatbotTimerMax" value="chatbotTimerMaxtext">
+                </div>
+            </div>
+            <br>Message history
+            <br>This is how many messages to send to the AI bot. ie 5 means collect the next 5 messages (after the timeout above) 
+                and send them to get a response
+          
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="chatbotMessageMaxLines" class="">Num of messages : </label>
+                    <input type="text" name="chatbotMessageMaxLines"  id="chatbotMessageMaxLines" value="chatbotMessageMaxLinestext">
+                </div>
+            </div>
+
+
+            <hr>
+            <h5 class="modal-title">Display</h5>
+            Select an emote that is used at the start of each opanAI responce in chat to avoid confusion that these messages are from a real person
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="boticon" class="col-form-label">Emote : </label>
+                    <input type="text" name="boticon" id="boticon" value="boticontext">
+                </div>
+            </div>
+
+            <HR>
+            <h5 class="modal-title">Personality and Behaviour</h5>
+            <HR>Describe the personality of the bot so that the AI can try and mimic this in it's responses
+            <div class="form-group row-2">
+                <label for="chatBotPersonality" class="col-form-label" >Chatbot personality.</label>
+                <input type="text" name="chatBotPersonality" class="form-control" id="chatBotPersonality" value="chatBotPersonalitytext">
+            </div>
+            <HR>Give some examples of how you expect the bot to respond to the following questions
+            <div class="form-group row-2">
+                <input type="hidden" name="chatBotBehaviour0" class="form-control" value="chatBotBehaviour0text" tabindex="-1" />
+                <label for="chatBotBehaviour1" class="col-form-label">chatBotBehaviour0text</label>
+                <input type="text" name="chatBotBehaviour1" class="form-control" id="chatBotBehaviour1" value="chatBotBehaviour1text">
+            </div>
+            <div class="form-group row-2">
+                <input type="hidden" name="chatBotBehaviour2" class="form-control" value="chatBotBehaviour2text" tabindex="-1" />
+                <label for="chatBotBehaviour3" class="col-form-label" value="chatBotBehaviour3text">chatBotBehaviour2text</label>
+                <input type="text" name="chatBotBehaviour3" class="form-control" id="chatBotBehaviour3" value="chatBotBehaviour3text">
+
+            </div>
+            <div class="form-group row-2">
+                <input type="hidden" name="chatBotBehaviour4" class="form-control" value="chatBotBehaviour4text" tabindex="-1" />
+                <label for="chatBotBehaviour5" class="col-form-label" value="chatBotBehaviour5text" >chatBotBehaviour4text</label>
+                <input type="text" name="chatBotBehaviour5" class="form-control" id="chatBotBehaviour5" value="chatBotBehaviour5text">
+
+            </div>
+            <div class="form-group row-2">
+                <input type="hidden" name="chatBotBehaviour6" class="form-control" value="chatBotBehaviour6text" tabindex="-1" />
+                <label for="chatBotBehaviour7" class="col-form-label">chatBotBehaviour6text</label>
+                <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7" value="chatBotBehaviour7text">
+
             </div>
         </div>
         <!-- Standard footer with submit and cancel buttons -->

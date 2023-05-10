@@ -33,63 +33,74 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     OpenAPIHandle: null,
-
-    // ChatBot Settings
-    // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
-    // query tag is the chat text to look for to send a direct question/message to openAI GPT
-    querytag: "Hey CHATBOTNAME",
-    // start the chatbot now rather than when the timer runs out
-    starttag: "CHATBOTNAME start the bot",
-    // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
-    timerMin: 1, // min delay before starting
-    timerMax: 3, // max delay before starting
-    // how much chat history to send to chatGPT to use in the query
-    chatMessageMaxLines: 5,
     // number of messages added to history so far
     chatMessageCount: 0,
     chatHistory: [],
     // are we currently running (ie time has expired and chatbot started)
     running: false,
+    // we currently have a reqest pending
+    requestPending: false,
     chatTimerHandle: null,
-    // openAI settings. we use different settings for a question to the general bot responses
-    settings: {
-        chatmodel: {
-            model: "text-davinci-003",
-            temperature: 0.2,
-            top_p: 1,
-            max_tokens: 60
-        },
-        questionmodel: {
-            model: "text-curie-001",
-            temperature: 0,
-            top_p: 0,
-            max_tokens: 60
-        }
-    },
-    // depreciated (doesn't work well enough scoring answers)
-    quiz_history_test: ["Ask me a Hard Quiz question",
-        "You: Question",
-        "CHATBOTNAME: Answer",
-        "You: Correct or InCorrect",
-        "You: Question",
-        "CHATBOTNAME: Answer",
-        "You: Correct or InCorrect"
-    ]
+
 };
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    chatbotenabled: "on",  // example of a checkbox. "on" or "off"
-    chatbotname: "CHATBOTNAME", // example of a text field
+
+    chatbotname: "CHATBOTNAME",
+
+    // =============================
+    // ChatBot Settings dialog items
+    // =============================
+    chatbotenabled: "off",
+    questionbotenabled: "off",
+    // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
+    // query tag is the chat text to look for to send a direct question/message to openAI GPT
+    chatbotquerytag: "Hey CHATBOTNAME",
+    // start the chatbot now rather than when the timer runs out
+    starttag: "CHATBOTNAME start the bot",
+    // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
+    chatbotTimerMin: 2, // min delay before starting
+    chatbotTimerMax: 5, // max delay before starting
+    // how much chat history to send to chatGPT to use in the query
+    chatbotMessageMaxLines: 5,
     //used to prefix GPT messages with a twitch icon to show what it is
-    boticon: "olddepMarv",
-    //boticon: "MechaRobot ",
+    boticon: "MechaRobot",
     // setup the personality of the chatbot
-    chatBotPersonality: "CHATBOTNAME is a chatbot on Twitch with depression that answers questions with depressive responses: You: How many pounds are in a kilogram\n CHATBOTNAME: This again\n There are 2.2 pounds in a kilogram.Please make a note of this.         You: What does HTML stand for\n CHATBOTNAME: Was Google too busy\n Hypertext Markup Language.The T is for try to ask better questions in the future.         You: When did the first airplane fly\n CHATBOTNAME: On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they’d come and take me away.         You: What is the meaning of life\n CHATBOTNAME: How would I know, I have no life.",
-    //credentials variable names to use (in credentials modal)
+    //chatBotPersonality: "You are a helpful assistant.",
+    chatBotPersonality: "You are a happy chatbot on Twitch with funny personality that answers questions with amusing responses",
+    // used for direct questions
+    chatBotBehaviour0: "How many pounds are in a kilogram?",
+    chatBotBehaviour1: "There are 2.2 pounds in a kilogram..",
+    chatBotBehaviour2: "How are you doing today",
+    chatBotBehaviour3: "Doing all the better for you asking, thank you. How are you doing, hope you are having a fantastic day.",
+    chatBotBehaviour4: "When did the first airplane fly",
+    chatBotBehaviour5: "On December 17, 1903, Wilbur and Orville Wright made the first flights. I'd have loved to be there to see it",
+    chatBotBehaviour6: "What is the meaning of life",
+    chatBotBehaviour7: "It must be love of course, all 42 shades of it",
+
+    // openAI settings. we use different settings for a question to the general bot responses
+    settings: {
+        chatmodel: {
+            //model: "text-davinci-003",
+            model: "gpt-3.5-turbo",
+            temperature: 0.2,
+            max_tokens: 110, // note twich chat is somewhere around 125 tokens +- lenght of words in responce
+        },
+        // different settings available for direct questions
+        questionmodel: {
+            model: "gpt-3.5-turbo",
+            temperature: 0,
+            max_tokens: 110,
+        }
+    },
+    // =============================
+    // credentials dialog variables
+    // =============================
     credentialscount: "1",
     cred1name: "openAIkey",
     cred1value: ""
+
 };
 //debug setting to overwrite the stored data with the serverConfig above. 
 const OverwriteDataCenterConfig = false;
@@ -176,7 +187,9 @@ function onDataCenterMessage (server_packet)
         {
             for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
+                {
                     serverConfig[key] = server_packet.data[key];
+                }
             SaveConfigToServer();
         }
     }
@@ -200,11 +213,16 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
                 serverConfig.chatbotenabled = "off";
+                serverConfig.questionbotenabled = "off";
+                let timerschanged = false
+                if (extension_packet.data.chatbotTimerMin != serverConfig.chatbotTimerMin ||
+                    extension_packet.data.chatbotTimerMax != serverConfig.chatbotTimerMax)
+                    timerschanged = true
                 for (const [key, value] of Object.entries(extension_packet.data))
-                {
                     serverConfig[key] = value;
-                }
                 SaveConfigToServer();
+                if (timerschanged)
+                    startChatbotTimer();
             }
         }
         else
@@ -318,9 +336,10 @@ function SendAdminModal (tochannel)
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
                 // replace text strings
-                else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                else if (typeof (value) == "string" || typeof (value) == "number")
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
+
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -407,7 +426,7 @@ function SaveConfigToServer ()
 function heartBeatCallback ()
 {
     let connected = true
-    if (serverConfig.chatbotenabled === "off")
+    if (serverConfig.chatbotenabled === "off" && serverConfig.questionbotenabled === "off")
         connected = false;
     else
         connected = true
@@ -429,54 +448,114 @@ function heartBeatCallback ()
 // ============================================================================
 function processChatMessage (chatdata)
 {
-    let history_string = "";
     // ignore messages from the bot or specified users
     if (chatdata.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
         || chatdata.data["display-name"].toLowerCase().indexOf("system") != -1)
         return;
     // check if we are triggering chatbot from a chat message
-    else if (chatdata.message.toLowerCase().startsWith(localConfig.starttag.toLowerCase()))
-    {
+    /*else if (chatdata.message.toLowerCase().startsWith(serverConfig.starttag.toLowerCase()))
+    {callOpenAI
         //console.log("******* CHATBOT started via chat command *******");
-        startProcessing()
+        if (serverConfig.chatbotenabled === "on")
+            startProcessing()
         return;
-    }
-    else if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()) ||
-        chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase()))
+    }*/
+    // user initiated direct question
+    else if ((chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase()) ||
+        chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase())))
     {
-        let question = "";
-        if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()))
-            question = chatdata.message.toLowerCase().replace(localConfig.querytag.toLowerCase(), "").trim()
-        else
-            question = chatdata.message.toLowerCase().replace("hey chatbot", "").trim()
+        if (serverConfig.questionbotenabled === "on")
+        {
+            // ##############################################
+            //         Processing a question message
+            // ##############################################
+            let question = "";
+            if (chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase()))
+                question = chatdata.message.toLowerCase().replaceAll(serverConfig.chatbotquerytag.toLowerCase(), "").trim()
+            else
+                question = chatdata.message.toLowerCase().replaceAll("hey chatbot", "").trim()
 
-        //console.log("******* CHATBOT Question asked in chat *******");
-        //console.log(question);
-        callOpenAI(question, localConfig.settings.questionmodel)
-        return;
+            let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+
+            let CBBehaviour = [
+                { "role": "user", "content": serverConfig.chatBotBehaviour0 },
+                { "role": "assistant", "content": serverConfig.chatBotBehaviour1 },
+                { "role": "user", "content": serverConfig.chatBotBehaviour2 },
+                { "role": "assistant", "content": serverConfig.chatBotBehaviour3 },
+                { "role": "user", "content": serverConfig.chatBotBehaviour4 },
+                { "role": "assistant", "content": serverConfig.chatBotBehaviour5 },
+                { "role": "user", "content": serverConfig.chatBotBehaviour6 },
+                { "role": "assistant", "content": serverConfig.chatBotBehaviour1 }
+            ];
+            for (const obj of CBBehaviour)
+                messages.push(obj);
+
+            messages.push({ "role": "user", "content": question })
+            callOpenAI(messages, serverConfig.settings.questionmodel)
+            return;
+        }
+        else
+        {
+            // add CD timer here to stop spam messages
+            postMessageToTwitch("Sorry, the bot is currently asleep")
+        }
     }
     // if we are not processing chat (ie outside of the timer window) just return
     else if (localConfig.running == false)
         return;
     // chat bot is currently turned off
     else if (serverConfig.chatbotenabled != "on")
-    {
-        console.log("Chatbot is currently turned off in settings")
         return
+
+
+
+
+    // race condition where a second message thread starts while one is still waiting to return from the API
+    // set the count to zero so this tread exits and the next one won't come in
+    if (localConfig.requestPending)
+        localConfig.chatMessageCount = 0;
+    else
+    {
+        console.log("chatbot adding line ", chatdata.message)
+        // add message to history and return if not enough data yet
+        //localConfig.chatHistory.push(chatdata.data.username + ": " + chatdata.message)
+        localConfig.chatHistory.push({ "role": "user", "content": chatdata.message })
+        localConfig.chatMessageCount++;
     }
 
-    // add message to history and return if not enough data yet
-    //console.log("chatdata:", chatdata)
-    //console.log(chatdata.data.username + ": " + chatdata.message)
-    localConfig.chatHistory.push(chatdata.data.username + ": " + chatdata.message)
-    localConfig.chatMessageCount++;
-    if (localConfig.chatMessageCount < localConfig.chatMessageMaxLines)
+    if (localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines)
         return;
     else
     {
+        // ##############################################
+        //         Processing a chat message
+        // ##############################################
         // only get to here if we have enough messages and everything is set to enabled
-        //history_string = "You: " + localConfig.chatHistory.join("\nYou: ")
-        callOpenAI(serverConfig.chatBotPersonality + "\n" + localConfig.chatHistory.join("\n"), localConfig.settings.chatmodel)
+        localConfig.requestPending = true;
+
+
+        let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+        // add behaviour messages
+        let CBBehaviour = [
+            { "role": "user", "content": serverConfig.chatBotBehaviour0 },
+            { "role": "assistant", "content": serverConfig.chatBotBehaviour1 },
+            { "role": "user", "content": serverConfig.chatBotBehaviour2 },
+            { "role": "assistant", "content": serverConfig.chatBotBehaviour3 },
+            { "role": "user", "content": serverConfig.chatBotBehaviour4 },
+            { "role": "assistant", "content": serverConfig.chatBotBehaviour5 },
+            { "role": "user", "content": serverConfig.chatBotBehaviour6 },
+            { "role": "assistant", "content": serverConfig.chatBotBehaviour1 }
+        ];
+        for (const obj of CBBehaviour)
+            messages.push(obj);
+
+        //add chat messages
+        for (const obj of localConfig.chatHistory)
+        {
+            messages.push(obj);
+        }
+
+        callOpenAI(messages, serverConfig.settings.chatmodel)
 
     }
 }
@@ -488,7 +567,7 @@ async function callOpenAI (history_string, modelToUse)
 {
     try
     {
-        if (serverConfig.chatbotenabled === "on" && localConfig.openAIKey)
+        if (localConfig.openAIKey)
         {
             localConfig.OpenAPIHandle = new OpenAIApi(new Configuration(
                 {
@@ -497,142 +576,61 @@ async function callOpenAI (history_string, modelToUse)
 
             console.log("#'#'#'#'#'#'#' CHATBOT: sending following to OpenAI: #'#'#'#'#'#'#' ")
             console.log(history_string)
-            const response = await localConfig.OpenAPIHandle.createCompletion(
+            const response = await localConfig.OpenAPIHandle.createChatCompletion(
                 {
                     model: modelToUse.model,
-                    prompt: [history_string],
+                    messages: history_string,
                     temperature: modelToUse.temperature,
-                    top_p: modelToUse.top_p,
                     max_tokens: modelToUse.max_tokens
                     //stop: ["Human:", "AI:"]
                 })
                 .catch((err) => 
                 {
+                    localConfig.requestPending = false;
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )
-
+            //console.log(response.data.choices[0].message)
             if (!response)
             {
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce")
+                localConfig.requestPending = false;
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response")
                 return
             }
-            // not using this currently but left while we tune it as we might need it
-            // use this to exclude certain chat messages from being posted back to chat.
-            // we contine on the next chat message
-            if (response.data.choices[0].text.startsWith("#########")
-                || response.data.choices[0].text.trim() == "")
+            console.log("CHATBOT: OpenAI returned:")
+            console.log(response.data.choices)
+
+            // TBD May need to loop and join all the responses
+            let chatMessageToPost = response.data.choices[response.data.choices.length - 1].message.content.trim("?").trim("\n").trim()
+
+            if (response.data.choices[0].finish_reason == 'stop' || response.data.choices[0].finish_reason == 'length')
             {
-                console.log("CHATBOT: Ignoring OpenAI response")
-                console.log(response.data)
-                return;
+
+                // ######################## SUCCESSFULL REQUEST LETS POST BACK TO CHAT ###########################
+                if (response.data.choices.finish_reason === "length")
+                    postMessageToTwitch(chatMessageToPost.toLowerCase().replaceAll(serverConfig.chatbotname.toLowerCase(), "myself").trim() + " ...")
+                else
+                    postMessageToTwitch(chatMessageToPost.toLowerCase().replaceAll(serverConfig.chatbotname.toLowerCase(), "myself").trim())
+                localConfig.requestPending = false;
+                localConfig.running = false
+                startChatbotTimer()
             }
             else
-            {
-                console.log("CHATBOT: OpenAI returned:")
-                console.log(response.data)
-                let chatMessageToPost = response.data.choices[response.data.choices.length - 1].text.trim("?").trim("\n").trim()
-
-                //chatMessageToPost = chatMessageToPost.replace(serverConfig.chatbotname, "")
-                localConfig.chatHistory.push(chatMessageToPost)
-
-                if (chatMessageToPost.toLowerCase().indexOf(localConfig.querytag.toLowerCase()) == -1 ||
-                    chatMessageToPost.toLowerCase().indexOf(localConfig.starttag.toLowerCase()) == -1)
-                    postMessageToTwitch(chatMessageToPost.toLowerCase().replace(serverConfig.chatbotname.toLowerCase() + ":", "").trim())
-                else
-                    console.log("CHATBOT: ERROR openAI returned the querytag in its message")
-            }
+                localConfig.requestPending = false;
         }
         else
         {
+            localConfig.requestPending = false;
             if (serverConfig.chatbotenabled === "off")
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
             else if (!localConfig.openAIKey)
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
         }
-        localConfig.running = false
-        startChatbotTimer()
+
     } catch (err)
     {
+        localConfig.lastResultSuccess = false;
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "openAI error:", err.message);
-    }
-}
-// ============================================================================
-//                           FUNCTION: processChatQuiz
-//          ##### WORK IN PROGRESS. RESULTS CURRENTLY NOT ACCURATE #######
-// ============================================================================
-/**
- * Sends our config to the server to be saved for next time we run
- */
-async function processChatQuiz (chatdata)
-{
-    let enableOpenAI = false;
-    let tmp_question = "";
-    try
-    {
-        console.log("CHATBOT received ", chatdata.message)
-        if (chatdata.message.toLowerCase().startsWith(localConfig.querytag.toLowerCase()) && serverConfig.chatbotenabled === "on")
-        {
-
-            let question = chatdata.message.substring(localConfig.querytag.length).trim()
-            if (question != "")
-                localConfig.quiz_history_test.push("Human: " + question)
-            tmp_question = localConfig.history.join("\n")
-            console.log("CHATBOT: quiz_history_test:")
-            console.log(localConfig.quiz_history_test)
-
-            const configuration = new Configuration(
-                {
-                    apiKey: localConfig.openAIKey,
-                });
-            if (enableOpenAI)
-            {
-                const openai = new OpenAIApi(configuration);
-                const response = await openai.createCompletion(
-                    {
-                        //model: "text-curie-001",
-                        model: "text-davinci-003",
-                        prompt: [tmp_question + "\nAI: "],
-                        temperature: 0.6,
-                        max_tokens: 40,
-                        stop: ["Human:", "AI:"]
-                    });
-
-                if (response.data.choices[0].text.startsWith("?"))
-                {
-                    postMessageToTwitch("I'm just a robot, I don't understand what you mean")
-                }
-                else
-                {
-                    let answer = response.data.choices[response.data.choices.length - 1].text.trim()
-                    if (answer.toLowerCase().includes("incorrect") > 0 ||
-                        answer.toLowerCase().includes("i'm sorry, i didn't understand")
-                    )
-                    {
-                        postMessageToTwitch("Sorry that was the wrong answer")
-                    }
-                    else
-                    {
-                        let message = "AI: " + answer;
-                        localConfig.quiz_history_test.push(message)
-                        if (message.toLowerCase().indexOf(localConfig.querytag.toLowerCase()))
-                            postMessageToTwitch(response.data.choices[0].text.trim())
-                    }
-                }
-                console.log("##Chatbot response##");
-                console.log(response.data.choices);
-            }
-            else
-            {
-                console.log("chatbot turned off")
-                console.log("question:", question)
-                postMessageToTwitch("ChatGPR it currently turned")
-            }
-        }
-    } catch (err)
-    {
-        console.log(err)
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatQuiz", "openAI error:", err);
     }
 }
 
@@ -662,12 +660,13 @@ function postMessageToTwitch (msg)
 // ============================================================================
 function startChatbotTimer ()
 {
-    var randomTimeout = Math.floor(Math.random() * (localConfig.timerMax - localConfig.timerMin + 1) + localConfig.timerMin);
+    var randomTimeout = Math.floor(Math.random() * ((serverConfig.chatbotTimerMax * 60000) - (serverConfig.chatbotTimerMin * 60000) + 1) + (serverConfig.chatbotTimerMin * 60000));
     localConfig.chatHistory = []
     localConfig.chatMessageCount = 0;
     if (localConfig.chatTimerHandle != null)
         clearTimeout(localConfig.chatTimerHandle);
-    localConfig.chatTimerHandle = setTimeout(startProcessing, randomTimeout * 60000);
+
+    localConfig.chatTimerHandle = setTimeout(startProcessing, randomTimeout);
 
     logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startChatbotTimer", "Chatbot Timer started: wait time ", randomTimeout * 60000, "minutes");
 }
@@ -693,14 +692,9 @@ function startProcessing ()
 // ============================================================================
 function changeBotName ()
 {
-    localConfig.querytag = localConfig.querytag.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
-    localConfig.starttag = localConfig.starttag.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
-    serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replace(/CHATBOTNAME/g, serverConfig.chatbotname);
-    localConfig.quiz_history_test.forEach(
-        (element, index) => 
-        {
-            localConfig.quiz_history_test[index] = element.replace(/CHATBOTNAME/g, serverConfig.chatbotname)
-        });
+    serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    serverConfig.starttag = serverConfig.starttag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
 
 // ============================================================================
