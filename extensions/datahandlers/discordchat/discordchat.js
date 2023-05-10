@@ -54,8 +54,8 @@ const serverConfig = {
 const OverwriteDataCenterConfig = false;
 const serverData =
 {
-    discordMessageBuffer: [],
-}
+    discordMessageBuffer: [{ name: "system", message: "Start of buffer" }]
+};
 
 // ============================================================================
 //                           FUNCTION: initialise
@@ -136,9 +136,9 @@ function onDataCenterMessage (server_packet)
             connectToDiscord(server_packet.data);
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.", "\nExtension:" + serverConfig.extensionname, "\nName: DISCORD_TOKEN");
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, "', Name to 'DISCORD_TOKEN'", " and add your token to the 'Value' Field");
         }
     }
@@ -149,9 +149,7 @@ function onDataCenterMessage (server_packet)
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
             {
-                if (server_packet.data == {})
-                    serverData.discordMessageBuffer = [];
-                else
+                if (server_packet.data != {})
                     serverData.discordMessageBuffer = server_packet.data.discordMessageBuffer;
             }
             SaveDataToServer();
@@ -197,7 +195,7 @@ function onDataCenterMessage (server_packet)
             }
             else if (extension_packet.type === "PostMessage")
             {
-                console.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                     ".onDataCenterMessage", "Posting Message", extension_packet.data)
                 if (serverConfig.discordenabled === "on")
                 {

@@ -28,7 +28,7 @@ if (config === "")
         SYSTEM_LOGGING_TAG: "DATA-CENTER",
         HOST: "http://localhost",
         PORT: 3000,
-        logginglevel: 5,
+        logginglevel: 0,
         heartbeat: 5000, // heartbeat timers
         apiVersion: sr_api.__api_version__,
     };
@@ -118,7 +118,7 @@ else
     loadExtensions(__dirname + "/../../extensions")
 }
 
-function loadExtensions (extensionFolder)
+function loadExtensions(extensionFolder)
 {
     fs.readdir(extensionFolder, (err, files) =>
     {

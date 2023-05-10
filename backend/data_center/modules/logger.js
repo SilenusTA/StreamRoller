@@ -157,7 +157,8 @@ function setLoggingLevel(level)
 {
     loglevel = level;
     console.log("LOG:STREAMTOOL_DEBUG_LEVEL: ", loglevel);
-    console.log("LOG:STREAMTOOL_DEBUG_FORMAT: ", process.env.STREAMTOOL_DEBUG_FORMAT);
+    if (!process.env.STREAMTOOL_DEBUG_FORMAT)
+        process.env.STREAMTOOL_DEBUG_FORMAT = "off"
     console.log("LOG:Log system: " + process.platform);
     console.log("LOG:Log color: " + usecolor);
 }
