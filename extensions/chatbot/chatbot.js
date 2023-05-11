@@ -92,8 +92,10 @@ const serverConfig = {
             model: "gpt-3.5-turbo",
             temperature: 0,
             max_tokens: 110,
-        }
+        },
     },
+
+    chatbotminmessagelength: 10,
     // =============================
     // credentials dialog variables
     // =============================
@@ -444,8 +446,20 @@ function heartBeatCallback ()
 // ============================================================================
 //                           FUNCTION: processChatMessage
 // ============================================================================
-function processChatMessage (chatdata)
+function processChatMessage (data)
 {
+    let chatdata = data
+    /* let chatdata = parseChatData(data)
+    
+    if (!chatdata || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
+    {
+        if (chatdata.message.length < serverConfig.chatbotminmessagelength)
+            console.log("CHATBOT: chatdata too short", chatdata.message, chatdata.message.length)
+        else
+            console.log("CHATBOT: chatdata not usable")
+        return
+
+    }*/
     // ignore messages from the bot or specified users
     if (chatdata.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
         || chatdata.data["display-name"].toLowerCase().indexOf("system") != -1)
@@ -631,7 +645,55 @@ async function callOpenAI (history_string, modelToUse)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "openAI error:", err.message);
     }
 }
+// ============================================================================
+//                           FUNCTION: parseChatData
+// ============================================================================
+function parseChatData (data)
+{
+    let originalmessage = data.message;
+    let messageEmotes = data.data.emotes;
+    let emoteposition = null
+    let emotetext = null
+    if (messageEmotes != null)
+    {
+        console.log("======================")
+        //console.log("message", data)
+        console.log("messageEmotes:", messageEmotes)
+        emotetext = []
+        for (var key in messageEmotes) 
+        {
 
+            if (!messageEmotes.hasOwnProperty(key)) continue;
+            console.log("checking:", key, "-", messageEmotes[key])
+
+            emoteposition = messageEmotes[key][0].split("-");
+            emotetext.push(data.message.substring(emoteposition[0], Number(emoteposition[1]) + 1))
+        }
+        if (emotetext)
+        {
+            console.log("emotetext:", emotetext)
+
+            emotetext.forEach(function (item, index)
+            {
+                console.log(">>>replacing", item)
+                data.message = data.message.replaceAll(item, "")
+                console.log("<<<emotes replaced:", data.message)
+            });
+        }
+        else
+            console.log("emotetext is null")
+        //remove non ascii chars (ie ascii art, unicode etc)
+        data.message = data.message.replace(/[^\x00-\x7F]/g, "");
+        // strip all white spaces down to one
+        data.message = data.message.replace(/\s+/g, ' ').trim();
+        console.log("original     :", originalmessage)
+        console.log("final message:", data.message)
+        console.log("final message length:", data.message.length)
+        return null; // temp while debugging. remove once happy with the results
+    }
+
+    return data
+}
 // ============================================================================
 //                           FUNCTION: postMessageToTwitch
 // ============================================================================

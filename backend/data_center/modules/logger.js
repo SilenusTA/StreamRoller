@@ -83,7 +83,7 @@ function usecoloredlogs (val)
             //bgColour = "\x1b[44m";
             bgColour = "";
             resetColour = "\x1b[0m";
-            dimText = "\x1b[2m";
+            dimText = "\x1b[1m";
             brightText = "\x1b[1m";
             infoColour = "\x1b[32m";
             logColour = "\x1b[33m";
@@ -95,7 +95,7 @@ function usecoloredlogs (val)
         {
             bgColour = "";
             resetColour = "\x1b[0m";
-            dimText = "\x1b[2m";
+            dimText = "\x1b[1m";
             brightText = "\x1b[1m";
             infoColour = "\x1b[32m";
             logColour = "\x1b[33m";
@@ -119,8 +119,7 @@ function usecoloredlogs (val)
 }
 /* color reference
 Reset = "\x1b[0m"
-Bright = "\x1b[1m"
-Dim = "\x1b[2m"
+Bold = "\x1b[1m"
 Underscore = "\x1b[4m"
 Blink = "\x1b[5m"
 Reverse = "\x1b[7m"
@@ -186,7 +185,7 @@ function log (source, ...args)
     if (__createlogfile)
         addToLogfile("[log]" + source, args)
     if (loglevel >= 2)
-        output(dimText + bgColour + logColour + "%s" + resetColour, "[log]" + source, "", args);
+        output(brightText + bgColour + logColour + "%s" + resetColour, source, "[log]", args);
 }
 // ============================================================================
 //                           FUNCTION: info
@@ -202,7 +201,7 @@ function info (source, ...args)
     if (__createlogfile)
         addToLogfile("[info]" + source, args)
     if (loglevel >= 3)
-        output(dimText + bgColour + infoColour + "%s" + resetColour, "[info]" + source, "", args);
+        output(brightText + bgColour + infoColour + "%s" + resetColour, source, "[info]", args);
 }
 // ============================================================================
 //                           FUNCTION: warn
@@ -233,7 +232,7 @@ function err (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[err]" + source, args)
-    output(brightText + bgColour + errColour + "%s" + resetColour, source, "!!! ERROR !!! ", args);
+    output(brightText + bgColour + errColour + "%s" + resetColour, source, "!!! ERROR !!!", args);
 }
 
 // ============================================================================
@@ -250,7 +249,7 @@ function extra (source, ...args)
     if (__createlogfile)
         addToLogfile("[extra]" + source, args)
     if (loglevel >= 4)
-        output(brightText + bgColour + extraColour + "%s" + resetColour, source, "[extra] ", args);
+        output(brightText + bgColour + extraColour + "%s" + resetColour, source, "[extra]", args);
 }
 // ============================================================================
 //                           FUNCTION: output

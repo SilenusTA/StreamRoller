@@ -94,7 +94,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function ConnectToDataCenter(host, port)
+            function ConnectToDataCenter (host, port)
             {
                 try
                 {
@@ -117,7 +117,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function onDataCenterDisconnect(reason)
+            function onDataCenterDisconnect (reason)
             {
                 adminData.extensions = {};
                 adminData.channellist = {};
@@ -131,7 +131,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function onDataCenterConnect(socket)
+            function onDataCenterConnect (socket)
             {
                 // we set this hear as it means the page has loaded at this point 
                 adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
@@ -178,7 +178,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function onDataCenterMessage(server_packet)
+            function onDataCenterMessage (server_packet)
             {
                 // -------------------------------------------------------------------------------------------------
                 //                  RECEIVED CONFIG
@@ -509,14 +509,14 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function heartBeatCallback(extensionname)
+            function heartBeatCallback (extensionname)
             {
                 setExtensionStatus(extensionname, false);
             }
             // ============================================================================
             //                           FUNCTION: SaveConfigToServer
             // ============================================================================
-            function SaveConfigToServer()
+            function SaveConfigToServer ()
             {
                 // saves our serverConfig to the server so we can load it again next time we startup
                 sr_api.sendMessage(DataCenterSocket,
@@ -537,7 +537,7 @@
             // force a fresh of the page when a new extension list comes in. Not very
             // smooth :(
             // ===========================================================================
-            function loadExtensionCards(extensions)
+            function loadExtensionCards (extensions)
             {
                 extensions.sort()
                 // First we create all the links (these may be changed below if the extension has provided a modal box)
@@ -577,7 +577,7 @@
             // ----------------------------- notes ---------------------------------------
             // none
             // ===========================================================================
-            function SendModal(toextension)
+            function SendModal (toextension)
             {
 
                 let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
@@ -619,7 +619,7 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function addModal(xname, data)
+            function addModal (xname, data)
             {
                 // only update modals if we have received the extension name from the server
                 if (adminData.extensions[xname])
@@ -675,7 +675,7 @@
             // ============================================================================
             //                           FUNCTION: setExtensionStatus
             // ============================================================================
-            function setExtensionStatus(extension, status)
+            function setExtensionStatus (extension, status)
             {
                 if (!status.connected || status == "false")
                     document.getElementById(extension + "_status").style = "color:red";
@@ -688,7 +688,7 @@
             // ============================================================================
             //                           FUNCTION: UpdateOBSDefaultButtons
             // ============================================================================
-            function UpdateOBSDefaultButtons()
+            function UpdateOBSDefaultButtons ()
             {
                 //Start: { title: "Start", scenename: "##Starting Soon" }
                 var element = document.getElementById("OBSDefaultButtons");
@@ -709,7 +709,7 @@
             // ============================================================================
             //                           FUNCTION: ParseOBSScenesList
             // ============================================================================
-            function ParseOBSScenesList(data)
+            function ParseOBSScenesList (data)
             {
                 let primaryScenes = data.main;
                 let secondaryScenes = data.secondary;
@@ -772,7 +772,7 @@
             // ============================================================================
             //                           FUNCTION: addOBSSceneButton
             // ============================================================================
-            function addOBSSceneButton(element, displayname, scenename, current)
+            function addOBSSceneButton (element, displayname, scenename, current)
             {
                 button = document.createElement('input');
                 button.type = 'button';
@@ -807,7 +807,7 @@
             // ============================================================================
             //                           FUNCTION: addOBSMuteButton
             // ============================================================================
-            function addOBSMuteButton(muted)
+            function addOBSMuteButton (muted)
             {
                 button = document.createElement('input');
                 button.type = 'button';
@@ -845,7 +845,7 @@
             // ============================================================================
             //                           FUNCTION: SaveConfigToServer
             // ============================================================================
-            function OBSLiveCheck()
+            function OBSLiveCheck ()
             {
                 let livebackbround = document.getElementById("OBSControllsCard");
                 // check if we are live
@@ -911,7 +911,7 @@
           */
 
             // ===========================================================================
-            function ProcessOBSStats(data)
+            function ProcessOBSStats (data)
             {
                 if (localConfig.obslive)
                 {
@@ -982,7 +982,7 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function parseExtensionModalData(extension)
+            function parseExtensionModalData (extension)
             {
                 let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
                 // convert our array of objects into a more usable objet
@@ -1012,7 +1012,7 @@
             // ----------------------------- notes ----------------------------------------
             // 
             // ===========================================================================
-            function UpdateAdminModalData()
+            function UpdateAdminModalData ()
             {
                 //get the updated dom we just changed and change the rest using sting replace
                 let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
@@ -1040,7 +1040,7 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function processOwnModalSubmit(name)
+            function processOwnModalSubmit (name)
             {
                 // get the modal data as an array
                 let fieldsAsArray = $('#' + name + "_modal").serializeArray();
@@ -1073,7 +1073,7 @@
             // ============================================================================
             //                           FUNCTION: changeServerLogging
             // ============================================================================
-            function changeServerLogging(logsetting)
+            function changeServerLogging (logsetting)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
@@ -1127,7 +1127,7 @@
             // ============================================================================
             // display buffers on screen
             // if parse=false is passed then the buffer isn't parsed, just update the screen
-            function displayChatMessages(data)
+            function displayChatMessages (data)
             {
                 // parse the messages and add them to the buffer
                 //        if (parse)
@@ -1167,7 +1167,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            async function processTwitchChatBuffer(chatdata)
+            async function processTwitchChatBuffer (chatdata)
             {
                 let counter = 0
                 // as we have received a bufer lets delete the old data
@@ -1189,7 +1189,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            async function processTwitchAccountNames(extension_packet)
+            async function processTwitchAccountNames (extension_packet)
             {
                 // as we have received a bufer lets delete the old data
                 let newchatternames = ""
@@ -1223,7 +1223,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function userDropdownChanged(e)
+            function userDropdownChanged (e)
             {
                 document.getElementById("chatuserselect").innerHTML = e.innerHTML;
                 // if we have changed users update the config to remember it
@@ -1241,23 +1241,25 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            async function processDiscordChatBuffer(chatdata)
+            async function processDiscordChatBuffer (chatdata)
             {
                 let counter = 0
                 // as we have received a bufer lets delete the old data
                 document.getElementById("ModMessagesCardText").innerHTML = "";
                 localConfig.modMessageBuffer = [];
-                chatdata.forEach(ele => 
-                {
-                    parseDiscordChatMessage(ele);
-                })
+
+                if (chatdata)
+                    chatdata.forEach(ele => 
+                    {
+                        parseDiscordChatMessage(ele);
+                    })
                 localConfig.modMessageBuffer.push("--------- buffer loaded --------");
             }
             // ============================================================================
             //                           FUNCTION: parseTwitchChatMessage
             // ============================================================================
             // updates the buffer with the messages
-            function parseTwitchChatMessage(chatdata)
+            function parseTwitchChatMessage (chatdata)
             {
                 //let chatdata = data.data;
                 let today = new Date();
@@ -1313,7 +1315,7 @@
             //                           FUNCTION: parseDiscordChatMessage
             // ============================================================================
             // updates the buffer with the messages
-            function parseDiscordChatMessage(chatdata)
+            function parseDiscordChatMessage (chatdata)
             {
                 //let chatdata = data.data;
                 let today = new Date();
@@ -1341,7 +1343,7 @@
             //                           FUNCTION: addDiscordEmotes
 
             // ============================================================================
-            function parseDiscordEmojis(message)
+            function parseDiscordEmojis (message)
             {
                 let index = message.indexOf('<');
                 let is, ie, emoji = 0;
@@ -1373,7 +1375,7 @@
             // ============================================================================
             //                           FUNCTION: addTwitchEmotes
             // ============================================================================
-            function addTwitchEmotes(message, emotes)
+            function addTwitchEmotes (message, emotes)
             {
                 if (!emotes) return message;
 
@@ -1422,7 +1424,7 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function DisplayAlertMessages(message)
+            function DisplayAlertMessages (message)
             {
                 let cardref = document.getElementById("AlertCardText");
                 cardref.innerHTML = cardref.innerHTML + message
@@ -1438,7 +1440,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestExtList()
+            function RequestExtList ()
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
@@ -1454,7 +1456,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestOBSScenes(to)
+            function RequestOBSScenes (to)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
@@ -1476,7 +1478,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestChList()
+            function RequestChList ()
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
@@ -1492,7 +1494,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestChatBuffer(extname)
+            function RequestChatBuffer (extname)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1515,7 +1517,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestTwitchAccountNames(extname)
+            function RequestTwitchAccountNames (extname)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1538,7 +1540,7 @@
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestAdminModalsCode(extname)
+            function RequestAdminModalsCode (extname)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1556,7 +1558,7 @@
             // ============================================================================
             //                           FUNCTION: RequestLoggingLevel
             // ============================================================================
-            function RequestLoggingLevel()
+            function RequestLoggingLevel ()
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket(
@@ -1567,7 +1569,7 @@
             // ============================================================================
             //                           FUNCTION: process_stream_alert
             // ============================================================================
-            function ProcessStreamAlert(server_packet)
+            function ProcessStreamAlert (server_packet)
             {
                 //console.log("ProcessStreamAlert ", server_packet);
                 let alertdata = server_packet.data;
@@ -1684,7 +1686,7 @@
             // ============================================================================
             //                           FUNCTION: PostMessageToDiscord
             // ============================================================================
-            function PostMessageToDiscord(msg, channel)
+            function PostMessageToDiscord (msg, channel)
             {
                 //console.log("Posting messaage to discord, ", msg, channel)
                 sr_api.sendMessage(DataCenterSocket,
@@ -1706,7 +1708,7 @@
             // ============================================================================
             //                           FUNCTION: postMessageToTwitter
             // ============================================================================
-            function postMessageToTwitter()
+            function postMessageToTwitter ()
             {
 
                 let msg = "We're live twitch.tv/OldDepressedGamer ";
@@ -1743,7 +1745,7 @@
             // ============================================================================
             //                           FUNCTION: postMessageToTwitch
             // ============================================================================
-            function postMessageToTwitch(msg)
+            function postMessageToTwitch (msg)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1762,7 +1764,7 @@
             // ============================================================================
             //                           FUNCTION: changeDiscordListeningChannel
             // ============================================================================
-            function changeDiscordListeningChannel(channel)
+            function changeDiscordListeningChannel (channel)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1780,7 +1782,7 @@
             // ============================================================================
             //                           FUNCTION: chatInput
             // ============================================================================
-            function chatInput(event)
+            function chatInput (event)
             {
                 event.preventDefault();
                 //console.log("ChattInput")
@@ -1791,7 +1793,7 @@
             // ============================================================================
             //                           FUNCTION: modInput
             // ============================================================================
-            function modInput(event)
+            function modInput (event)
             {
                 event.preventDefault();
                 //console.log("modtInput")
@@ -1802,7 +1804,7 @@
             // ============================================================================
             //                           FUNCTION: RequestRandomFact
             // ============================================================================
-            function RequestRandomFact()
+            function RequestRandomFact ()
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -1820,14 +1822,14 @@
             // ============================================================================
             //                           FUNCTION: processRandomFact
             // ============================================================================
-            function processRandomFact(data)
+            function processRandomFact (data)
             {
                 localConfig.randomFact = data;
             }
             // ============================================================================
             //                           FUNCTION: processTimers
             // ============================================================================
-            function processTimers(data)
+            function processTimers (data)
             {
                 localConfig.timers[data.timername] = data.timerdata
             }
@@ -1835,7 +1837,7 @@
             // ============================================================================
             //                           FUNCTION: twitchFactOfTheDay
             // ============================================================================
-            function twitchFactOfTheDay()
+            function twitchFactOfTheDay ()
             {
                 if (localConfig.twitchRandomFactHandle != null)
                     clearTimeout(localConfig.twitchRandomFactHandle);
@@ -1853,7 +1855,7 @@
 
             // test purposes only. 
             // can be sent from browser console.
-            function testChatMessage(user, message)
+            function testChatMessage (user, message)
             {
                 // fake twitch chat message
                 sr_api.sendMessage(DataCenterSocket,

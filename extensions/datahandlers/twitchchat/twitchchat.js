@@ -71,6 +71,9 @@ const serverConfig = {
     cred4name: "twitchchatuseroauth",
     cred4value: ""
 };
+
+/// this debug settings will post messages internally only and not to twich
+const DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = false
 //debug setting to overwrite the stored data with the serverConfig above. 
 const OverwriteDataCenterConfig = false;
 const serverData =
@@ -256,7 +259,14 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SendChatMessage")
         {
-            sendChatMessage(serverConfig.streamername, extension_packet.data)
+            if (!DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH)
+                sendChatMessage(serverConfig.streamername, extension_packet.data)
+            else
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
+                console.log("Not posting to twitch ", extension_packet.data)
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "?" + extension_packet.data.account + "?", "emotes": "" }, extension_packet.data.message)
+            }
         }
         else if (extension_packet.type === "RequestAccountNames")
         {
