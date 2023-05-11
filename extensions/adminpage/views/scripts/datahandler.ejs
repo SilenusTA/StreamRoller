@@ -49,7 +49,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function ConnectToDataCenter (host, port)
+                function ConnectToDataCenter(host, port)
                 {
                     try
                     {
@@ -67,7 +67,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function onDataCenterDisconnect (reason)
+                function onDataCenterDisconnect(reason)
                 {
                     console.log("datahandler.onDataCenterDisconnect", reason);
                 }
@@ -79,7 +79,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function onDataCenterConnect ()
+                function onDataCenterConnect()
                 {
                     //console.log("datahandler.onDataCenterConnect", "Registering our channel and requesting channel and extension list");
                     // DEBUGGING overwrite our config data on the server if the flag is set
@@ -114,7 +114,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function onDataCenterMessage (server_packet)
+                function onDataCenterMessage(server_packet)
                 {
                     // -------------------------------------------------------------------------------------------------
                     //                  RECEIVED CONFIG
@@ -178,6 +178,16 @@
                         //load extension cards
                         loadExtensionCards(server_packet.data);
                     }
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED EXTENSION LIST
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.type === "LoggingLevel")
+                    {
+                        serverConfig.logginglevel = server_packet.data
+                        UpdateAdminModalData();
+                        //send modal to everyone to update their own copies of out model
+                        SendModal("");
+                    }
                     else if (server_packet.type === "ExtensionMessage")
                     {
                         extension_packet = server_packet.data
@@ -196,7 +206,7 @@
                         else if (extension_packet.type === "AdminModalCode")
                             addModal(extension_packet.from, extension_packet.data, "SettingsPlaceholder", "admincard");
                         // -------------------------------------------------------------------------------------------------
-                        //                   RECEIVED EXTENSION MODAL CODE
+                        //                   RECEIVED EXTENSION CREDENTIALS MODAL CODE
                         // -------------------------------------------------------------------------------------------------
                         else if (extension_packet.type === "CredentialsModalCode")
                             addModal(extension_packet.from, extension_packet.data, "CredentialsPlaceholder", "credentialscard");
@@ -280,7 +290,6 @@
                     } else if (server_packet.type === "ChannelJoined"
                         || server_packet.type === "ChannelCreated"
                         || server_packet.type === "ChannelLeft"
-                        || server_packet.type === "LoggingLevel"
                     )
                     {
                         // just a blank handler for items we are not using to avoid message from the catchall
@@ -298,7 +307,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function heartBeatCallback (extensionname)
+                function heartBeatCallback(extensionname)
                 {
                     setExtensionStatus(extensionname, false);
                 }
@@ -310,7 +319,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function SaveConfigToServer ()
+                function SaveConfigToServer()
                 {
                     // saves our serverConfig to the server so we can load it again next time we startup
                     sr_api.sendMessage(DataCenterSocket,
@@ -331,7 +340,7 @@
                 // force a fresh of the page when a new extension list comes in. Not very
                 // smooth :(
                 // ===========================================================================
-                function loadExtensionCards (extensions)
+                function loadExtensionCards(extensions)
                 {
 
                     extensions.sort()
@@ -396,7 +405,7 @@
                 // ----------------------------- notes ---------------------------------------
                 // none
                 // ===========================================================================
-                function SendModal (toextension)
+                function SendModal(toextension)
                 {
 
                     let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
@@ -409,7 +418,7 @@
                             modalstring = modalstring.replace(key + "checked", "checked");
                         }   //value is a string then we need to replace the text
                         else if (typeof (value) == "string")
-                            modalstring = modalstring.replace(key + "text", value);
+                            modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
                     }
                     // send the modal data to the server
                     // send the modal data to the server
@@ -440,13 +449,15 @@
                 // ----------------------------- notes ----------------------------------------
                 // None
                 // ===========================================================================
-                function addModal (xname, data, placeholdername, cardtype)
+                function addModal(xname, data, placeholdername, cardtype)
                 {
                     // only update modals if we have received the extension name from the server
                     if (adminData.extensions[xname])
                     {
 
                         let modalbox = document.getElementById(placeholdername).children[0];
+                        if (document.getElementById(xname + "_" + cardtype) == null)
+                            return
                         // grab the <li> element for this extension
                         let extLiTag = document.getElementById(xname + "_" + cardtype);
 
@@ -492,7 +503,7 @@
                 // ============================================================================
                 //                           FUNCTION: setExtensionStatus
                 // ============================================================================
-                function setExtensionStatus (extension, connected)
+                function setExtensionStatus(extension, connected)
                 {
                     if (connected == true)
                         document.getElementById(extension + "_status").style = "color:green";
@@ -502,7 +513,7 @@
                 // ============================================================================
                 //                           FUNCTION: ParseOBSScenesList
                 // ============================================================================
-                function ParseOBSScenesList (data)
+                function ParseOBSScenesList(data)
                 {
                     let primaryScenes = data.main;
                     let secondaryScenes = data.secondary;
@@ -569,7 +580,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // None
                 // ===========================================================================
-                function parseExtensionModalData (extension)
+                function parseExtensionModalData(extension)
                 {
                     let fieldsAsArray = $('#' + extension + "_modal_admincard").serializeArray();
                     // convert our array of objects into a more usable objet
@@ -598,9 +609,8 @@
                 // ----------------------------- notes ----------------------------------------
                 // 
                 // ===========================================================================
-                function UpdateAdminModalData ()
+                function UpdateAdminModalData()
                 {
-                    //get the updated dom we just changed and change the rest using sting replace
                     let modalstring = document.getElementById("adminmodalplaceholder").innerHTML;
                     for (const [key, value] of Object.entries(serverConfig))
                     {
@@ -608,10 +618,12 @@
                         if (value === "on")
                             modalstring = modalstring.replace(key + "checked", "checked");
                         // replace text strings
-                        else if (typeof (value) == "string")
-                            modalstring = modalstring.replace(key + "text", value);
+                        else if (typeof (value) == "string" || typeof (value) == "number")
+                            modalstring = modalstring.replace('"' + key + 'text"', '"' + value + '"');
                     }
                     adminData.extensions[serverConfig.extensionname].admincard = modalstring;
+                    addModal(serverConfig.extensionname, modalstring, "SettingsPlaceholder", "admincard")
+
                 }
                 // ============================================================================
                 //                      FUNCTION: processOwnModalSubmit
@@ -622,7 +634,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // None
                 // ===========================================================================
-                function processOwnModalSubmit (name)
+                function processOwnModalSubmit(name)
                 {
                     // get the modal data as an array
                     let fieldsAsArray = $('#' + name + "_modal_admincard").serializeArray();
@@ -654,7 +666,7 @@
                 // Parameters: none
                 // ----------------------------- notes ----------------------------------------
                 // ----------------------------------------------------------------------------
-                function changeServerLogging (logsetting)
+                function changeServerLogging(logsetting)
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -697,7 +709,7 @@
                 // ============================================================================
                 //                           FUNCTION: displayChatMessages
                 // ============================================================================
-                function displayChatMessages (data)
+                function displayChatMessages(data)
                 {
                     let chatdata = data.data;
 
@@ -722,7 +734,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // None
                 // ===========================================================================
-                function displayChannelMessages (data)
+                function displayChannelMessages(data)
                 {
                     let cardref = document.getElementById("MessagesCardText");
                     let today = new Date();
@@ -770,7 +782,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function RequestExtList ()
+                function RequestExtList()
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -786,7 +798,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function RequestChList ()
+                function RequestChList()
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -802,7 +814,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function RequestAdminModalsCode (extname)
+                function RequestAdminModalsCode(extname)
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket("ExtensionMessage",
@@ -825,7 +837,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function RequestCredentialsModalsCode (extname)
+                function RequestCredentialsModalsCode(extname)
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket("ExtensionMessage",
@@ -848,7 +860,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function CredentialsSubmit (event)
+                function CredentialsSubmit(event)
                 {
                     // sercurity notes.
                     event.preventDefault();
@@ -886,7 +898,7 @@
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function StopServer (event)
+                function StopServer(event)
                 {
                     event.preventDefault();
                     sr_api.sendMessage(DataCenterSocket,
@@ -899,7 +911,7 @@
                 // ============================================================================
                 //                           FUNCTION: RequestLoggingLevel
                 // ============================================================================
-                function RequestLoggingLevel ()
+                function RequestLoggingLevel()
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -909,7 +921,7 @@
                 }
                 // test purposes only. 
                 // can be sent from browser console.
-                function testChatMessage (user, message)
+                function testChatMessage(user, message)
                 {
                     // fake twitch chat message
                     sr_api.sendMessage(DataCenterSocket,
