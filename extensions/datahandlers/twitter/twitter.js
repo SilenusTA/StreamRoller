@@ -32,7 +32,7 @@ let channelConnectionAttempts = 0;
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    twitterenabled: "on",
+    twitterenabled: "off",
     //credentials variable names to use (in credentials modal)
     credentialscount: "4",
     cred1name: "twitterAPIkey",
