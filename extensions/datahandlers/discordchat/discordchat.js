@@ -136,10 +136,8 @@ function onDataCenterMessage (server_packet)
             connectToDiscord(server_packet.data);
         else
         {
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.", "\nExtension:" + serverConfig.extensionname, "\nName: DISCORD_TOKEN");
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, "', Name to 'DISCORD_TOKEN'", " and add your token to the 'Value' Field");
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
     }
     else if (server_packet.type === "DataFile")
@@ -226,8 +224,12 @@ function onDataCenterMessage (server_packet)
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                     "Unable to process ExtensionMessage : ", server_packet);
         }
+        else if (extension_packet.type === "AdminModalCode")
+        {
+            // ignore these messages
+        }
         else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", server_packet);
     }
     else if (server_packet.type === "ChannelData")

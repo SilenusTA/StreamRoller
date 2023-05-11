@@ -224,10 +224,8 @@ function onDataCenterMessage (server_packet)
             connectToStreamLabs(server_packet.data);
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, " Add the following fields: 'SL_SOCKET_TOKEN'");
         }
 
     }

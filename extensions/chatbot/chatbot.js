@@ -263,9 +263,7 @@ function onDataCenterMessage (server_packet)
         else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.", "\nExtension:" + serverConfig.extensionname, "\nName: openAIkey");
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, "', Name to 'openAIkey'", " and add your token to the 'Value' Field");
+                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
     }
     else if (server_packet.type === "InvalidMessage")

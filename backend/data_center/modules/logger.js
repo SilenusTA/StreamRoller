@@ -61,7 +61,7 @@ let extraColour = ""
  * Turn on or off color
  * @param {string} val "off","default" or a color code
  */
-function usecoloredlogs(val)
+function usecoloredlogs (val)
 {
     usecolor = val;
     if (val === "off")
@@ -153,20 +153,22 @@ BgWhite = "\x1b[47m"
  * 3) 2 + info
  * @param {string} level 
  */
-function setLoggingLevel(level)
+function setLoggingLevel (level)
 {
     loglevel = level;
-    console.log("LOG:STREAMTOOL_DEBUG_LEVEL: ", loglevel);
-    if (!process.env.STREAMTOOL_DEBUG_FORMAT)
-        process.env.STREAMTOOL_DEBUG_FORMAT = "off"
-    console.log("LOG:Log system: " + process.platform);
-    console.log("LOG:Log color: " + usecolor);
+    /*    
+        console.log("LOG:STREAMTOOL_DEBUG_LEVEL: ", loglevel);
+        if (!process.env.STREAMTOOL_DEBUG_FORMAT)
+            process.env.STREAMTOOL_DEBUG_FORMAT = "off"
+        console.log("LOG:Log system: " + process.platform);
+        console.log("LOG:Log color: " + usecolor);
+    */
 }
 /**
  * gets the current logging elvel
  * @returns logging level (string)
  */
-function getLoggingLevel()
+function getLoggingLevel ()
 {
     return loglevel;
 }
@@ -179,7 +181,7 @@ function getLoggingLevel()
  * @param {String} source log source. Normall "filename.function"
  * @param  {...any} args additional arguments
  */
-function log(source, ...args)
+function log (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[log]" + source, args)
@@ -195,7 +197,7 @@ function log(source, ...args)
  * @param {String} source log source. Normall "filename.function"
  * @param  {...any} args additional arguments
  */
-function info(source, ...args)
+function info (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[info]" + source, args)
@@ -211,7 +213,7 @@ function info(source, ...args)
  * @param {String} source log source. Normall "filename.function"
  * @param  {...any} args additional arguments
  */
-function warn(source, ...args)
+function warn (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[warn]" + source, args)
@@ -227,7 +229,7 @@ function warn(source, ...args)
  * @param {String} source log source. Normall "filename.function"
  * @param  {...any} args additional arguments
  */
-function err(source, ...args)
+function err (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[err]" + source, args)
@@ -243,7 +245,7 @@ function err(source, ...args)
  * @param {String} source log source. Normall "filename.function"
  * @param  {...any} args additional arguments
  */
-function extra(source, ...args)
+function extra (source, ...args)
 {
     if (__createlogfile)
         addToLogfile("[extra]" + source, args)
@@ -260,7 +262,7 @@ function extra(source, ...args)
  * @param {String} tag tag "[EXTENSION]"
  * @param {String} message message to log 
  */
-function output(col, func, tag, message)
+function output (col, func, tag, message)
 {
     if (typeof (message) == "object")
         message = JSON.stringify(message);
@@ -284,7 +286,7 @@ function output(col, func, tag, message)
  * @param {String} tag tag "[EXTENSION]"
  * @param {String} message message to log 
  */
-function addToLogfile(func, tag, message)
+function addToLogfile (func, tag, message)
 {
     if (firstrun)
     {

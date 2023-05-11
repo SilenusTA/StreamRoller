@@ -132,8 +132,6 @@ function onDataCenterMessage (server_packet)
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Set ", "Extension to '" + serverConfig.extensionname, " Add the following fields: 'twitterAPIkey', 'twitterAPISecret','twitterAccessToken','TwitterAccessTokenSecret'");
         }
 
     }
@@ -163,7 +161,12 @@ function onDataCenterMessage (server_packet)
                     tweetmessage(extension_packet.data)
                 else
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
-        } else
+        }
+        else if (extension_packet.type === "AdminModalCode")
+        {
+            // ignore these messages
+        }
+        else
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", server_packet);
     }

@@ -252,8 +252,8 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     // if message provides a destination but we don't a client socket for it
     if (server_packet.to && extensions[server_packet.to] && !extensions[server_packet.to].socket)
     {
-        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:extension:", server_packet.to, " connection doesn't exist");
+        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+            "Destination:extension:", server_packet.to, " connection doesn't exist from " + server_packet.from);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
     }
@@ -268,7 +268,7 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     else if (server_packet.dest_channel && !channels.includes(server_packet.dest_channel))
     {
         logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:channel:", server_packet.dest_channel, "doesn't exist (is the extension running?)");
+            "Destination:channel:", server_packet.dest_channel, "doesn't exist (is the extension running?) from " + server_packet.from);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, server_packet.dest_channel));
     }
@@ -281,7 +281,7 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     }
     else
     {// broadcast (except the sender)
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+        logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:BROADCAST(Except sender):", server_packet);
         client_socket.broadcast.emit("message", server_packet);
     }

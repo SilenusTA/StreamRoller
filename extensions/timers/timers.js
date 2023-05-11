@@ -43,7 +43,7 @@ const timer = {
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     try
     {
@@ -62,7 +62,7 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
@@ -73,7 +73,7 @@ function onDataCenterDisconnect(reason)
  * Connection message handler
  * @param {*} socket 
  */
-function onDataCenterConnect(socket)
+function onDataCenterConnect (socket)
 {
     logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // Request our config from the server
@@ -93,7 +93,7 @@ function onDataCenterConnect(socket)
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
     if (server_packet.type === "ConfigFile")
@@ -135,7 +135,12 @@ function onDataCenterMessage(server_packet)
         }
         else if (decoded_packet.type === "StartSomeTimerHere")
         {
-            // do something
+            // This is an extension message from the API. not currently used as timers are started from the settins modals
+            CheckTimers(decoded_packet.data.TimerName);
+        }
+        else if (decoded_packet.type === "AdminModalCode")
+        {
+            // ignore these messages
         }
         else
             logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -184,7 +189,7 @@ function onDataCenterMessage(server_packet)
  * send some modal code 
  * @param {String} tochannel 
  */
-function SendAdminModal(tochannel)
+function SendAdminModal (tochannel)
 {
     fs.readFile(__dirname + '/timersadminmodal.html', function (err, filedata)
     {
@@ -224,7 +229,7 @@ function SendAdminModal(tochannel)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
@@ -235,7 +240,7 @@ function SaveConfigToServer()
 // ============================================================================
 //                           FUNCTION: CheckTimers
 // ============================================================================
-function CheckTimers(timername)
+function CheckTimers (timername)
 {
     if (localConfig[timername].timeout > 0)
     {
@@ -247,7 +252,7 @@ function CheckTimers(timername)
 // ============================================================================
 //                           FUNCTION: Timer
 // ============================================================================
-function Timer(timername)
+function Timer (timername)
 {
     sendTimerData(timername, localConfig[timername].timeout);
     localConfig[timername].timeout = localConfig[timername].timeout - 1;
@@ -271,7 +276,7 @@ function Timer(timername)
 // ============================================================================
 //                           FUNCTION: sendTimerData
 // ============================================================================
-function sendTimerData(timername, timedata)
+function sendTimerData (timername, timedata)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(

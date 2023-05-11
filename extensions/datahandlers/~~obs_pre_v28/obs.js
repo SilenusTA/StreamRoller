@@ -64,7 +64,7 @@ const serverConfig = {
  * @param {String} host 
  * @param {String} port 
  */
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.initialise', 'host', host, 'port', port, 'heartbeat', heartbeat);
     if (typeof (heartbeat) != 'undefined')
@@ -88,14 +88,14 @@ function initialise(app, host, port, heartbeat)
  * Disconnection message sent from the server
  * @param {String} reason 
  */
-function onDataCenterDisconnect(reason)
+function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterDisconnect', reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-function onDataCenterConnect()
+function onDataCenterConnect ()
 {
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -120,7 +120,7 @@ function onDataCenterConnect()
  * receives message from the socket
  * @param {data} server_packet 
  */
-function onDataCenterMessage(server_packet)
+function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === 'ConfigFile')
     {
@@ -145,7 +145,7 @@ function onDataCenterMessage(server_packet)
                 connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
             }
             else
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage',
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage',
                     serverConfig.extensionname + ' CredentialsFile', 'Credential file is empty');
     }
     else if (server_packet.type === 'ExtensionMessage')
@@ -240,7 +240,7 @@ function onDataCenterMessage(server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal(tochannel)
+function SendAdminModal (tochannel)
 {
     // read our modal file
     fs.readFile(__dirname + '/obsadminmodal.html', function (err, filedata)
@@ -283,7 +283,7 @@ function SendAdminModal(tochannel)
 /**
  * savel config file to the server
  */
-function SaveConfigToServer()
+function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
@@ -305,7 +305,7 @@ localConfig.obsConnection = new OBSWebSocket();
 /**
  * connects to the obs server
  */
-function connectToObs(host, port, pass)
+function connectToObs (host, port, pass)
 {
     localConfig.obsConnecting = true
     if (host != '' && port != '' && pass != '' && host != null && port != null && pass != null)
@@ -365,7 +365,7 @@ function connectToObs(host, port, pass)
  * @param {Object} data extra data for the request
  * @param {Function} callback called back with the data
  */
-function OBSRequest(request, data)
+function OBSRequest (request, data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBSRequest', request, data);
     try { localConfig.obsConnection.sendCallback(request, data, OBSRequestCallback); }
@@ -374,7 +374,7 @@ function OBSRequest(request, data)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, '.OBSRequest failed', request, data, err);
     }
 }
-function OBSRequestCallback(err, data)
+function OBSRequestCallback (err, data)
 {
     if (err != null)
     {
@@ -464,7 +464,7 @@ Stats message
  * process a new list of scenes from OBS
  * @param {Scenes} scenes 
  */
-function processOBSSceneList(scenes)
+function processOBSSceneList (scenes)
 {
     try
     {
@@ -509,7 +509,7 @@ function processOBSSceneList(scenes)
  * Change to the scene named in the paramert
  * @param {String} scene 
  */
-function changeScene(scene)
+function changeScene (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.changeScene', ' request come in. changing to ', scene);
     OBSRequest('SetCurrentScene', { 'scene-name': scene })
@@ -539,7 +539,7 @@ localConfig.obsConnection.on('error', err =>
 // ============================================================================
 //                           FUNCTION: onStreamStatus
 // ============================================================================
-function onStreamStatus(data)
+function onStreamStatus (data)
 {
     localConfig.status.connected = true;
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -558,7 +558,7 @@ function onStreamStatus(data)
 // ============================================================================
 //                           FUNCTION: onScenesChanged
 // ============================================================================
-function onScenesListChanged(data)
+function onScenesListChanged (data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onScenesListChanged', 'OBS scenes list has changed');
     processOBSSceneList(data.scenes);
@@ -574,7 +574,7 @@ function onScenesListChanged(data)
  * handles onSceneChanged callback
  * @param {Scene} scene 
  */
-function onSwitchedScenes(scene)
+function onSwitchedScenes (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onSwitchedScenes', 'OBS scene changed ', scene);
     localConfig.sceneList.current = scene;
@@ -600,7 +600,7 @@ function onSwitchedScenes(scene)
  * Called when the stream is stopped
  * @param {Object} data 
  */
-function onStreamStopped(data)
+function onStreamStopped (data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.StreamStopped', data);
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -623,7 +623,7 @@ function onStreamStopped(data)
  * Called when the stream is started
  * @param {Object} data 
  */
-function onStreamStarted(data)
+function onStreamStarted (data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.StreamStarted', data);
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -645,7 +645,7 @@ function onStreamStarted(data)
 /**
  * Called with a list of scene (triggered by the get scenes call)
  */
-function sendScenes()
+function sendScenes ()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBSScenes');
     // lets add the deliminatores we currently are using before sending it out
@@ -667,7 +667,7 @@ function sendScenes()
 // ============================================================================
 //                           FUNCTION: ToggleMute
 // ============================================================================
-function ToggleMute(input)
+function ToggleMute (input)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, 'ToggleMute', input)
     OBSRequest('ToggleMute', { source: input });
@@ -676,7 +676,7 @@ function ToggleMute(input)
 // ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
 // ============================================================================
-function onSourceMuteStateChanged(data)
+function onSourceMuteStateChanged (data)
 {
     logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.OBS \'SourceMuteStateChanged\' received', data)
     sr_api.sendMessage(
@@ -698,7 +698,7 @@ function onSourceMuteStateChanged(data)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
-function heartBeatCallback()
+function heartBeatCallback ()
 {
     if (localConfig.obsConnection._connected == false)
     {
