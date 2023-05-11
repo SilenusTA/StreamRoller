@@ -14,7 +14,7 @@
                     Intermission: { title: "Intermission", scenename: "##Intermission" },
                     End: { title: "End", scenename: "##StreamEnd" },
                 },
-                showsecondaryscenes: "on",
+                showsecondaryscenes: "off",
                 showallscenes: "on",
                 mutescene: "",
                 muted: false,
@@ -34,7 +34,7 @@
                 merch: "off",
                 bits: "off",
                 donations: "off",
-                chatAsUsername : "user"
+                chatAsUsername: "user"
             };
             const localConfig =
             {
@@ -159,6 +159,7 @@
                     RequestChList();
                     RequestExtList();
                     RequestRandomFact();
+                    RequestLoggingLevel();
                     RequestTwitchAccountNames("twitchchat");
                     RequestChatBuffer("twitchchat");
                     RequestChatBuffer("discordchat");
@@ -195,7 +196,8 @@
                                     serverConfig[key] = server_packet.data[key];
                             // update our modal to match the new data
                             UpdateAdminModalData();
-                            //update the logging on the server
+                            // update server log, mainly here if we have added new default options when a user
+                            // updates their version of streamroller
                             SaveConfigToServer();
                         }
                 }
@@ -216,6 +218,16 @@
                                     element
                                 ));
                     });
+                }
+                // -------------------------------------------------------------------------------------------------
+                //                  RECEIVED LOGGING LEVEL
+                // -------------------------------------------------------------------------------------------------
+                else if (server_packet.type === "LoggingLevel")
+                {
+                    serverConfig.logginglevel = server_packet.data
+                    UpdateAdminModalData();
+                    //send modal to everyone to update their own copies of out model
+                    SendModal("");
                 }
                 // -------------------------------------------------------------------------------------------------
                 //                   RECEIVED EXTENSION LIST
@@ -245,15 +257,13 @@
                     // -------------------------------------------------------------------------------------------------
                     if (extension_packet.type === "RequestAdminModalCode")
                     {
-                        //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
-                        SendModal(extension_packet.from, extension_packet.data);
+                        SendModal(extension_packet.from);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED EXTENSION MODAL CODE
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "AdminModalCode")
                     {
-                        //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
                         if (extension_packet.to === serverConfig.extensionname)
                             addModal(extension_packet.from, extension_packet.data);
                     }
@@ -270,7 +280,7 @@
                             // set our config values to the ones in message
                             for (const [key, value] of Object.entries(extension_packet.data))
                                 serverConfig[key] = value;
-                            
+
                             changeServerLogging(serverConfig.logginglevel)
                             // save our data to the server for next time we run
                             SaveConfigToServer();
@@ -483,7 +493,6 @@
                 } else if (server_packet.type === "ChannelJoined"
                     || server_packet.type === "ChannelCreated"
                     || server_packet.type === "ChannelLeft"
-                    || server_packet.type === "LoggingLevel"
                 )
                 {
                     // just a blank handler for items we are not using to avoid message from the catchall
@@ -543,7 +552,7 @@
                         RequestAdminModalsCode(extensions[i]);
                     }
 
-                    html += "<div  id='" + extensions[i] +"_visibility_admincard' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                    html += "<div  id='" + extensions[i] + "_visibility_admincard' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
                     html += " <span id='" + extensions[i] + "'>"
                     html += extensions[i] + "</span></div>";
 
@@ -581,7 +590,7 @@
                         modalstring = modalstring.replace(key + "checked", "checked");
                     }   //value is a string then we need to replace the text
                     else if (typeof (value) == "string")
-                        modalstring = modalstring.replace(key + "text", value);
+                        modalstring = modalstring.replace('"' + key + 'text"', '"' + value + '"');
                 }
                 // send the modal data to the server
                 // send the modal data to the server
@@ -618,6 +627,8 @@
                     let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
                     // grab the <li> element for this extension
                     let extLiTag = document.getElementById(xname);
+                    if (document.getElementById(xname + "_visibility_admincard") == null)
+                        return
                     document.getElementById(xname + "_visibility_admincard").style.display = "";
                     // remove the previous event listener (if there was one)
                     $('#' + xname + "_modal").off('submit');
@@ -653,7 +664,7 @@
                             parseExtensionModalData(xname);
                         return false;
                     });
-                    document.getElementById(xname + "_visibility_admincard").style.display="block"
+                    document.getElementById(xname + "_visibility_admincard").style.display = "block"
                     adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
 
                 }
@@ -902,23 +913,23 @@
             // ===========================================================================
             function ProcessOBSStats(data)
             {
-                if(localConfig.obslive)
-                    {
+                if (localConfig.obslive)
+                {
                     //let rate = data.outputBytes;
                     let strain = data.outputCongestion; // red/green/amber icon needed
                     var straincolor = (255 / 1 * strain);
                     var Uptime = "";
 
                     // saves our serverConfig to the server so we can load it again next time we startup
-                    if(data.totalStreamTime>0)
+                    if (data.totalStreamTime > 0)
                     {
-                    hour = Math.floor((data.totalStreamTime/1000/3600) << 0) 
-                    min = Math.floor((data.totalStreamTime/1000/60) << 0)
-                    sec = Math.floor((data.totalStreamTime/1000) % 60);
-                    if (hour > 0)
-                        Uptime = "Uptime:<BR>" + hour + ":" + (min - (hour*60)) + ":" + sec
-                    else 
-                        Uptime = "Uptime:<BR>" + hour + ":" + min + ":" + sec
+                        hour = Math.floor((data.totalStreamTime / 1000 / 3600) << 0)
+                        min = Math.floor((data.totalStreamTime / 1000 / 60) << 0)
+                        sec = Math.floor((data.totalStreamTime / 1000) % 60);
+                        if (hour > 0)
+                            Uptime = "Uptime:<BR>" + hour + ":" + (min - (hour * 60)) + ":" + sec
+                        else
+                            Uptime = "Uptime:<BR>" + hour + ":" + min + ":" + sec
                     }
 
                     document.getElementById("OBSUptime").innerHTML = Uptime;
@@ -958,7 +969,7 @@
                         document.getElementById("OBSNetwork").innerHTML = skippedframestxt + "/" + (~~(data.outputTotalFrames / 1000)) + "k";
                     else
                         document.getElementById("OBSNetwork").innerHTML = skippedframestxt + "/" + data.outputTotalFrames;
-                
+
                     document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
                 }
             }
@@ -1009,14 +1020,16 @@
                 {
                     // checkboxes
                     if (value === "on")
-                        modalstring = modalstring.replace(key + "checked", "checked");
+                        modalstring = modalstring.replace(key + 'checked', 'checked');
                     // replace text strings
-                    else if (typeof (value) == "string")
-                        modalstring = modalstring.replace(key + "text", value);
+                    else if (typeof (value) == "string" || typeof (value) == "number")
+                        modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
                 }
                 adminData.extensions[serverConfig.extensionname].admincard = modalstring;
+                //document.getElementById(serverConfig.extensionname + "_modal").innerHTML = modalstring;
                 // Update the OBS channel list as we might have changed what we want to show
                 ParseOBSScenesList(localConfig.OBSSceneslist);
+                addModal(serverConfig.extensionname, modalstring)
             }
             // ============================================================================
             //                      FUNCTION: processOwnModalSubmit
@@ -1033,12 +1046,11 @@
                 let fieldsAsArray = $('#' + name + "_modal").serializeArray();
                 // convert our array of objects into a more usable object
                 var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-                if (fieldsAsObject.logginglevel != "null")
+                if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
                 {
                     // change server logging level
                     changeServerLogging(fieldsAsObject.logginglevel);
-                    // change our logging level (probably should be a separate option)
-                    G_LOGLEVEL = fieldsAsObject.logginglevel;
+                    serverConfig.logginglevel = fieldsAsObject.logginglevel;
                 }
                 // loop though our keys and set them to match what is in the modal
                 for (const [key, value] of Object.entries(serverConfig))
@@ -1160,7 +1172,7 @@
                 let counter = 0
                 // as we have received a bufer lets delete the old data
                 document.getElementById("ChatMessagesCardText").innerHTML = "";
-                
+
                 localConfig.chatMessageBuffer = [];
                 chatdata.forEach(ele => 
                 {
@@ -1182,28 +1194,28 @@
                 // as we have received a bufer lets delete the old data
                 let newchatternames = ""
                 // if we have a username set in our config and that is in the current list of names lets use that one
-                if(serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
+                if (serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
                 {
                     document.getElementById("chatuserselect").innerHTML = serverConfig.chatAsUsername;
                 }
                 // if we don't have a valid username then use the first one in the list passed in
-                else if(extension_packet.data && extension_packet.data[0])
+                else if (extension_packet.data && extension_packet.data[0])
                 {
                     document.getElementById("chatuserselect").innerHTML = extension_packet.data[0];
                     serverConfig.chatAsUsername = extension_packet.data[0];
                 }
                 else
-                    document.getElementById("chatuserselect").innerHTML= "Select a User to chat as";
+                    document.getElementById("chatuserselect").innerHTML = "Select a User to chat as";
 
                 twitchnamedropdowns = document.getElementById("chatuserchattername");
                 for (const [key, value] of Object.entries(extension_packet.data)) 
                 {
-                    newchatternames += "<li><a id='"+value+"_user_select' class='dropdown-item' href='#' value="+value+" onClick='userDropdownChanged( this )'>"+value+"</a></li>"
+                    newchatternames += "<li><a id='" + value + "_user_select' class='dropdown-item' href='#' value=" + value + " onClick='userDropdownChanged( this )'>" + value + "</a></li>"
                 }
                 twitchnamedropdowns.innerHTML = newchatternames
 
             }
-             // ============================================================================
+            // ============================================================================
             //                           FUNCTION: userDropdownChanged
             // ============================================================================
             // Desription: user has changed the account in the twitch chat box
@@ -1215,7 +1227,7 @@
             {
                 document.getElementById("chatuserselect").innerHTML = e.innerHTML;
                 // if we have changed users update the config to remember it
-                if(serverConfig.chatAsUsername != e.innerHTML)
+                if (serverConfig.chatAsUsername != e.innerHTML)
                 {
                     serverConfig.chatAsUsername = e.innerHTML;
                     SaveConfigToServer()
@@ -1623,7 +1635,7 @@
                         {
                             let submessage = alertcontents.message;
                             if (submessage === null)
-                            submessage = ""
+                                submessage = ""
                             if (alertcontents.months === 1)
                                 messagetxt += alertcontents.name + " for the " + alertcontents.months + ' month subscription. "' + submessage + '"'
                             else
@@ -1646,7 +1658,7 @@
                         break;
                     case "subMysteryGift":
                         console.log(alertcontents)
-                        messagetxt += alertcontents.gifter + " for the "+ alertcontents.amount + " gifted subs"
+                        messagetxt += alertcontents.gifter + " for the " + alertcontents.amount + " gifted subs"
                         postMessageToTwitch(messagetxt)
                         if (serverConfig.giftsubs === "on")
                             PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
@@ -1740,12 +1752,12 @@
                             "SendChatMessage",
                             serverConfig.extensionname,
                             // need to read accounts from twitchchat ext and give an option to chose who to send the message as
-                            {account : serverConfig.chatAsUsername ,message : msg},
+                            { account: serverConfig.chatAsUsername, message: msg },
                             "",
                             "twitchchat"),
                         "",
                         "twitchchat"
-                    ));         
+                    ));
             }
             // ============================================================================
             //                           FUNCTION: changeDiscordListeningChannel
@@ -1825,14 +1837,11 @@
             // ============================================================================
             function twitchFactOfTheDay()
             {
-                console.log(localConfig.factofthedaytimeout)
-                console.log("handle", localConfig.twitchRandomFactHandle)
                 if (localConfig.twitchRandomFactHandle != null)
                     clearTimeout(localConfig.twitchRandomFactHandle);
 
                 localConfig.twitchRandomFactHandle = setTimeout(function ()
                 {
-                    console.log(("Random Fact: " + localConfig.randomFact, localConfig.factofthedaytimeout));
                     postMessageToTwitch("Random Fact: " + localConfig.randomFact)
                     RequestRandomFact();
                     twitchFactOfTheDay();
