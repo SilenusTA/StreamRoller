@@ -1152,10 +1152,14 @@
                 {
                     if (localConfig.mouseDown < 1)
                     {
-                        var cardScrollHeight = document.getElementById("ChatMessagesCardText").scrollHeight;
-                        document.getElementById("ChatMessagesCardText").scrollTo(0, cardScrollHeight + 1000);
-                        var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
-                        document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 1000);
+                        //var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
+                        //document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 1000);
+
+                        var cardScrollHeight = document.getElementById('ChatMessagesCardText');
+                        cardScrollHeight.scrollTop = cardScrollHeight.scrollHeight;
+
+                        var modScrollHeight = document.getElementById('ModMessagesCardText');
+                        modScrollHeight.scrollTop = modScrollHeight.scrollHeight;
                     }
                 }, 200);
             }

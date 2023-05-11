@@ -448,22 +448,25 @@ function heartBeatCallback ()
 // ============================================================================
 function processChatMessage (data)
 {
-    let chatdata = data
-    /* let chatdata = parseChatData(data)
-    
-    if (!chatdata || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
+    if (data.message.length < serverConfig.chatbotminmessagelength)
+        return
+
+    let chatdata = parseChatData(data)
+
+    if (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
     {
-        if (chatdata.message.length < serverConfig.chatbotminmessagelength)
-            console.log("CHATBOT: chatdata too short", chatdata.message, chatdata.message.length)
+        if (chatdata && chatdata.message && chatdata.message.length < serverConfig.chatbotminmessagelength)
+            console.log("CHATBOT: chatdata too short'" + chatdata.message + "'", chatdata.message.length)
         else
             console.log("CHATBOT: chatdata not usable")
         return
 
-    }*/
+    }
     // ignore messages from the bot or specified users
     if (chatdata.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
         || chatdata.data["display-name"].toLowerCase().indexOf("system") != -1)
         return;
+
     // check if we are triggering chatbot from a chat message
     /*else if (chatdata.message.toLowerCase().startsWith(serverConfig.starttag.toLowerCase()))
     {callOpenAI
@@ -507,20 +510,17 @@ function processChatMessage (data)
             return;
         }
         else
-        {
             // add CD timer here to stop spam messages
             postMessageToTwitch("Sorry, the bot is currently asleep")
-        }
+
     }
     // if we are not processing chat (ie outside of the timer window) just return
     else if (localConfig.running == false)
         return;
+
     // chat bot is currently turned off
     else if (serverConfig.chatbotenabled != "on")
         return
-
-
-
 
     // race condition where a second message thread starts while one is still waiting to return from the API
     // set the count to zero so this tread exits and the next one won't come in
@@ -528,9 +528,7 @@ function processChatMessage (data)
         localConfig.chatMessageCount = 0;
     else
     {
-        console.log("chatbot adding line ", chatdata.message)
-        // add message to history and return if not enough data yet
-        //localConfig.chatHistory.push(chatdata.data.username + ": " + chatdata.message)
+        console.log("chatbot adding line '" + chatdata.message + "'")
         localConfig.chatHistory.push({ "role": "user", "content": chatdata.message })
         localConfig.chatMessageCount++;
     }
@@ -558,14 +556,13 @@ function processChatMessage (data)
             { "role": "user", "content": serverConfig.chatBotBehaviour6 },
             { "role": "assistant", "content": serverConfig.chatBotBehaviour1 }
         ];
+        // add behaviour messages
         for (const obj of CBBehaviour)
             messages.push(obj);
 
         //add chat messages
         for (const obj of localConfig.chatHistory)
-        {
             messages.push(obj);
-        }
 
         callOpenAI(messages, serverConfig.settings.chatmodel)
 
@@ -587,7 +584,7 @@ async function callOpenAI (history_string, modelToUse)
                 }));
 
             console.log("#'#'#'#'#'#'#' CHATBOT: sending following to OpenAI: #'#'#'#'#'#'#' ")
-            console.log(history_string)
+            //console.log(history_string)
             const response = await localConfig.OpenAPIHandle.createChatCompletion(
                 {
                     model: modelToUse.model,
@@ -602,7 +599,6 @@ async function callOpenAI (history_string, modelToUse)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )
-            //console.log(response.data.choices[0].message)
             if (!response)
             {
                 localConfig.requestPending = false;
@@ -619,10 +615,14 @@ async function callOpenAI (history_string, modelToUse)
             {
 
                 // ######################## SUCCESSFULL REQUEST LETS POST BACK TO CHAT ###########################
+                // replace teh chatbot name if it is there
+                let regEx = new RegExp(serverConfig.chatbotname, "ig")
+                chatMessageToPost = chatMessageToPost.replace(regEx, "");
+
                 if (response.data.choices.finish_reason === "length")
-                    postMessageToTwitch(chatMessageToPost.toLowerCase().replaceAll(serverConfig.chatbotname.toLowerCase(), "myself").trim() + " ...")
+                    postMessageToTwitch(chatMessageToPost.trim() + " ...")
                 else
-                    postMessageToTwitch(chatMessageToPost.toLowerCase().replaceAll(serverConfig.chatbotname.toLowerCase(), "myself").trim())
+                    postMessageToTwitch(chatMessageToPost.trim())
                 localConfig.requestPending = false;
                 localConfig.running = false
                 startChatbotTimer()
@@ -650,47 +650,35 @@ async function callOpenAI (history_string, modelToUse)
 // ============================================================================
 function parseChatData (data)
 {
-    let originalmessage = data.message;
     let messageEmotes = data.data.emotes;
     let emoteposition = null
     let emotetext = null
-    if (messageEmotes != null)
+    if (messageEmotes != null && messageEmotes != "")
     {
-        console.log("======================")
-        //console.log("message", data)
-        console.log("messageEmotes:", messageEmotes)
         emotetext = []
         for (var key in messageEmotes) 
         {
-
-            if (!messageEmotes.hasOwnProperty(key)) continue;
-            console.log("checking:", key, "-", messageEmotes[key])
-
+            if (!messageEmotes.hasOwnProperty(key))
+                continue;
             emoteposition = messageEmotes[key][0].split("-");
             emotetext.push(data.message.substring(emoteposition[0], Number(emoteposition[1]) + 1))
         }
         if (emotetext)
         {
-            console.log("emotetext:", emotetext)
-
             emotetext.forEach(function (item, index)
             {
-                console.log(">>>replacing", item)
                 data.message = data.message.replaceAll(item, "")
-                console.log("<<<emotes replaced:", data.message)
             });
         }
-        else
-            console.log("emotetext is null")
+
+
         //remove non ascii chars (ie ascii art, unicode etc)
         data.message = data.message.replace(/[^\x00-\x7F]/g, "");
         // strip all white spaces down to one
         data.message = data.message.replace(/\s+/g, ' ').trim();
-        console.log("original     :", originalmessage)
-        console.log("final message:", data.message)
-        console.log("final message length:", data.message.length)
-        return null; // temp while debugging. remove once happy with the results
     }
+    if (data.message.includes("http"))
+        return null;
 
     return data
 }
@@ -728,7 +716,7 @@ function startChatbotTimer ()
 
     localConfig.chatTimerHandle = setTimeout(startProcessing, randomTimeout);
 
-    logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startChatbotTimer", "Chatbot Timer started: wait time ", randomTimeout * 60000, "minutes");
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startChatbotTimer", "Chatbot Timer started: wait time ", randomTimeout, "minutes");
 }
 // ============================================================================
 //                           FUNCTION: startProcessing

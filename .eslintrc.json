@@ -10,7 +10,9 @@
     },
     "rules": {
       "no-unused-vars": "off",
-      "no-unexpected-multiline": "off"
+      "no-unexpected-multiline": "off",
+      "no-prototype-builtins": "off",
+      "no-control-regex": "off"
     },
     "overrides": [
     {

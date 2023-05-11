@@ -45,7 +45,7 @@ const serverConfig = {
     monitoring_channel: "stream-mod-messages", // discord channel
     discordenabled: "off",
     discordMessageBufferMaxSize: "300",
-    discordMessageBackupTimer: "6000",
+    discordMessageBackupTimer: "60",
     //credentials variable names to use (in credentials modal)
     credentialscount: "1",
     cred1name: "DISCORD_TOKEN",
@@ -412,7 +412,7 @@ function SaveChatMessagesToServerScheduler ()
     SaveDataToServer()
     // clear any previous timeout
     clearTimeout(localConfig.saveDataHandle)
-    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.discordMessageBackupTimer)
+    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.discordMessageBackupTimer * 1000)
 
 }
 // ############################################################################
