@@ -257,7 +257,7 @@ function Timer(timername)
     {
         let minutes = Math.floor(localConfig[timername].timeout / 60);
         let seconds = localConfig[timername].timeout - (minutes * 60);
-        fs.writeFileSync(__dirname + "/tempfiles/" + timername + ".txt", localConfig[timername].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
+        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", localConfig[timername].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
         localConfig[timername].Handle = setTimeout(() =>
         {
             Timer(timername)
@@ -266,7 +266,7 @@ function Timer(timername)
         )
     }
     else
-        fs.writeFileSync(__dirname + "/tempfiles/" + timername + ".txt", " ")
+        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", " ")
 }
 // ============================================================================
 //                           FUNCTION: sendTimerData

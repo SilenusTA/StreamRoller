@@ -6,6 +6,10 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+            <p>Timer files can be found in StreamRoller\extensions\timers\timerfiles after they have been run the first
+                time.
+                <BR>eg. These files can be opend in OBS to show a countdown on screen
+            </p>
             <div class="form-group invisible">
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
                     tabindex="-1" />
@@ -14,7 +18,9 @@
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
             <div class="form-group">
-                <label for="TimerName" class="col-form-label">Timer Name</label>
+                <label for="TimerName" class="col-form-label">Timer Name <BR>( use the counter name
+                    'StartCountdownTimer'
+                    to also show on the OBS start button on this page )</label>
                 <input type="text" name="TimerName" class="form-control" id="TimerName" value="TimerNametext">
                 <label for="TimerMessage" class="col-form-label">Timer Message</label>
                 <input type="text" name="TimerMessage" class="form-control" id="TimerMessage" value="TimerMessagetext">
