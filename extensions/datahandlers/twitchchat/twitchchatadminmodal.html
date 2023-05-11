@@ -6,24 +6,21 @@
         </div>
         <div class="modal-body">
             <div class="form-group invisible">
-                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
-                    tabindex="-1" />
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
                 <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
                 <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="enabletwitchchat" type="checkbox" id="enabletwitchchat"
-                        enabletwitchchatchecked>
+                    <input class="form-check-input" name="enabletwitchchat" type="checkbox" id="enabletwitchchat" enabletwitchchatchecked>
                     <label class="form-check-label" for="enabletwitchchat">Enable/Disable</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="updateUserList" type="checkbox" id="updateUserList"
-                        updateUserListchecked>
-                    <label class="form-check-label" for="updateUserList">Keep Userlist upto data (requires users extension)</label>
+                    <input class="form-check-input" name="updateUserList" type="checkbox" id="updateUserList" updateUserListchecked>
+                    <label class="form-check-label" for="updateUserList">Keep Userlist upto data (requires 'users' extension)</label>
                 </div>
             </div>
             <div class="form-group">
@@ -31,16 +28,12 @@
                 <input type="text" name="streamername" class="form-control" id="streamername" value="streamernametext">
             </div>
             <div class="form-group">
-                <label for="chatMessageBufferMaxSize" class="col-form-label">Chat Buffer Size to save over
-                    restarts</label>
-                <input type="text" name="chatMessageBufferMaxSize" class="form-control" id="chatMessageBufferMaxSize"
-                    value="chatMessageBufferMaxSizetext">
+                <label for="chatMessageBufferMaxSize" class="col-form-label">Chat Buffer Size. How many messages to keep on screen and over reloads of the server</label>
+                <input type="text" name="chatMessageBufferMaxSize" class="form-control" id="chatMessageBufferMaxSize" value="chatMessageBufferMaxSizetext">
             </div>
             <div class="form-group">
-                <label for="chatMessageBackupTimer" class="col-form-label">How often to save chat buffer. default 60000
-                    (1minute)</label>
-                <input type="text" name="chatMessageBackupTimer" class="form-control" id="chatMessageBackupTimer"
-                    value="chatMessageBackupTimertext">
+                <label for="chatMessageBackupTimer" class="col-form-label">How often to save chat buffer. Default 60 seconds (1minute)</label>
+                <input type="text" name="chatMessageBackupTimer" class="form-control" id="chatMessageBackupTimer" value="chatMessageBackupTimertext">
             </div>
         </div>
         <div class="modal-footer">

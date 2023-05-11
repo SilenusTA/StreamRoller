@@ -55,11 +55,11 @@ localConfig.twitchClient["user"] = {
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    enabletwitchchat: "on",
-    updateUserList: "on",
+    enabletwitchchat: "off",
+    updateUserList: "off",
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
-    chatMessageBackupTimer: "6000",
+    chatMessageBackupTimer: "60",
     //credentials variable names to use (in credentials modal)
     credentialscount: "4",
     cred1name: "twitchchatbot",
@@ -158,9 +158,9 @@ function onDataCenterMessage (server_packet)
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
-        serverConfig.enabletwitchchat = "off";
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
+            serverConfig.enabletwitchchat = "off";
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (key in server_packet.data)
@@ -221,7 +221,6 @@ function onDataCenterMessage (server_packet)
                 serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
             SaveDataToServer();
         }
-        SaveChatMessagesToServerScheduler();
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -485,7 +484,7 @@ function SaveChatMessagesToServerScheduler ()
     SaveDataToServer()
     // clear any previous timeout
     clearTimeout(localConfig.saveDataHandle)
-    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer)
+    localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer * 1000)
 
 }
 // ============================================================================
