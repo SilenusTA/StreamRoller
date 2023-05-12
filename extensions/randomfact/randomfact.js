@@ -185,17 +185,16 @@ function process_chat_command (data)
     let Buffer = "";
     if (data.message === "!randomfact")
     {
-        var options = { host: "uselessfacts.jsph.pl", path: "/random.json?language=en", };
+        var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
         var req = https.get(options, function (res)
         {
-            //console.log('STATUS: ' + res.statusCode);
-            //console.log('HEADERS: ' + JSON.stringify(res.headers));
             var bodyChunks = [];
             res.on("data", function (chunk)
             {
                 bodyChunks.push(chunk);
             }).on("end", function ()
             {
+
                 var body = Buffer.concat(bodyChunks);
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
@@ -204,7 +203,10 @@ function process_chat_command (data)
                         sr_api.ExtensionPacket(
                             "SendChatMessage",
                             serverConfig.extensionname,
-                            JSON.parse(body).text,
+                            {
+                                account: "bot",
+                                message: JSON.parse(body).text
+                            },
                             "",
                             "twitchchat"
                         ),

@@ -563,7 +563,7 @@ function sendChatMessage (channel, data)
         {
             localConfig.twitchClient[account].connection.say(channel, data.message)
                 .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
-                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say error", e) })
+                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say error", e.message) })
             sent = true;
         }
         if (!sent)
