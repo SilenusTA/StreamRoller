@@ -92,11 +92,16 @@ npm install
 
 
 ## Step 4: Start StreamRoller
-Start the server with the following comand on both windows or linux (run in the root folder)
+Start the server with the following comand on windows (run in the root folder)
 
 ```
-npm start
+run.cmd
 ```
+or for linux
+```
+node /backend/datacenter/server.js
+```
+
 
 At this point the node webserver will start up and load any extensions currently in the extension directory. point a webrowser at http://localhost:3000 to see it running.
 
