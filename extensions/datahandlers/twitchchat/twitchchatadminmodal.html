@@ -36,6 +36,19 @@
                 <input type="text" name="chatMessageBackupTimer" class="form-control" id="chatMessageBackupTimer" value="chatMessageBackupTimertext">
             </div>
         </div>
+        <HR>
+            <div class="form-group">
+                <div>
+                    <h4>DEBUG OPTIONS</h4>
+                    <BR>Enabling this will prevent messages being sent to twitch but they will propergate locally so it appears like the messages have been sent to twitch.<BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" type="checkbox" id="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" DEBUG_ONLY_MIMICK_POSTING_TO_TWITCHchecked>
+                        <label class="form-check-label" for="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH">Enable/Disable</label>
+                    </div>
+                </div>
+            </div>
+
+        
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>

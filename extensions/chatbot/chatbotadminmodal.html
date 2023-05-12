@@ -50,7 +50,7 @@
                     <input type="text" name="chatbotTimerMax" id="chatbotTimerMax" value="chatbotTimerMaxtext">
                 </div>
             </div>
-            <br>Message history
+            <br>Valid chat content per request
             <br>This is how many messages to send to the AI bot. ie 5 means collect the next 5 messages (after the timeout above) 
                 and send them to get a response
           
@@ -61,6 +61,14 @@
                 </div>
             </div>
 
+            <br>How long should a message be before it is added to the list to send to the bot. Short messages 'hello', 'nice one' or a Bttv emote (can't easily filter these out yet)
+            don't make for such a good responce.
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="chatbotminmessagelength" class="">Minimum char length of a message</label>
+                    <input type="text" name="chatbotminmessagelength"  id="chatbotminmessagelength" value="chatbotminmessagelengthtext">
+                </div>
+            </div>
 
             <hr>
             <h5 class="modal-title">Display</h5>
@@ -102,6 +110,15 @@
                 <label for="chatBotBehaviour7" class="col-form-label">chatBotBehaviour6text</label>
                 <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7" value="chatBotBehaviour7text">
 
+            </div>
+
+            <h5 class="modal-title">Debug</h5>
+            <HR>Outputs some extra text in the console for help to tune things better.
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="DEBUG_MODE" type="checkbox" id="DEBUG_MODE" DEBUG_MODEchecked>
+                    <label class="form-check-label" for="DEBUG_MODE">Enable debug messages</label>
+                </div>
             </div>
         </div>
         <!-- Standard footer with submit and cancel buttons -->

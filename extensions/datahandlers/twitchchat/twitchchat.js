@@ -69,11 +69,11 @@ const serverConfig = {
     cred3name: "twitchchatuser",
     cred3value: "",
     cred4name: "twitchchatuseroauth",
-    cred4value: ""
+    cred4value: "",
+    /// this debug settings will post messages internally only and not to twich
+    DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH: "off"
 };
 
-/// this debug settings will post messages internally only and not to twich
-const DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = false
 //debug setting to overwrite the stored data with the serverConfig above. 
 const OverwriteDataCenterConfig = false;
 const serverData =
@@ -164,6 +164,8 @@ function onDataCenterMessage (server_packet)
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
             serverConfig.enabletwitchchat = "off";
+            serverConfig.updateUserList = "off";
+            serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off";
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (key in server_packet.data)
@@ -240,6 +242,8 @@ function onDataCenterMessage (server_packet)
                 // need to update these manually as the web page does not send unchecked box values
                 serverConfig.enabletwitchchat = "off";
                 serverConfig.updateUserList = "off";
+                serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off"
+
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in extension_packet.data)
                     {
@@ -259,11 +263,12 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SendChatMessage")
         {
-            if (!DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH)
+            if (serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH === "off")
                 sendChatMessage(serverConfig.streamername, extension_packet.data)
             else
             {
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
+                extension_packet.data.account = localConfig.usernames.bot.name
                 console.log("Not posting to twitch ", extension_packet.data)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "?" + extension_packet.data.account + "?", "emotes": "" }, extension_packet.data.message)
             }
