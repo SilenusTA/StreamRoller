@@ -70,7 +70,7 @@ import * as logger from "./logger.js";
 import { Server } from "socket.io";
 import * as mh from "./message_handlers.js";
 import * as cm from "./common.js";
-
+import * as childprocess from "child_process"
 const channels = [];
 let extensions = {};
 let server_socket = null;
@@ -196,6 +196,21 @@ function onMessage (socket, server_packet)
         mh.saveData(server_packet.from, server_packet.data);
     else if (server_packet.type === "StopServer")
         process.exit(0);
+    else if (server_packet.type == "RestartServer")
+    {
+        console.log("Restarting...");
+        const child = childprocess.exec('start "Streamroller" node backend\\data_center\\server.js 5',
+            {
+                detached: true,
+                stdio: 'ignore'
+            })
+        child.unref();
+
+        // we have to block here to all the restarted thread to start up
+        blockingsleep(1000)
+        process.exit();
+
+    }
     else if (server_packet.type === "UpdateCredentials")
     {
         mh.UpdateCredentials(server_packet.data);
@@ -240,6 +255,18 @@ function onMessage (socket, server_packet)
     else
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
 
+}
+
+//if we are restarting the server we need to wait for the old one to exit first.
+blockingsleep(1000)
+function blockingsleep (time, callback)
+{
+    var stop = new Date().getTime();
+    while (new Date().getTime() < stop + time)
+    {
+        ;
+    }
+    //callback();
 }
 
 // ============================================================================
