@@ -51,7 +51,6 @@
         // both arrays need to match up elements in the same indix. ie index 2 should be bg-dark and bg-light to allow swapping
         let darkclasses = ['dark','bg-dark','navbar-dark','text-light'];
         let lightclasses = ['light','bg-light','navbar-light','text-dark'];
-        
         // get all the dark and light class items
         $([".light [class*='-light']", ".dark [class*='-dark']"]).each((i, ele) =>
         {
@@ -65,34 +64,68 @@
                 {
                     match = null
                     tag = $(this)[0].classList[i].toString()
-                    // if in dark mode
-                    if(modeDark=="true")
+                    // close buttons are a special case and need to be opposite 
+                    // need the opposite color to show the cross icon
+                    if(tag==="btn-close")
                     {
-                        lightclasses.forEach((element,index,arr) =>
+                        //if going to ligth mode so set check for light close buttons and switch to dark
+                        if(modeDark==="false")
                         {
-                            if(element == tag)
-                                match=darkclasses[index]
+                            checklist = lightclasses;
+                            oppositechecklist = darkclasses;
+                        }
+                        else
+                        {
+                            checklist = darkclasses;
+                            oppositechecklist = lightclasses;
+                        }
+                        //loop through these classes
+                        for (j = 0; j < $(this)[0].classList.length; j++)
+                        {
+                            match = null
+                            // as we are doing the looping here we need to move the main loop counter on
+                            i++;
+                            tag = $(this)[0].classList[j].toString()
+                            checklist.forEach((element,index,arr) =>
+                            {
+                                if(element === tag)
+                                    match=oppositechecklist[index]
+                            })
+                            if (match)
+                                newclasses = newclasses + " " + match;
+                        
+                            // if the tag didn't match just copy the original tag
+                            if(!match)
+                                newclasses = newclasses + " " + $(this)[0].classList[j].toString();
+                        }
+                    }
+                    else 
+                    {
+                        if(modeDark==="true")
+                        {
+                            checklist = lightclasses;
+                            oppositechecklist = darkclasses;
+                        }
+                        else
+                        {
+                            checklist = darkclasses;
+                            oppositechecklist = lightclasses;
+                        }
+                        checklist.forEach((element,index,arr) =>
+                        {
+                            if(element === tag)
+                                match=oppositechecklist[index]
                         })
                         if (match)
                             newclasses = newclasses + " " + match;
+                        
+                        // if the tag didn't match just copy the original tag
+                        if(!match)
+                            newclasses = newclasses + " " + $(this)[0].classList[i].toString();
                     }
-                    // if in light mode
-                    else
-                    {
-                        darkclasses.forEach((element,index,arr) =>
-                        {
-                            if(element == tag)
-                                match=lightclasses[index]
-                        })
-                        if (match)
-                            newclasses = newclasses + " " + match;
-                    }
-                    // if the tag didn't match just copy the original tag
-                    if(!match)
-                        newclasses = newclasses + " " + $(this)[0].classList[i].toString();
                 }
                 // change the classlist to the new modified oen
-                $(this)[0].classList.value = newclasses;
+                $(this)[0].classList.value = newclasses.trim();
             })
         });
         
