@@ -8,12 +8,10 @@
                 channel: "LIVE_PORTAL",
                 logginglevel: 0,
                 // obs settings
-                defaultscenes: {
-                    Start: { title: "Start", scenename: "##Starting Soon" },
-                    Live: { title: "Live", scenename: "##Game" },
-                    Intermission: { title: "Intermission", scenename: "##Intermission" },
-                    End: { title: "End", scenename: "##StreamEnd" },
-                },
+                obsdefaultstartscenename: "##Starting Soon",
+                obsdefaultlivescenename: "##Game",
+                obsdefaultintermissionscenename: "##Intermission",
+                obsdefaultendscenename: "##StreamEnd",
                 showprimaryscenes: "off",
                 showsecondaryscenes: "off",
                 showallscenes: "on",
@@ -711,21 +709,20 @@
             // ============================================================================
             function UpdateOBSDefaultButtons ()
             {
-                //Start: { title: "Start", scenename: "##Starting Soon" }
                 var element = document.getElementById("OBSDefaultButtons");
                 element.textContent = "";
-                for (const [key, value] of Object.entries(serverConfig.defaultscenes))
+
+                if (localConfig.timers.StartCountdownTimer != undefined && localConfig.timers.StartCountdownTimer > 0)
                 {
-                    if (value.title === "Start" && localConfig.timers.StartCountdownTimer != undefined && localConfig.timers.StartCountdownTimer > 0)
-                    {
-                        let minutes = Math.floor(localConfig.timers.StartCountdownTimer / 60);
-                        let seconds = localConfig.timers.StartCountdownTimer - (minutes * 60);
-                        //addOBSSceneButton(element, localConfig.timers.StartCountdownTimer + "s", value.scenename, localConfig.OBSSceneslist.current)
-                        addOBSSceneButton(element, minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'), value.scenename, localConfig.OBSSceneslist.current)
-                    }
-                    else
-                        addOBSSceneButton(element, value.title, value.scenename, localConfig.OBSSceneslist.current)
+                    let minutes = Math.floor(localConfig.timers.StartCountdownTimer / 60);
+                    let seconds = localConfig.timers.StartCountdownTimer - (minutes * 60);
+                    addOBSSceneButton(element, minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'), serverConfig.obsdefaultstartscenename, localConfig.OBSSceneslist.current)
                 }
+                else
+                    addOBSSceneButton(element, "Start", serverConfig.obsdefaultstartscenename, localConfig.OBSSceneslist.current)
+                addOBSSceneButton(element, "Live", serverConfig.obsdefaultlivescenename, localConfig.OBSSceneslist.current)
+                addOBSSceneButton(element, "Intermission", serverConfig.obsdefaultintermissionscenename, localConfig.OBSSceneslist.current)
+                addOBSSceneButton(element, "End", serverConfig.obsdefaultendscenename, localConfig.OBSSceneslist.current)
             }
             // ============================================================================
             //                           FUNCTION: ParseOBSScenesList
