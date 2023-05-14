@@ -14,6 +14,7 @@
                     Intermission: { title: "Intermission", scenename: "##Intermission" },
                     End: { title: "End", scenename: "##StreamEnd" },
                 },
+                showprimaryscenes: "off",
                 showsecondaryscenes: "off",
                 showallscenes: "on",
                 mutescene: "",
@@ -745,7 +746,9 @@
                 UpdateOBSDefaultButtons();
 
                 // always show the primary scene list
-                if (typeof (primaryScenes) !== "undefined")
+                if (typeof (primaryScenes) !== "undefined" &&
+                    (serverConfig.showallscenes === "on" || serverConfig.showprimaryscenes === "on")
+                )
                 {
                     primaryScenes.forEach((scene) => 
                     {
@@ -757,7 +760,7 @@
                         }
                     });
                 }
-                // if we have all or secondory selected to show then show them
+                // if we have all or secondory selected to show then show both 'secondary' list and 'rest' list
                 if (typeof (secondaryScenes) !== "undefined" && (serverConfig.showallscenes === "on" || serverConfig.showsecondaryscenes === "on"))
                 {
                     secondaryScenes.forEach((scene) => 

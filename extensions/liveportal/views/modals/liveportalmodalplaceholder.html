@@ -17,8 +17,14 @@
                     <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
                 </div>
                 <div class="form-group">
-                    <label class="col-form-label">Scene Display (set identifier tags in the obs extension settings
+                    <label class="col-form-label">Extra scene buttons to display on top of defaults start, live,
+                        intermission and end buttons (set identifier tags in the obs extension settings
                         first)</label><BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes"
+                            showprimarysceneschecked>
+                        <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
+                    </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" name="showsecondaryscenes" type="checkbox"
                             id="showsecondaryscenes" showsecondarysceneschecked>
