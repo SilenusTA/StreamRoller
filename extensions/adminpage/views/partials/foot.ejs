@@ -1,5 +1,9 @@
-<p class="text-center text-muted">Creator <a href="https://twitch.tv/OldDepressedGamer" target="creatorwindow">twitch.tv/OldDepressedGamer</a>
-<BR><a href="https://github.com/SilenusTA/StreamRoller" target="creatorwindow">Streamroller on github</a></p>
+<p class="text-center text-muted">Creator <a href="https://twitch.tv/OldDepressedGamer"
+        target="creatorwindow">twitch.tv/OldDepressedGamer</a>
+    <BR><a href="https://github.com/SilenusTA/StreamRoller" target="creatorwindow">Streamroller on github</a>
+    <BR><a href="https://streamlabs.com/olddepressedgamer/tip" target="creatorwindow">Donate</a>
+</p>
+
 <!-- Bootstrap JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
@@ -11,14 +15,14 @@
 <script>
     let modeDark = localStorage.getItem("darkmode")
     // check for no stored value
-    if(!modeDark)
-        modeDark="false";
+    if (!modeDark)
+        modeDark = "false";
     window.onload = setDarkMode(modeDark)
-    
+
     // on click handler for switching dark mode
     $('.darkswitch').click(() =>
     {
-        if(modeDark == "true")
+        if (modeDark == "true")
             modeDark = "false"
         else
             modeDark = "true"
@@ -34,7 +38,7 @@
     // ----------------------------- notes ----------------------------------------
     // none
     // ============================================================================
-    function refreshDarkMode()
+    function refreshDarkMode ()
     {
         setDarkMode(localStorage.getItem("darkmode"))
     }
@@ -46,11 +50,11 @@
     // ----------------------------- notes ----------------------------------------
     // none
     // ============================================================================
-    function setDarkMode(modeDark)
+    function setDarkMode (modeDark)
     {
         // both arrays need to match up elements in the same indix. ie index 2 should be bg-dark and bg-light to allow swapping
-        let darkclasses = ['dark','bg-dark','navbar-dark','text-light'];
-        let lightclasses = ['light','bg-light','navbar-light','text-dark'];
+        let darkclasses = ['dark', 'bg-dark', 'navbar-dark', 'text-light'];
+        let lightclasses = ['light', 'bg-light', 'navbar-light', 'text-dark'];
         // get all the dark and light class items
         $([".light [class*='-light']", ".dark [class*='-dark']"]).each((i, ele) =>
         {
@@ -66,10 +70,10 @@
                     tag = $(this)[0].classList[i].toString()
                     // close buttons are a special case and need to be opposite 
                     // need the opposite color to show the cross icon
-                    if(tag==="btn-close")
+                    if (tag === "btn-close")
                     {
                         //if going to ligth mode so set check for light close buttons and switch to dark
-                        if(modeDark==="false")
+                        if (modeDark === "false")
                         {
                             checklist = lightclasses;
                             oppositechecklist = darkclasses;
@@ -86,22 +90,22 @@
                             // as we are doing the looping here we need to move the main loop counter on
                             i++;
                             tag = $(this)[0].classList[j].toString()
-                            checklist.forEach((element,index,arr) =>
+                            checklist.forEach((element, index, arr) =>
                             {
-                                if(element === tag)
-                                    match=oppositechecklist[index]
+                                if (element === tag)
+                                    match = oppositechecklist[index]
                             })
                             if (match)
                                 newclasses = newclasses + " " + match;
-                        
+
                             // if the tag didn't match just copy the original tag
-                            if(!match)
+                            if (!match)
                                 newclasses = newclasses + " " + $(this)[0].classList[j].toString();
                         }
                     }
                     else 
                     {
-                        if(modeDark==="true")
+                        if (modeDark === "true")
                         {
                             checklist = lightclasses;
                             oppositechecklist = darkclasses;
@@ -111,16 +115,16 @@
                             checklist = darkclasses;
                             oppositechecklist = lightclasses;
                         }
-                        checklist.forEach((element,index,arr) =>
+                        checklist.forEach((element, index, arr) =>
                         {
-                            if(element === tag)
-                                match=oppositechecklist[index]
+                            if (element === tag)
+                                match = oppositechecklist[index]
                         })
                         if (match)
                             newclasses = newclasses + " " + match;
-                        
+
                         // if the tag didn't match just copy the original tag
-                        if(!match)
+                        if (!match)
                             newclasses = newclasses + " " + $(this)[0].classList[i].toString();
                     }
                 }
@@ -128,9 +132,9 @@
                 $(this)[0].classList.value = newclasses.trim();
             })
         });
-        
+
         // set the body tags (these don't get read by the above code)
-        if(modeDark=="true")
+        if (modeDark == "true")
         {
             $('body').addClass('dark').removeClass('light');
             $('body').addClass('bg-dark').removeClass('bg-light');

@@ -35,7 +35,7 @@ import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const logfilename = __dirname + "/../credentialstore/log.log"
+const logfilename = __dirname + "/../../../streamroller.log"
 
 const __createlogfile = false;
 let firstrun = true;
