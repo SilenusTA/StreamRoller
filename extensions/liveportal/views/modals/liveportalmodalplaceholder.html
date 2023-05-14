@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content bg-light text-dark">
             <div class="modal-header">
-                <h5 class="modal-title">Live Portal Admin Settings</h5>
+                <h2 class="modal-title">Live Portal Admin Settings</h2>
                 <button type="button" class="btn-close bg-light" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -16,6 +16,8 @@
                         tabindex="-1" />
                     <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
                 </div>
+                <h4 class="modal-title">OBS Settings</h4>
+                <h5 class="modal-title">OBS Scene buttons</h5>
                 <div class="form-group">
                     <label class="col-form-label">Extra scene buttons to display on top of defaults start, live,
                         intermission and end buttons (set identifier tags in the obs extension settings
@@ -35,8 +37,8 @@
                             showallsceneschecked>
                         <label class="form-check-label" for="showallscenes">Show All Scenes</label>
                     </div>
-
                 </div>
+                <h5 class="modal-title">OBS Mute button</h5>
                 <div class="form-group row">
                     <div class="form-group">
                         <label for="mutescene" class="col-form-label">Scene to mute when button pressed (suggestion:
@@ -45,17 +47,19 @@
                         <input type="text" name="mutescene" class="form-control" id="mutescene" value="mutescenetext">
                     </div>
                 </div>
+                <HR>
+                <h4 class="modal-title">Discord</h4>
+                <h5 class="modal-title">Mod Chat Window</h5>
                 <div class="form-group">
-                    <label class="col-form-label">Mod Chat Window/Discord</label><BR>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" name="modchattomodwindow" type="checkbox"
                             id="modchattomodwindow" modchattomodwindowchecked>
-                        <label class="form-check-label" for="modchattomodwindow">Show Chat mod messages as well as
-                            discord</label>
+                        <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
+                            window as well as discord</label>
                     </div>
                 </div>
+                <h5 class="modal-title">Alerts to post on discord</h5>
                 <div class="form-group">
-                    <label class="col-form-label">Alerts to post on discord</label><BR>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" name="follows" type="checkbox" id="follows" followschecked>
                         <label class="form-check-label" for="follows">Follows</label>
@@ -98,6 +102,9 @@
                             id="cloudbotredemption" cloudbotredemptionchecked>
                         <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
                     </div>
+                </div>
+                <h5 class="modal-title">Discord Channels</h5>
+                <div class="form-group">
                     <div class="form-group">
                         <label for="donations_channel" class="col-form-label">Discord Donations Channel to use:</label>
                         <input type="text" name="donations_channel" class="form-control" id="donations_channel"
@@ -109,8 +116,9 @@
                             value="modmessage_channeltext">
                     </div>
                 </div>
+                <HR>
+                <h4 class="modal-title">Random Facts</h4>
                 <div class="form-group">
-                    <label class="col-form-label">Random Facts.</label><BR>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" name="randomfactsenabled" type="checkbox"
                             id="randomfactsenabled" randomfactsenabledchecked>
@@ -122,7 +130,10 @@
                         <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout"
                             value="randomfactstimeouttext">
                     </div>
-                    <label class="col-form-label">Twitter</label><BR>
+                </div>
+                <HR>
+                <h4 class="modal-title">Twitter</h4>
+                <div class="form-group">
                     On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
                     <ol>
                         <li>Main message</li>
@@ -155,11 +166,10 @@
                             id="randomfactstwittermessage_x" value="randomfactstwittermessage_xtext">
                     </div>
                 </div>
-
-
+                <HR>
+                <h4 class="modal-title">Debug</h4>
                 <div class="form-group">
                     <HR>
-                    <h5>Debug</H5>
                     <div class="form-group">
                         <label for="logginglevel" class="col-sm-3 col-form-label">System Log Level</label>
                         <div class="col-sm-2">
@@ -167,7 +177,6 @@
                                 value="loggingleveltext">
                         </div>
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
