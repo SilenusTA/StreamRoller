@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-form-label">Mod Chat Window</label><BR>
+                    <label class="col-form-label">Mod Chat Window/Discord</label><BR>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" name="modchattomodwindow" type="checkbox"
                             id="modchattomodwindow" modchattomodwindowchecked>
@@ -92,33 +92,81 @@
                             id="cloudbotredemption" cloudbotredemptionchecked>
                         <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
                     </div>
+                    <div class="form-group">
+                        <label for="donations_channel" class="col-form-label">Discord Donations Channel to use:</label>
+                        <input type="text" name="donations_channel" class="form-control" id="donations_channel"
+                            value="donations_channeltext">
+                    </div>
+                    <div class="form-group">
+                        <label for="modmessage_channel" class="col-form-label">Discord Channel to monitor:</label>
+                        <input type="text" name="modmessage_channel" class="form-control" id="modmessage_channel"
+                            value="modmessage_channeltext">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-form-label">Random Facts.</label><BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="randomfactsenabled" type="checkbox"
+                            id="randomfactsenabled" randomfactsenabledchecked>
+                        <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="randomfactstimeout" class="col-form-label">How often to post random facts to twitch
+                            chat(in seconds)</label>
+                        <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout"
+                            value="randomfactstimeouttext">
+                    </div>
+                    <label class="col-form-label">Twitter</label><BR>
+                    On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
+                    <ol>
+                        <li>Main message</li>
+                        <li>Extra message</li>
+                        <li>Random fact</li>
+                    </ol>
+                    Streamroller will calculate the length of the tweet and do the following options in order depending
+                    on size
+                    <ol>
+                        <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
+                        <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
+                        <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
+                    </ol>
+
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="randomfactstwitterenabled" type="checkbox"
+                            id="randomfactstwitterenabled" randomfactstwitterenabledchecked>
+                        <label class="form-check-label" for="randomfactstwitterenabled">Post a Tweet on going live (hit
+                            start streaming in OBS).</label>
+                    </div>
+                    <div class="form-group">
+
+                        <label for="randomfactstwittermessage" class="col-form-label">Main Message</label>
+                        <input type="text" name="randomfactstwittermessage" class="form-control"
+                            id="randomfactstwittermessage" value="randomfactstwittermessagetext">
+
+                        <label for="randomfactstwittermessage_x" class="col-form-label">Extra message if there is
+                            space</label>
+                        <input type="text" name="randomfactstwittermessage_x" class="form-control"
+                            id="randomfactstwittermessage_x" value="randomfactstwittermessage_xtext">
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <HR>
+                    <h5>Debug</H5>
+                    <div class="form-group">
+                        <label for="logginglevel" class="col-sm-3 col-form-label">System Log Level</label>
+                        <div class="col-sm-2">
+                            <input type="text" name="logginglevel" class="form-control" id="logginglevel"
+                                value="loggingleveltext">
+                        </div>
+                    </div>
 
                 </div>
-            
-            <div class="form-group">
-                <label for="donations_channel" class="col-form-label">Discord Donations Channel to use:</label>
-                <input type="text" name="donations_channel" class="form-control" id="donations_channel"
-                    value="donations_channeltext">
-            </div>
-            <div class="form-group">
-                <label for="modmessage_channel" class="col-form-label">Discord Channel to monitor:</label>
-                <input type="text" name="modmessage_channel" class="form-control" id="modmessage_channel"
-                    value="modmessage_channeltext">
-            </div>
-            <HR>
-            <h5>Debug</H5>
-            <div class="form-group">
-                <label for="logginglevel" class="col-sm-3 col-form-label">System Log Level</label>
-                <div class="col-sm-2">
-                    <input type="text" name="logginglevel" class="form-control" id="logginglevel"
-                        value="loggingleveltext">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
                 </div>
-            </div>
-            <BR>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
-            </div>
             </div>
         </div>
     </div>

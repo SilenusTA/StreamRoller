@@ -126,8 +126,8 @@ function onDataCenterMessage (server_packet)
                     serverConfig[key] = value;
 
                 SaveConfigToServer();
-                // send any updated data to all extensions that are using the modal
-                SendAdminModal(server_packet.from);
+                // broadcast our modal out so anyone showing it can update it
+                SendAdminModal("");
 
                 // check any timers needed
                 CheckTimers(decoded_packet.data.TimerName);

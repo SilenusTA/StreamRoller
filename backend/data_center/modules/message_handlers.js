@@ -252,8 +252,8 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     // if message provides a destination but we don't a client socket for it
     if (server_packet.to && extensions[server_packet.to] && !extensions[server_packet.to].socket)
     {
-        logger.warn("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:extension:", server_packet.to, " connection doesn't exist from " + server_packet.from);
+        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
+            "Destination:extension:", server_packet.to, " connection doesn't exist (maybe still loading?) from " + server_packet.from);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
     }

@@ -34,7 +34,14 @@
                 merch: "off",
                 bits: "off",
                 donations: "off",
-                chatAsUsername: "user"
+                chatAsUsername: "user",
+
+                // random facts / twitter settings
+                randomfactsenabled: "off",
+                randomfactstimeout: 1800,
+                randomfactstwitterenabled: "off",
+                randomfactstwittermessage: "We're live twitch.tv/OldDepressedGamer",
+                randomfactstwittermessage_x: "Come say Hi!"
             };
             const localConfig =
             {
@@ -49,8 +56,7 @@
                 mouseDown: 0,
                 randomFact: "",
                 twitchRandomFactHandle: null,
-                timers: [],
-                factofthedaytimeout: 1800000
+                timers: []
             }
 
             // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -165,8 +171,8 @@
                     RequestChatBuffer("discordchat");
                 }, 2000);
 
-                // setup gimeout for facts on stream
-                if (localConfig.factofthedaytimeout > 0)
+                // setup timeout for facts on stream
+                if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
                     twitchFactOfTheDay();
 
             }
@@ -185,7 +191,6 @@
                 // -------------------------------------------------------------------------------------------------
                 if (server_packet.type === "ConfigFile")
                 {
-                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " for " + server_packet.to);
                     // update our config
                     if (server_packet.data != "")
                         // check it is our config
@@ -264,7 +269,9 @@
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "AdminModalCode")
                     {
-                        if (extension_packet.to === serverConfig.extensionname)
+                        // we process our own submits so don't do anything with the updates we send out if they come 
+                        // back to us
+                        if (extension_packet.from != serverConfig.extensionname)
                             addModal(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
@@ -272,20 +279,33 @@
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "AdminModalData")
                     {
-                        // check that it is for us
-                        if (extension_packet.to === serverConfig.extensionname)
+                        // check that it is not from us as we process our own code internally
+                        if (extension_packet.from != serverConfig.extensionname)
                         {
                             // lets reset our config checkbox settings (modal will omit ones not
                             // checked in checkboxes so set them to "off" here first if you have them)
                             // set our config values to the ones in message
-                            for (const [key, value] of Object.entries(extension_packet.data))
-                                serverConfig[key] = value;
+                            //for (const [key, value] of Object.entries(extension_packet.data))
+                            //        serverConfig[key] = value;
+                            for (const [key, value] of Object.entries(serverConfig))
+                            {
+                                //lets check our settings and send out updates as required
+                                if (value === "on" && !extension_packet.data[key])
+                                    serverConfig[key] = "off";
+                                if (key in extension_packet.data)
+                                    serverConfig[key] = extension_packet.data[key];
+                                // setup timeout for facts on stream
+                                if (extension_packet.data[key] == "randomFactsEnabled" && serverConfig.randomFactsEnabled === "on" && serverConfig.randomFactsTimeout > 0)
+                                    twitchFactOfTheDay();
+                            }
 
                             changeServerLogging(serverConfig.logginglevel)
                             // save our data to the server for next time we run
                             SaveConfigToServer();
                             //lets update our modal
                             UpdateAdminModalData();
+                            // update anyone that may have out modal
+                            SendModal("");
                         }
                     }
                     // -------------------------------------------------------------------------------------------------
@@ -436,7 +456,7 @@
                             localConfig.obslive = true;
                             OBSLiveCheck();
                             // send tweet to say we are live
-                            postMessageToTwitter();
+                            postMessageToTwitter(serverConfig.randomfactstwittermessage, serverConfig.randomfactstwittermessage_x);
                         }
                         else if (extension_packet.type === "StreamStopped")
                         {
@@ -579,7 +599,6 @@
             // ===========================================================================
             function SendModal (toextension)
             {
-
                 let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
                 // first lets update our modal to the current settings
                 for (const [key, value] of Object.entries(serverConfig))
@@ -589,7 +608,7 @@
                     {
                         modalstring = modalstring.replace(key + "checked", "checked");
                     }   //value is a string then we need to replace the text
-                    else if (typeof (value) == "string")
+                    else if (typeof (value) == "string" || typeof (value) == "number")
                         modalstring = modalstring.replace('"' + key + 'text"', '"' + value + '"');
                 }
                 // send the modal data to the server
@@ -653,12 +672,13 @@
                         {
                             // process this data oursleves first
                             processOwnModalSubmit(xname);
-                            // now it is processed we can parse it and send the data out to other who
-                            // migh have it on their page
-                            parseExtensionModalData(xname);
+                            // now it is processed we can parse it
+                            UpdateAdminModalData()
                             // As we have some updateded data we need to make sure that we refresh ourselves in case
                             // we have changed some settings (ie buttons to be shown)
                             ParseOBSScenesList(localConfig.OBSSceneslist);
+                            // update anyone that has our modal
+                            SendModal("");
                         }
                         else
                             parseExtensionModalData(xname);
@@ -843,7 +863,7 @@
                 document.getElementById("OBSMute").appendChild(button);
             }
             // ============================================================================
-            //                           FUNCTION: SaveConfigToServer
+            //                           FUNCTION: OBSLiveCheck
             // ============================================================================
             function OBSLiveCheck ()
             {
@@ -1712,34 +1732,33 @@
             // ============================================================================
             //                           FUNCTION: postMessageToTwitter
             // ============================================================================
-            function postMessageToTwitter ()
+            function postMessageToTwitter (msg1, msg2)
             {
 
-                let msg = "We're live twitch.tv/OldDepressedGamer ";
-                let msg_hi = "Come say Hi! ";
+                msg1 += " ";
+                msg2 += " ";
                 let msg_end = "Sent from StreamRoller";
                 let msg_fact = "";
 
-                if (localConfig.randomFact !== "")
+                if (serverConfig.randomfactstwitterenabled && localConfig.randomFact !== "")
                     msg_fact = "FOTD:" + localConfig.randomFact + " ";
 
-                if (((msg.length - 12) + msg_hi.length + msg_fact.length + msg_end.length) < 281)
-                    msg = msg + msg_hi + msg_fact + msg_end;
-                else if (((msg.length - 12) + msg_fact.length + msg_end.length) < 281)
-                    msg = msg + msg_fact + msg_end;
-                else if (((msg.length - 12) + msg_hi.length + msg_end.length) < 281)
-                    msg = msg + msg_hi + msg_end;
-
-                console.log("postMessageToTwitter: ", msg)
-                console.log("msg.length ", msg.length)
-
+                // we have enough space for everything 
+                if (((msg1.length - 12) + msg2.length + msg_fact.length + msg_end.length) < 281)
+                    msg1 = msg1 + msg2 + msg_fact + msg_end;
+                //we have enough space if we remove the extra message
+                else if (((msg1.length - 12) + msg_fact.length + msg_end.length) < 281)
+                    msg1 = msg1 + msg_fact + msg_end;
+                //we can't fit random fact and main message in so remove the random fact
+                else if (((msg1.length - 12) + msg2.length + msg_end.length) < 281)
+                    msg1 = msg1 + msg2 + msg_end;
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
                             "PostTweet",
                             serverConfig.extensionname,
-                            msg,
+                            msg1,
                             "",
                             "twitter"),
                         "",
@@ -1846,14 +1865,17 @@
                 if (localConfig.twitchRandomFactHandle != null)
                     clearTimeout(localConfig.twitchRandomFactHandle);
 
-                localConfig.twitchRandomFactHandle = setTimeout(function ()
+                if (serverConfig.randomfactsenabled === "on")
                 {
-                    postMessageToTwitch("Random Fact: " + localConfig.randomFact)
-                    RequestRandomFact();
-                    twitchFactOfTheDay();
-                },
-                    localConfig.factofthedaytimeout
-                )
+                    localConfig.twitchRandomFactHandle = setTimeout(function ()
+                    {
+                        postMessageToTwitch("Random Fact: " + localConfig.randomFact)
+                        RequestRandomFact();
+                        twitchFactOfTheDay();
+                    },
+                        serverConfig.randomfactstimeout * 1000
+                    )
+                }
             }
             // ============================================================================
             //                           FUNCTION: heartBeat

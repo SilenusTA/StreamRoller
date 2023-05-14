@@ -188,8 +188,8 @@ function onDataCenterMessage (server_packet)
                         serverConfig[key] = extension_packet.data[key];
                 // save our data to the server for next time we run
                 SaveConfigToServer();
-                // currently we have the same data as sent so no need to update the server page at the moment
-                SendAdminModal(extension_packet.from);
+                // broadcast our modal out so anyone showing it can update it
+                SendAdminModal("");
             }
             else if (extension_packet.type === "PostMessage")
             {

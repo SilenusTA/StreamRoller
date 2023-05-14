@@ -204,7 +204,12 @@
                         //                   RECEIVED EXTENSION MODAL CODE
                         // -------------------------------------------------------------------------------------------------
                         else if (extension_packet.type === "AdminModalCode")
-                            addModal(extension_packet.from, extension_packet.data, "SettingsPlaceholder", "admincard");
+                        {
+                            // we process our own submits so don't do anything with the updates we send out if they come 
+                            // back to us
+                            if (extension_packet.from != serverConfig.extensionname)
+                                addModal(extension_packet.from, extension_packet.data, "SettingsPlaceholder", "admincard");
+                        }
                         // -------------------------------------------------------------------------------------------------
                         //                   RECEIVED EXTENSION CREDENTIALS MODAL CODE
                         // -------------------------------------------------------------------------------------------------
@@ -215,8 +220,10 @@
                         // -------------------------------------------------------------------------------------------------
                         else if (extension_packet.type === "AdminModalData")
                         {
-                            // check that it is ours
-                            if (extension_packet.to === serverConfig.extensionname)
+                            // check that this is not from us.
+                            // we process our own submits so do'nt do anything with the updates we send out if they come
+                            // back to us
+                            if (extension_packet.from != serverConfig.extensionname)
                             {
                                 // lets reset our config checkbox settings (modal will omit ones not
                                 // checked in checkboxes so set them to "off" here first if you have them)

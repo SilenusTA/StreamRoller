@@ -259,6 +259,8 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 // restart the scheduler in case we changed it
                 SaveChatMessagesToServerScheduler();
+                // broadcast our modal out so anyone showing it can update it
+                SendAdminModal("");
             }
         }
         else if (extension_packet.type === "SendChatMessage")
@@ -552,6 +554,11 @@ function sendChatMessage (channel, data)
 {
     let sent = false
     let account = null;
+    if (serverConfig.enabletwitchchat == "off")
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with twitchchat turned off", data.account, data.message)
+        return;
+    }
     try
     {
         if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))

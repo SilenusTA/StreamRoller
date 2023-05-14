@@ -151,6 +151,8 @@ function onDataCenterMessage (server_packet)
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
+                // broadcast our modal out so anyone showing it can update it
+                SendAdminModal("");
             }
         }
         else if (extension_packet.type === "PostTweet")

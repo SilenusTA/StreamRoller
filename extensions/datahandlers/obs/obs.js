@@ -202,6 +202,8 @@ function onDataCenterMessage (server_packet)
                     processOBSSceneList(localConfig.OBSAvailableScenes);
                 sendScenes();
             }
+            //update anyone who is showing our code at the moment
+            SendAdminModal("");
         }
         else if (extension_packet.type === "RequestScenes")
         {

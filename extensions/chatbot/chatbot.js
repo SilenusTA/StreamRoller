@@ -230,6 +230,8 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 if (timerschanged)
                     startChatbotTimer();
+                // broadcast our modal out so anyone showing it can update it
+                SendAdminModal("");
             }
         }
         else
