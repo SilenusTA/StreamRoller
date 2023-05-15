@@ -15,7 +15,7 @@ jobs:
       - run: |
             npm i -D caxa
             npm install
-            npx caxa -i . -o SR1.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 #      - uses: actions/upload-artifact@v3
 #        with:
 #          name: my-artifact
@@ -27,13 +27,10 @@ jobs:
           git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
           cd sr_clone\windows_releases\
           del StreamRoller.exe
-          dir
-          dir ..\..\
-          copy ..\..\SR1.exe SR.exe
-          dir
-#          git add .
-#          git commit -m "$(date)"
-#          git push
+          copy ..\..\StreamRoller.exe StreamRoller.exe
+          git add .
+          git commit -m "$(date)"
+          git push
 #                  cp index.js clonedFolder/ -f
 #                  cd clonedFolder
 #                  git add .
