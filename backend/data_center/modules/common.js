@@ -13,11 +13,16 @@ import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const configFilesPath = __dirname + "/../configstore/";
-const dataFilesPath = __dirname + "/../datastore/";
-const credentialFilesPath = __dirname + "/../credentialstore/";
+//const usersPath = dirname(fileURLToPath(import.meta.url));
+let usersPath = process.env.APPDATA + "/StreamRoller/Data";
+const configFilesPath = usersPath + "/configstore/";
+const dataFilesPath = usersPath + "/datastore/";
+const credentialFilesPath = usersPath + "/credentialstore/";
 let credentials = {};
+
+if (!fs.existsSync(configFilesPath)) fs.mkdir(configFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(dataFilesPath)) fs.mkdir(dataFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(credentialFilesPath)) fs.mkdir(credentialFilesPath, { recursive: true }, (err) => { if (err) throw err; });
 // ============================================================================
 //                  FUNCTION: encrypt
 // ============================================================================
@@ -26,7 +31,7 @@ let credentials = {};
  * @param {String} text 
  * @returns 
  */
-function encrypt(text)
+function encrypt (text)
 {
     let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
     let encrypted = cipher.update(text);
@@ -42,7 +47,7 @@ function encrypt(text)
  * @param {String} text 
  * @returns 
  */
-function decrypt(text)
+function decrypt (text)
 {
     //let iv = Buffer.from(text.iv, 'hex');
     //let iv = JSON.parse(text.iv);
@@ -55,7 +60,7 @@ function decrypt(text)
 // ============================================================================
 //                  FUNCTION: loadconfig
 // ============================================================================
-function initcrypto()
+function initcrypto ()
 {
     const credfile = loadConfig("seed", credentialFilesPath)
     if (credfile === "")
@@ -89,7 +94,7 @@ function initcrypto()
  * @param {String} configname 
  * @returns configfile object or ""
  */
-function loadConfig(configname, path = configFilesPath)
+function loadConfig (configname, path = configFilesPath)
 {
     let filename = path + configname + ".json";
     try
@@ -124,7 +129,7 @@ function loadConfig(configname, path = configFilesPath)
  * @param {string} configname 
  * @param {object} data 
  */
-function saveConfig(configname, data, path = configFilesPath)
+function saveConfig (configname, data, path = configFilesPath)
 {
     try
     {
@@ -145,14 +150,14 @@ function saveConfig(configname, data, path = configFilesPath)
 // ============================================================================
 //                  FUNCTION: loadData
 // ============================================================================
-function loadData(configname)
+function loadData (configname)
 {
     return loadConfig(configname, dataFilesPath)
 }
 // ============================================================================
 //                  FUNCTION: saveData
 // ============================================================================
-function saveData(configname, data)
+function saveData (configname, data)
 {
     return saveConfig(configname, data, dataFilesPath)
 }
@@ -164,7 +169,7 @@ function saveData(configname, data)
  * @param {String} configname 
  * @returns configfile object or ""
  */
-function loadCredentials(configname)
+function loadCredentials (configname)
 {
     const credfile = loadConfig(configname, credentialFilesPath)
     if (credfile != "")
@@ -183,7 +188,7 @@ function loadCredentials(configname)
  * Saves data to the filename given.
  * @param {object} data 
  */
-function saveCredentials(data)
+function saveCredentials (data)
 {
     if (data.ExtensionName != "" && data.CredentialName != "" && data.CredentialValue != "")
     {
