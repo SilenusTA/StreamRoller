@@ -14,7 +14,6 @@ jobs:
       - uses: nizarmah/auto-minify@v2.1
         with:
           js_engine : 'uglify-js'
-          directory: ''
           output: 'mini_js'            
       - run: |
             cd mini_js/
