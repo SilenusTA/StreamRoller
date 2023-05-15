@@ -27,7 +27,7 @@ jobs:
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
-          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller sr_clone
           cd sr_clone\windows_releases\
           del StreamRoller.exe
           copy ..\..\StreamRoller.exe StreamRoller.exe
