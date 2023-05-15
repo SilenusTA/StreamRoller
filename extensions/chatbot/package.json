@@ -7,7 +7,6 @@
     "scripts": {},
     "author": "Twitch/OldDepressedGamer",
     "license": "",
-    ,
     "dependencies": {
         "openai": "^3.2.0"
     }
