@@ -16,7 +16,6 @@ jobs:
         with:
           js_engine : 'uglify-js'
           overwrite: true
-          output: 'mini_js'
       - run: |
             npm i -D caxa
             npm install
