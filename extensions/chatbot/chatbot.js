@@ -84,13 +84,13 @@ const serverConfig = {
         chatmodel: {
             //model: "text-davinci-003",
             model: "gpt-3.5-turbo",
-            temperature: 0.2,
+            temperature: 0.3,
             max_tokens: 110, // note twich chat is somewhere around 125 tokens +- lenght of words in responce
         },
         // different settings available for direct questions
         questionmodel: {
             model: "gpt-3.5-turbo",
-            temperature: 0,
+            temperature: 0.1,
             max_tokens: 110,
         },
     },
@@ -791,16 +791,16 @@ function startChatbotTimer ()
 {
     var randomTimeout = Math.floor(Math.random() * ((serverConfig.chatbotTimerMax * 60000) - (serverConfig.chatbotTimerMin * 60000) + 1) + (serverConfig.chatbotTimerMin * 60000));
 
-    //avoid spamming the API so set the maximum query time to 5 seconds
-    if (randomTimeout < 5000)
-        randomTimeout = 5000
+    //avoid spamming the API so set the maximum query time to 1 seconds
+    if (randomTimeout < 1000)
+        randomTimeout = 1000
 
     localConfig.chatHistory = []
     localConfig.chatMessageCount = 0;
     if (localConfig.chatTimerHandle != null)
         clearTimeout(localConfig.chatTimerHandle);
     if (serverConfig.DEBUG_MODE === "on")
-        console.log("Setting timer to", randomTimeout / 1000, "seconds")
+        console.log("Setting timer to", (randomTimeout / 1000), "seconds")
     localConfig.chatTimerHandle = setTimeout(startProcessing, randomTimeout);
 
     logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startChatbotTimer", "Chatbot Timer started: wait time ", randomTimeout, "minutes");
