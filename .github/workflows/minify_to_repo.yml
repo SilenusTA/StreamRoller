@@ -1,6 +1,7 @@
 name: minify_and_Build
 run-name: ${{ github.actor }} is Creating a windows version of Streamroller
-on: [push]
+on: 
+[push]
 
 jobs:
   minify_and_Build:
