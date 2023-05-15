@@ -1,5 +1,5 @@
 name: minify_and_Build
-run-name: ${{ github.actor }} is Creating a windows version of Streamroller
+run-name: ${{ github.actor }} is minifying
 on: [push]
 
 jobs:
@@ -19,5 +19,6 @@ jobs:
       - run: |
             npm i -D caxa
             npm install
-            npm start
+            cat extensions\chatbot\chatbot.js
+            //npm start
 
