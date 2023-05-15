@@ -4,46 +4,60 @@ on: [push]
 
 jobs:
   create_windows-version:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: '16.13.2'
       - uses: actions/checkout@v3
-      - run: |
-            npm i -D caxa
-            npm install
       - uses: nizarmah/auto-minify@v2.1
         with:
           js_engine : 'uglify-js'
           overwrite: true
-      - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
-      - uses: actions/upload-artifact@v3
-        with:
-          name: my-artifact
-          path: StreamRoller.exe
+      - run: |
+            npm i -D caxa
+            npm install
+            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+            git config --global user.email "silenusta@gmail.com.com"
+            git config --global user.name "silenusta"
+            git config --global credential.helper cache
+            git clone https://${{secrets.ACCESS_TOKEN}}@github.com/SilenusTA/StreamRollerRelease sr_tmp
+            ls -la
+            ls -l sr_tmp
+                  
 
-  push_file:
-    runs-on: ubuntu-latest
-    needs: create_windows-version
-    env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-    steps:
-      - uses: actions/checkout@v3
-      - run: git config http.postBuffer 524288000
-      - uses: actions/download-artifact@v3
-        with:
-          name: my-artifact
-      - name: Display structure of downloaded files
-        run: ls -R
-      - uses: dmnemec/copy_file_to_another_repo_action@main
-        name: push_to_repo
-        with:
-          source_file: 'StreamRoller.exe'
-          destination_repo: 'SilenusTA/StreamRollerRelease'
-          destination_folder: 'windows_releases'
-          user_email: 'silenusta@gmail.com'
-          user_name: 'silenusTA'
-          commit_message: 'Software Release'
-      - run: echo finished            
+
+
+
+
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          name: my-artifact
+#          path: StreamRoller.exe
+
+#  push_file:
+#    runs-on: ubuntu-latest
+#    needs: create_windows-version
+#    env:
+#        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+#    steps:
+#      - uses: actions/checkout@v3
+#      - run: git config http.postBuffer 524288000
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: my-artifact
+#      - name: Display structure of downloaded files
+#        run: ls -R
+#      - uses: dmnemec/copy_file_to_another_repo_action@main
+#        name: push_to_repo
+#        with:
+#          source_file: 'StreamRoller.exe'
+#          destination_repo: 'SilenusTA/StreamRollerRelease'
+#          destination_folder: 'windows_releases'
+#          user_email: 'silenusta@gmail.com'
+#          user_name: 'silenusTA'
+#          commit_message: 'Software Release'
+#      - run: echo finished            
