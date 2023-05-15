@@ -18,7 +18,7 @@ jobs:
       - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}\backend\data_center\server.js"
         name: push_to_repo
       - uses: dmnemec/copy_file_to_another_repo_action@main
-      - with:
+        with:
           source_file: 'StreamRoller.exe'
           destination_repo: 'SilenusTA/StreamRollerRelease'
           destination_folder: 'windows_releases'
