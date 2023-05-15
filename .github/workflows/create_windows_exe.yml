@@ -10,10 +10,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16.13.2'
-      - run: npm install
       - uses: actions/checkout@v3
       - run: |
             npm i -D caxa
+            npm install
             npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 
       - uses: actions/upload-artifact@v3
