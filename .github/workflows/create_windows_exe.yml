@@ -1,6 +1,7 @@
 name: create_windows_exe
 run-name: ${{ github.actor }} is Creating a windows version of Streamroller
-on: [push]
+on: 
+[push]
 
 jobs:
   create_windows-version:
