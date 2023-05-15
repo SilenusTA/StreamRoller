@@ -23,7 +23,7 @@ jobs:
           name: my-artifact
           path: StreamRoller.exe
 
-push_file:
+  push_file:
     runs-on: ubuntu-latest
     env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
