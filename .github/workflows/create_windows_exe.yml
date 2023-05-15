@@ -14,6 +14,7 @@ jobs:
           node-version: '16.13.2'
       - run: |
             npm i -D caxa
+            npm install
             npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 #      - uses: actions/upload-artifact@v3
 #        with:
