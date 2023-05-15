@@ -12,7 +12,9 @@ jobs:
           node-version: '16.13.2'
       - run: npm install
       - uses: actions/checkout@v3
-      - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+      - run: |
+            npm i -D caxa
+            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 
       - uses: actions/upload-artifact@v3
         with:
