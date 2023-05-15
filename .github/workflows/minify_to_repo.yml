@@ -19,6 +19,6 @@ jobs:
       - run: |
             npm i -D caxa
             npm install
-            cat extensions\chatbot\chatbot.js
-            //npm start
+            cat extensions/chatbot/chatbot.js
+#npm start
 
