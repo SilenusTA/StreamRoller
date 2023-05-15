@@ -31,7 +31,8 @@ jobs:
           name: my-artifact
     
       - name: Display structure of downloaded files
-        run: ls -R
+        run: |
+            ls -R
             git config http.postBuffer 524288000
       - uses: dmnemec/copy_file_to_another_repo_action@main
         name: push_to_repo
