@@ -24,8 +24,8 @@ jobs:
           git config --global user.name "silenusta"
           git config --global credential.helper cache
           git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
-          ls -la
-          ls -la /sr_clone
+          dir
+          dir sr_clone
 #                  cp index.js clonedFolder/ -f
 #                  cd clonedFolder
 #                  git add .
