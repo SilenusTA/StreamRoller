@@ -15,7 +15,7 @@ jobs:
       - run: |
             npm i -D caxa
             npm install
-            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+            npx caxa -i . -o SR1.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 #      - uses: actions/upload-artifact@v3
 #        with:
 #          name: my-artifact
@@ -29,7 +29,7 @@ jobs:
           del StreamRoller.exe
           dir
           dir ..\..\
-          copy ..\..\StreamRoller.exe StreamRoller.exe
+          copy ..\..\SR1.exe SR.exe
           dir
 #          git add .
 #          git commit -m "$(date)"
