@@ -1,8 +1,8 @@
 {
-  "name": "liveportal",
+  "name": "randomfact",
   "version": "1.0.0",
-  "description": "liveportal web frontend for streamroller",
-  "main": "liveportal.js",
+  "description": "randomfact provides randomfacts",
+  "main": "randomfact.js",
   "type": "module",
   "scripts": {
     "start": "echo This code is an extension and will be autloaded by the backend data server. "

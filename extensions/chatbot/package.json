@@ -6,7 +6,8 @@
     "type": "module",
     "scripts": {},
     "author": "Twitch/OldDepressedGamer",
-    "license": "ISC",
+    "license": "",
+    ,
     "dependencies": {
         "openai": "^3.2.0"
     }

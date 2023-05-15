@@ -8,7 +8,7 @@
         "start": "echo This code is an extension and will be autloaded by the backend data server. "
     },
     "author": "Twitch/OldDepressedGamer",
-    "license": "ISC",
+    "license": "",
     "dependencies": {
         "discord.js": "^13.3.1"
     }

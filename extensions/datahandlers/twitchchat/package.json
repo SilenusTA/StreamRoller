@@ -4,10 +4,9 @@
   "description": "",
   "main": "twitchchat.js",
   "type": "module",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Twitch/OldDepressedGamer",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "tmi.js": "^1.8.5"
   }

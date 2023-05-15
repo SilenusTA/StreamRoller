@@ -11,7 +11,7 @@
     "postinstall": "node extensioninstaller.js"
   },
   "author": "Twitch/OldDepressedGamer",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "express": "^4.17.1",
     "ejs": "^3.1.6",

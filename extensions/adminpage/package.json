@@ -8,9 +8,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Twitch/OldDepressedGamer",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "ejs": "^3.1.6"
   }
-
 }

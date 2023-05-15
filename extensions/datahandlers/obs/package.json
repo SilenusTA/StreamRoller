@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {},
   "author": "Twitch/OldDepressedGamer",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "obs-websocket-js": "^5.0.1"
   }

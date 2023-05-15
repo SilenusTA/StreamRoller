@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Twitch/OldDepressedGamer",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "twitter-api-client": "^1.5.2"
   }

@@ -1,8 +1,8 @@
 {
-  "name": "liveportal",
+  "name": "timers",
   "version": "1.0.0",
-  "description": "liveportal web frontend for streamroller",
-  "main": "liveportal.js",
+  "description": "timers creates timers that run in a text file to be used in overlays",
+  "main": "timers.js",
   "type": "module",
   "scripts": {
     "start": "echo This code is an extension and will be autloaded by the backend data server. "
