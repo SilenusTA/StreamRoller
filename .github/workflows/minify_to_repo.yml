@@ -17,16 +17,23 @@ jobs:
           overwrite: true
           js_engine : 'uglify-js'
       - run: |
-#            npm i -D caxa
-#            npm install
-#            cat extensions/chatbot/chatbot.js
-#            cat extensions/liveportal/views/scripts/datahandler.ejs
-#            npm start
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-site
-          path: ./
-          retention-days: 1
+          git config --global user.email "silenusta.com"
+          git config --global user.name "silenusta"
+          git config --global credential.helper cache
+          git remote rename origin upstream
+          git remote add origin https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
+          git push origin master
+
+
+
+          //git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller sr_clone
+          //cd sr_clone
+
+
+
+          //git add .
+          //git tag -a ${{GITHUB_REF_NAME}} -m "Autmated Build"
+          //git commit -m "$(date)"
+          //git push 
 
 
