@@ -1,4 +1,4 @@
-name: minify_and_Build
+name: minify_and_upload
 run-name: ${{ github.actor }} is minifying
 on: [push]
 
@@ -21,11 +21,12 @@ jobs:
             npm i -D caxa
             npm install
             cat extensions/chatbot/chatbot.js
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-site
-          path: ./
-          retention-days: 1
-#npm start
+            npm start
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: html-site
+#          path: ./
+#          retention-days: 1
+
 
