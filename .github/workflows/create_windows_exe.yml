@@ -16,7 +16,7 @@ jobs:
       - run: npm i -D caxa
       - run: cd backend && npm install
       - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}\backend\data_center\server.js"
-        name: push_to_repo
+      - name: push_to_repo
       - uses: dmnemec/copy_file_to_another_repo_action@main
       - with:
           source_file: 'StreamRoller.exe'
@@ -25,4 +25,5 @@ jobs:
           user_email: 'silenusta@gmail.com'
           user_name: 'silenusTA'
           commit_message: 'Software Release'
+      - run: echo finished
       
