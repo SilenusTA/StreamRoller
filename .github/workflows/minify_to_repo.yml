@@ -1,0 +1,21 @@
+name: create_windows_exe
+run-name: ${{ github.actor }} is Creating a windows version of Streamroller
+on: [push]
+
+jobs:
+  create_windows-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.13.2'
+      - uses: actions/checkout@v3
+      - uses: nizarmah/auto-minify@v2.1
+        with:
+          js_engine : 'uglify-js'
+          maxdepth: 100
+          output: 'mini_js'            
+      - run: |
+            cd mini_js/
+            ls -la *.*
