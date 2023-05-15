@@ -1,7 +1,9 @@
 name: create_windows_exe
 run-name: ${{ github.actor }} is Creating a windows version of Streamroller
-on: [push]
-
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
   create_windows-version:
     runs-on: windows-latest
@@ -29,8 +31,9 @@ jobs:
           del StreamRoller.exe
           copy ..\..\StreamRoller.exe StreamRoller.exe
           git add .
+          git tag -a ${{GITHUB_REF_NAME}} -m "Autmated Build"
           git commit -m "$(date)"
-          git push
+          git push 
 #                  cp index.js clonedFolder/ -f
 #                  cd clonedFolder
 #                  git add .
