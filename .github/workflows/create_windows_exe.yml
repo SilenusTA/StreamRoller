@@ -5,6 +5,8 @@ on: [push]
 jobs:
   create_windows-version:
     runs-on: windows-latest
+    env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -21,9 +23,9 @@ jobs:
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
-          git clone https://${{secrets.ACCESS_TOKEN}}@github.com/SilenusTA/StreamRollerRelease sr_clone
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
           ls -la
-          ls -la /sr
+          ls -la /sr_clone
 #                  cp index.js clonedFolder/ -f
 #                  cd clonedFolder
 #                  git add .
