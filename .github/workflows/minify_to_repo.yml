@@ -1,6 +1,6 @@
 name: minify_and_upload
 run-name: ${{ github.actor }} is minifying
-on: [push]
+on: workflow_dispatch
 
 jobs:
   minify_and_Build:
