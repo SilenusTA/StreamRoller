@@ -12,5 +12,5 @@ jobs:
           node-version: '16.13.2'
       - run: npm install
       - run: cd backend && npm install
-      - run: npx caxa --directory . --command "{{caxa}}/node_modules/.bin/node" "{{caxa}}/backend/datacenter/index.js" --output "StreamRoller--${{ github.sha }}.exe"
+      - run: caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}\backend\data_center\server.js"
       
