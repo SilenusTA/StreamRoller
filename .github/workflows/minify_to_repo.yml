@@ -12,7 +12,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16.13.2'
-      - uses: actions/checkout@v3
       - uses: nizarmah/auto-minify@v2.1
         with:
           js_engine : 'uglify-js'
@@ -20,7 +19,7 @@ jobs:
       - run: |
             npm i -D caxa
             npm install
-            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}\node_modules\.bin\node" -- "{{caxa}}\backend\data_center\server.js"
+            npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
 #            git config --global user.email "silenusta@gmail.com.com"
 #            git config --global user.name "silenusta"
 #            git config --global credential.helper cache
