@@ -1,9 +1,8 @@
 name: create_windows_exe
 run-name: ${{ github.actor }} is Creating a windows version of Streamroller
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  registry_package:
+    types: [published]
 jobs:
   create_windows-version:
     runs-on: windows-latest
