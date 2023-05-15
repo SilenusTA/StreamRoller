@@ -28,6 +28,8 @@ jobs:
           cd sr_clone\windows_releases\
           dir
           del StreamRoller.exe
+          dir
+          dir ..\..\
           copy /Y ..\..\StreamRoller.exe StreamRoller.exe
           dir
 #          git add .
