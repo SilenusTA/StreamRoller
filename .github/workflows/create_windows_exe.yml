@@ -1,9 +1,9 @@
 name: create_windows_exe
-run-name: ${{ github.actor }} is learning GitHub Actions
+run-name: ${{ github.actor }} is Creating a windows version of Streamroller
 on: [push]
 
 jobs:
-  check-bats-version:
+  create_windows-version:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -11,6 +11,7 @@ jobs:
         with:
           node-version: '16.13.2'
       - run: npm install
+      - run: npm i -D caxa
       - run: cd backend && npm install
       - run: caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}\backend\data_center\server.js"
       
