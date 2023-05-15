@@ -9,24 +9,24 @@ jobs:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16.13.2'
+#      - uses: actions/setup-node@v3
+#        with:
+#          node-version: '16.13.2'
       - uses: nizarmah/auto-minify@v2.1
         with:
           overwrite: true
           js_engine : 'uglify-js'
       - run: |
-            npm i -D caxa
-            npm install
-            cat extensions/chatbot/chatbot.js
-            cat extensions/liveportal/views/scripts/datahandler.ejs
-            npm start
-#      - name: Upload artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: html-site
-#          path: ./
-#          retention-days: 1
+#            npm i -D caxa
+#            npm install
+#            cat extensions/chatbot/chatbot.js
+#            cat extensions/liveportal/views/scripts/datahandler.ejs
+#            npm start
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-site
+          path: ./
+          retention-days: 1
 
 
