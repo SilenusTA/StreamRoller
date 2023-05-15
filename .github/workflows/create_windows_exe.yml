@@ -1,0 +1,16 @@
+name: create_windows_exe
+run-name: ${{ github.actor }} is learning GitHub Actions
+on: [push]
+
+jobs:
+  check-bats-version:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.13.2'
+      - run: npm install
+      - run: cd backend && npm install
+      - run: npx caxa --directory . --command "{{caxa}}/node_modules/.bin/node" "{{caxa}}/backend/datacenter/index.js" --output "StreamRoller--${{ github.sha }}.exe"
+      
