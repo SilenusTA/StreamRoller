@@ -25,6 +25,7 @@ jobs:
 
   push_file:
     runs-on: ubuntu-latest
+    needs: create_windows-version
     env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
