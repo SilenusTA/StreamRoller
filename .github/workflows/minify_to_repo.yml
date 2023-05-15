@@ -14,7 +14,6 @@ jobs:
           node-version: '16.13.2'
       - uses: nizarmah/auto-minify@v2.1
         with:
-          js_engine : 'bable'
           overwrite: true
           #js_engine : 'uglify-js'
       - run: |
