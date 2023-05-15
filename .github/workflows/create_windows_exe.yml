@@ -28,14 +28,12 @@ jobs:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
+      - run: git config http.postBuffer 524288000
       - uses: actions/download-artifact@v3
         with:
           name: my-artifact
-    
       - name: Display structure of downloaded files
-        run: |
-            ls -R
-            git config http.postBuffer 524288000
+        run: ls -R
       - uses: dmnemec/copy_file_to_another_repo_action@main
         name: push_to_repo
         with:
