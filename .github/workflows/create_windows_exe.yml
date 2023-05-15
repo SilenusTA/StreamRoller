@@ -26,7 +26,7 @@ jobs:
           git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
           cd sr_clone\windows_releases\
           dir /a
-          copy /Y ..\..\StreamRoller.exe .\StreamRoller.exe
+          copy /Y ..\..\StreamRoller.exe StreamRoller.exe
           dir /a
           git add .
           git commit -m "$(date)"
