@@ -26,11 +26,10 @@ jobs:
           git config --global credential.helper cache
           git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRollerRelease sr_clone
           cd sr_clone\windows_releases\
-          dir
           del StreamRoller.exe
           dir
           dir ..\..\
-          copy /Y ..\..\StreamRoller.exe StreamRoller.exe
+          copy ..\..\StreamRoller.exe StreamRoller.exe
           dir
 #          git add .
 #          git commit -m "$(date)"
