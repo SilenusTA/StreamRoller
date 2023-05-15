@@ -5,6 +5,8 @@ on: [push]
 jobs:
   create_windows-version:
     runs-on: windows-latest
+    env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -14,16 +16,10 @@ jobs:
       - run: npm i -D caxa
       - run: cd backend && npm install
       - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}\backend\data_center\server.js"
-  copy-file:
-    runs-on: windows-latest
-    steps:
-    - name: Pushes test file
-      uses: dmnemec/copy_file_to_another_repo_action@main
-    - env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-    - with:
+      - uses: dmnemec/copy_file_to_another_repo_action@main
+      - with:
           source_file: 'StreamRoller.exe'
-          destination_repo: 'dmnemec/release-test'
+          destination_repo: 'SilenusTA/StreamRollerRelease'
           destination_folder: 'windows_releases'
           user_email: 'silenusta@gmail.com'
           user_name: 'silenusTA'
