@@ -17,7 +17,7 @@ jobs:
           overwrite: true
           js_engine : 'uglify-js'
       - run: |
-          git config --global user.email "silenusta.com"
+          git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
           git remote rename origin upstream
