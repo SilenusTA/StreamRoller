@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   create_windows-version:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
