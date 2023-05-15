@@ -4,9 +4,7 @@ on: [push]
 
 jobs:
   create_windows-version:
-    runs-on: ubuntu-latest
-    env:
-        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -15,9 +13,30 @@ jobs:
       - run: npm install
       - run: npm i -D caxa
       - run: cd backend && npm install
+      - uses: actions/checkout@v3
+      - run: mkdir -p ../
+
       - run: npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
-        name: push_to_repo
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: StreamRoller.exe
+
+push_file:
+    runs-on: ubuntu-latest
+    env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+    
+      - name: Display structure of downloaded files
+        run: ls -R
       - uses: dmnemec/copy_file_to_another_repo_action@main
+        name: push_to_repo
         with:
           source_file: 'StreamRoller.exe'
           destination_repo: 'SilenusTA/StreamRollerRelease'
