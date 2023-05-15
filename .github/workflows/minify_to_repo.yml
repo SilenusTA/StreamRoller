@@ -15,11 +15,12 @@ jobs:
       - uses: nizarmah/auto-minify@v2.1
         with:
           overwrite: true
-          #js_engine : 'uglify-js'
+          js_engine : 'uglify-js'
       - run: |
             npm i -D caxa
             npm install
             cat extensions/chatbot/chatbot.js
+            cat extensions/liveportal/views/scripts/datahandler.ejs
             npm start
 #      - name: Upload artifact
 #        uses: actions/upload-artifact@v3
