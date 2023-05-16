@@ -26,7 +26,7 @@ jobs:
       - name: checkout live repo
         run: |
           git config --unset-all http.https://github.com/.extraheader
-          git config --global user.email "silenusta.com"
+          git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
           git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller .
@@ -58,7 +58,7 @@ jobs:
           dir
           git config http.postBuffer 524288000
           git add .
-          git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
+          git tag -a ${{env.GITHUB_REF_NAME}} -m "Automated Build"
           git commit -m "$(date)"
           git push 
 
