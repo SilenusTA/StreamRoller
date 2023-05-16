@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
 
 jobs:
-  minify_and_Build:
+  minify:
     runs-on: ubuntu-latest
     steps:
       - name: checkout code
@@ -20,15 +20,18 @@ jobs:
           path: .
   crate_windows_version:
     runs-on: windows-latest
-    needs: minify_and_Build
+    needs: minify
     steps:
       - name: checkout live repo
         run: |
-          git config http.postBuffer 524288000
+          export GIT_TRACE_PACKET=1
+          export GIT_TRACE=1
+          export GIT_CURL_VERBOSE=1
+          git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
-          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller sr_clone
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller 
       - name: get node
         uses: actions/setup-node@v3
         with:
@@ -45,8 +48,9 @@ jobs:
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
       - name: push to new repo
         run: |
-            git .
-            git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
-            git commit -m "$(date)"
-            git push 
+            git config http.postBuffer 524288000
+            git add .
+#            git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
+#            git commit -m "$(date)"
+#            git push 
 
