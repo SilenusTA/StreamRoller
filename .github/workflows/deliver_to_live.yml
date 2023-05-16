@@ -47,9 +47,9 @@ jobs:
           dir
           npm i -D caxa
           npm install
+          dir
       - name: create windows exe
         run:
-          dir
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
       - name: push to new repo
         run: |
