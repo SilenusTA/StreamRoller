@@ -58,7 +58,8 @@ jobs:
           dir
           git config http.postBuffer 524288000
           git add .
-#         git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
-#         git commit -m "$(date)"
-#         git push 
+          git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
+          git commit -m "$(date)"
+          git push 
+
 
