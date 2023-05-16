@@ -1,5 +1,5 @@
-name: testing
-run-name: ${{ github.actor }} is testing
+name: deliver_to_live
+run-name: ${{ github.actor }} is delivering
 on: [push,  workflow_dispatch]
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
@@ -17,7 +17,8 @@ jobs:
           dir
       - name: push to new repo
         run: |
-          dir hi there > temp.txt
+          dir 
+          echo testing > temp.txt
           echo pre ref
           echo $SRS_GITHUB_REF_NAME
           echo mid ref
