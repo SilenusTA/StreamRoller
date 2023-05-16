@@ -9,6 +9,8 @@ jobs:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
+        with: 
+          fetch-depth: 0
 #      - uses: actions/setup-node@v3
 #        with:
 #          node-version: '16.13.2'
@@ -17,6 +19,9 @@ jobs:
           overwrite: true
           js_engine : 'uglify-js'
       - run: |
+            export GIT_TRACE_PACKET=1
+            export GIT_TRACE=1
+            export GIT_CURL_VERBOSE=1
             git config --unset-all http.https://github.com/.extraheader
             git config http.postBuffer 524288000
             git config --global user.email "silenusta@gmail.com"
