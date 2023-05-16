@@ -84,7 +84,7 @@ const serverConfig = {
         chatmodel: {
             //model: "text-davinci-003",
             model: "gpt-3.5-turbo",
-            temperature: 0.3,
+            temperature: 0.4,
             max_tokens: 110, // note twich chat is somewhere around 125 tokens +- lenght of words in responce
         },
         // different settings available for direct questions
