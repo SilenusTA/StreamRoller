@@ -33,6 +33,8 @@ jobs:
           dir
           cd sr
           dir
+      - name: check for normal
+        run:  cat extensions/chatbot/chatbot.js
       - name: get node
         uses: actions/setup-node@v3
         with:
@@ -41,7 +43,9 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: minified_code_artifact
-          path: .
+          path: ./SR/
+      - name: check for minified
+        run:  cat extensions/chatbot/chatbot.js
       - name: install dependancies
         run: |
           dir
