@@ -51,7 +51,6 @@ function encrypt (text)
  */
 function decrypt (text)
 {
-    let Buffer = "";
     //let iv = Buffer.from(text.iv, 'hex');
     //let iv = JSON.parse(text.iv);
     let encryptedText = Buffer.from(text.encryptedData, 'hex');
