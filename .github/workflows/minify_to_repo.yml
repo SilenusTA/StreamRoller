@@ -24,6 +24,7 @@ jobs:
             ls
             git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller ./tmp
             ls
+            rm -fr .git/*
             rm .git
             mv tmp/.git .git
             ls
