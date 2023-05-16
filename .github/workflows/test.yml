@@ -20,9 +20,9 @@ jobs:
           dir 
           echo testing > temp.txt
           echo pre ref
-          echo $SRS_GITHUB_REF_NAME
+          echo $github.GITHUB_REF_NAME
           echo mid ref
-          echo ${{ env.SRS_GITHUB_REF_NAME }}
+          echo ${{ github.GITHUB_REF_NAME }}
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
