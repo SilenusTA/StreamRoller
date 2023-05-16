@@ -24,7 +24,6 @@ jobs:
     needs: minify
     steps:
       - name: checkout live repo
-        working-directory: ./SR
         run: |
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta.com"
@@ -46,17 +45,21 @@ jobs:
           name: minified_code_artifact
           path: ./SR/
       - name: check for minified
+        working-directory: ./SR
         run:  cat extensions/chatbot/chatbot.js
       - name: install dependancies
+        working-directory: ./SR
         run: |
           dir
           npm i -D caxa
           npm install
           dir
       - name: create windows exe
+        working-directory: ./SR
         run:
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
       - name: push to new repo
+        working-directory: ./SR
         run: |
           dir
           git config http.postBuffer 524288000
