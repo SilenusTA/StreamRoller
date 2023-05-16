@@ -32,7 +32,7 @@ jobs:
           cd sr_clone
           mkdir windows_releases
           cd windows_releases
-          del StreamRoller.exe
+          #del StreamRoller.exe
           copy ..\..\StreamRoller.exe StreamRoller.exe
           git add .
           git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
