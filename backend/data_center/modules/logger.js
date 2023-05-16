@@ -34,6 +34,8 @@
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import process from 'node:process';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const logfilename = __dirname + "/../../../streamroller.log"
 

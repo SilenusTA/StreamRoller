@@ -10,19 +10,20 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import * as fs from "fs";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import process from 'node:process';
+
 //const usersPath = dirname(fileURLToPath(import.meta.url));
-let usersPath = process.env.APPDATA + "/StreamRoller/Data";
-const configFilesPath = usersPath + "/configstore/";
-const dataFilesPath = usersPath + "/datastore/";
-const credentialFilesPath = usersPath + "/credentialstore/";
+let usersPath = process.env.APPDATA + "\\StreamRoller\\Data";
+const configFilesPath = usersPath + "\\configstore\\";
+const dataFilesPath = usersPath + "\\datastore\\";
+const credentialFilesPath = usersPath + "\\credentialstore\\";
 let credentials = {};
 
-if (!fs.existsSync(configFilesPath)) fs.mkdir(configFilesPath, { recursive: true }, (err) => { if (err) throw err; });
-if (!fs.existsSync(dataFilesPath)) fs.mkdir(dataFilesPath, { recursive: true }, (err) => { if (err) throw err; });
-if (!fs.existsSync(credentialFilesPath)) fs.mkdir(credentialFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(configFilesPath)) fs.mkdirSync(configFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(dataFilesPath)) fs.mkdirSync(dataFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(credentialFilesPath)) fs.mkdirSync(credentialFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+
 // ============================================================================
 //                  FUNCTION: encrypt
 // ============================================================================
@@ -33,6 +34,7 @@ if (!fs.existsSync(credentialFilesPath)) fs.mkdir(credentialFilesPath, { recursi
  */
 function encrypt (text)
 {
+    let Buffer = ""
     let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -49,6 +51,7 @@ function encrypt (text)
  */
 function decrypt (text)
 {
+    let Buffer = "";
     //let iv = Buffer.from(text.iv, 'hex');
     //let iv = JSON.parse(text.iv);
     let encryptedText = Buffer.from(text.encryptedData, 'hex');
@@ -109,7 +112,7 @@ function loadConfig (configname, path = configFilesPath)
             }
             catch (err)
             {
-                console.log('There has been an error parsing your JSON while loading the config file')
+                console.log('common.js: loadConfig: There has been an error parsing your JSON while loading the config file')
                 console.log(err);
                 return "";
             }
@@ -133,6 +136,11 @@ function saveConfig (configname, data, path = configFilesPath)
 {
     try
     {
+        if (!fs.existsSync(path + configname + ".json"))
+        {
+            if (!fs.existsSync(configFilesPath))
+                console.log("common.js: saveConfig Path doesn't exist creating new")
+        }
         fs.writeFileSync(path + configname + ".json", JSON.stringify(data), function (err)
         {
             if (err)
@@ -143,7 +151,7 @@ function saveConfig (configname, data, path = configFilesPath)
     }
     catch (err)
     {
-        console.log("saveConfig failed,", err.message)
+        console.log("common.js: saveConfig failed,", err.message)
     }
 }
 
@@ -176,7 +184,7 @@ function loadCredentials (configname)
     {
         const credfile = loadConfig(configname, credentialFilesPath)
         const decrypted = decrypt(credfile);
-        return JSON.parse(decrypted);;
+        return JSON.parse(decrypted);
     }
     else
         return "";
@@ -205,7 +213,7 @@ function saveCredentials (data)
         saveConfig(data.ExtensionName, encryptedcreds, credentialFilesPath)
     }
     else
-        console.log("SaveCredentials failed, missing field", data.ExtensionName)
+        console.log("common.js: SaveCredentials failed, missing field", data.ExtensionName)
 }
 // ============================================================================
 //                           EXPORTS: 

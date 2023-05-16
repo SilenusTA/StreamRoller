@@ -36,6 +36,7 @@ if (config === "")
 }
 logger.setLoggingLevel(config.logginglevel);
 console.log("serverSettings: ", config);
+console.log("\x1b[1m\x1b[33mload the url\x1b[31m", config.HOST + ":" + config.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");
 // ============================================================================
 //                          IMPORTS/VARIABLES
 // ============================================================================
@@ -118,7 +119,7 @@ else
     loadExtensions(__dirname + "/../../extensions")
 }
 
-function loadExtensions(extensionFolder)
+function loadExtensions (extensionFolder)
 {
     fs.readdir(extensionFolder, (err, files) =>
     {
