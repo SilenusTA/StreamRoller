@@ -29,9 +29,7 @@ jobs:
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
-          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller SR
-          dir
-          cd sr
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
           dir
       - name: check for normal
         run:  cat extensions/chatbot/chatbot.js
@@ -43,23 +41,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: minified_code_artifact
-          path: ./SR/
+          path: .
       - name: check for minified
-        working-directory: ./SR
         run:  cat extensions/chatbot/chatbot.js
       - name: install dependancies
-        working-directory: ./SR
         run: |
           dir
           npm i -D caxa
           npm install
           dir
       - name: create windows exe
-        working-directory: ./SR
         run:
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
       - name: push to new repo
-        working-directory: ./SR
         run: |
           dir
           git config http.postBuffer 524288000
