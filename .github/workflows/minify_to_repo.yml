@@ -27,12 +27,12 @@ jobs:
             cp -fr * /sr_clone
             cd /sr_clone
             ls
-            #git add .
-            #git tag -a ${{GITHUB_REF_NAME}} -m "Autmated Build"
-            #git commit -m "$(date)"
-            #git push 
-            #git remote rename origin upstream
-            #git remote add origin https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
-            #git push origin master
+#            git add .
+#            git tag -a ${{GITHUB_REF_NAME}} -m "Autmated Build"
+#            git commit -m "$(date)"
+#            git push 
+#            git remote rename origin upstream
+#            git remote add origin https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
+#            git push origin master
   
 
