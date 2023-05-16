@@ -17,7 +17,7 @@ jobs:
           dir
       - name: push to new repo
         run: |
-          dir touch temp.txt
+          dir hi there > temp.txt
           echo pre ref
           echo $SRS_GITHUB_REF_NAME
           echo mid ref
