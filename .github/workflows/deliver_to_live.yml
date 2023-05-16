@@ -2,7 +2,7 @@ name: deliver_to_live
 run-name: ${{ github.actor }} is delivering
 on: [push,  workflow_dispatch]
 env:
-SRS_GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}  
+  SRS_GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}  
 jobs:
   minify:
     runs-on: ubuntu-latest
