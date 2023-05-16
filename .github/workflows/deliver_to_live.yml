@@ -56,14 +56,16 @@ jobs:
       - name: push to new repo
         run: |
           dir
-          echo ref name ${{env.GITHUB_REF_NAME}}
+          echo pre ref
+          echo ${{ env.GITHUB_REF_NAME }}
+          echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
-          git tag -a "${{env.GITHUB_REF_NAME}}" -m "Automated Build"
+          git tag -a "${{ env.GITHUB_REF_NAME }}" -m "Automated Build"
           git commit -m "$(date)"
           git push 
 
