@@ -1,0 +1,34 @@
+name: deliver_to_live
+run-name: ${{ github.actor }} is delivering
+on: [push,  workflow_dispatch]
+env:
+  SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
+jobs:
+  create_windows_version:
+    runs-on: windows-latest
+    steps:
+      - name: checkout live repo
+        run: |
+          git config --unset-all http.https://github.com/.extraheader
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "silenusta"
+          git config --global credential.helper cache
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller .
+          dir
+      - name: push to new repo
+        run: |
+          dir touch temp.txt
+          echo pre ref
+          echo $SRS_GITHUB_REF_NAME
+          echo post ref
+          git config --unset-all http.https://github.com/.extraheader
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "silenusta"
+          git config --global credential.helper cache
+#          git config http.postBuffer 524288000
+#          git add .
+#          git tag -a $SRS_GITHUB_REF_NAME -m "Automated Build"
+#          git commit -m "$(date)"
+#          git push 
+
+
