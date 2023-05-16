@@ -1,6 +1,7 @@
 name: deliver_to_live
 run-name: ${{ github.actor }} is delivering
-on: workflow_dispatch
+on: [push,  workflow_dispatch]
+    
 
 jobs:
   minify:
