@@ -58,6 +58,7 @@ jobs:
           dir
           echo pre ref
           echo "${{github.ref_name}}"
+          echo "${{github.github_ref_name}}"
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "SilenusTA@gmail.com"
