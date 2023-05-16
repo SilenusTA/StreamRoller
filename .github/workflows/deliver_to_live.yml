@@ -1,8 +1,8 @@
 name: deliver_to_live
 run-name: ${{ github.actor }} is delivering
 on: [push,  workflow_dispatch]
-    
-
+env:
+SRS_GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}  
 jobs:
   minify:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
         run: |
           dir
           echo pre ref
-          echo ${{ env.GITHUB_REF_NAME }}
+          echo ${{env.SRS_GITHUB_REF_NAME}}
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
@@ -65,7 +65,7 @@ jobs:
           git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
-          git tag -a "${{ env.GITHUB_REF_NAME }}" -m "Automated Build"
+          git tag -a ${{env.SRS_GITHUB_REF_NAME}} -m "Automated Build"
           git commit -m "$(date)"
           git push 
 
