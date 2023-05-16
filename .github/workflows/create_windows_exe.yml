@@ -9,7 +9,6 @@ jobs:
   create_windows-version:
     runs-on: windows-latest
     env:
-        TAGNAME: ${{GITHUB_REF_NAME}}
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
@@ -33,7 +32,7 @@ jobs:
           del StreamRoller.exe
           copy ..\..\StreamRoller.exe StreamRoller.exe
           git add .
-          git tag -a $TAGNAME -m "Autmated Build"
+          git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
           git commit -m "$(date)"
           git push 
 #                  cp index.js clonedFolder/ -f
