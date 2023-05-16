@@ -9,7 +9,8 @@ jobs:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
     steps:
       - uses: actions/checkout@v3
-        with: 
+#        with: 
+#          fetch-depth: 0
 #      - uses: actions/setup-node@v3
 #        with:
 #          node-version: '16.13.2'
