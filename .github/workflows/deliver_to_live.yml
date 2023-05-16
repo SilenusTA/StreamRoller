@@ -65,7 +65,7 @@ jobs:
           git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
-          git tag -a "Automated_Build" -m "Automated Build"
+          git tag -a "${{github.ref_name}}" -m "Automated Build"
           git commit -m "$(date)"
           git push 
 
