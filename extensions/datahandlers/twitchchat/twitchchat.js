@@ -55,7 +55,7 @@ localConfig.twitchClient["user"] = {
 const serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    enabletwitchchat: "off",
+    enabletwitchchat: "on",
     updateUserList: "off",
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
@@ -78,7 +78,12 @@ const serverConfig = {
 const OverwriteDataCenterConfig = false;
 const serverData =
 {
-    chatMessageBuffer: [],
+    chatMessageBuffer: [{
+        channel: serverConfig.streamername + " (Readonly)",
+        message: "Empty chat buffer",
+        data: { 'display-name': serverConfig.streamername, emotes: '' }
+    }
+    ],
 }
 
 // ============================================================================
@@ -157,7 +162,6 @@ function onDataCenterConnect (socket)
 // ===========================================================================
 function onDataCenterMessage (server_packet)
 {
-    //console.log(server_packet)
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
@@ -195,12 +199,22 @@ function onDataCenterMessage (server_packet)
                 localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
             }
             // start connection
-            for (const [key, value] of Object.entries(localConfig.usernames))
+            if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
             {
-                if (localConfig.twitchClient[key].state.connected)
-                    reconnectChat(key);
-                else
-                    connectToTwtich(key);
+                for (const [key, value] of Object.entries(localConfig.usernames))
+                {
+                    if (localConfig.twitchClient[key].state.connected)
+                        reconnectChat(key);
+                    else
+                        connectToTwtich(key);
+                }
+            }
+            else
+            {
+                localConfig.usernames.user = [];
+                localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                connectToTwtich("user");
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "" }, "No twitch users setup yet")
             }
         }
         else
@@ -208,12 +222,22 @@ function onDataCenterMessage (server_packet)
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty, connecting readonly");
             // can still connect readonly
-            for (const [key, value] of Object.entries(localConfig.usernames))
+            if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
             {
-                if (localConfig.twitchClient[key].state.connected)
-                    reconnectChat(key);
-                else
-                    connectToTwtich(key);
+                for (const [key, value] of Object.entries(localConfig.usernames))
+                {
+                    if (localConfig.twitchClient[key].state.connected)
+                        reconnectChat(key);
+                    else
+                        connectToTwtich(key);
+                }
+            }
+            else
+            {
+                localConfig.usernames.user = [];
+                localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                connectToTwtich("user");
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "" }, "No twitch users setup yet")
             }
         }
     }
@@ -222,7 +246,7 @@ function onDataCenterMessage (server_packet)
         if (server_packet.data != "")
         {
             // check it is our data
-            if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.to === serverConfig.extensionname && server_packet.data.chatMessageBuffer.length > 0)
                 serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
             SaveDataToServer();
         }
@@ -271,7 +295,7 @@ function onDataCenterMessage (server_packet)
             {
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
                 extension_packet.data.account = localConfig.usernames.bot.name
-                console.log("Not posting to twitch ", extension_packet.data)
+                console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet.data)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "?" + extension_packet.data.account + "?", "emotes": "" }, extension_packet.data.message)
             }
         }
@@ -521,7 +545,7 @@ function process_chat_data (channel, tags, chatmessage)
         };
         // set the channel name
         if (localConfig.twitchClient["user"].state.readonly)
-            data.channel = data.channel + " (Readonly)"
+            data.channel = channel + " (Readonly)"
 
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
@@ -566,16 +590,20 @@ function sendChatMessage (channel, data)
         else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
             account = "user"
 
-        if (account && localConfig.twitchClient[account].connection)
+        if (account && localConfig.twitchClient[account].connection && localConfig.twitchClient[account].state.connected)
         {
             localConfig.twitchClient[account].connection.say(channel, data.message)
                 .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
-                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "Twitch.say error", e.message) })
+                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "sendChatMessage error", e) })
             sent = true;
         }
         if (!sent)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch.say, couldn't send message. user not available", data.account)
+            if (localConfig.twitchClient[account].state.connected)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch, couldn't send message. user not available", data.account)
+            else
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch, User not connected (have you setup your credentials in the admin page)", data.account)
+
         }
     }
     catch (e)
@@ -664,14 +692,14 @@ function connectToTwtich (account)
             localConfig.usernames.user["name"] === "" || localConfig.usernames.user["oauth"] === ""))
     {
         logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
-        localConfig.twitchClient["account"].connection = new tmi.Client({ channels: [serverConfig.streamername] });
+        localConfig.twitchClient[account].connection = new tmi.Client({ channels: [serverConfig.streamername] });
         localConfig.twitchClient[account].connection.connect()
             .then(() =>
             {
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly");
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Chat connected readonly: " + serverConfig.streamername);
+                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "" }, "Chat connected readonly: " + serverConfig.streamername);
             }
             )
             .catch((err) => 
@@ -679,7 +707,7 @@ function connectToTwtich (account)
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = false;
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Failed to join " + serverConfig.streamername)
+                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "" }, "Failed to join " + serverConfig.streamername)
             }
             )
 
