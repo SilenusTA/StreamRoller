@@ -24,9 +24,6 @@ jobs:
     steps:
       - name: checkout live repo
         run: |
-          export GIT_TRACE_PACKET=1
-          export GIT_TRACE=1
-          export GIT_CURL_VERBOSE=1
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
