@@ -25,6 +25,7 @@ jobs:
     steps:
       - name: checkout live repo
         run: |
+          git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
@@ -55,6 +56,10 @@ jobs:
       - name: push to new repo
         run: |
           dir
+          git config --unset-all http.https://github.com/.extraheader
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "silenusta"
+          git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
           git tag -a ${{env.GITHUB_REF_NAME}} -m "Automated Build"
