@@ -17,7 +17,6 @@ jobs:
           overwrite: true
           js_engine : 'uglify-js'
       - run: |
-            git config --unset-all http.https://github.com/.extraheader
             git config --global user.email "silenusta@gmail.com"
             git config --global user.name "silenusta"
             git config --global credential.helper cache
@@ -25,6 +24,7 @@ jobs:
             git remote add origin https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
             git push --no-thin origin master
 
+#            git config --unset-all http.https://github.com/.extraheader
 #            ls
 #            git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller ./tmp
 #            ls
