@@ -1,10 +1,10 @@
-name: deliver_to_live
-run-name: ${{ github.actor }} is delivering
+name: testing
+run-name: ${{ github.actor }} is testing
 on: [push,  workflow_dispatch]
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
 jobs:
-  create_windows_version:
+  testing:
     runs-on: windows-latest
     steps:
       - name: checkout live repo
@@ -20,6 +20,8 @@ jobs:
           dir touch temp.txt
           echo pre ref
           echo $SRS_GITHUB_REF_NAME
+          echo mid ref
+          echo ${{ env.SRS_GITHUB_REF_NAME }}
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
