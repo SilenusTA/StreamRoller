@@ -23,7 +23,7 @@ jobs:
     needs: minify_and_Build
     steps:
       - name: checkout live repo
-        run: !
+        run: |
           git config http.postBuffer 524288000
           git config --global user.email "silenusta.com"
           git config --global user.name "silenusta"
