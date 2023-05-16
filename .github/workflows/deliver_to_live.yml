@@ -1,0 +1,52 @@
+name: deliver_to_live
+run-name: ${{ github.actor }} is delivering
+on: workflow_dispatch
+
+jobs:
+  minify_and_Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+      - name: minify
+        uses: nizarmah/auto-minify@v2.1
+        with:
+          overwrite: true
+          js_engine : 'uglify-js'
+      - name: upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: minified_code_artifact
+          path: .
+  crate_windows_version:
+    runs-on: windows-latest
+    needs: minify_and_Build
+    steps:
+      - name: checkout live repo
+        run: !
+          git config http.postBuffer 524288000
+          git config --global user.email "silenusta.com"
+          git config --global user.name "silenusta"
+          git config --global credential.helper cache
+          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller sr_clone
+      - name: get node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.13.2'
+      - name: get arifact
+        uses: actions/download-artifact@v3
+        with:
+          name: minified_code_artifact
+          path: .
+      - name: create windows_exe
+        run: |
+          npm i -D caxa
+          npm install
+          npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+      - name: push to new repo
+        run: |
+            git .
+            git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
+            git commit -m "$(date)"
+            git push 
+
