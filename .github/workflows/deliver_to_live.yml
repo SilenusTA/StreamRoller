@@ -56,7 +56,7 @@ jobs:
       - name: push to new repo
         run: |
           dir
-          echo ${{env.GITHUB_REF_NAME}}
+          echo ref name ${{env.GITHUB_REF_NAME}}
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
