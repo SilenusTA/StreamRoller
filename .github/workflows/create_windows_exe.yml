@@ -34,7 +34,7 @@ jobs:
           cd windows_releases
           #del StreamRoller.exe
           copy ..\..\StreamRoller.exe StreamRoller.exe
-          git add .
+          git add StreamRoller.exe
           git tag -a ${{env.GITHUB_REF_NAME}} -m "Autmated Build"
           git commit -m "$(date)"
           git push 
