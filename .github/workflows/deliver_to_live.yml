@@ -57,11 +57,11 @@ jobs:
         run: |
           dir
           echo pre ref
-          echo $SRS_GITHUB_REF_NAME
+          echo "${{github.ref_name}}"
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
-          git config --global user.email "silenusta@gmail.com"
-          git config --global user.name "silenusta"
+          git config --global user.email "SilenusTA@gmail.com"
+          git config --global user.name "SilenusTA"
           git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
