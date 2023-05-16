@@ -57,7 +57,7 @@ jobs:
         run: |
           dir
           echo pre ref
-          echo ${{env.SRS_GITHUB_REF_NAME}}
+          echo $SRS_GITHUB_REF_NAME
           echo post ref
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
@@ -65,7 +65,7 @@ jobs:
           git config --global credential.helper cache
           git config http.postBuffer 524288000
           git add .
-          git tag -a ${{env.SRS_GITHUB_REF_NAME}} -m "Automated Build"
+          git tag -a $SRS_GITHUB_REF_NAME -m "Automated Build"
           git commit -m "$(date)"
           git push 
 
