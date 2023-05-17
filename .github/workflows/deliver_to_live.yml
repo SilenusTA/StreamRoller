@@ -1,6 +1,6 @@
 name: deliver_to_live
 run-name: ${{ github.actor }} is delivering
-on: [push,  workflow_dispatch]
+on: workflow_dispatch
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
 jobs:
