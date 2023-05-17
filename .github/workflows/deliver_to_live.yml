@@ -2,7 +2,6 @@ name: deliver_to_live
 run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
 env:
-  SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
 jobs:
   minify:
@@ -24,10 +23,6 @@ jobs:
     runs-on: windows-latest
     needs: minify
     steps:
-      - name: checkout source
-        uses: actions/checkout@v3
-        with:
-          path: "SR_source"
       - name: checkout live repo
         run: |
           echo "ref name=$SRS_GITHUB_REF_NAME"
@@ -74,6 +69,6 @@ jobs:
           git config http.postBuffer 1048576000
           git add .
           git commit -m "$(date)"
-          git push https://SilenusTA:${{env.MY_API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
+          git push https://SilenusTA:${{ env.MY_API_TOKEN_GITHUB }}@github.com/SilenusTA/StreamRoller.git
 
 
