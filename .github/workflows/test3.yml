@@ -62,7 +62,6 @@ jobs:
           cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
-          mkdir windows_releases
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
     - name: Creating exe
       run: |
