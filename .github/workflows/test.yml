@@ -1,6 +1,9 @@
 name: test
 run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
+env:
+  SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
+  MY_API_TOKEN_GITHUB: ${{secrets.API_TOKEN_GITHUB}}
 jobs:
   testing:
     runs-on: windows-latest
@@ -12,7 +15,7 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            rmdir
+            echo "var = $SRS_GITHUB_REF_NAME"
             rmdir \S sr_source
             dir
             
