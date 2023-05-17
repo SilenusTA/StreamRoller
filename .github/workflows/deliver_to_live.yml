@@ -64,7 +64,7 @@ jobs:
           git config --global user.email "SilenusTA@gmail.com"
           git config --global user.name "SilenusTA"
           git config --global credential.helper cache
-          git config http.postBuffer 524288000
+          git config http.postBuffer 1048576000
           git add .
           git tag -a "${{github.ref_name}}" -m "Automated Build"
           git commit -m "$(date)"
