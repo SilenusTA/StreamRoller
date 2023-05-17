@@ -65,9 +65,6 @@ jobs:
           npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
     - name: Creating exe
       run: |
-          export GIT_TRACE_PACKET=1
-          export GIT_TRACE=1
-          export GIT_CURL_VERBOSE=1
           git config --unset-all http.https://github.com/.extraheader
           git config http.postBuffer 524288000
           git config --global user.email "silenusta@gmail.com"
