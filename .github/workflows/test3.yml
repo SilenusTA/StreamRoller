@@ -62,10 +62,16 @@ jobs:
           cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
-          del windows_releases/StreamRoller.exe
-          npx caxa -i . -o windows_releases/StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
-          dir windows_releases
-    - name: Pushing to live repo}
+          npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+    - name: uploading exe
+      uses: actions/upload-artifact@v3
+      with:
+        name: mini-artifacts
+        path: StreamRoller.exe
+    - name: deleting exe
+      run:
+        del StreamRoller.exe
+    - name: Pushing to live repo
       run: |
           git config --unset-all http.https://github.com/.extraheader
           git config http.postBuffer 1048576000
@@ -76,7 +82,7 @@ jobs:
           git diff > gitdiff.txt
           git commit -m "$(date)"
           git push --no-thin origin master
-    - name: uploading artifact
+    - name: uploading fullcode
       uses: actions/upload-artifact@v3
       with:
           name: final_code
