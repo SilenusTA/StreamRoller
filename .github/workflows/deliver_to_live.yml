@@ -29,7 +29,7 @@ jobs:
           path: "SR_source"
       - name: checkout live repo
         run: |
-          rmdir /?
+          rmdir //?
           rmdir /Q /S SR_source
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
