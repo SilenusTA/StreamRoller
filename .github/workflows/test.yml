@@ -15,7 +15,8 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            echo ${{ env.MY_API_TOKEN_GITHUB }}
+            echo "key ${{ env.MY_API_TOKEN_GITHUB }} "
+            echo "key2 $MY_API_TOKEN_GITHUB "
             rmdir --help
             dir
             
