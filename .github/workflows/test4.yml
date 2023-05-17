@@ -62,6 +62,8 @@ jobs:
       with:
         prerelease: true
         body: Testing relase strategy
+        name: "PreReleaseTest"
+        tag_name: "test-release"
         token: ${{secrets.API_TOKEN_GITHUB}}
         repository: SilenusTA/StreamRoller
         files: |
