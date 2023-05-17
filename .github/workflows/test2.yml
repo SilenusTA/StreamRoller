@@ -1,4 +1,4 @@
-name: create_windows_exe
+name: test2
 run-name: ${{ github.actor }} is Creating a windows version of Streamroller
 on:
   workflow_dispatch:
