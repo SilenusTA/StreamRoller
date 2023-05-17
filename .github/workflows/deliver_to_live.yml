@@ -3,6 +3,7 @@ run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
+  MY_API_TOKEN_GITHUB: ${{secrets.API_TOKEN_GITHUB}}
 jobs:
   minify:
     runs-on: ubuntu-latest
@@ -35,7 +36,7 @@ jobs:
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
           git config --global credential.helper cache
-          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller .
+          git clone https://${{ env.MY_API_TOKEN_GITHUB }}@github.com/SilenusTA/StreamRoller .
           dir
       - name: check for normal
         run:  cat extensions/chatbot/chatbot.js
