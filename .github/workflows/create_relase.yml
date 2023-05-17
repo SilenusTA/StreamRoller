@@ -16,17 +16,12 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '16.13.2'
-#    - name: run linter
-#      uses: docker://github/super-linter:v3
-#      env:
-#        VALIDATE_ALL_CODEBASE: false
-#        DEFAULT_BRANCH: master
     - name: minifying
       uses: nizarmah/auto-minify@v2.1
       with:
         overwrite: true
         js_engine : 'uglify-js'
-    - name: removing git folder
+    - name: removing git folder (to keep space down in exe)
       run: |
           ls -la
           rm -fr .git/*
@@ -54,26 +49,22 @@ jobs:
           npm i -D caxa
           npm install
           npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
-    - name: Build
+    - name: Create Release.txt
       run: |
-          echo env.VERSION_TAG ${{ env.VERSION_TAG }} github.ref ${{ github.ref}} github.ref_name ${{ github.ref_name}} >> Release.txt
-    - name: Test
+          echo Release version ${{ github.ref_name }} >> Release.txt
+    - name: Zip up exe
       run: |
         7z a StreamRoller.zip StreamRoller.exe
-        dir
-    - name: Release
+    - name: Push Release
       uses: softprops/action-gh-release@v1
       with:
         prerelease: true
-        body: Automated Release
-        name: "StreamRoller"
-        tag_name: "test-release"
+        body: Version ${{ github.ref_name }} of StreamRoller
+        name: "StreamRoller${{ github.ref_name }}"
+        tag_name: ${{ github.ref_name }}
         token: ${{secrets.API_TOKEN_GITHUB}}
         repository: SilenusTA/StreamRoller
         files: |
           Release.txt
           StreamRoller.zip
-
-#          git remote rename origin upstream
-#          git remote add origin https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
-#          git checkout origin windows_releases/StreamRoller.exe
+          StreamRoller.exe
