@@ -23,6 +23,10 @@ jobs:
     runs-on: windows-latest
     needs: minify
     steps:
+      - name: checkout source
+        uses: actions/checkout@v3
+        with:
+          path: "SR_source"
       - name: checkout live repo
         run: |
           git config --unset-all http.https://github.com/.extraheader
