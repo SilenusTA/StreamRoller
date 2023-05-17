@@ -18,7 +18,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: minified_code_artifact
-          path: .
+          path: path/**/*.js
   crate_windows_version:
     runs-on: windows-latest
     needs: minify
