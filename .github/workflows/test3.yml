@@ -74,5 +74,10 @@ jobs:
           git remote add origin https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
           git checkout origin indows_releases/StreamRoller.exe
           git add .
+    - name: uploading artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: final_code
+        path: .  
 #          git commit -m "$(date)"
 #          git push --no-thin origin master
