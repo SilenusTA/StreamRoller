@@ -56,11 +56,7 @@ jobs:
           npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
     - name: Build
       run: |
-        echo ${{ github.sha }} > Release.txt
-        echo ${{ env.VERSION_TAG }} >> Release.txt
-        echo ${{ github.ref}} >> Release.txt
-        echo ${{ github.ref_name}} >> Release.txt
-        Compress-Archive -Path StreamRoller.exe -Destination StreamRoller.zip
+          echo env.VERSION_TAG ${{ env.VERSION_TAG }} github.ref ${{ github.ref}} github.ref_name ${{ github.ref_name}} >> Release.txt
     - name: Test
       run: |
         7z a StreamRoller.zip StreamRoller.exe
