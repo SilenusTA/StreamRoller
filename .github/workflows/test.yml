@@ -12,6 +12,7 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            rmdir sr_source/
+            rmdir
+            rmdir \S sr_source
             dir
             
