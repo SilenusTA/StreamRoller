@@ -1,11 +1,13 @@
 name: deliver_exe_to_release_on_new_repo
 run-name: ${{ github.actor }} delivering exe to live repo release
 on:
+  push:
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
-  registry_package:
-    types: [published]
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
 jobs:
   minify_code:
     runs-on: ubuntu-latest
@@ -53,22 +55,28 @@ jobs:
           npm install
           npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
     - name: Build
-      run: echo ${{ github.sha }} > Release.txt
+      run: |
+        echo ${{ github.sha }} > Release.txt
+        echo ${{ env.VERSION_TAG }} >> Release.txt
+        echo ${{ github.ref}} >> Release.txt
+        echo ${{ github.ref_name}} >> Release.txt
+        Compress-Archive -Path StreamRoller.exe -Destination StreamRoller.zip
     - name: Test
       run: |
+        7z a StreamRoller.zip StreamRoller.exe
         dir
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         prerelease: true
-        body: Testing relase strategy
-        name: "PreReleaseTest"
+        body: Automated Release
+        name: "StreamRoller"
         tag_name: "test-release"
         token: ${{secrets.API_TOKEN_GITHUB}}
         repository: SilenusTA/StreamRoller
         files: |
           Release.txt
-          StreamRoller.exe
+          StreamRoller.zip
 
 #          git remote rename origin upstream
 #          git remote add origin https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
