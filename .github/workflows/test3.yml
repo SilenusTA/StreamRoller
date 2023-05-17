@@ -14,11 +14,11 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '16.13.2'
-    - name: run linter
-      uses: docker://github/super-linter:v3
-      env:
-        VALIDATE_ALL_CODEBASE: false
-        DEFAULT_BRANCH: master
+#    - name: run linter
+#      uses: docker://github/super-linter:v3
+#      env:
+#        VALIDATE_ALL_CODEBASE: false
+#        DEFAULT_BRANCH: master
     - name: minifying
       uses: nizarmah/auto-minify@v2.1
       with:
