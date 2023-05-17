@@ -14,7 +14,6 @@ jobs:
           path: ./sr_source
       - name: try to delete dirs
         run: |
-            dir
             rmdir ./sr_source
             dir
             
