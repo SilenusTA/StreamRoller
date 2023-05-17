@@ -1,4 +1,4 @@
-name: deliver_to_live
+name: test
 run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
 env:
