@@ -1,11 +1,13 @@
-name: create_windows_exe3
-run-name: ${{ github.actor }} pushtolive2
+name: Creating a new Release
+run-name: ${{ github.actor }} delivering exe to live repo release
 on:
+  push:
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
-  registry_package:
-    types: [published]
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
 jobs:
   minify_code:
     runs-on: ubuntu-latest
@@ -39,17 +41,6 @@ jobs:
     runs-on: windows-latest    
     needs: minify_code
     steps:
-    - name: getting live repo
-      run: |
-        echo 1 $env.MY_API_TOKEN_GITHUB
-        echo 2 ${{env.MY_API_TOKEN_GITHUB}}
-        echo 3 $secrets.API_TOKEN_GITHUB
-        echo 4 ${{secrets.API_TOKEN_GITHUB}}
-        git config --global user.email "SilenusTA@gmail.com"
-        git config --global user.name "SilenusTA"
-        git config --global credential.helper cache
-        git clone https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller .
-        dir
     - name: importing artecfact
       uses: actions/download-artifact@v3
       with:
@@ -63,30 +54,30 @@ jobs:
           npm i -D caxa
           npm install
           npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
-    - name: uploading exe
-      uses: actions/upload-artifact@v3
-      with:
-        name: mini-artifacts
-        path: StreamRoller.exe
-    - name: deleting exe
-      run:
-        del StreamRoller.exe
-    - name: Pushing to live repo
+    - name: Build
       run: |
-          git config --unset-all http.https://github.com/.extraheader
-          git config http.postBuffer 1048576000
-          git config --global user.email "silenusta@gmail.com"
-          git config --global user.name "silenusta"
-          git config --global credential.helper cache
-          git add .
-          git diff > gitdiff.txt
-          git commit -m "$(date)"
-          git push --no-thin origin master
-    - name: uploading fullcode
-      uses: actions/upload-artifact@v3
+        echo ${{ github.sha }} > Release.txt
+        echo ${{ env.VERSION_TAG }} >> Release.txt
+        echo ${{ github.ref}} >> Release.txt
+        echo ${{ github.ref_name}} >> Release.txt
+        Compress-Archive -Path StreamRoller.exe -Destination StreamRoller.zip
+    - name: Test
+      run: |
+        7z a StreamRoller.zip StreamRoller.exe
+        dir
+    - name: Release
+      uses: softprops/action-gh-release@v1
       with:
-          name: final_code
-          path: .  
+        prerelease: true
+        body: Automated Release
+        name: "StreamRoller"
+        tag_name: "test-release"
+        token: ${{secrets.API_TOKEN_GITHUB}}
+        repository: SilenusTA/StreamRoller
+        files: |
+          Release.txt
+          StreamRoller.zip
+
 #          git remote rename origin upstream
 #          git remote add origin https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
 #          git checkout origin windows_releases/StreamRoller.exe
