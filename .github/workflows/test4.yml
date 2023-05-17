@@ -1,0 +1,73 @@
+name: deliver_exe_to_release_on_new_repo
+run-name: ${{ github.actor }} delivering exe to live repo release
+on:
+  workflow_dispatch:
+  registry_package:
+    types: [published]
+env:
+  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+jobs:
+  minify_code:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16.13.2'
+#    - name: run linter
+#      uses: docker://github/super-linter:v3
+#      env:
+#        VALIDATE_ALL_CODEBASE: false
+#        DEFAULT_BRANCH: master
+    - name: minifying
+      uses: nizarmah/auto-minify@v2.1
+      with:
+        overwrite: true
+        js_engine : 'uglify-js'
+    - name: removing git folder
+      run: |
+          ls -la
+          rm -fr .git/*
+          rmdir .git
+          ls -la
+    - name: uploading artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: mini-artifacts
+        path: .      
+  creating_exe:
+    runs-on: windows-latest    
+    needs: minify_code
+    steps:
+    - name: importing artecfact
+      uses: actions/download-artifact@v3
+      with:
+        name: mini-artifacts
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16.13.2'
+    - name: Creating exe
+      run: |
+          cat extensions/chatbot/chatbot.js
+          npm i -D caxa
+          npm install
+          npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+    - name: Build
+      run: echo ${{ github.sha }} > Release.txt
+    - name: Test
+      run: |
+        dir
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        prerelease: true
+        body: Testing relase strategy
+        token: ${{secrets.API_TOKEN_GITHUB}}
+        repository: SilenusTA/StreamRoller
+        files: |
+          Release.txt
+          StreamRoller.exe
+
+#          git remote rename origin upstream
+#          git remote add origin https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller
+#          git checkout origin windows_releases/StreamRoller.exe
