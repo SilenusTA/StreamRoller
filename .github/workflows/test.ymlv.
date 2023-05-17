@@ -15,7 +15,7 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            echo "var = $SRS_GITHUB_REF_NAME"
-            rmdir \S sr_source
+            echo "var = ${emv.SRS_GITHUB_REF_NAME"}
+            rmdir --help
             dir
             
