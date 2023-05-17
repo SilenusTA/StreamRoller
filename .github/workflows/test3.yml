@@ -41,10 +41,10 @@ jobs:
     steps:
     - name: getting live repo
       run: |
-        echo 1) $env.MY_API_TOKEN_GITHUB
-        echo 2) ${{env.MY_API_TOKEN_GITHUB}}
-        echo 3) $secrets.API_TOKEN_GITHUB
-        echo 4) ${{secrets.API_TOKEN_GITHUB}}
+        echo 1 $env.MY_API_TOKEN_GITHUB
+        echo 2 ${{env.MY_API_TOKEN_GITHUB}}
+        echo 3 $secrets.API_TOKEN_GITHUB
+        echo 4 ${{secrets.API_TOKEN_GITHUB}}
         git config --global user.email "SilenusTA@gmail.com"
         git config --global user.name "SilenusTA"
         git config --global credential.helper cache
