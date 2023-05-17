@@ -1,37 +1,16 @@
 name: test
 run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
-env:
-  SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
 jobs:
   testing:
     runs-on: windows-latest
     steps:
-      - name: checkout live repo
+      - name: checkout code
+        uses: actions/checkout@v3
+        with:
+          path: "sr_source"
+      - name: try to delete dirs
         run: |
-          git config --unset-all http.https://github.com/.extraheader
-          git config --global user.email "silenusta@gmail.com"
-          git config --global user.name "silenusta"
-          git config --global credential.helper cache
-          git clone https://${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller .
-          dir
-      - name: push to new repo
-        run: |
-          dir 
-          echo testing > temp.txt
-          echo pre ref
-          echo $github.GITHUB_REF_NAME
-          echo mid ref
-          echo "$(date)"
-          echo post ref
-          git config --unset-all http.https://github.com/.extraheader
-          git config --global user.email "silenusta@gmail.com"
-          git config --global user.name "silenusta"
-          git config --global credential.helper cache
-#          git config http.postBuffer 524288000
-#          git add .
-#          git tag -a $SRS_GITHUB_REF_NAME -m "Automated Build"
-#          git commit -m "$(date)"
-#          git push 
-
-
+            dir
+            rmdir /S sr_source
+            
