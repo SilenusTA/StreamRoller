@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is delivering
 on: workflow_dispatch
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
-  MY_API_TOKEN_GITHUB: ${{secrets.API_TOKEN_GITHUB}}
+  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
 jobs:
   minify:
     runs-on: ubuntu-latest
@@ -73,8 +73,7 @@ jobs:
           git config --global credential.helper cache
           git config http.postBuffer 1048576000
           git add .
-          git tag -a "${{github.ref_name}}" -m "Automated Build"
-#          git commit -m "$(date)"
-#          git push https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
+          git commit -m "$(date)"
+          git push https://SilenusTA:${{env.MY_API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
 
 
