@@ -29,6 +29,7 @@ jobs:
           path: "SR_source"
       - name: checkout live repo
         run: |
+          rmdir /s /q SR_source
           git config --unset-all http.https://github.com/.extraheader
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "silenusta"
@@ -71,7 +72,7 @@ jobs:
           git config http.postBuffer 1048576000
           git add .
           git tag -a "${{github.ref_name}}" -m "Automated Build"
-          git commit -m "$(date)"
-          git push https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
+#          git commit -m "$(date)"
+#          git push https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
 
 
