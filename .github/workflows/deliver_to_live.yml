@@ -68,6 +68,6 @@ jobs:
           git add .
           git tag -a "${{github.ref_name}}" -m "Automated Build"
           git commit -m "$(date)"
-          git push 
+          git push https://SilenusTA:${{secrets.API_TOKEN_GITHUB}}@github.com/SilenusTA/StreamRoller.git
 
 
