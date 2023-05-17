@@ -1,5 +1,5 @@
 name: test
-run-name: ${{ github.actor }} is delivering
+run-name: ${{ github.actor }} is running a test
 on: workflow_dispatch
 env:
   SRS_GITHUB_REF_NAME: ${{ github.GITHUB_REF_NAME }}  
@@ -15,8 +15,6 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            echo "key ${{ env.MY_API_TOKEN_GITHUB }} "
-            echo "key2 $MY_API_TOKEN_GITHUB "
-            rmdir --help
+            rmdir ./sr_source
             dir
             
