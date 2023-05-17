@@ -15,7 +15,7 @@ jobs:
       - name: try to delete dirs
         run: |
             dir
-            echo ${{env.SRS_GITHUB_REF_NAME }}
+            echo ${{ env.MY_API_TOKEN_GITHUB }}
             rmdir --help
             dir
             
