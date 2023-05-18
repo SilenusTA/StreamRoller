@@ -48,7 +48,7 @@ jobs:
           cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
-          npx caxa -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
+          npx caxa -m "First run, unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/node_modules/.bin/node" -- "{{caxa}}/backend/data_center/server.js"
     - name: Create Release.txt
       run: |
           echo Release version ${{ github.ref_name }} >> Release.txt

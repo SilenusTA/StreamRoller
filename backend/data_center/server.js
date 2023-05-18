@@ -19,6 +19,11 @@ import * as logger from "./modules/logger.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 // load our config settings
 let config = cm.loadConfig("datacenter");
+
+// old bug, need to remove the old setup if anyone has it.
+if (config.HOST.startsWith("http") > 0)
+    config = ""
+
 // check we have a config. if this is a new instance the we need to create a config
 if (config === "")
 {
