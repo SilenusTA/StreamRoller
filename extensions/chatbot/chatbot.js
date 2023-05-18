@@ -532,7 +532,7 @@ function processChatMessage (data)
     }
 
     // ignore messages from the bot or specified users
-    if (data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
+    if ((serverConfig.chatbotname != null && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1)
         || data.data["display-name"].toLowerCase().indexOf("system") != -1)
     {
         if (serverConfig.DEBUG_MODE === "on")

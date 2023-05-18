@@ -599,7 +599,7 @@ function sendChatMessage (channel, data)
         }
         if (!sent)
         {
-            if (localConfig.twitchClient[account].state.connected)
+            if (account && localConfig.twitchClient[account].state.connected)
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch, couldn't send message. user not available", data.account)
             else
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Twitch, User not connected (have you setup your credentials in the admin page)", data.account)
