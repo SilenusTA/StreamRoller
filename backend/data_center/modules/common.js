@@ -12,6 +12,7 @@
 import * as fs from "fs";
 import crypto from 'crypto';
 import process from 'node:process';
+import { execFile } from "child_process";
 
 //const usersPath = dirname(fileURLToPath(import.meta.url));
 let usersPath = process.env.APPDATA + "\\StreamRoller\\Data";
@@ -124,6 +125,44 @@ function loadConfig (configname, path = configFilesPath)
     return "";
 }
 // ============================================================================
+//                  FUNCTION: loadSoftwareVersion
+// ============================================================================
+/**
+ * Loads and returns a SoftwareVersion number
+ * @returns version number or ""
+ */
+function loadSoftwareVersion ()
+{
+    let filename = "SoftwareVersion.txt";
+    try
+    {
+        if (fs.existsSync(filename))
+        {
+            try
+            {
+                var data = fs.readFileSync(filename, { encoding: 'utf8', flag: 'r' });
+                console.log("data", data)
+                return data;
+            }
+            catch (err)
+            {
+                console.log("Failed to find version file")
+                console.log(err);
+                return "";
+            }
+        }
+        else
+        {
+            return ""
+        }
+    }
+    catch (err)
+    {
+        console.log("common.js: loadConfig error", err);
+    }
+    return "";
+}
+// ============================================================================
 //                  FUNCTION: saveConfig
 // ============================================================================
 /**
@@ -217,4 +256,4 @@ function saveCredentials (data)
 // ============================================================================
 //                           EXPORTS: 
 // ============================================================================
-export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials };
+export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials, loadSoftwareVersion };

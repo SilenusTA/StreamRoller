@@ -19,7 +19,7 @@ import * as logger from "./modules/logger.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 // load our config settings
 let config = cm.loadConfig("datacenter");
-
+let version = cm.loadSoftwareVersion();
 // old bug, need to remove the old setup if anyone has it.
 if (config === "" || config.HOST.startsWith("http") > 0)
     config = ""
@@ -36,9 +36,19 @@ if (config === "")
         logginglevel: 0,
         heartbeat: 5000, // heartbeat timers
         apiVersion: sr_api.__api_version__,
+        softwareversion: version
     };
     cm.saveConfig(config.extensionname, config);
 }
+else
+{
+    if (config.softwareversion != version)
+    {
+        config.softwareversion = version;
+        cm.saveConfig(config.extensionname, config);
+    }
+}
+
 logger.setLoggingLevel(config.logginglevel);
 console.log("serverSettings: ", config);
 console.log("\x1b[1m\x1b[33mload the url\x1b[31m", config.HOST + ":" + config.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");

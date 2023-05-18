@@ -99,6 +99,13 @@
                             serverConfig.extensionname,
                             serverConfig.channel
                         ));
+                    //request software version
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "RequestSoftwareVersion",
+                            serverConfig.extensionname,
+                            serverConfig.channel
+                        ));
                     //Request lists once up and running, we delay a while so other extensions can load
                     setTimeout(() =>
                     {
@@ -187,6 +194,13 @@
                         UpdateAdminModalData();
                         //send modal to everyone to update their own copies of out model
                         SendModal("");
+                    }
+                    // -------------------------------------------------------------------------------------------------
+                    //                  RECEIVED LOGGING LEVEL
+                    // -------------------------------------------------------------------------------------------------
+                    else if (server_packet.type === "SoftwareVersion")
+                    {
+                        document.getElementById("softwareversion").innerHTML = server_packet.data;
                     }
                     else if (server_packet.type === "ExtensionMessage")
                     {

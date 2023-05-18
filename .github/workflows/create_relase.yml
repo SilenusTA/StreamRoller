@@ -43,6 +43,9 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '16.13.2'
+    - name: Create Version.txt
+      run: |
+          echo ${{ github.ref_name }} >> SoftwareVersion.txt
     - name: Creating exe
       run: |
           cat extensions/chatbot/chatbot.js

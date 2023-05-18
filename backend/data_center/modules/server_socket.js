@@ -188,7 +188,9 @@ function onMessage (socket, server_packet)
         }
     }
     // process the clients request
-    if (server_packet.type === "RequestConfig")
+    if (server_packet.type === "RequestSoftwareVersion")
+        mh.sendSoftwareVersion(socket, server_packet.from);
+    else if (server_packet.type === "RequestConfig")
         mh.sendConfig(socket, server_packet.from);
     else if (server_packet.type === "SaveConfig")
         mh.saveConfig(server_packet.from, server_packet.data);

@@ -65,6 +65,22 @@ function sendData (client_socket, extensionname)
     client_socket.emit("message", msg);
 }
 // ============================================================================
+//                           FUNCTION: sendData
+// ============================================================================
+/**
+ * loads and sends the data file to the given extension
+ * @param {Socket} client_socket socket to send on
+ * @param {String} extensionname extension name
+ */
+function sendSoftwareVersion (client_socket, extensionname)
+{
+    let loadedData = cm.loadSoftwareVersion();
+    logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendData",
+        "Sending data file", extensionname, loadedData);
+    let msg = sr_api.ServerPacket("SoftwareVersion", EXTENSION_NAME, loadedData, "", extensionname);
+    client_socket.emit("message", msg);
+}
+// ============================================================================
 //                           FUNCTION: saveData
 // ============================================================================
 /**
@@ -370,6 +386,7 @@ export
     broadcastMessage,
     errorMessage,
     UpdateCredentials,
-    RetrieveCredentials
+    RetrieveCredentials,
+    sendSoftwareVersion
 }
 
