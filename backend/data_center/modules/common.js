@@ -35,7 +35,6 @@ if (!fs.existsSync(credentialFilesPath)) fs.mkdirSync(credentialFilesPath, { rec
  */
 function encrypt (text)
 {
-    let Buffer = ""
     let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
