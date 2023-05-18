@@ -26,7 +26,7 @@ if (config === "")
         name: "StreamRoller",
         extensionname: "datacenter",
         SYSTEM_LOGGING_TAG: "DATA-CENTER",
-        HOST: "http://localhost",
+        HOST: "localhost",
         PORT: 3000,
         logginglevel: 0,
         heartbeat: 5000, // heartbeat timers
@@ -51,12 +51,27 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // app server start
 const app = express();
 const server = http.createServer(app);
-server.listen(config.PORT);
 // some global vars, yes I know I need to fix using globals.
 const extensions = [];
 // used to import extra extensions during testing
 const testing = 0;
-
+server.listen(config.PORT, config.HOST);
+server.on('error', (e) =>
+{
+    if (e.code === 'EADDRINUSE')
+    {
+        console.log('Address in use, retrying...');
+        setTimeout(() =>
+        {
+            server.close();
+            server.listen(config.PORT, config.HOST);
+        }, 1000);
+    }
+});
+server.on('listening', (e) =>
+{
+    console.log("Server Started");
+})
 // ============================================================================
 //                          EXPRESS
 // ============================================================================

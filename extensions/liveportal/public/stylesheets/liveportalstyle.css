@@ -49,4 +49,7 @@ a
   /* Needed to add space between the bullet and the text */
   width: 1em;
 }
- 
+.dropdown-menu 
+{
+  border: 1px solid grey;
+}

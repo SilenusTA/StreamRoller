@@ -71,6 +71,8 @@ import { Server } from "socket.io";
 import * as mh from "./message_handlers.js";
 import * as cm from "./common.js";
 import * as childprocess from "child_process"
+import process from 'node:process';
+
 const channels = [];
 let extensions = {};
 let server_socket = null;
@@ -168,11 +170,11 @@ function onMessage (socket, server_packet)
         return;
     }
     // add this socket to the extension if it doesn't already exist
-    if (typeof (extensions[server_packet.from]) === undefined || !extensions[server_packet.from])
+    if (typeof (extensions[server_packet.from]) === "undefined" || !extensions[server_packet.from])
     {
         extensions[server_packet.from] = {};
     }
-    if (typeof (extensions[server_packet.from].socket) === undefined || !extensions[server_packet.from].socket)
+    if (typeof (extensions[server_packet.from].socket) === "undefined" || !extensions[server_packet.from].socket)
     {
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + server_packet.from);
         extensions[server_packet.from].socket = socket;
@@ -205,9 +207,6 @@ function onMessage (socket, server_packet)
                 stdio: 'ignore'
             })
         child.unref();
-
-        // we have to block here to all the restarted thread to start up
-        blockingsleep(1000)
         process.exit();
 
     }
@@ -255,18 +254,6 @@ function onMessage (socket, server_packet)
     else
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
 
-}
-
-//if we are restarting the server we need to wait for the old one to exit first.
-blockingsleep(1000)
-function blockingsleep (time, callback)
-{
-    var stop = new Date().getTime();
-    while (new Date().getTime() < stop + time)
-    {
-        ;
-    }
-    //callback();
 }
 
 // ============================================================================
