@@ -21,7 +21,7 @@ import sr_api from "./public/streamroller-message-api.cjs";
 let config = cm.loadConfig("datacenter");
 
 // old bug, need to remove the old setup if anyone has it.
-if (config.HOST.startsWith("http") > 0)
+if (config === "" || config.HOST.startsWith("http") > 0)
     config = ""
 
 // check we have a config. if this is a new instance the we need to create a config
@@ -60,7 +60,7 @@ const server = http.createServer(app);
 const extensions = [];
 // used to import extra extensions during testing
 const testing = 0;
-server.listen(config.PORT, config.HOST);
+server.listen(config.PORT);
 server.on('error', (e) =>
 {
     if (e.code === 'EADDRINUSE')
@@ -69,7 +69,7 @@ server.on('error', (e) =>
         setTimeout(() =>
         {
             server.close();
-            server.listen(config.PORT, config.HOST);
+            server.listen(config.PORT);
         }, 1000);
     }
 });
@@ -89,7 +89,7 @@ app.use(express.static(__dirname + "/public"));
 app.get("/", function (req, res)
 {
     res.render(__dirname + "/../../extensions/liveportal/views/pages/index", {
-        host: config.HOST,
+        host: "http://" + config.HOST,
         port: config.PORT,
         heartbeat: config.heartbeat
     });
@@ -167,7 +167,7 @@ function loadExtensions (extensionFolder)
                                     extensions[file] = { initialise: module.initialise };
                                     if (typeof extensions[file].initialise === "function")
                                         extensions[file].initialise(
-                                            app, config.HOST,
+                                            app, "http://" + config.HOST,
                                             config.PORT,
                                             // add a slight offset to the heartbeat so they don't all end up synced
                                             config.heartbeat + (Math.floor(Math.random() * 100)));
