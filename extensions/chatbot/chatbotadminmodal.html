@@ -111,9 +111,28 @@
                 <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7" value="chatBotBehaviour7text">
 
             </div>
+            <HR>
+            <h4 class="modal-title">Advanced options</h4>
+            <h5 class="modal-title">Accuracy (or temperature in OpenAI speak)</h5>
+            <BR>Higher = less random/more precise
+            <BR>Low = more random/less precise
+            <div class="form-group row-2 text-center">
+                <label for="chattemperature" class="form-label">Chatbot Accuracy</label>
+                <label id="chattemperaturerangeval">chattemperaturetext</label>
+                <input type="range" class="form-range" name="chattemperature" id="chattemperature"  min="0" max="100" step="1" onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
+            </div>
+            <div class="form-group row-2 text-center ">
+                <label for="questiontemperature" class="form-label">Direct Question Accuracy</label>
+                <label id="questiontemperaturerangeval">questiontemperaturetext</label>
+                <input type="range" class="form-range" name="questiontemperature" id="questiontemperature"  min="0" max="100" step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">
+            </div>
+            
 
+
+
+            <HR>
             <h5 class="modal-title">Debug</h5>
-            <HR>Outputs some extra text in the console for help to tune things better.
+            Outputs some extra text in the console for help to tune things better.
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="DEBUG_MODE" type="checkbox" id="DEBUG_MODE" DEBUG_MODEchecked>

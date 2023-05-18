@@ -79,18 +79,21 @@ const serverConfig = {
     chatBotBehaviour6: "What is the meaning of life",
     chatBotBehaviour7: "It must be love of course, all 42 shades of it",
 
+    chattemperature: 0.4,
+    questiontemperature: 0.1,
+
     // openAI settings. we use different settings for a question to the general bot responses
     settings: {
         chatmodel: {
             //model: "text-davinci-003",
             model: "gpt-3.5-turbo",
-            temperature: 0.4,
+            temperature: 0.4, // will be overwritten by chattemperature
             max_tokens: 110, // note twich chat is somewhere around 125 tokens +- lenght of words in responce
         },
         // different settings available for direct questions
         questionmodel: {
             model: "gpt-3.5-turbo",
-            temperature: 0.1,
+            temperature: 0.1,// will be overwritten by questiontemperature
             max_tokens: 110,
         },
     },
@@ -192,7 +195,20 @@ function onDataCenterMessage (server_packet)
             for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
                 {
-                    serverConfig[key] = server_packet.data[key];
+                    if (key === "chattemperature")
+                    {
+                        serverConfig[key] = server_packet.data[key];
+                        // set the openAI value as well
+                        serverConfig.settings.chatmodel.temperature = server_packet.data[key];
+                    }
+                    else if (key === "questiontemperature")
+                    {
+                        serverConfig[key] = server_packet.data[key];
+                        // set the openAI value as well
+                        serverConfig.settings.questionmodel.temperature = server_packet.data[key];
+                    }
+                    else
+                        serverConfig[key] = server_packet.data[key];
                 }
             SaveConfigToServer();
         }
@@ -226,7 +242,25 @@ function onDataCenterMessage (server_packet)
                     extension_packet.data.chatbotTimerMax != serverConfig.chatbotTimerMax)
                     timerschanged = true
                 for (const [key, value] of Object.entries(extension_packet.data))
-                    serverConfig[key] = value;
+                {
+                    var tmp = 0
+                    if (key === "chattemperature")
+                    {
+                        tmp = (1 - (value / 100))
+                        serverConfig[key] = tmp.toFixed(2);
+                        // set the openAI value as well
+                        serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
+                    }
+                    else if (key === "questiontemperature")
+                    {
+                        tmp = (1 - (value / 100))
+                        serverConfig[key] = tmp.toFixed(2);
+                        // set the openAI value as well
+                        serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
+                    }
+                    else
+                        serverConfig[key] = value;
+                }
                 SaveConfigToServer();
                 if (timerschanged)
                     startChatbotTimer();
@@ -342,7 +376,10 @@ function SendAdminModal (tochannel)
                 // checkboxes
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
-                // replace text strings
+                else if (key === "chattemperature")
+                    modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
+                else if (key === "questiontemperature")
+                    modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
                 else if (typeof (value) == "string" || typeof (value) == "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
@@ -661,7 +698,7 @@ async function callOpenAI (history_string, modelToUse)
                 {
                     model: modelToUse.model,
                     messages: history_string,
-                    temperature: modelToUse.temperature,
+                    temperature: modelToUse.chattemperature,
                     max_tokens: modelToUse.max_tokens
                     //stop: ["Human:", "AI:"]
                 })

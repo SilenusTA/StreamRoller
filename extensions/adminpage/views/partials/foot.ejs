@@ -13,12 +13,14 @@
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
-    let modeDark = localStorage.getItem("darkmode")
-    // check for no stored value
-    if (!modeDark)
-        modeDark = "false";
+     let modeDark = localStorage.getItem("darkmode")
+    if (localStorage.getItem('darkmode') === null)
+    {
+        modeDark = "true";
+        localStorage.setItem('darkmode', modeDark);
+    }
     window.onload = setDarkMode(modeDark)
-
+ 
     // on click handler for switching dark mode
     $('.darkswitch').click(() =>
     {

@@ -13,10 +13,6 @@
 
 <script>
     let modeDark = localStorage.getItem("darkmode")
-    console.log("darkmode:", localStorage.getItem("darkmode"))
-    // check for no stored value
-    console.log("modeDark storage",localStorage.getItem('darkmode') === null)
-    
     if (localStorage.getItem('darkmode') === null)
     {
         modeDark = "true";
