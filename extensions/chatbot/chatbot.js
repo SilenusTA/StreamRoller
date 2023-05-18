@@ -81,7 +81,7 @@ const serverConfig = {
 
     chattemperature: 0.4,
     questiontemperature: 0.1,
-
+    maxtokenstouse: 110,
     // openAI settings. we use different settings for a question to the general bot responses
     settings: {
         chatmodel: {
@@ -207,6 +207,14 @@ function onDataCenterMessage (server_packet)
                         // set the openAI value as well
                         serverConfig.settings.questionmodel.temperature = server_packet.data[key];
                     }
+                    else if (key === "maxtokenstouse")
+                    {
+                        serverConfig[key] = server_packet.data[key];
+                        // set the openAI value as well
+                        serverConfig.settings.questionmodel.temperature = server_packet.data[key];
+                        serverConfig.settings.chatmodel.max_tokens = server_packet.data[key];
+
+                    }
                     else
                         serverConfig[key] = server_packet.data[key];
                 }
@@ -257,6 +265,13 @@ function onDataCenterMessage (server_packet)
                         serverConfig[key] = tmp.toFixed(2);
                         // set the openAI value as well
                         serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
+                    }
+                    else if (key === "maxtokenstouse")
+                    {
+                        serverConfig[key] = value;
+                        // set the openAI value as well
+                        serverConfig.settings.chatmodel.max_tokens = value;
+                        serverConfig.settings.questionmodel.maxtokenstouse = value;
                     }
                     else
                         serverConfig[key] = value;
@@ -380,7 +395,7 @@ function SendAdminModal (tochannel)
                     modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
                 else if (key === "questiontemperature")
                     modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
-                else if (typeof (value) == "string" || typeof (value) == "number")
+                else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
 
@@ -683,6 +698,8 @@ function processChatMessage (data)
 // ============================================================================
 async function callOpenAI (history_string, modelToUse)
 {
+    if (serverConfig.DEBUG_MODE === "on")
+        console.log("Calling OpenAI with model ", modelToUse)
     try
     {
         if (localConfig.openAIKey)
@@ -698,8 +715,8 @@ async function callOpenAI (history_string, modelToUse)
                 {
                     model: modelToUse.model,
                     messages: history_string,
-                    temperature: modelToUse.chattemperature,
-                    max_tokens: modelToUse.max_tokens
+                    temperature: Number(modelToUse.chattemperature),
+                    max_tokens: Number(modelToUse.max_tokens)
                     //stop: ["Human:", "AI:"]
                 })
                 .catch((err) => 

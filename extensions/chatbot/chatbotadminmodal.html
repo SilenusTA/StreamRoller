@@ -130,9 +130,14 @@
                 <label id="questiontemperaturerangeval">questiontemperaturetext</label>
                 <input type="range" class="form-range" name="questiontemperature" id="questiontemperature"  min="0" max="100" step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">
             </div>
-            
-
-
+             <h5 class="modal-title">Token Limit</h5>
+            Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125 tokens is around the max twitch chat lenght. Over this you will get multiple messages in chat.
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="maxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" name="maxtokenstouse" id="maxtokenstouse" value="maxtokenstousetext">
+                </div>
+            </div>
 
             <HR>
             <h5 class="modal-title">Debug</h5>
