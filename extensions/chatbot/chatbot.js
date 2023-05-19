@@ -274,7 +274,7 @@ function onDataCenterMessage (server_packet)
                         serverConfig[key] = value;
                         // set the openAI value as well
                         serverConfig.settings.chatmodel.max_tokens = value;
-                        serverConfig.settings.questionmodel.maxtokenstouse = value;
+                        serverConfig.settings.questionmodel.max_tokens = value;
                     }
                     else
                         serverConfig[key] = value;
