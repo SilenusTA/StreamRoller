@@ -54,6 +54,7 @@ const serverConfig = {
     // =============================
     chatbotenabled: "off",
     questionbotenabled: "off",
+    chatbotquerytagstartofline: "on",
     // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
     // query tag is the chat text to look for to send a direct question/message to openAI GPT
     chatbotquerytag: "Hey CHATBOTNAME",
@@ -191,6 +192,7 @@ function onDataCenterMessage (server_packet)
         {
             serverConfig.chatbotenabled = "off";
             serverConfig.questionbotenabled = "off";
+            serverConfig.chatbotquerytagstartofline = "off";
             serverConfig.DEBUG_MODE = "off";
             for (const [key] of Object.entries(serverConfig))
                 if (key in server_packet.data)
@@ -244,6 +246,7 @@ function onDataCenterMessage (server_packet)
             {
                 serverConfig.chatbotenabled = "off";
                 serverConfig.questionbotenabled = "off";
+                serverConfig.chatbotquerytagstartofline = "off";
                 serverConfig.DEBUG_MODE = "off";
                 let timerschanged = false
                 if (extension_packet.data.chatbotTimerMin != serverConfig.chatbotTimerMin ||
@@ -573,8 +576,17 @@ function processChatMessage (data)
         return;
     }*/
     // user initiated direct question
-    else if ((chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase()) ||
-        chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase())))
+    else if (
+        (serverConfig.chatbotquerytagstartofline == "off" &&
+            chatdata.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
+            || chatdata.message.toLowerCase().includes("hey chatbot".toLowerCase())
+        )
+        ||
+        (serverConfig.chatbotquerytagstartofline == "on" &&
+            chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
+            || chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
+        )
+    )
     {
         if (serverConfig.DEBUG_MODE === "on")
         {

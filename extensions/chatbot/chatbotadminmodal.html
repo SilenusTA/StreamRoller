@@ -13,66 +13,81 @@
                 <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
-            
-            <p>Chatbot is a ChatGPT powered chatbot that can be asked questions or just hang out in chat talking with users. 
+
+            <p>Chatbot is a ChatGPT powered chatbot that can be asked questions or just hang out in chat talking with
+                users.
             </p>
-            
+
             <!-- fields for user interaction -->
             <!-- enable/disable chatbot -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled" chatbotenabledchecked>
-                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot (joins in the conversation in chat)</label>
+                    <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled"
+                        chatbotenabledchecked>
+                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot (joins in the conversation in
+                        chat)</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled" questionbotenabledchecked>
-                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot (chat can ask questions directly)</label>
+                    <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled"
+                        questionbotenabledchecked>
+                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot (chat can ask questions
+                        directly)</label>
                 </div>
             </div>
             <div class="form-group row">
                 <div class="col-xs-1">
-                    <label for="chatbotquerytag" class="">message to directly ask a question in chat</label>
-                    <input type="text" name="chatbotquerytag"  id="chatbotquerytag" value="chatbotquerytagtext">
+                    <label for="chatbotquerytag" class="">Message to directly ask a question in chat</label>
+                    <input type="text" name="chatbotquerytag" id="chatbotquerytag" value="chatbotquerytagtext">
+                    <input class="form-check-input" name="chatbotquerytagstartofline" type="checkbox"
+                        id="chatbotquerytagstartofline" chatbotquerytagstartoflinechecked>
+                    <label class="form-check-label" for="chatbotquerytagstartofline">Start of line only</label>
                 </div>
+
             </div>
-            
+
             <hr>
             <h5 class="modal-title">Activity level (how much the bot responds)</h5>
             Timeout for bot.
-            <br>A random time will be selected between min and max, after chatting the bot will sleep for this random amount of time.
+            <br>A random time will be selected between min and max, after chatting the bot will sleep for this random
+            amount of time.
             <div class="form-group row">
                 <div class="col-xs-1">
                     <label for="chatbotTimerMin" class="">Min (minutes) : </label>
-                    <input type="text" name="chatbotTimerMin"  id="chatbotTimerMin" value="chatbotTimerMintext">
+                    <input type="text" name="chatbotTimerMin" id="chatbotTimerMin" value="chatbotTimerMintext">
                     <label for="chatbotTimerMax" class=""> Max (minutes) : </label>
                     <input type="text" name="chatbotTimerMax" id="chatbotTimerMax" value="chatbotTimerMaxtext">
                 </div>
             </div>
             <br>Valid chat content per request
-            <br>This is how many messages to send to the AI bot. ie 5 means collect the next 5 messages (after the timeout above) 
-                and send them to get a response
-          
+            <br>This is how many messages to send to the AI bot. ie 5 means collect the next 5 messages (after the
+            timeout above)
+            and send them to get a response
+
             <div class="form-group row">
                 <div class="col-xs-1">
                     <label for="chatbotMessageMaxLines" class="">Num of messages : </label>
-                    <input type="text" name="chatbotMessageMaxLines"  id="chatbotMessageMaxLines" value="chatbotMessageMaxLinestext">
+                    <input type="text" name="chatbotMessageMaxLines" id="chatbotMessageMaxLines"
+                        value="chatbotMessageMaxLinestext">
                 </div>
             </div>
 
-            <br>How long should a message be before it is added to the list to send to the bot. Short messages 'hello', 'nice one' or a Bttv emote (can't easily filter these out yet)
+            <br>How long should a message be before it is added to the list to send to the bot. Short messages 'hello',
+            'nice one' or a Bttv emote (can't easily filter these out yet)
             don't make for such a good responce.
             <div class="form-group row">
                 <div class="col-xs-1">
                     <label for="chatbotminmessagelength" class="">Minimum char length of a message</label>
-                    <input type="text" name="chatbotminmessagelength"  id="chatbotminmessagelength" value="chatbotminmessagelengthtext">
+                    <input type="text" name="chatbotminmessagelength" id="chatbotminmessagelength"
+                        value="chatbotminmessagelengthtext">
                 </div>
             </div>
 
             <hr>
             <h5 class="modal-title">Display</h5>
-            Select an emote that is used at the start of each opanAI responce in chat to avoid confusion that these messages are from a real person
+            Select an emote that is used at the start of each opanAI responce in chat to avoid confusion that these
+            messages are from a real person
             <div class="form-group row">
                 <div class="col-xs-1">
                     <label for="boticon" class="col-form-label">Emote : </label>
@@ -84,35 +99,40 @@
             <h5 class="modal-title">Personality and Behaviour</h5>
             <HR>Describe the personality of the bot so that the AI can try and mimic this in it's responses
             <div class="form-group row-2">
-                <label for="chatBotPersonality" class="col-form-label" >Chatbot personality.</label>
-                <input type="text" name="chatBotPersonality" class="form-control" id="chatBotPersonality" value="chatBotPersonalitytext">
+                <label for="chatBotPersonality" class="col-form-label">Chatbot personality.</label>
+                <input type="text" name="chatBotPersonality" class="form-control" id="chatBotPersonality"
+                    value="chatBotPersonalitytext">
             </div>
             <HR>Give some examples of how you expect the bot to respond to the following questions
             <div class="form-group row-2">
                 <label for="chatBotBehaviour0" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour0" class="form-control" value="chatBotBehaviour0text"/>
+                <input type="text" name="chatBotBehaviour0" class="form-control" value="chatBotBehaviour0text" />
                 <label for="chatBotBehaviour1" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour1" class="form-control" id="chatBotBehaviour1" value="chatBotBehaviour1text">
+                <input type="text" name="chatBotBehaviour1" class="form-control" id="chatBotBehaviour1"
+                    value="chatBotBehaviour1text">
             </div>
             <div class="form-group row-2">
                 <label for="chatBotBehaviour2" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour2" class="form-control" value="chatBotBehaviour2text"/>
+                <input type="text" name="chatBotBehaviour2" class="form-control" value="chatBotBehaviour2text" />
                 <label for="chatBotBehaviour3" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour3" class="form-control" id="chatBotBehaviour3" value="chatBotBehaviour3text">
+                <input type="text" name="chatBotBehaviour3" class="form-control" id="chatBotBehaviour3"
+                    value="chatBotBehaviour3text">
 
             </div>
             <div class="form-group row-2">
                 <label for="chatBotBehaviour4" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour4" class="form-control" value="chatBotBehaviour4text"/>
+                <input type="text" name="chatBotBehaviour4" class="form-control" value="chatBotBehaviour4text" />
                 <label for="chatBotBehaviour5" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour5" class="form-control" id="chatBotBehaviour5" value="chatBotBehaviour5text">
+                <input type="text" name="chatBotBehaviour5" class="form-control" id="chatBotBehaviour5"
+                    value="chatBotBehaviour5text">
 
             </div>
             <div class="form-group row-2">
                 <label for="chatBotBehaviour6" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour6" class="form-control" value="chatBotBehaviour6text"/>
+                <input type="text" name="chatBotBehaviour6" class="form-control" value="chatBotBehaviour6text" />
                 <label for="chatBotBehaviour7" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7" value="chatBotBehaviour7text">
+                <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7"
+                    value="chatBotBehaviour7text">
 
             </div>
             <HR>
@@ -123,15 +143,19 @@
             <div class="form-group row-2 text-center">
                 <label for="chattemperature" class="form-label">Chatbot Accuracy</label>
                 <label id="chattemperaturerangeval">chattemperaturetext</label>
-                <input type="range" class="form-range" name="chattemperature" id="chattemperature"  min="0" max="100" step="1" onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
+                <input type="range" class="form-range" name="chattemperature" id="chattemperature" min="0" max="100"
+                    step="1" onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
             </div>
             <div class="form-group row-2 text-center ">
                 <label for="questiontemperature" class="form-label">Direct Question Accuracy</label>
                 <label id="questiontemperaturerangeval">questiontemperaturetext</label>
-                <input type="range" class="form-range" name="questiontemperature" id="questiontemperature"  min="0" max="100" step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">
+                <input type="range" class="form-range" name="questiontemperature" id="questiontemperature" min="0"
+                    max="100" step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())"
+                    value="questiontemperaturetext">
             </div>
-             <h5 class="modal-title">Token Limit</h5>
-            Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125 tokens is around the max twitch chat lenght. Over this you will get multiple messages in chat.
+            <h5 class="modal-title">Token Limit</h5>
+            Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
+            tokens is around the max twitch chat lenght. Over this you will get multiple messages in chat.
             <div class="form-group row">
                 <div class="col-xs-1">
                     <label for="maxtokenstouse" class="col-form-label">Max Tokens to use:</label>
