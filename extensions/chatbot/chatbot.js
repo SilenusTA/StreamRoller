@@ -257,14 +257,14 @@ function onDataCenterMessage (server_packet)
                     var tmp = 0
                     if (key === "chattemperature")
                     {
-                        tmp = (1 - (value / 100))
+                        tmp = (value / 100)
                         serverConfig[key] = tmp.toFixed(2);
                         // set the openAI value as well
                         serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
                     }
                     else if (key === "questiontemperature")
                     {
-                        tmp = (1 - (value / 100))
+                        tmp = (value / 100)
                         serverConfig[key] = tmp.toFixed(2);
                         // set the openAI value as well
                         serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
@@ -395,9 +395,9 @@ function SendAdminModal (tochannel)
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
                 else if (key === "chattemperature")
-                    modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
                 else if (key === "questiontemperature")
-                    modalstring = modalstring.replaceAll(key + "text", 100 - (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
@@ -656,7 +656,7 @@ function processChatMessage (data)
         localConfig.chatMessageCount++;
     }
 
-    if (localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines)
+    if ((localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines) || (localConfig.chatMessageCount < 1))
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("not got enough messages in buffer to process yet", localConfig.chatMessageCount)
