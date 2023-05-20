@@ -593,7 +593,7 @@ function sendChatMessage (channel, data)
         if (account && localConfig.twitchClient[account].connection && localConfig.twitchClient[account].state.connected)
         {
             localConfig.twitchClient[account].connection.say(channel, data.message)
-                .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "twitchClient.message sent ", channel, data.message))
+                .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "message sent ", channel, data.message))
                 .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "sendChatMessage error", e) })
             sent = true;
         }
@@ -729,7 +729,7 @@ function connectToTwtich (account)
 // ============================================================================
 function chatLogin (account)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames.bot["name"])
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames[account]["name"])
     try
     {
         localConfig.twitchClient[account].connection = new tmi.Client({
@@ -774,7 +774,23 @@ function chatLogin (account)
         {
             process_chat_data(channel, tags, message);
         });
+
+        /*localConfig.twitchClient[account].connection.on("whisper", (channel, tags, message, self) =>
+        {
+            console.log("USER WHISPER channel", channel)
+            console.log("USER WHISPER tags", tags)
+            console.log("USER WHISPER message", message);
+        });*/
     }
+    /*else // bot account messages
+    {
+        localConfig.twitchClient[account].connection.on("whisper", (channel, tags, message, self) =>
+        {
+            console.log("BOT WHISPER channel", channel)
+            console.log("BOT WHISPER tags", tags)
+            console.log("BOT WHISPER message", message);
+        });
+    }*/
 }
 // ============================================================================
 //                           FUNCTION: updateUserList

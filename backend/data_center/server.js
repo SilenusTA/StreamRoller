@@ -37,6 +37,7 @@ if (config === "")
         heartbeat: 5000, // heartbeat timers
         apiVersion: sr_api.__api_version__,
         softwareversion: version,
+        overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
         testing: 0// used to import extra extensions during testing
     };
     cm.saveConfig(config.extensionname, config);
@@ -105,7 +106,7 @@ app.get("/", function (req, res)
         heartbeat: config.heartbeat
     });
 });
-// server our overlay. Overlay currently needs updating and moving into the extensions
+// serve our overlay. Overlay currently needs updating and moving into the extensions
 // as this is where I suspect it should live. or maybe we need a separate overlays folder?
 //////let overlayfolder = __dirname + "/../../frontend/overlays/main_overlay";
 //////app.use("/overlay", express.static(overlayfolder));
@@ -119,9 +120,13 @@ app.get("/", function (req, res)
 // #### Maybe this is passed in or setup on the admin page #####
 // ### This is only here as my overly was writting using php ###
 // #############################################################
+//config.overlayfolder = __dirname + "/../../../ODGOverlay";
+//config.overlayfolder = "/repos/ODGOverlay";
+
 import { execPHP } from "./execphp.js";
-execPHP.phpFolder = __dirname + "/../../../ODGOverlay";
-var webfiles = __dirname + "/../../../ODGOverlay";
+execPHP.phpFolder = config.overlayfolder;
+var webfiles = config.overlayfolder;
+
 app.use("*.php", function (request, response, next)
 {
     execPHP.parseFile(request.originalUrl, function (phpResult)
