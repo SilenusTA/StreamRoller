@@ -648,8 +648,8 @@ function reconnectChat (account)
     }
     catch (err)
     {
-        localConfig.twitchClient[account].state.connected = false;
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
+        localConfig.twitchClient[account].state.connected = false;
     }
 }
 // ============================================================================
@@ -676,7 +676,7 @@ function joinChatChannel (account)
                 process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                 setTimeout(() =>
                 {
-                    reconnectChat()
+                    reconnectChat(account)
                 }, 5000)
             });
     }
@@ -730,18 +730,25 @@ function connectToTwtich (account)
 function chatLogin (account)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames.bot["name"])
-    localConfig.twitchClient[account].connection = new tmi.Client({
-        options: { debug: false, messagesLogLevel: "info" },
-        connection: {
-            reconnect: true,
-            secure: true
-        },
-        identity: {
-            username: localConfig.usernames[account]["name"],//'bot-name',
-            password: localConfig.usernames[account]["oauth"]//'oauth:my-bot-token'
-        },
-        channels: [serverConfig.streamername]
-    });
+    try
+    {
+        localConfig.twitchClient[account].connection = new tmi.Client({
+            options: { debug: false, messagesLogLevel: "info" },
+            connection: {
+                reconnect: true,
+                secure: true
+            },
+            identity: {
+                username: localConfig.usernames[account]["name"],//'bot-name',
+                password: localConfig.usernames[account]["oauth"]//'oauth:my-bot-token'
+            },
+            channels: [serverConfig.streamername]
+        })
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Failed to get twitch client for" + account + ":", err);
+    }
 
 
     localConfig.twitchClient[account].connection.connect()
