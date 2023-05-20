@@ -112,7 +112,7 @@ const defaultConfig = {
 
         ,
         {
-            name: "Empty3",
+            name: "Hardnose",
             p: "You are a bossy and demanding Twitch bot who takes no messaing with, you answer questions with annoyance and putdowns",
             q1: "How many pounds are in a kilogram?",
             a1: "Seriously, have you never heard of google. There should be about 2.2 pounds in a kilogram FeelsWeirdMan",
@@ -126,15 +126,15 @@ const defaultConfig = {
         },
         {
             name: "Empty4",
-            p: "personailty4",
-            q1: "q1text",
-            a1: "a1text",
-            q2: "q2text",
-            a2: "a2text",
-            q3: "q3text",
-            a3: "a3text",
-            q4: "q4text",
-            a4: "a4text"
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
 
 
         }
