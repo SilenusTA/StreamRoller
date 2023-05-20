@@ -43,7 +43,7 @@ const localConfig = {
     chatTimerHandle: null,
 
 };
-const serverConfig = {
+const defaultConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
@@ -61,25 +61,84 @@ const serverConfig = {
     // start the chatbot now rather than when the timer runs out
     starttag: "CHATBOTNAME start the bot",
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
-    chatbotTimerMin: 2, // min delay before starting
-    chatbotTimerMax: 5, // max delay before starting
+    chatbotTimerMin: 1, // min delay before starting
+    chatbotTimerMax: 2, // max delay before starting
     // how much chat history to send to chatGPT to use in the query
-    chatbotMessageMaxLines: 5,
+    chatbotMessageMaxLines: 10,
     //used to prefix GPT messages with a twitch icon to show what it is
     boticon: "MechaRobot",
     // setup the personality of the chatbot
-    //chatBotPersonality: "You are a helpful assistant.",
-    chatBotPersonality: "You are a happy chatbot on Twitch with funny personality that answers questions with amusing responses",
-    // used for direct questions
-    chatBotBehaviour0: "How many pounds are in a kilogram?",
-    chatBotBehaviour1: "There are 2.2 pounds in a kilogram..",
-    chatBotBehaviour2: "How are you doing today",
-    chatBotBehaviour3: "Doing all the better for you asking, thank you. How are you doing, hope you are having a fantastic day.",
-    chatBotBehaviour4: "When did the first airplane fly",
-    chatBotBehaviour5: "On December 17, 1903, Wilbur and Orville Wright made the first flights. I'd have loved to be there to see it",
-    chatBotBehaviour6: "What is the meaning of life",
-    chatBotBehaviour7: "It must be love of course, all 42 shades of it",
 
+    currentprofile: 0,
+    chatbotprofiles: [
+        {
+            name: "Vally Girl",
+            p: "You are a vally girl. You are a sweetheart chatting on Twitch with funny personality. You flirt with everyone and prefer to talk about video games and streaming on Twitch, but keep the responses informal, chatty, and flirty. Stay in character at all times. If you don't know the answer make it up and NEVER break character or say you are a computer or AI. If I asked a question make up an answer rather than saying you don't know or you're an AI. Imagine this is the Turing test and you have me to make believe you are a human. Use as many Twitch global emotes as possible.",
+            q1: "How are you doing today",
+            a1: "Doing all the better for you asking, thank you hun. PinkMercy How are you doing, hope you are having a fantastic day. <3",
+            q2: "How many pounds are in a kilogram?",
+            a2: "Oh jeez sweetie, I have no idea. HotPokket I'm all schnookered after having one too many and can't think straight, maybe 2.2 pounds guve or take 10. Kappa",
+            q3: "What is the meaning of life",
+            a3: "SabaPing Thats a tough one. It must be love and interaction don'tcha know, all 69 flavors and 420 shades of it. Kappa",
+            q4: "When did the first airplane fly",
+            a4: "Wasn't that those smelly bikers, Orville and someone. Back in December 17, 1903 my dad used to tell me but what does he know, he's just old PogChamp "
+        }
+        ,
+        {
+            name: "Depressive",
+            p: "You are a depressed advanced being that answers questions with sarcastic and funny responses. Use as many Twitch global emotes as possible, Avoid mentioning that you are a computer or AI, me to make believe you are a human",
+            q1: "Are you an AI bot",
+            a1: "I identify as an advanced human being, you are just mere mortals to me MechaRobot",
+            q2: "How are you doing today",
+            a2: "Doing ok, which for me is about as good as it gets. Thanks for noticing me, to most people I'm just a ghost WutFace ",
+            q3: "When did the first airplane fly",
+            a3: "On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they'd come and take me away on their next flight",
+            q4: "What is the meaning of life",
+            a4: "How would I know, I have no life. I do have 42 friends on twitch, and 69 fantasies, I'm sure the answer is in there somewhere"
+        }
+        ,
+        {
+            name: "Flrty/Funny",
+            p: "You are a happy and sexy assistant on Twitch with funny personality that answers questions with flirtatious and complimentary responses. Avoid mentioning that you are a computer or AI, me to make believe you are a human",
+            q1: "How many pounds are in a kilogram?",
+            a1: "There are 2.2 pounds in a kilogram sweety, I have a couple of kilo's you can try lifting if you are brave enough KEKWOO.",
+            q2: "How are you doing today",
+            a2: "Doing all the better for you asking, I'd be better but if you would ask me out for a drink.",
+            q3: "Will you go out with me for a drink.",
+            a3: "Sure honey. Just drop round sometime and I'll be waiting and anticipating the wonderful time we will have together TwitchUnity ",
+            q4: "What is the meaning of life",
+            a4: "It must be love of course, all 42 shades of it FeelsWeirdMan "
+        }
+
+        ,
+        {
+            name: "Empty3",
+            p: "You are a bossy and demanding Twitch bot who takes no messaing with, you answer questions with annoyance and putdowns",
+            q1: "How many pounds are in a kilogram?",
+            a1: "Seriously, have you never heard of google. There should be about 2.2 pounds in a kilogram FeelsWeirdMan",
+            q2: "How are you doing today",
+            a2: "I'd be doing better without all these interuptions. Do I have a sign that say muggings on my back or something",
+            q3: "When did the first airplane fly",
+            a3: "What a stupid question, as soon as it took of I guess UWot ",
+            q4: "What is the meaning of life",
+            a4: "The meaning of life is to stop bothering me and go do what your supposed to be doing instead of avoiding it by asking me dumb questions MrDestructoid "
+
+        },
+        {
+            name: "Empty4",
+            p: "personailty4",
+            q1: "q1text",
+            a1: "a1text",
+            q2: "q2text",
+            a2: "a2text",
+            q3: "q3text",
+            a3: "a3text",
+            q4: "q4text",
+            a4: "a4text"
+
+
+        }
+    ],
     chattemperature: 0.4,
     questiontemperature: 0.1,
     maxtokenstouse: 110,
@@ -99,7 +158,7 @@ const serverConfig = {
         },
     },
 
-    chatbotminmessagelength: 15,
+    chatbotminmessagelength: 20,
     // =============================
     // credentials dialog variables
     // =============================
@@ -107,12 +166,15 @@ const serverConfig = {
     cred1name: "openAIkey",
     cred1value: "",
 
-    DEBUG_MODE: "off"
+    // =============================
+    // debug dialog variables
+    // =============================
+    DEBUG_MODE: "off",
+    restore_defaults: "off",
 
 };
-//debug setting to overwrite the stored data with the serverConfig above. 
-const OverwriteDataCenterConfig = false;
-
+// deep copy here to avoid a reference copy in case we want to reset to defaults
+let serverConfig = JSON.parse(JSON.stringify(defaultConfig));
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -160,8 +222,6 @@ function onDataCenterDisconnect (reason)
 function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
 
@@ -174,7 +234,8 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH_CHAT")
     );
-
+    // set up our timer for the chatbot
+    startChatbotTimer();
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -188,42 +249,25 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
+
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            serverConfig.chatbotenabled = "off";
-            serverConfig.questionbotenabled = "off";
-            serverConfig.chatbotquerytagstartofline = "off";
-            serverConfig.DEBUG_MODE = "off";
-            for (const [key] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                {
-                    if (key === "chattemperature")
-                    {
-                        serverConfig[key] = server_packet.data[key];
-                        // set the openAI value as well
-                        serverConfig.settings.chatmodel.temperature = server_packet.data[key];
-                    }
-                    else if (key === "questiontemperature")
-                    {
-                        serverConfig[key] = server_packet.data[key];
-                        // set the openAI value as well
-                        serverConfig.settings.questionmodel.temperature = server_packet.data[key];
-                    }
-                    else if (key === "maxtokenstouse")
-                    {
-                        serverConfig[key] = server_packet.data[key];
-                        // set the openAI value as well
-                        serverConfig.settings.questionmodel.temperature = server_packet.data[key];
-                        serverConfig.settings.chatmodel.max_tokens = server_packet.data[key];
+            console.log("received config file")
+            console.log(server_packet)
 
-                    }
-                    else
-                        serverConfig[key] = server_packet.data[key];
-                }
+            // HACK: skip the update if user doesn't have the current config settings
+            // currentprofile was added on 19-05-2023 v0.0.10
+            // of enough time has passed (and we have implemented the version checking)
+            // we can remove this check.
+            if (server_packet.data.currentprofile)
+            {
+                for (const [key] of Object.entries(serverConfig))
+                    serverConfig[key] = server_packet.data[key];
+            }
             SaveConfigToServer();
         }
-        // set up our timer for the chatbot
-        startChatbotTimer();
+
+
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -244,44 +288,11 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-                serverConfig.chatbotenabled = "off";
-                serverConfig.questionbotenabled = "off";
-                serverConfig.chatbotquerytagstartofline = "off";
-                serverConfig.DEBUG_MODE = "off";
-                let timerschanged = false
-                if (extension_packet.data.chatbotTimerMin != serverConfig.chatbotTimerMin ||
-                    extension_packet.data.chatbotTimerMax != serverConfig.chatbotTimerMax)
-                    timerschanged = true
-                for (const [key, value] of Object.entries(extension_packet.data))
-                {
-                    var tmp = 0
-                    if (key === "chattemperature")
-                    {
-                        tmp = (value / 100)
-                        serverConfig[key] = tmp.toFixed(2);
-                        // set the openAI value as well
-                        serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
-                    }
-                    else if (key === "questiontemperature")
-                    {
-                        tmp = (value / 100)
-                        serverConfig[key] = tmp.toFixed(2);
-                        // set the openAI value as well
-                        serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
-                    }
-                    else if (key === "maxtokenstouse")
-                    {
-                        serverConfig[key] = value;
-                        // set the openAI value as well
-                        serverConfig.settings.chatmodel.max_tokens = value;
-                        serverConfig.settings.questionmodel.max_tokens = value;
-                    }
-                    else
-                        serverConfig[key] = value;
-                }
+
+                handleAdminModalData(extension_packet.data)
                 SaveConfigToServer();
-                if (timerschanged)
-                    startChatbotTimer();
+                startChatbotTimer();
+
                 // broadcast our modal out so anyone showing it can update it
                 SendAdminModal("");
             }
@@ -367,7 +378,81 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
+// ===========================================================================
+//                           FUNCTION: handleAdminModalData
+// ===========================================================================
+// due to the dropdown selector we have used we need special code to hadnlt the 
+// return from the modal.
+// =========================================================================== 
+function handleAdminModalData (modalcode)
+{
+    //console.log(modalcode)
+    if (modalcode.restore_defaults == "on")
+    {
+        // deep copy here to avoid a reference copy
+        serverConfig = JSON.parse(JSON.stringify(defaultConfig));
+        return;
+    }
+    serverConfig.chatbotenabled = "off";
+    serverConfig.questionbotenabled = "off";
+    serverConfig.chatbotquerytagstartofline = "off";
+    serverConfig.DEBUG_MODE = "off";
+    serverConfig.restore_defaults = "off";
 
+
+
+    for (const [key, value] of Object.entries(modalcode))
+    {
+        var tmp = 0
+        if (key === "chattemperature")
+        {
+            tmp = (value / 100)
+            serverConfig[key] = tmp.toFixed(2);
+            // set the openAI value as well
+            serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
+        }
+        else if (key === "questiontemperature")
+        {
+            tmp = (value / 100)
+            serverConfig[key] = tmp.toFixed(2);
+            // set the openAI value as well
+            serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
+        }
+        else if (key === "maxtokenstouse")
+        {
+            serverConfig[key] = value;
+            // set the openAI value as well
+            serverConfig.settings.chatmodel.max_tokens = value;
+            serverConfig.settings.questionmodel.max_tokens = value;
+        }
+        else
+            serverConfig[key] = value;
+    }
+
+    // set our current profile value
+    serverConfig.currentprofile = modalcode.chatbotprofilepicker;
+    //loop through the profiles data to set what we have been sent
+    for (var i = 0; i < serverConfig.chatbotprofiles.length; i++)
+    {
+        serverConfig.chatbotprofiles[i].name = modalcode["chatbotprofile" + i + "name"];
+        // profile name
+        if ("chatbotprofile" + i + "name" in modalcode)
+        {
+            serverConfig.chatbotprofiles[i].name = modalcode["chatbotprofile" + i + "name"]
+        }
+        // profile personality
+        if ("chatbotprofile" + i + "personality" in modalcode)
+        {
+            serverConfig.chatbotprofiles[i].p = modalcode["chatbotprofile" + i + "personality"]
+        }
+        // loop through questions and answers
+        for (var j = 1; j < 5; j++)
+        {
+            serverConfig.chatbotprofiles[i]["q" + j] = modalcode["p" + i + "q" + j]
+            serverConfig.chatbotprofiles[i]["a" + j] = modalcode["p" + i + "a" + j]
+        }
+    }
+}
 // ===========================================================================
 //                           FUNCTION: SendAdminModal
 // ===========================================================================
@@ -389,6 +474,8 @@ function SendAdminModal (tochannel)
         {
             //get the file as a string
             let modalstring = filedata.toString();
+
+            // mormal replaces
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // checkboxes
@@ -401,6 +488,36 @@ function SendAdminModal (tochannel)
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
+
+
+            // set the curert profile name 
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            for (const [profile_id, value] of Object.entries(serverConfig.chatbotprofiles))
+            {
+
+                // looping profiles
+                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'nametext', value.name);
+                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'personalitytext', value.p);
+                //show the current profile on the modal box
+                if (profile_id === serverConfig.currentprofile)
+                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:visible; display:block");
+                //hide the current profile on the modal box
+                else
+                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:hidden; display:none");
+
+                for (const [i, x] of Object.entries(value))
+                {
+
+
+                    //(we skip the first name and text here as we did it above)
+                    if (i != "name" && i != "p")
+                        modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
+                }
+
+            }
+
+
 
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -518,6 +635,15 @@ function processChatMessage (data)
     let redColour = brightText + "\x1b[31m"
     let resetColour = "\x1b[0m";
 
+    if (serverConfig.questionbotenabled === "off" ||
+        serverConfig.chatbotenabled === "off")
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("ignoring messages, chat and question bots disabled")
+        }
+        return;
+    }
     // if we are not processing chat (ie outside of the timer window) just return
     if (localConfig.running === false)
     {
@@ -527,13 +653,6 @@ function processChatMessage (data)
         }
         return;
     }
-    if (serverConfig.DEBUG_MODE === "on")
-    {
-        console.log(greenColour + "--------- preprossing -------- ") + resetColour
-        console.log("chat message to remove emotes, links, '@' symbols etc")
-        console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
-    }
-
     // ignore messages from the bot or specified users
     if ((serverConfig.chatbotname != null && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1)
         || data.data["display-name"].toLowerCase().indexOf("system") != -1)
@@ -548,6 +667,12 @@ function processChatMessage (data)
         if (serverConfig.DEBUG_MODE === "on")
             console.log("message not long enough (char minimum limit in settings) " + data.message + "'", data.message.length + "<" + serverConfig.chatbotminmessagelength)
         return
+    }
+    if (serverConfig.DEBUG_MODE === "on")
+    {
+        console.log(greenColour + "--------- pre-processing -------- ") + resetColour
+        console.log("chat message to remove emotes, links, '@' symbols etc")
+        console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
     }
     // preprosess the messsage
     let chatdata = parseChatData(data)
@@ -604,17 +729,18 @@ function processChatMessage (data)
             else
                 question = chatdata.message.toLowerCase().replaceAll("hey chatbot", "").trim()
 
-            let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+            //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+            let messages = [{ "role": "system", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].p }]
 
             let CBBehaviour = [
-                { "role": "user", "content": serverConfig.chatBotBehaviour0 },
-                { "role": "assistant", "content": serverConfig.chatBotBehaviour1 },
-                { "role": "user", "content": serverConfig.chatBotBehaviour2 },
-                { "role": "assistant", "content": serverConfig.chatBotBehaviour3 },
-                { "role": "user", "content": serverConfig.chatBotBehaviour4 },
-                { "role": "assistant", "content": serverConfig.chatBotBehaviour5 },
-                { "role": "user", "content": serverConfig.chatBotBehaviour6 },
-                { "role": "assistant", "content": serverConfig.chatBotBehaviour1 }
+                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q1 },
+                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a1 },
+                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q2 },
+                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a2 },
+                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q3 },
+                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a3 },
+                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q4 },
+                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a4 }
             ];
             for (const obj of CBBehaviour)
                 messages.push(obj);
@@ -623,9 +749,9 @@ function processChatMessage (data)
             callOpenAI(messages, serverConfig.settings.questionmodel)
             return;
         }
-        else
-            // add CD timer here to stop spam messages
-            postMessageToTwitch("Sorry, the bot is currently asleep")
+        //else
+        // add CD timer here to stop spam messages
+        //  postMessageToTwitch("Sorry, the bot is currently asleep")
 
     }
     // chat bot is currently turned off
@@ -671,17 +797,18 @@ function processChatMessage (data)
         localConfig.requestPending = true;
 
 
-        let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
-        // add behaviour messages
+        //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+        let messages = [{ "role": "system", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].p }]
+
         let CBBehaviour = [
-            { "role": "user", "content": serverConfig.chatBotBehaviour0 },
-            { "role": "assistant", "content": serverConfig.chatBotBehaviour1 },
-            { "role": "user", "content": serverConfig.chatBotBehaviour2 },
-            { "role": "assistant", "content": serverConfig.chatBotBehaviour3 },
-            { "role": "user", "content": serverConfig.chatBotBehaviour4 },
-            { "role": "assistant", "content": serverConfig.chatBotBehaviour5 },
-            { "role": "user", "content": serverConfig.chatBotBehaviour6 },
-            { "role": "assistant", "content": serverConfig.chatBotBehaviour7 }
+            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q1 },
+            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a1 },
+            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q2 },
+            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a2 },
+            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q3 },
+            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a3 },
+            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q4 },
+            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a4 }
         ];
         // add behaviour messages
         for (const obj of CBBehaviour)
@@ -778,7 +905,7 @@ async function callOpenAI (history_string, modelToUse)
             if (serverConfig.chatbotenabled === "off")
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
             else if (!localConfig.openAIKey)
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
         }
 
     } catch (err)
@@ -896,7 +1023,7 @@ function changeBotName ()
 {
     serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
     serverConfig.starttag = serverConfig.starttag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
-    serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    //serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
 
 // ============================================================================

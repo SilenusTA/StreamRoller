@@ -246,8 +246,8 @@
                 // -------------------------------------------------------------------------------------------------
                 else if (server_packet.type === "SoftwareVersion")
                 {
-                    document.getElementById("softwareversion").innerHTML=  server_packet.data;
-                    
+                    document.getElementById("softwareversion").innerHTML = server_packet.data;
+
                 }
                 // -------------------------------------------------------------------------------------------------
                 //                   RECEIVED EXTENSION LIST
@@ -1332,7 +1332,9 @@
                 }
                 else
                 {
-                    if (chatdata.data.mod)
+                    if (chatdata.data['display-name'].startsWith("?"))
+                        usercolor = "<span style='color: yellow'>";
+                    else if (chatdata.data.mod)
                         usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
                     else if (chatdata.data.color === null)
                         usercolor = "<span style='color: #6f42c1'>";
@@ -1343,8 +1345,10 @@
 
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    localConfig.chatMessageBuffer.push(time + username + " " + message);
-
+                    if (chatdata.data['display-name'].startsWith("?"))
+                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' >" + message + "</span>");
+                    else
+                        localConfig.chatMessageBuffer.push(time + username + " " + message);
                     // add mod messages to mod card if selected
                     if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
                         localConfig.modMessageBuffer.push(time + username + " " + message);

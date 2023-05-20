@@ -36,7 +36,8 @@ if (config === "")
         logginglevel: 0,
         heartbeat: 5000, // heartbeat timers
         apiVersion: sr_api.__api_version__,
-        softwareversion: version
+        softwareversion: version,
+        testing: 0// used to import extra extensions during testing
     };
     cm.saveConfig(config.extensionname, config);
 }
@@ -68,8 +69,8 @@ const app = express();
 const server = http.createServer(app);
 // some global vars, yes I know I need to fix using globals.
 const extensions = [];
-// used to import extra extensions during testing
-const testing = 0;
+
+
 server.listen(config.PORT);
 server.on('error', (e) =>
 {
@@ -135,8 +136,9 @@ app.use(express.static(webfiles));
 // ################### Install Extensions #####################
 // #############################################################
 // Just some debugging code
-if (testing)
+if (config.testing > 0)
 {
+    console.log("#### running extera DEBUG extensions ####")
     logger.usecoloredlogs("default");
     loadExtensions(__dirname + "/../../test-ext")
     loadExtensions(__dirname + "/../../extensions/datahandlers")

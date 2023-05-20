@@ -94,47 +94,189 @@
                     <input type="text" name="boticon" id="boticon" value="boticontext">
                 </div>
             </div>
-
             <HR>
-            <h5 class="modal-title">Personality and Behaviour</h5>
-            <HR>Describe the personality of the bot so that the AI can try and mimic this in it's responses
-            <div class="form-group row-2">
-                <label for="chatBotPersonality" class="col-form-label">Chatbot personality.</label>
-                <input type="text" name="chatBotPersonality" class="form-control" id="chatBotPersonality"
-                    value="chatBotPersonalitytext">
+
+
+            <!-- ####################################################### -->
+            <!--              behaviour and personalities                -->
+            <!-- ####################################################### -->
+            <div class="form-group row-2" class="form-control">
+                <h4>Profile in use:<span style='color: yellow'> chatbotprofileselectedname</span></h4>
+                <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one"
+                    id="chatbotprofilepicker" name="chatbotprofilepicker" onchange="
+                        let wc_i = this.selectedIndex; 
+                        Array.apply(null,this.options).forEach(x => 
+                        {
+                            document.getElementById('chatbotprofile' + x.value+'profile').style.visibility ='hidden'
+                            document.getElementById('chatbotprofile' + x.value+'profile').style.display ='none'
+                        })
+                        let selectedElement = document.getElementById('chatbotprofile' + this.options[wc_i].value+'profile')                    
+                        selectedElement.style.visibility ='visible'
+                        selectedElement.style.display ='block'
+                " required>
+                    <!--  onChange='add_img()' -->
+                    <option value="0">chatbotprofile0nametext</option>
+                    <option value="1">chatbotprofile1nametext</option>
+                    <option value="2">chatbotprofile2nametext</option>
+                    <option value="3">chatbotprofile3nametext</option>
+                    <option value="4">chatbotprofile4nametext</option>
+                </select>
             </div>
-            <HR>Give some examples of how you expect the bot to respond to the following questions
-            <div class="form-group row-2">
-                <label for="chatBotBehaviour0" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour0" class="form-control" value="chatBotBehaviour0text" />
-                <label for="chatBotBehaviour1" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour1" class="form-control" id="chatBotBehaviour1"
-                    value="chatBotBehaviour1text">
+
+            <div class="form-group row-2" id="chatbotprofile0profile" style="chatbotprofile0profilevisibility">
+                <label for="chatbotprofile0name" class="col-form-label">Name</label>
+                <input type="text" name="chatbotprofile0name" class="form-control" value="chatbotprofile0nametext" />
+
+                <label for="chatbotprofile0personality" class="col-form-label">Personality</label>
+                <input type="text" name="chatbotprofile0personality" class="form-control"
+                    value="chatbotprofile0personalitytext" />
+
+                <label for="p0q1" class="col-form-label">Question 1</label>
+                <input type="text" name="p0q1" class="form-control" value="p0q1text" />
+                <label for="p0a1" class="col-form-label">Answer 1 </label>
+                <input type="text" name="p0a1" class="form-control" id="p0a1" value="p0a1text">
+
+                <label for="p0q2" class="col-form-label">Question 2</label>
+                <input type="text" name="p0q2" class="form-control" value="p0q2text" />
+                <label for="p0a2" class="col-form-label">Answer 2</label>
+                <input type="text" name="p0a2" class="form-control" id="p0a2" value="p0a2text">
+
+                <label for="p0q3" class="col-form-label">Question 3</label>
+                <input type="text" name="p0q3" class="form-control" value="p0q3text" />
+                <label for="p0a3" class="col-form-label">Answer 3</label>
+                <input type="text" name="p0a3" class="form-control" id="p0a3" value="p0a3text">
+
+                <label for="p0q4" class="col-form-label">Question 4</label>
+                <input type="text" name="p0q4" class="form-control" value="p0q4text" />
+                <label for="p0a4" class="col-form-label">Answer 4</label>
+                <input type="text" name="p0a4" class="form-control" id="p0a4" value="p0a4text">
             </div>
-            <div class="form-group row-2">
-                <label for="chatBotBehaviour2" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour2" class="form-control" value="chatBotBehaviour2text" />
-                <label for="chatBotBehaviour3" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour3" class="form-control" id="chatBotBehaviour3"
-                    value="chatBotBehaviour3text">
+
+
+            <div class="form-group row-2" id="chatbotprofile1profile" style="visibility: hidden; display:none">
+
+                <label for="chatbotprofile1name" class="col-form-label">Profile Name</label>
+                <input type="text" name="chatbotprofile1name" class="form-control" value="chatbotprofile1nametext" />
+
+                <label for="chatbotprofile1personality" class="col-form-label">Personality</label>
+                <input type="text" name="chatbotprofile1personality" class="form-control"
+                    value="chatbotprofile1personalitytext" />
+
+                <label for="p1q1" class="col-form-label">Question 1</label>
+                <input type="text" name="p1q1" class="form-control" value="p1q1text" />
+                <label for="p1a1" class="col-form-label">Answer 1 </label>
+                <input type="text" name="p1a1" class="form-control" id="p1a1" value="p1a1text">
+
+                <label for="p1q2" class="col-form-label">Question 2</label>
+                <input type="text" name="p1q2" class="form-control" value="p1q2text" />
+                <label for="p1a2" class="col-form-label">Answer 2</label>
+                <input type="text" name="p1a2" class="form-control" id="p1a2" value="p1a2text">
+
+                <label for="p1q3" class="col-form-label">Question 3</label>
+                <input type="text" name="p1q3" class="form-control" value="p1q3text" />
+                <label for="p1a3" class="col-form-label">Answer 3</label>
+                <input type="text" name="p1a3" class="form-control" id="p1a3" value="p1a3text">
+
+                <label for="p1q4" class="col-form-label">Question 4</label>
+                <input type="text" name="p1q4" class="form-control" value="p1q4text" />
+                <label for="p1a4" class="col-form-label">Answer 4</label>
+                <input type="text" name="p1a4" class="form-control" id="p1a4" value="p1a4text">
+            </div>
+
+            <div class="form-group row-2" id="chatbotprofile2profile" style="visibility:hidden; display:none">
+
+                <label for="chatbotprofile2name" class="col-form-label">Profile Name</label>
+                <input type="text" name="chatbotprofile2name" class="form-control" value="chatbotprofile2nametext" />
+
+                <label for="chatbotprofile2personality" class="col-form-label">Personality</label>
+                <input type="text" name="chatbotprofile2personality" class="form-control"
+                    value="chatbotprofile2personalitytext" />
+
+                <label for="p2q1" class="col-form-label">Question 1</label>
+                <input type="text" name="p2q1" class="form-control" value="p2q1text" />
+                <label for="p2a1" class="col-form-label">Answer 1 </label>
+                <input type="text" name="p2a1" class="form-control" id="p2a1" value="p2a1text">
+
+                <label for="p2q2" class="col-form-label">Question 2</label>
+                <input type="text" name="p2q2" class="form-control" value="p2q2text" />
+                <label for="p2a2" class="col-form-label">Answer 2</label>
+                <input type="text" name="p2a2" class="form-control" id="p2a2" value="p2a2text">
+
+                <label for="p2q3" class="col-form-label">Question 3</label>
+                <input type="text" name="p2q3" class="form-control" value="p2q3text" />
+                <label for="p2a3" class="col-form-label">Answer 3</label>
+                <input type="text" name="p2a3" class="form-control" id="p2a3" value="p2a3text">
+
+                <label for="p2q4" class="col-form-label">Question 4</label>
+                <input type="text" name="p2q4" class="form-control" value="p2q4text" />
+                <label for="p2a4" class="col-form-label">Answer 4</label>
+                <input type="text" name="p2a4" class="form-control" id="p2a4" value="p2a4text">
+            </div>
+
+            <div class="form-group row-2" id="chatbotprofile3profile" style="visibility:hidden; display:none">
+
+                <label for="chatbotprofile3name" class="col-form-label">Profile Name</label>
+                <input type="text" name="chatbotprofile3name" class="form-control" value="chatbotprofile3nametext" />
+
+                <label for="chatbotprofile3personality" class="col-form-label">Personality</label>
+                <input type="text" name="chatbotprofile3personality" class="form-control"
+                    value="chatbotprofile3personalitytext" />
+
+                <label for="p3q1" class="col-form-label">Question 1</label>
+                <input type="text" name="p3q1" class="form-control" value="p3q1text" />
+                <label for="p3a1" class="col-form-label">Answer 1 </label>
+                <input type="text" name="p3a1" class="form-control" id="p3a1" value="p3a1text">
+
+                <label for="p3q2" class="col-form-label">Question 2</label>
+                <input type="text" name="p3q2" class="form-control" value="p3q2text" />
+                <label for="p3a2" class="col-form-label">Answer 2</label>
+                <input type="text" name="p3a2" class="form-control" id="p3a2" value="p3a2text">
+
+                <label for="p3q3" class="col-form-label">Question 3</label>
+                <input type="text" name="p3q3" class="form-control" value="p3q3text" />
+                <label for="p3a3" class="col-form-label">Answer 3</label>
+                <input type="text" name="p3a3" class="form-control" id="p3a3" value="p3a3text">
+
+                <label for="p3q4" class="col-form-label">Question 4</label>
+                <input type="text" name="p3q4" class="form-control" value="p3q4text" />
+                <label for="p3a4" class="col-form-label">Answer 4</label>
+                <input type="text" name="p3a4" class="form-control" id="p3a4" value="p3a4text">
 
             </div>
-            <div class="form-group row-2">
-                <label for="chatBotBehaviour4" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour4" class="form-control" value="chatBotBehaviour4text" />
-                <label for="chatBotBehaviour5" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour5" class="form-control" id="chatBotBehaviour5"
-                    value="chatBotBehaviour5text">
 
-            </div>
-            <div class="form-group row-2">
-                <label for="chatBotBehaviour6" class="col-form-label">Question</label>
-                <input type="text" name="chatBotBehaviour6" class="form-control" value="chatBotBehaviour6text" />
-                <label for="chatBotBehaviour7" class="col-form-label">Answer</label>
-                <input type="text" name="chatBotBehaviour7" class="form-control" id="chatBotBehaviour7"
-                    value="chatBotBehaviour7text">
+            <div class="form-group row-2" id="chatbotprofile4profile" style="visibility:hidden; display:none">
 
+                <label for="chatbotprofile4name" class="col-form-label">Profile Name</label>
+                <input type="text" name="chatbotprofile4name" class="form-control" value="chatbotprofile4nametext" />
+
+                <label for="chatbotprofile4personality" class="col-form-label">Personality</label>
+                <input type="text" name="chatbotprofile4personality" class="form-control"
+                    value="chatbotprofile4personalitytext" />
+
+                <label for="p4q1" class="col-form-label">Question 1</label>
+                <input type="text" name="p4q1" class="form-control" value="p4q1text" />
+                <label for="p4a1" class="col-form-label">Answer 1 </label>
+                <input type="text" name="p4a1" class="form-control" id="p4a1" value="p4a1text">
+
+                <label for="p4q2" class="col-form-label">Question 2</label>
+                <input type="text" name="p4q2" class="form-control" value="p4q2text" />
+                <label for="p4a2" class="col-form-label">Answer 2</label>
+                <input type="text" name="p4a2" class="form-control" id="p4a2" value="p4a2text">
+
+                <label for="p4q3" class="col-form-label">Question 3</label>
+                <input type="text" name="p4q3" class="form-control" value="p4q3text" />
+                <label for="p4a3" class="col-form-label">Answer 3</label>
+                <input type="text" name="p4a3" class="form-control" id="p4a3" value="p4a3text">
+
+                <label for="p4q4" class="col-form-label">Question 4</label>
+                <input type="text" name="p4q4" class="form-control" value="p4q4text" />
+                <label for="p4a4" class="col-form-label">Answer 4</label>
+                <input type="text" name="p4a4" class="form-control" id="p4a4" value="p4a4text">
             </div>
+            <!-- ####################################################### -->
+            <!--          end behaviour and personalities                -->
+            <!-- ####################################################### -->
+
             <HR>
             <h4 class="modal-title">Advanced options</h4>
             <h5 class="modal-title">Randomness (or temperature in OpenAI speak)</h5>
@@ -172,6 +314,17 @@
                     <label class="form-check-label" for="DEBUG_MODE">Enable debug messages</label>
                 </div>
             </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="restore_defaults" type="checkbox" id="restore_defaults"
+                        restore_defaultschecked>
+                    <label class="form-check-label" for="restore_defaults">Restore Defaults (requires server
+                        restart)</label>
+                </div>
+            </div>
+
+
+
         </div>
         <!-- Standard footer with submit and cancel buttons -->
         <div class="modal-footer">

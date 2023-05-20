@@ -13,6 +13,8 @@ import * as fs from "fs";
 import crypto from 'crypto';
 import process from 'node:process';
 import { execFile } from "child_process";
+import { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 
 //const usersPath = dirname(fileURLToPath(import.meta.url));
 let usersPath = process.env.APPDATA + "\\StreamRoller\\Data";
@@ -132,7 +134,7 @@ function loadConfig (configname, path = configFilesPath)
  */
 function loadSoftwareVersion ()
 {
-    let filename = "SoftwareVersion.txt";
+    let filename = dirname(fileURLToPath(import.meta.url)) + "/../../../SoftwareVersion.txt"
     try
     {
         if (fs.existsSync(filename))
