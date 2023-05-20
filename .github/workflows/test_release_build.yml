@@ -1,5 +1,5 @@
 name: Test release build
-run-name: ${{ github.actor }} delivering exe to live repo release
+run-name: ${{ github.actor }} Testing exe Build
 on:
   workflow_dispatch:
 env:
