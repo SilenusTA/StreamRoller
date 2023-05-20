@@ -64,6 +64,7 @@ goto init
     echo Creating desktop shortcut
     call :createshortcut
 
+    rem we need to pass in the temp dir so we can delete it once running (when we are not running a script in it :D)
     echo running the software
     %destination_dir%run.cmd -d "%tmp_dir%"
  
