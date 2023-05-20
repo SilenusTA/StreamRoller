@@ -2,8 +2,9 @@
 SETLOCAL
 goto init
 
-REM if we have a directory passed in then we can look at copying the files to the programfiles directory
+
 :getvariables
+    REM if we have a directory passed in then we can look at copying the files to the programfiles directory
     IF "%~1"=="" (
         echo no parameters passed
         Exit /b
@@ -40,20 +41,17 @@ REM if we have a directory passed in then we can look at copying the files to th
     echo Deleteing previous version
     rmdir /s /q %destination_dir%
     
-    rem echo Creating %destination_dir% if it doesn't exist
     if not exist %destination_dir% mkdir %destination_dir%
 
     echo Installing new version 
     xcopy %tmp_dir%\*.* %destination_dir% /e /c /i /q /h /r /y
     
-    echo deleting temporary files
-    rmdir /s /q %tmp_dir%
-    
     echo Creating desktop shortcut
     call :createshortcut
 
     echo running the software
-    %destination_dir%\run.cmd
+    %destination_dir%\run.cmd -d %tmp_dir%
+ 
     Exit /b
 
 :createshortcut
@@ -62,9 +60,9 @@ REM if we have a directory passed in then we can look at copying the files to th
     echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%
     echo sLinkFile = "%USERPROFILE%\Desktop\StreamRoller.lnk" >> %SCRIPT%
     echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%
-    echo oLink.TargetPath = "%destination_dir%run.cmd" >> %SCRIPT%
-    echo oLink.WorkingDirectory = "%destination_dir%\" >> %SCRIPT%
-    echo oLink.IconLocation ="C:\Users\Silenus\AppData\Local\StreamRoller\backend\data_center\public\favicon.ico" >> %SCRIPT%
+    echo oLink.TargetPath = "%destination_dir%\run.cmd" >> %SCRIPT%
+    echo oLink.WorkingDirectory = "%destination_dir%" >> %SCRIPT%
+    echo oLink.IconLocation = "%destination_dir%backend\data_center\public\favicon.ico" >> %SCRIPT%
     echo oLink.Save >> %SCRIPT%
 
     cscript /nologo %SCRIPT%
