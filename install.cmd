@@ -17,6 +17,21 @@ goto init
     set /p SoftwareVersion=< SoftwareVersion.txt    
     Exit /b
 
+:createshortcut
+    echo "%TEMP%\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"
+    set SCRIPT="%TEMP%\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"
+    echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%
+    echo sLinkFile = "%USERPROFILE%\Desktop\StreamRoller.lnk" >> %SCRIPT%
+    echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%
+    echo oLink.TargetPath = "%destination_dir%\run.cmd" >> %SCRIPT%
+    echo oLink.WorkingDirectory = "%destination_dir%" >> %SCRIPT%
+    echo oLink.IconLocation = "%destination_dir%backend\data_center\public\favicon.ico" >> %SCRIPT%
+    echo oLink.Save >> %SCRIPT%
+
+    cscript /nologo %SCRIPT%
+    del %SCRIPT%
+    exit /b
+
 :init
     rem unset any varibles we may have set (ie if someone exited the previous run half way though)
     set tmp_dir=""
@@ -50,27 +65,8 @@ goto init
     call :createshortcut
 
     echo running the software
-    %destination_dir%run.cmd -d %tmp_dir%
+    %destination_dir%run.cmd -d "%tmp_dir%"
  
-    Exit /b
-
-:createshortcut
-    echo "%TEMP%\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"
-    set SCRIPT="%TEMP%\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"
-    echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%
-    echo sLinkFile = "%USERPROFILE%\Desktop\StreamRoller.lnk" >> %SCRIPT%
-    echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%
-    echo oLink.TargetPath = "%destination_dir%\run.cmd" >> %SCRIPT%
-    echo oLink.WorkingDirectory = "%destination_dir%" >> %SCRIPT%
-    echo oLink.IconLocation = "%destination_dir%backend\data_center\public\favicon.ico" >> %SCRIPT%
-    echo oLink.Save >> %SCRIPT%
-
-    cscript /nologo %SCRIPT%
-    del %SCRIPT%
-    exit /b
-
 :end
-    echo "end"
 echo "Finished2"
 ENDLOCAL
-pause
