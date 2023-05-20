@@ -75,6 +75,7 @@ import process from 'node:process';
 
 const channels = [];
 let extensions = {};
+let backend_server = null;
 let server_socket = null;
 let config = {}
 // ============================================================================
@@ -89,6 +90,7 @@ let config = {}
 function start (app, server, exts)
 {
     extensions = exts;
+    backend_server = server;
     cm.initcrypto();
     config = cm.loadConfig('datacenter');
     //setup our server socket on the http server
@@ -209,8 +211,11 @@ function onMessage (socket, server_packet)
                 stdio: 'ignore'
             })
         child.unref();
-        process.exit();
-
+        setTimeout(() =>
+        {
+            backend_server.close();
+            process.exit();
+        }, 1000);
     }
     else if (server_packet.type === "UpdateCredentials")
     {

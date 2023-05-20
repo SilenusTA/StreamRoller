@@ -1,9 +1,7 @@
-name: Creating a new Release
+name: Test release build
 run-name: ${{ github.actor }} delivering exe to live repo release
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
@@ -57,16 +55,8 @@ jobs:
     - name: Zip up exe
       run: |
         7z a StreamRoller.zip StreamRoller.exe
-    - name: Push Release
-      uses: softprops/action-gh-release@v1
+    - name: uploading artifact
+      uses: actions/upload-artifact@v3
       with:
-        prerelease: true
-        body: Version ${{ github.ref_name }} of StreamRoller
-        name: "StreamRoller${{ github.ref_name }}"
-        tag_name: ${{ github.ref_name }}
-        token: ${{secrets.API_TOKEN_GITHUB}}
-        repository: SilenusTA/StreamRoller
-        files: |
-          Release.txt
-          StreamRoller.zip
-          StreamRoller.exe
+        name: test_build
+        path: StreamRoller.exe
