@@ -50,7 +50,7 @@ goto init
     call :createshortcut
 
     echo running the software
-    %destination_dir%\run.cmd -d %tmp_dir%
+    %destination_dir%run.cmd -d %tmp_dir%
  
     Exit /b
 
@@ -73,3 +73,4 @@ goto init
     echo "end"
 echo "Finished2"
 ENDLOCAL
+pause
