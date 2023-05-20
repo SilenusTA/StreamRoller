@@ -142,7 +142,6 @@ function loadSoftwareVersion ()
             try
             {
                 var data = fs.readFileSync(filename, { encoding: 'utf8', flag: 'r' });
-                console.log("data", data)
                 return data;
             }
             catch (err)

@@ -252,7 +252,6 @@ function onDataCenterMessage (server_packet)
 
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            console.log("received config file")
             // HACK: skip the update if user doesn't have the current config settings
             // currentprofile was added on 19-05-2023 v0.0.10
             // of enough time has passed (and we have implemented the version checking)
