@@ -44,13 +44,13 @@ jobs:
         node-version: '16.13.2'
     - name: Create Version.txt
       run: |
-          echo ${{ github.ref_name }} >> SoftwareVersion.txt
+          echo ${{ github.ref_name }} > SoftwareVersion.txt
     - name: Creating exe
       run: |
           cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
-          npx caxa -m "Unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/install.cmd" "{{caxa}}" 
+          npx caxa -m "Unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
     - name: Create Release.txt
       run: |
           echo Release version ${{ github.ref_name }} >> Release.txt

@@ -13,6 +13,8 @@ goto init
     set tmp_dir="%~1"
     REM set destination dir
     set destination_dir=%LOCALAPPDATA%\StreamRoller\
+    REM change to the tmp directory so we can read files and stuff
+    cd %tmp_dir%
     REM get softwareversion from the local file
     set /p SoftwareVersion=< SoftwareVersion.txt    
     Exit /b
@@ -33,7 +35,7 @@ goto init
     exit /b
 
 :init
-    rem unset any varibles we may have set (ie if someone exited the previous run half way though)
+    REM unset any varibles we may have set (ie if someone exited the previous run half way though)
     set tmp_dir=""
     set destination_dir=""
     set SoftwareVersion=""
@@ -50,23 +52,25 @@ goto init
     )
 
     echo [33mInstalling StreamRoller %SoftwareVersion%%[0m
-    rem echo %tmp_dir%
-    rem echo %destination_dir%
     
-    echo Deleteing previous version
+    echo Deleting previous version
     rmdir /s /q %destination_dir%
     
     if not exist %destination_dir% mkdir %destination_dir%
 
+    REM move to the new directory
+    cd %destination_dir%
+    
     echo Installing new version 
     xcopy %tmp_dir%\*.* %destination_dir% /e /c /i /q /h /r /y
     
     echo Creating desktop shortcut
     call :createshortcut
-
-    rem we need to pass in the temp dir so we can delete it once running (when we are not running a script in it :D)
+pause
+    REM we need to pass in the temp dir so we can delete it once running (when we are not running a script in it :D)
     echo running the software
-    %destination_dir%run.cmd -d "%tmp_dir%"
+    REM %destination_dir%run.cmd -d "%tmp_dir%"
+    run.cmd -d %tmp_dir%
  
 :end
 echo "Finished2"
