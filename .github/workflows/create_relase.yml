@@ -1,4 +1,4 @@
-name: Creating a new Release
+name: Create a new Release
 run-name: ${{ github.actor }} delivering exe to live repo release
 on:
   push:
