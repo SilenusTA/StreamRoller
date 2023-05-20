@@ -58,5 +58,5 @@ jobs:
     - name: uploading artifact
       uses: actions/upload-artifact@v3
       with:
-        name: test_build
+        name: StreamRoller
         path: StreamRoller.exe
