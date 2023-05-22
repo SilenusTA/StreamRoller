@@ -1,8 +1,8 @@
 @echo off
 rem SET STREAMTOOL_DEBUG_FORMAT=extended-line
-Start "Streamroller" node_modules\.bin\node.exe backend\data_center\server.js
-start http:\\localhost:3000
+
 rem check if we need to delete install files (only on first run)
+
 set str1="%~2"
 IF "%~1"=="-d" (
     echo %str1%
@@ -11,5 +11,15 @@ IF "%~1"=="-d" (
         rmdir /s /q "%~2..\.."
         )
 )
+cd %LOCALAPPDATA%\StreamRoller\
 
+echo waiting for file
+for /l %%x in (1, 1, 10) do (
+   echo .
+   IF EXIST "node_modules\.bin\node.exe" GOTO waitfornode
+   timeout /t 1
+)
+:waitfornode
 
+Start "Streamroller" node_modules\.bin\node.exe backend\data_center\server.js
+start http:\\localhost:3000

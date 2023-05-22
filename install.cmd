@@ -69,7 +69,7 @@ goto init
 
     REM we need to pass in the temp dir so we can delete it once running (when we are not running a script in it :D)
     echo running the software
-    run.cmd -d %tmp_dir%
+    run.cmd -d %tmp_dir% >> log.txt
  
 :end
 echo "Finished2"
