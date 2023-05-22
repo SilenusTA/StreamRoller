@@ -1328,7 +1328,8 @@
                 sanitiser.innerText = chatdata.message
                 // add any twitch emotes
                 let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
-                if (chatdata.data['display-name'] === localConfig.usernamelist.bot)
+                messae = message.replaceAll("\n", " ");
+                if (chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
                 {
                     if (chatdata.data.mod)
                         usercolor = "<img src='liveportal/images/badge_mod.png'>";
@@ -1340,7 +1341,6 @@
                 }
                 else if (chatdata.data['display-name'] === "System")
                 {
-
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
                     localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");

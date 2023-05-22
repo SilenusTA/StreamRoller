@@ -297,9 +297,14 @@ function onDataCenterMessage (server_packet)
                 sendChatMessage(serverConfig.streamername, extension_packet.data)
             else
             {
+                let name = ""
+                if (extension_packet.data.account == "bot" || extension_packet.data.account == "user")
+                    name = localConfig.usernames[extension_packet.data.account].name
+                else
+                    name = extension_packet.data.account
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
                 console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet.data)
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": extension_packet.data.account, "emotes": "", "message-type": "LOCAL_DEBUG" }, extension_packet.data.message)
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": name, "emotes": "", "message-type": "LOCAL_DEBUG" }, extension_packet.data.message)
             }
         }
         else if (extension_packet.type === "RequestAccountNames")

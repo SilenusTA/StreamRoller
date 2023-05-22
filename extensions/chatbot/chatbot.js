@@ -65,6 +65,10 @@ const defaultConfig = {
     chatbotTimerMax: 2, // max delay before starting
     // how much chat history to send to chatGPT to use in the query
     chatbotMessageMaxLines: 10,
+    // minimum number of charactors to consider before using the message for submission
+    chatbotminmessagelength: 20,
+    // slow the response down as if someone has actually type it
+    chatbottypingdelay: 0.3,
     //used to prefix GPT messages with a twitch icon to show what it is
     boticon: "MechaRobot",
     // setup the personality of the chatbot
@@ -152,7 +156,6 @@ const defaultConfig = {
         },
     },
 
-    chatbotminmessagelength: 20,
     // =============================
     // credentials dialog variables
     // =============================
@@ -256,6 +259,7 @@ function onDataCenterMessage (server_packet)
                     serverConfig[key] = server_packet.data[key];
             }
             SaveConfigToServer();
+            startChatbotTimer();
         }
 
 
@@ -627,8 +631,7 @@ function heartBeatCallback ()
 // ============================================================================
 function processChatMessage (data)
 {
-    //debug colours
-    //brightText + bgColour + logColour + "%s" + resetColour
+    let starttime = Date.now();
     let brightText = "\x1b[1m";
     let yellowColour = brightText + "\x1b[33m";
     let greenColour = brightText + "\x1b[32m";
@@ -644,7 +647,7 @@ function processChatMessage (data)
         }
         return;
     }
-    else if (data.data["message-type"] != "chat")
+    else if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG")
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -754,7 +757,7 @@ function processChatMessage (data)
                 messages.push(obj);
 
             messages.push({ "role": "user", "content": question })
-            callOpenAI(messages, serverConfig.settings.questionmodel)
+            callOpenAI(messages, serverConfig.settings.questionmodel, starttime)
             return;
         }
         //else
@@ -835,7 +838,7 @@ function processChatMessage (data)
             console.log(redColour + "--------- requesting chatGPT response -------- " + resetColour)
 
         }
-        callOpenAI(messages, serverConfig.settings.chatmodel)
+        callOpenAI(messages, serverConfig.settings.chatmodel, starttime)
 
     }
 }
@@ -843,7 +846,7 @@ function processChatMessage (data)
 // ============================================================================
 //                           FUNCTION: callOpenAI
 // ============================================================================
-async function callOpenAI (history_string, modelToUse)
+async function callOpenAI (history_string, modelToUse, starttime)
 {
     if (serverConfig.DEBUG_MODE === "on")
         console.log("Calling OpenAI with model ", modelToUse)
@@ -894,10 +897,29 @@ async function callOpenAI (history_string, modelToUse)
                 let regEx = new RegExp(serverConfig.chatbotname, "ig")
                 chatMessageToPost = chatMessageToPost.replace(regEx, "");
 
+                //chatbottypingdelay
+                chatMessageToPost = chatMessageToPost.trim()
+                let wordcount = chatMessageToPost.split(" ").length
+                // if we ran over the buffer (openai didn't return the whole string) add a "..."
                 if (response.data.choices[0].finish_reason === "length")
-                    postMessageToTwitch(chatMessageToPost.trim() + " ...")
-                else
-                    postMessageToTwitch(chatMessageToPost.trim())
+                    chatMessageToPost = chatMessageToPost + " ..."
+                // delay the message depending on how long it is and out delay factor
+                chatMessageToPost = chatMessageToPost.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
+                let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
+                if (serverConfig.DEBUG_MODE === "on")
+                {
+                    console.log("Checking the time to delay based on typing speed setting")
+                    console.log("processing time: ", Date.now() - starttime)
+                    console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
+                    console.log("delay response: ", delaytime / 1000, "s")
+                }
+                setTimeout(() =>
+                {
+                    postMessageToTwitch(chatMessageToPost)
+                }, delaytime);
+
+
+
                 localConfig.requestPending = false;
                 localConfig.running = false
                 //clear the buffer for next time (probably had some async messages while waiting for api to return)
@@ -990,8 +1012,8 @@ function postMessageToTwitch (msg)
 // ============================================================================
 function startChatbotTimer ()
 {
-    var randomTimeout = Math.floor(Math.random() * ((serverConfig.chatbotTimerMax * 60000) - (serverConfig.chatbotTimerMin * 60000) + 1) + (serverConfig.chatbotTimerMin * 60000));
 
+    var randomTimeout = Math.floor(Math.random() * ((serverConfig.chatbotTimerMax * 60000) - (serverConfig.chatbotTimerMin * 60000) + 1) + (serverConfig.chatbotTimerMin * 60000));
     //avoid spamming the API so set the maximum query time to 1 seconds
     if (randomTimeout < 1000)
         randomTimeout = 1000
@@ -1001,7 +1023,7 @@ function startChatbotTimer ()
     if (localConfig.chatTimerHandle != null)
         clearTimeout(localConfig.chatTimerHandle);
     if (serverConfig.DEBUG_MODE === "on")
-        console.log("Setting timer to", (randomTimeout / 1000), "seconds")
+        console.log("Setting sleep timer to", (randomTimeout / 1000), "seconds")
     localConfig.chatTimerHandle = setTimeout(startProcessing, randomTimeout);
 
     logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startChatbotTimer", "Chatbot Timer started: wait time ", randomTimeout, "minutes");

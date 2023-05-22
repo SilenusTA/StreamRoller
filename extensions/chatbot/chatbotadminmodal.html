@@ -84,6 +84,17 @@
                 </div>
             </div>
 
+            <br>Typing delay. mimics a delay for typing. Value is seconds per word or 0 if you want it to respond as
+            soon as it can
+            (this is multiplied by the number of words in the chatbots reply and then it will delay for that length of
+            time before posting back).
+            <div class="form-group row">
+                <div class="col-xs-1">
+                    <label for="chatbottypingdelay" class="">Delay per word in seconds</label>
+                    <input type="text" name="chatbottypingdelay" id="chatbottypingdelay" value="chatbottypingdelaytext">
+                </div>
+            </div>
+
             <hr>
             <h5 class="modal-title">Display</h5>
             Select an emote that is used at the start of each opanAI responce in chat to avoid confusion that these
