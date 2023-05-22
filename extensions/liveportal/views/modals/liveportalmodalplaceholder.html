@@ -151,7 +151,7 @@
                     </div>
                     <div class="form-group">
                         <label for="randomfactstimeout" class="col-form-label">How often to post random facts to twitch
-                            chat(in seconds)</label>
+                            chat(minutes)</label>
                         <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout"
                             value="randomfactstimeouttext">
                     </div>
@@ -163,7 +163,7 @@
                     <ol>
                         <li>Main message</li>
                         <li>Extra message</li>
-                        <li>Random fact</li>
+                        <li>Random fact (If enabled)</li>
                     </ol>
                     Streamroller will calculate the length of the tweet and do the following options in order depending
                     on size
@@ -173,18 +173,24 @@
                         <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
                     </ol>
 
+
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="randomfactstwitterenabled" type="checkbox"
-                            id="randomfactstwitterenabled" randomfactstwitterenabledchecked>
-                        <label class="form-check-label" for="randomfactstwitterenabled">Post a Tweet on going live (hit
+                        <input class="form-check-input" name="twitterstartenabled" type="checkbox"
+                            id="twitterstartenabled" twitterstartenabledchecked>
+                        <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
                             start streaming in OBS).</label>
                     </div>
+                    <BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
+                            id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
+                        <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
+                            tweet</label>
+                    </div>
                     <div class="form-group">
-
                         <label for="randomfactstwittermessage" class="col-form-label">Main Message</label>
                         <input type="text" name="randomfactstwittermessage" class="form-control"
                             id="randomfactstwittermessage" value="randomfactstwittermessagetext">
-
                         <label for="randomfactstwittermessage_x" class="col-form-label">Extra message if there is
                             space</label>
                         <input type="text" name="randomfactstwittermessage_x" class="form-control"

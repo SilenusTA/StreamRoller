@@ -217,7 +217,7 @@ function onDataCenterMessage (server_packet)
                 localConfig.usernames.user = [];
                 localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
                 connectToTwtich("user");
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "" }, "No twitch users setup yet")
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
             }
         }
         else
@@ -240,7 +240,7 @@ function onDataCenterMessage (server_packet)
                 localConfig.usernames.user = [];
                 localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
                 connectToTwtich("user");
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "" }, "No twitch users setup yet")
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
             }
         }
     }
@@ -701,7 +701,7 @@ function connectToTwtich (account)
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly");
-                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "" }, "Chat connected readonly: " + serverConfig.streamername);
+                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Chat connected readonly: " + serverConfig.streamername);
             }
             )
             .catch((err) => 
@@ -709,7 +709,7 @@ function connectToTwtich (account)
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = false;
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
-                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "" }, "Failed to join " + serverConfig.streamername)
+                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Failed to join " + serverConfig.streamername)
             }
             )
 
@@ -759,15 +759,15 @@ function chatLogin (account)
             localConfig.twitchClient[account].state.readonly = false;
             localConfig.twitchClient[account].state.connected = true;
             logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Twitch chat client connected with OAUTH")
-            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, account + ": " + localConfig.usernames[account]["name"] + " connected to " + serverConfig.streamername)
+            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, account + ": " + localConfig.usernames[account]["name"] + " connected to " + serverConfig.streamername)
         })
         .catch((err) => 
         {
             localConfig.twitchClient[account].state.readonly = true;
             localConfig.twitchClient[account].state.connected = false;
             logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err);
-            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Chat failed to connect to " + serverConfig.streamername + " with user: " + localConfig.usernames.bot["name"])
-            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "" }, "Please check your settings on the admin page.")
+            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Chat failed to connect to " + serverConfig.streamername + " with user: " + localConfig.usernames.bot["name"])
+            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Please check your settings on the admin page.")
         })
 
     // #################################################################################################################
