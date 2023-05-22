@@ -1,6 +1,6 @@
 @echo off
 rem SET STREAMTOOL_DEBUG_FORMAT=extended-line
-Start "Streamroller" node backend\data_center\server.js
+Start "Streamroller" node_modules\.bin\node.exe backend\data_center\server.js
 start http:\\localhost:3000
 rem check if we need to delete install files (only on first run)
 set str1="%~2"
