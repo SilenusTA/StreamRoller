@@ -369,8 +369,8 @@
                     var html = "<div>";
                     for (var i = 0; i < extensions.length; i++)
                     {
-                        html += "<div id='" + extensions[i] + "_visibility_admincard' style='display: none;'><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
-                        html += "<span id='" + extensions[i] + "_admincard'>"
+                        html += "<div id='" + extensions[i] + "_visibility_admincard' style='display: block;'><span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                        html += " <span id='" + extensions[i] + "_admincard'>"
                         html += extensions[i] + "</span></div>";
                         // check if we have previously recorded this extension, if not we should add it
                         if (!adminData.extensions[extensions[i]])
@@ -517,6 +517,7 @@
                             });
                         }
 
+                        //
                         document.getElementById(xname + "_visibility_" + cardtype).style.display = "block"
                         adminData.extensions[xname][cardtype] = document.getElementById(xname + "_" + cardtype).innerHTML
                     }
