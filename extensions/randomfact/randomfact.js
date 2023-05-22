@@ -144,7 +144,8 @@ function onDataCenterMessage (server_packet)
             }
             else if (extension_packet.type === "ChatMessage")
             {
-                process_chat_command(extension_packet.data)
+                if (extension_packet.data.message === "!randomfact")
+                    send_chat_command(extension_packet.data)
             }
             // do something with the data
 
@@ -174,56 +175,52 @@ function onDataCenterMessage (server_packet)
 }
 
 // ============================================================================
-//                           FUNCTION: process_stream_alert
+//                           FUNCTION: send_chat_command
 // ============================================================================
 /**
- * Just a function to log data from the streamlabs api messages
+ * send the random fact message to twitch
  * @param {String} server_packet 
  */
-function process_chat_command (data)
+function send_chat_command (data)
 {
     let Buffer = "";
-    if (data.message === "!randomfact")
-    {
-        var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
-        var req = https.get(options, function (res)
-        {
-            var bodyChunks = [];
-            res.on("data", function (chunk)
-            {
-                bodyChunks.push(chunk);
-            }).on("end", function ()
-            {
 
-                var body = Buffer.concat(bodyChunks);
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "ExtensionMessage",
+    var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
+    var req = https.get(options, function (res)
+    {
+        var bodyChunks = [];
+        res.on("data", function (chunk)
+        {
+            bodyChunks.push(chunk);
+        }).on("end", function ()
+        {
+
+            var body = Buffer.concat(bodyChunks);
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SendChatMessage",
                         serverConfig.extensionname,
-                        sr_api.ExtensionPacket(
-                            "SendChatMessage",
-                            serverConfig.extensionname,
-                            {
-                                account: "bot",
-                                message: JSON.parse(body).text
-                            },
-                            "",
-                            "twitchchat"
-                        ),
+                        {
+                            account: "bot",
+                            message: JSON.parse(body).text
+                        },
                         "",
                         "twitchchat"
-                    ));
+                    ),
+                    "",
+                    "twitchchat"
+                ));
 
-            })
-        });
-        req.on("error", function (e)
-        {
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".requestRandomFact", "Error getting quote", e.message);
-        });
-
-
-    }
+        })
+    });
+    req.on("error", function (e)
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".requestRandomFact", "Error getting quote", e.message);
+    });
 }
 // ============================================================================
 //                           FUNCTION: requestRandomFact

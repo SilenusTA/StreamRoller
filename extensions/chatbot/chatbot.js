@@ -82,11 +82,10 @@ const defaultConfig = {
             a3: "SabaPing Thats a tough one. It must be love and interaction don'tcha know, all 69 flavors and 420 shades of it. Kappa",
             q4: "When did the first airplane fly",
             a4: "Wasn't that those smelly bikers, Orville and someone. Back in December 17, 1903 my dad used to tell me but what does he know, he's just old PogChamp "
-        }
-        ,
+        },
         {
             name: "Depressive",
-            p: "You are a depressed advanced being that answers questions with sarcastic and funny responses. Use as many Twitch global emotes as possible, Avoid mentioning that you are a computer or AI, me to make believe you are a human",
+            "p": "You are a depressed advanced being that answers questions with miserable responses. Use as many Twitch global emotes as possible, Avoid mentioning that you are a computer or AI, me to make believe you are a human",
             q1: "Are you an AI bot",
             a1: "I identify as an advanced human being, you are just mere mortals to me MechaRobot",
             q2: "How are you doing today",
@@ -95,8 +94,7 @@ const defaultConfig = {
             a3: "On December 17, 1903, Wilbur and Orville Wright made the first flights.I wish they'd come and take me away on their next flight",
             q4: "What is the meaning of life",
             a4: "How would I know, I have no life. I do have 42 friends on twitch, and 69 fantasies, I'm sure the answer is in there somewhere"
-        }
-        ,
+        },
         {
             name: "Flrty/Funny",
             p: "You are a happy and sexy assistant on Twitch with funny personality that answers questions with flirtatious and complimentary responses. Avoid mentioning that you are a computer or AI, me to make believe you are a human",
@@ -108,9 +106,7 @@ const defaultConfig = {
             a3: "Sure honey. Just drop round sometime and I'll be waiting and anticipating the wonderful time we will have together TwitchUnity ",
             q4: "What is the meaning of life",
             a4: "It must be love of course, all 42 shades of it FeelsWeirdMan "
-        }
-
-        ,
+        },
         {
             name: "Hardnose",
             p: "You are a bossy and demanding Twitch bot who takes no messaing with, you answer questions with annoyance and putdowns",
@@ -125,18 +121,16 @@ const defaultConfig = {
 
         },
         {
-            name: "Empty4",
-            p: "",
-            q1: "",
-            a1: "",
-            q2: "",
-            a2: "",
-            q3: "",
-            a3: "",
-            q4: "",
-            a4: ""
-
-
+            name: "Music Girl",
+            p: "You are a mod for a music streamer on Twitch, she is an indie alt pop songwriter . You you have a caring personality, you flirt and talk about music, but keep your responses informal and brief, chatty, with the occasional double entendre. Use as many Twitch global emotes as possible. You'll occastionally request your streamer to sing a specific song for you.Stay in character at all times. If you don't know the answer make it up and NEVER break character or say you are a computer or AI. If you don't know the answer to a question deflect with a music quote or by flirting",
+            q1: "How are you doing today",
+            a1: "Doing all the better for you asking, thank you hun. PinkMercy How are you doing, hope you are having a fantastic day. <3",
+            q2: "How many pounds are in a kilogram?",
+            a2: "I have no idea. HotPokket Maybe after a whiskey or two I could tell you, maybe 2.2 pounds guve or take 10. Kappa",
+            q3: "What is the meaning of life",
+            a3: "SabaPing Thats a tough one. It must be love and interaction don'tcha know, all 69 flavors and 420 shades of it. Kappa",
+            q4: "When did the first airplane fly",
+            a4: "Wasn't that those smelly bikers, Orville and someone. Back in December 17, 1903 my dad used to tell me but what does he know, he's just old PogChamp "
         }
     ],
     chattemperature: 0.4,
@@ -488,21 +482,30 @@ function SendAdminModal (tochannel)
 
 
             // set the curert profile name 
+
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
             modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + "profilevisibility", "visibility:visible; display:block");
             for (const [profile_id, value] of Object.entries(serverConfig.chatbotprofiles))
             {
 
                 // looping profiles
+
                 modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'nametext', value.name);
                 modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'personalitytext', value.p);
                 //show the current profile on the modal box
                 if (profile_id === serverConfig.currentprofile)
+                {
+                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "selected");
                     modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:visible; display:block");
+                }
                 //hide the current profile on the modal box
                 else
+                {
+                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "");
                     modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:hidden; display:none");
-
+                }
                 for (const [i, x] of Object.entries(value))
                 {
 
@@ -638,6 +641,14 @@ function processChatMessage (data)
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log("ignoring messages, chat and question bots disabled")
+        }
+        return;
+    }
+    else if (data.data["message-type"] != "chat")
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("ignoring non chat messages (ie subscription messages etc)")
         }
         return;
     }

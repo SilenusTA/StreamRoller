@@ -55,7 +55,9 @@
                 mouseDown: 0,
                 randomFact: "",
                 twitchRandomFactHandle: null,
-                timers: []
+                timers: [],
+                newTwitchChatBuffer: false,
+                newDiscordChatBuffer: false,
             }
 
             // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -109,10 +111,6 @@
                 {
                     console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
                 }
-                //capture mose down so we can stop chat scroll when use is trying to use the scrollbar.
-                // crude but it works :D
-                document.body.onmousedown = function () { ++localConfig.mouseDown; }
-                document.body.onmouseup = function () { --localConfig.mouseDown; }
             }
             // ============================================================================
             //                           FUNCTION: onDataCenterDisconnect
@@ -336,11 +334,12 @@
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "TwitchChatBuffer")
                     {
+                        localConfig.newTwitchChatBuffer = true
                         // recreate our buffer
                         processTwitchChatBuffer(extension_packet.data)
                             .then(() =>
                                 // display the chat buffer
-                                displayChatMessages(extension_packet.data)
+                                displayChatMessages()
 
                             )
                     }
@@ -356,11 +355,12 @@
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "DiscordChatBuffer")
                     {
+                        localConfig.newDiscordChatBuffer = true
                         // recreate our buffer
                         processDiscordChatBuffer(extension_packet.data)
                             .then(() =>
                                 // display the chat buffer
-                                displayChatMessages(extension_packet.data)
+                                displayChatMessages()
 
                             )
                     }
@@ -423,7 +423,7 @@
                         if (extension_packet.type === "ChatMessage")
                         {
                             parseTwitchChatMessage(extension_packet.data);
-                            displayChatMessages(extension_packet);
+                            displayChatMessages();
                         }
                     }
                     // -------------------------------------------------------------------------------------------------
@@ -433,7 +433,7 @@
                     {
                         parseDiscordChatMessage(server_packet.data.data);
                         //displayDiscordMessages(server_packet);
-                        displayChatMessages(server_packet);
+                        displayChatMessages();
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                           DISCORD_CHAT
@@ -1163,7 +1163,7 @@
             // ============================================================================
             // display buffers on screen
             // if parse=false is passed then the buffer isn't parsed, just update the screen
-            function displayChatMessages (data)
+            function displayChatMessages ()
             {
                 // parse the messages and add them to the buffer
                 //        if (parse)
@@ -1183,21 +1183,27 @@
                 chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
                 modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
 
-                // prevent auto scrolling if mouse key is pressed (ie user is wding chat)
-                setTimeout(() =>
+                // Auto scroll the boxes unless we have a new buffer, then we scroll to theend
+                if (!localConfig.newTwitchChatBuffer)
+                    MessageboxAutoscroll("ChatMessagesCardText")
+                else
                 {
-                    if (localConfig.mouseDown < 1)
-                    {
-                        //var modScrollHeight = document.getElementById("ModMessagesCardText").scrollHeight;
-                        //document.getElementById("ModMessagesCardText").scrollTo(0, modScrollHeight + 1000);
+                    const cardref = document.getElementById("ChatMessagesCardText")
+                    const cardScrollHeight = cardref.scrollHeight;
+                    cardref.scrollTo(0, cardScrollHeight + 1);
+                    localConfig.newTwitchChatBuffer = false;
+                }
 
-                        var cardScrollHeight = document.getElementById('ChatMessagesCardText');
-                        cardScrollHeight.scrollTop = cardScrollHeight.scrollHeight;
+                if (!localConfig.newDiscordChatBuffer)
+                    MessageboxAutoscroll("ModMessagesCardText")
+                else
+                {
+                    const cardref = document.getElementById("ModMessagesCardText")
+                    const cardScrollHeight = cardref.scrollHeight;
+                    cardref.scrollTo(0, cardScrollHeight + 1);
+                    localConfig.newDiscordChatBuffer = false;
+                }
 
-                        var modScrollHeight = document.getElementById('ModMessagesCardText');
-                        modScrollHeight.scrollTop = modScrollHeight.scrollHeight;
-                    }
-                }, 200);
             }
             // ============================================================================
             //                           FUNCTION: processTwitchChatBuffer
@@ -1233,6 +1239,7 @@
             {
                 // as we have received a bufer lets delete the old data
                 let newchatternames = ""
+                localConfig.usernamelist = extension_packet.data;
                 // if we have a username set in our config and that is in the current list of names lets use that one
                 if (serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
                 {
@@ -1313,7 +1320,7 @@
                 sanitiser.innerText = chatdata.message
                 // add any twitch emotes
                 let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
-                if (chatdata.data['display-name'] === "MiserableMarvin")
+                if (chatdata.data['display-name'] === localConfig.usernamelist.bot)
                 {
                     if (chatdata.data.mod)
                         usercolor = "<img src='liveportal/images/badge_mod.png'>";
@@ -1332,7 +1339,7 @@
                 }
                 else
                 {
-                    if (chatdata.data['display-name'].startsWith("?"))
+                    if (chatdata.data["message-type"] != "chat")
                         usercolor = "<span style='color: yellow'>";
                     else if (chatdata.data.mod)
                         usercolor = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
@@ -1345,8 +1352,8 @@
 
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    if (chatdata.data['display-name'].startsWith("?"))
-                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' >" + message + "</span>");
+                    if (chatdata.data["message-type"] != "chat")
+                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' >" + chatdata.data["message-type"] + ": " + message + "</span>");
                     else
                         localConfig.chatMessageBuffer.push(time + username + " " + message);
                     // add mod messages to mod card if selected
@@ -1474,7 +1481,35 @@
                 cardref.innerHTML = cardref.innerHTML + message
                 // keep scroll at the bottom of the card
                 var cardScrollHeight = cardref.scrollHeight;
-                cardref.scrollTo(0, cardScrollHeight);
+                cardref.scrollTo(0, cardScrollHeight + 1);
+            }
+
+            // ============================================================================
+            //                           FUNCTION:MessageboxAutoscroll
+            // ============================================================================
+            // Desription: keeps a message box scrolled if user hasn't scrolled up
+            // Parameters: e
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function MessageboxAutoscroll (messageBoxName)
+            {
+                //querySelector
+                const messages = document.getElementById(messageBoxName)
+                const newMessage = messages.lastElementChild;
+                if (newMessage != null)
+                {
+                    const newMessageStyles = getComputedStyle(newMessage)
+                    const newMessageMargin = parseInt(newMessageStyles.marginBottom)
+                    const newMessageHeight = newMessage.offsetHeight + newMessageMargin
+                    const visibleHeight = messages.offsetHeight
+                    const containerHeight = messages.scrollHeight
+                    const scrollOffset = messages.scrollTop + visibleHeight
+                    if (containerHeight - newMessageHeight <= scrollOffset)
+                    {
+                        messages.scrollTop = messages.scrollHeight
+                    }
+                }
             }
             // ============================================================================
             //                           FUNCTION: RequestExtList

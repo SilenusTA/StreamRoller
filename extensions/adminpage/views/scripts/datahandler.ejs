@@ -734,14 +734,17 @@
                 function displayChatMessages (data)
                 {
                     let chatdata = data.data;
-
-                    //console.log(chatdata);
                     let cardref = document.getElementById("ChatMessagesCardText")
                     let today = new Date();
                     let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
                     // make it colourful
                     var timecolor = "<span style='color: #757875'>";
-                    var usercolor = "<span style='color: " + chatdata.data.color + "'>";
+                    var usercolor = "<span style='color: " + chatdata.data.color + "'>"
+                    if (chatdata.data["message-type"] != "chat")
+                    {
+                        usercolor = "<span style='color: yellow'>";
+                        message = chatdata.data["message-type"] + ": " + message
+                    }
 
                     let username = usercolor + ' ' + chatdata.data["display-name"] + "&gt</span>";
                     time = timecolor + time + ":</span>";

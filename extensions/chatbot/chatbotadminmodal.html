@@ -103,7 +103,7 @@
             <div class="form-group row-2" class="form-control">
                 <h4>Profile in use:<span style='color: yellow'> chatbotprofileselectedname</span></h4>
                 <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one"
-                    id="chatbotprofilepicker" name="chatbotprofilepicker" onchange="
+                    id="chatbotprofilepicker" value="chatbotprofilepickervalue" name="chatbotprofilepicker" onchange="
                         let wc_i = this.selectedIndex; 
                         Array.apply(null,this.options).forEach(x => 
                         {
@@ -115,11 +115,11 @@
                         selectedElement.style.display ='block'
                 " required>
                     <!--  onChange='add_img()' -->
-                    <option value="0">chatbotprofile0nametext</option>
-                    <option value="1">chatbotprofile1nametext</option>
-                    <option value="2">chatbotprofile2nametext</option>
-                    <option value="3">chatbotprofile3nametext</option>
-                    <option value="4">chatbotprofile4nametext</option>
+                    <option value="0" chatbotprofilepickerselected0>chatbotprofile0nametext</option>
+                    <option value="1" chatbotprofilepickerselected1>chatbotprofile1nametext</option>
+                    <option value="2" chatbotprofilepickerselected2>chatbotprofile2nametext</option>
+                    <option value="3" chatbotprofilepickerselected3>chatbotprofile3nametext</option>
+                    <option value="4" chatbotprofilepickerselected4>chatbotprofile4nametext</option>
                 </select>
             </div>
 
@@ -153,7 +153,7 @@
             </div>
 
 
-            <div class="form-group row-2" id="chatbotprofile1profile" style="visibility: hidden; display:none">
+            <div class="form-group row-2" id="chatbotprofile1profile" style="chatbotprofile1profilevisibility">
 
                 <label for="chatbotprofile1name" class="col-form-label">Profile Name</label>
                 <input type="text" name="chatbotprofile1name" class="form-control" value="chatbotprofile1nametext" />
@@ -183,7 +183,7 @@
                 <input type="text" name="p1a4" class="form-control" id="p1a4" value="p1a4text">
             </div>
 
-            <div class="form-group row-2" id="chatbotprofile2profile" style="visibility:hidden; display:none">
+            <div class="form-group row-2" id="chatbotprofile2profile" style="chatbotprofile2profilevisibility">
 
                 <label for="chatbotprofile2name" class="col-form-label">Profile Name</label>
                 <input type="text" name="chatbotprofile2name" class="form-control" value="chatbotprofile2nametext" />
@@ -213,7 +213,7 @@
                 <input type="text" name="p2a4" class="form-control" id="p2a4" value="p2a4text">
             </div>
 
-            <div class="form-group row-2" id="chatbotprofile3profile" style="visibility:hidden; display:none">
+            <div class="form-group row-2" id="chatbotprofile3profile" style="chatbotprofile3profilevisibility">
 
                 <label for="chatbotprofile3name" class="col-form-label">Profile Name</label>
                 <input type="text" name="chatbotprofile3name" class="form-control" value="chatbotprofile3nametext" />
@@ -244,7 +244,7 @@
 
             </div>
 
-            <div class="form-group row-2" id="chatbotprofile4profile" style="visibility:hidden; display:none">
+            <div class="form-group row-2" id="chatbotprofile4profile" style="chatbotprofile4profilevisibility">
 
                 <label for="chatbotprofile4name" class="col-form-label">Profile Name</label>
                 <input type="text" name="chatbotprofile4name" class="form-control" value="chatbotprofile4nametext" />
@@ -333,4 +333,5 @@
         </div>
     </div>
 </div>
+
 <!-- END: -->
