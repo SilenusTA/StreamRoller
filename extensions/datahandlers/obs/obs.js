@@ -51,10 +51,7 @@ const localConfig = {
         outputSkippedFrames: 0,
         outputTotalFrames: 0
 
-    },
-    obshost: "localhost",
-    obsport: "4444",
-    obspass: ""
+    }
 };
 //sever config (stuff we want to save over runs)
 const serverConfig = {
@@ -144,6 +141,7 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
+        console.log("ConfigFile received", server_packet.data)
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
@@ -155,11 +153,12 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
+        console.log("credentials received", server_packet.data)
         if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
         {
-            localConfig.obshost = server_packet.data.obshost;
-            localConfig.obsport = server_packet.data.obsport;
-            localConfig.obspass = server_packet.data.obspass;
+            serverConfig.cred1value = server_packet.data.obshost;
+            serverConfig.cred2value = server_packet.data.obsport;
+            serverConfig.cred3value = server_packet.data.obspass;
             if (localConfig.obsConnecting == false && serverConfig.enableobs == "on")
                 connectToObs();
         }
@@ -331,18 +330,15 @@ function SendCredentialsModal (extensionname)
         else
         {
             let modalstring = filedata.toString();
+
             // first lets update our modal to the current settings
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
-                {
                     modalstring = modalstring.replace(key + "checked", "checked");
-                }   //value is a string then we need to replace the text
-                else if (typeof (value) == "string")
-                {
+                else if (typeof (value) == "string" || typeof (value) == "number")
                     modalstring = modalstring.replace(key + "text", value);
-                }
             }
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -392,11 +388,12 @@ localConfig.obsConnection = new OBSWebSocket();
  */
 function connectToObs ()
 {
-    if (localConfig.obshost != "" && localConfig.obsport != "" && localConfig.obspass != "" && localConfig.obshost != null && localConfig.obsport != null && localConfig.obspass != null &&
+    console.log(serverConfig)
+    if (serverConfig.cred1value != "" && serverConfig.cred2value != "" && serverConfig.cred3value != "" && serverConfig.cred1value != null && serverConfig.cred2value != null && serverConfig.cred3value != null &&
         serverConfig.enableobs == "on" && localConfig.status.connected == false)
     {
         localConfig.obsConnecting = true
-        localConfig.obsConnection.connect("ws://" + localConfig.obshost + ":" + localConfig.obsport, localConfig.obspass)
+        localConfig.obsConnection.connect("ws://" + serverConfig.cred1value + ":" + serverConfig.cred2value, serverConfig.cred3value)
             .then(data =>
             {
                 // we are now connected so stop any furthur scheduling
@@ -442,8 +439,8 @@ function connectToObs ()
         {
             logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", " Trying to connect while turned off by user");
         }
-        else if (localConfig.obshost == "" || localConfig.obsport == "" || localConfig.obspass == ""
-            || localConfig.obshost == null || localConfig.obsport == null || localConfig.obspass == null)
+        else if (serverConfig.cred1value == "" || serverConfig.cred2value == "" || serverConfig.cred3value == ""
+            || serverConfig.cred1value == null || serverConfig.cred2value == null || serverConfig.cred3value == null)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, missing credentials");
         }
@@ -816,7 +813,7 @@ function heartBeatCallback ()
             if (localConfig.obsConnecting == false)
             {
                 localConfig.obsConnecting = true;
-                connectToObs(localConfig.obshost, localConfig.obsport, localConfig.obspass);
+                connectToObs(serverConfig.obshost, serverConfig.cred2value, serverConfig.cred3value);
             }
 
         }
