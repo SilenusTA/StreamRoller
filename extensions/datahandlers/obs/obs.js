@@ -810,7 +810,7 @@ function heartBeatCallback ()
             if (localConfig.obsConnecting == false)
             {
                 localConfig.obsConnecting = true;
-                connectToObs(serverConfig.obshost, serverConfig.cred2value, serverConfig.cred3value);
+                connectToObs(serverConfig.cred1value, serverConfig.cred2value, serverConfig.cred3value);
             }
 
         }
