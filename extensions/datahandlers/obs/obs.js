@@ -141,7 +141,6 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
-        console.log("ConfigFile received", server_packet.data)
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
@@ -153,7 +152,6 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        console.log("credentials received", server_packet.data)
         if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
         {
             serverConfig.cred1value = server_packet.data.obshost;
@@ -388,7 +386,6 @@ localConfig.obsConnection = new OBSWebSocket();
  */
 function connectToObs ()
 {
-    console.log(serverConfig)
     if (serverConfig.cred1value != "" && serverConfig.cred2value != "" && serverConfig.cred3value != "" && serverConfig.cred1value != null && serverConfig.cred2value != null && serverConfig.cred3value != null &&
         serverConfig.enableobs == "on" && localConfig.status.connected == false)
     {
