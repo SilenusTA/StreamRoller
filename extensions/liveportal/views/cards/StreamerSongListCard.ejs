@@ -1,0 +1,32 @@
+<div id="StreamerSongListCard" class="card bg-light text-dark">
+  <!--img class=" card-img-top" src="..." alt="Card image cap" -->
+  <div class="card-body">
+    <div id="StreamerSongListGroup" class="input-group">
+      <div class="col-md-10" style="padding-right:15px">
+        <h4 id="streamersonglisttitle">Song Queue</h4>
+        <table class="table table-striped" styel="vertical-align: middle">
+          <tr class="bg-light text-dark">
+            <th>Time</th>
+            <th>Song</th>
+            <th>Artist</th>
+            <th>Capo</th>
+            <th data-bs-toggle="tooltip" title="number in queue">#</th>
+            <th>Username</th>
+            <th>Message</th>
+            <th data-bs-toggle="tooltip" title="Donation ammount">$</th>
+            <th></th>
+          </tr>
+          <tbody id="queueTableBody">
+          </tbody>
+        </table>
+      </div>
+      <div class="col-md-2 bg-light text-dark">
+        <div class="container mt-4">
+          <h4>Search</h4>
+          <input type="text" id="autocomplete-input" class="form-control bg-light text-dark" placeholder="search ...">
+          <div id="autocomplete-list" class="list-group"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

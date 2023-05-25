@@ -7,6 +7,9 @@
                 extensionname: "liveportal",
                 channel: "LIVE_PORTAL",
                 logginglevel: 0,
+
+                // extensions to display on main page
+                streamersonglistdisplay: "on",
                 // obs settings
                 obsdefaultstartscenename: "##Starting Soon",
                 obsdefaultlivescenename: "##Game",
@@ -61,6 +64,8 @@
                 timers: [],
                 newTwitchChatBuffer: false,
                 newDiscordChatBuffer: false,
+                // streamersonglist variables
+                setreamersonglist: { songlist: [], queue: [] }
             }
 
             // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -127,7 +132,6 @@
             {
                 adminData.extensions = {};
                 adminData.channellist = {};
-                console.log("datahandler.onDataCenterDisconnect", reason);
             }
             // ============================================================================
             //                           FUNCTION: onDataCenterConnect
@@ -207,6 +211,7 @@
                             for (const [key, value] of Object.entries(serverConfig))
                                 if (key in server_packet.data)
                                     serverConfig[key] = server_packet.data[key];
+                            setCardsVisibility();
                             // update our modal to match the new data
                             UpdateAdminModalData();
                             // update server log, mainly here if we have added new default options when a user
@@ -219,7 +224,6 @@
                 // -------------------------------------------------------------------------------------------------
                 else if (server_packet.type === "ChannelList")
                 {
-                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
                     adminData.channellist = server_packet.data;
                     adminData.channellist.forEach(element =>
                     {
@@ -255,7 +259,6 @@
                 // -------------------------------------------------------------------------------------------------
                 else if (server_packet.type === "ExtensionList")
                 {
-                    //console.log("datahandler.onDataCenterMessage", server_packet.type + " received");
                     // we need to reload the page if we receive more than one list due to callback handler isses
                     // on the form
                     if (bugfix_extensionlist_count > 0)
@@ -272,7 +275,6 @@
                 else if (server_packet.type === "ExtensionMessage")
                 {
                     let extension_packet = server_packet.data;
-                    //console.log(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED ADMIN MODAL REQUEST
                     // -------------------------------------------------------------------------------------------------
@@ -331,7 +333,6 @@
                     // -------------------------------------------------------------------------------------------------
                     else if (extension_packet.type === "SceneList")
                     {
-                        //console.log(".onDataCenterMessage", "Scenelist received ", extension_packet.type, " parsing obs list", extension_packet.data);
                         ParseOBSScenesList(extension_packet.data)
                     }
                     // -------------------------------------------------------------------------------------------------
@@ -495,6 +496,13 @@
                         }
                         else
                             console.log(".onDataCenterMessage", "OBS_CHANNEL message ignored ", extension_packet.type, " from ", extension_packet.from);
+                    }
+                    else if (server_packet.dest_channel == "STREAMERSONGLIST_CHANNEL")
+                    {
+                        if (extension_packet.type == "SongQueue")
+                            updateSingerSonglistQueue(extension_packet.data)
+                        else if (extension_packet.type == "SongList")
+                            updateSingerSonglistList(extension_packet.data.items)
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                           UNHANDLED CHANNEL DATA
@@ -698,6 +706,7 @@
                             ParseOBSScenesList(localConfig.OBSSceneslist);
                             // update anyone that has our modal
                             SendModal("");
+                            setCardsVisibility();
                         }
                         else
                             parseExtensionModalData(xname);
@@ -1027,7 +1036,6 @@
                 let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
                 // convert our array of objects into a more usable objet
                 var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-                //console.log(fieldsAsObject);
                 if (fieldsAsObject.extensionname)
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket(
@@ -1126,46 +1134,6 @@
                         logsetting,
                     ));
             }
-
-            // ============================================================================
-            //                           FUNCTION: Display channel message
-            // ============================================================================
-            // Desription: display message in allmessages card
-            // Parameters: none
-            // ----------------------------- notes ----------------------------------------
-            /*  data currently available from a tag.
-                  tags{
-                        "type": "ChannelData",
-                        "from": "twitchchat",
-                        "dest_channel": "TWITCH_CHAT",
-                        "data": {
-                            "channel": "#olddepressedgamer",
-                            "message": "test for badges",
-                            "data": {
-                                "badge-info": {
-                                    "subscriber": "40"
-                                },
-                                "badges": {
-                                    "broadcaster": "1",
-                                    "subscriber": "3012"
-                                },
-                                "color": "#8A2BE2",
-                                "display-name": "OldDepressedGamer",
-                                "emote-sets": "0,19313,1454048,1454049,1454050,300374282,300548761,390077889,461451828,472873131,477339272,488737509,537206155,564265402,592920959,610186276",
-                                "mod": false,
-                                "subscriber": true,
-                                "user-type": null,
-                                "badge-info-raw": "subscriber/40",
-                                "badges-raw": "broadcaster/1,subscriber/3012",
-                                "username": "olddepressedgamer",
-                                "emotes": {},
-                                "emotes-raw": null,
-                                "message-type": "chat"
-                            }
-                        },
-                        "version": "0.2"
-                    }*/
-
             // ============================================================================
             //                           FUNCTION: displayChatMessages
             // ============================================================================
@@ -1321,14 +1289,21 @@
                 let time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
                 // make it colourful
                 var timecolor = "<span style='color: #757875'>";
-                var usercolor = ""
-
+                var usercolor = "";
+                var background_color = "";
+                var end_background_color = "";
                 // lets sanitise the message before we add the emotes
                 var sanitiser = document.createElement('div');
                 sanitiser.innerText = chatdata.message
                 // add any twitch emotes
                 let message = addTwitchEmotes(sanitiser.innerHTML, chatdata.data.emotes);
-                messae = message.replaceAll("\n", " ");
+                message = message.replaceAll("\n", " ");
+
+                if (message.indexOf('@' + localConfig.usernamelist.user) > -1)
+                {
+                    background_color = "<span style='background-color: darkred; '>";
+                    end_background_color = "</span>"
+                }
                 if (chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
                 {
                     if (chatdata.data.mod)
@@ -1361,9 +1336,9 @@
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
                     if (chatdata.data["message-type"] != "chat")
-                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' >" + chatdata.data["message-type"] + ": " + message + "</span>");
+                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' > " + message + "</span>");
                     else
-                        localConfig.chatMessageBuffer.push(time + username + " " + message);
+                        localConfig.chatMessageBuffer.push(time + username + " " + background_color + message + end_background_color);
                     // add mod messages to mod card if selected
                     if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
                         localConfig.modMessageBuffer.push(time + username + " " + message);
@@ -1458,7 +1433,7 @@
                     stringReplacements.push({
                         stringToReplace: stringToReplace,
                         //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
-                        replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/${theme}/1.0">`
+                        replacement: "<img src='https://static-cdn.jtvnw.net/emoticons/v2/" + id + "/default/" + theme + "/1.0'>"
                     });
                 });
 
@@ -1658,7 +1633,6 @@
             // ============================================================================
             function ProcessStreamAlert (server_packet)
             {
-                //console.log("ProcessStreamAlert ", server_packet);
                 let alertdata = server_packet.data;
                 // display the alert
 
@@ -1775,7 +1749,6 @@
             // ============================================================================
             function PostMessageToDiscord (msg, channel)
             {
-                //console.log("Posting messaage to discord, ", msg, channel)
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
@@ -1871,8 +1844,6 @@
             function chatInput (event)
             {
                 event.preventDefault();
-                //console.log("ChattInput")
-                //console.log(document.getElementById("chatInputText").value)
                 postMessageToTwitch(document.getElementById("chatInputText").value)
                 document.getElementById("chatInputText").value = ""
             }
@@ -1882,8 +1853,6 @@
             function modInput (event)
             {
                 event.preventDefault();
-                //console.log("modtInput")
-                //console.log(document.getElementById("modInputText").value)
                 PostMessageToDiscord(document.getElementById("modInputText").value, serverConfig.modmessage_channel);
                 document.getElementById("modInputText").value = ""
             }
@@ -1938,6 +1907,169 @@
                 )
             }
             // ============================================================================
+            //                           FUNCTION: addSongToStreamersonglistQueue
+            // ============================================================================
+            function addSongToStreamersonglistQueue (songId)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "AddSongToQueue",
+                            serverConfig.extensionname,
+                            songId,
+                            "",
+                            "streamersonglist"),
+                        "",
+                        "streamersonglist"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: removeSongFromQueue
+            // ============================================================================
+            function removeSongFromQueue (queueId)
+            {
+                let classes = "bg-light text-dark"
+                if (modeDark)
+                    classes = "bg-dark text-light"
+                $("#queue_" + queueId + "_remove").addClass("btn-warning").removeClass(classes)
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RemoveSongFromQueue",
+                            serverConfig.extensionname,
+                            queueId,
+                            "",
+                            "streamersonglist"),
+                        "",
+                        "streamersonglist"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: markSongAsPlayed
+            // ============================================================================
+            function markSongAsPlayed (queueId)
+            {
+                let classes = "bg-light text-dark"
+                if (modeDark)
+                    classes = "bg-dark text-light"
+                $("#queue_" + queueId + "_played").addClass("btn-warning").removeClass(classes)
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "MarkSongAsPlayed",
+                            serverConfig.extensionname,
+                            queueId,
+                            "",
+                            "streamersonglist"),
+                        "",
+                        "streamersonglist"
+                    ));
+            }
+            // ============================================================================
+            //                           FUNCTION: updateSingerSonglistQueue
+            // ============================================================================
+            function updateSingerSonglistQueue (queue)
+            {
+                const tabletitle = document.getElementById("streamersonglisttitle")
+                const queueTableBody = document.querySelector('#queueTableBody');
+                queueTableBody.innerHTML = '';
+                let tableentry = ""
+                let song = ""
+                let classes = "bg-light text-dark"
+                if (modeDark == "true")
+                    classes = "bg-dark text-light"
+
+                // if we havent been passed an array just use the stored one (might just be a refresh)
+                if (queue != [])
+                    localConfig.setreamersonglist.queue = queue;
+
+                tabletitle.innerHTML = "Song Queue (played today: " + localConfig.setreamersonglist.queue.status.songsPlayedToday
+                    + ", in Queue: " + localConfig.setreamersonglist.queue.list.length + ")"
+                localConfig.setreamersonglist.queue.list.forEach((entry) =>
+                {
+                    if (song != null)
+                    {
+                        song = entry.song
+                        songtime = (new Date(entry.createdAt))
+                        displaytime = songtime.getHours() + ":" + songtime.getMinutes().toString().padStart(2, '0')
+
+                        tableentry += "<tr class = '" + classes + "'>"
+                        tableentry += "<td>" + displaytime + "</td>";
+                        tableentry += "<td>" + song.title + "</td>";
+                        tableentry += "<td>" + song.artist + "</td>";
+                        tableentry += "<td>" + (song.capo ? song.capo : "None") + "</td>";
+                        // number of entries in the queue
+                        tableentry += "<td>" + localConfig.setreamersonglist.queue.list.filter((v) => (v.songId === entry.songId)).length + "</td>";
+                        tableentry += "<td>" + entry.requests[0].name + "</td>";
+                        tableentry += "<td>" + entry.requests[0].inChat + "</td>";//inchat
+                        tableentry += "<td " + (entry.donationAmount > 0 ? "style = 'background: rgb(208 0 255)'" : "") + ">" + entry.donationAmount + "</td>";//$
+
+                        // mark as played button
+                        tableentry += "<td><button id='queue_" + entry.id + "_played'class='btn " + classes + "' style='border:1px solid rgb(174, 255, 0)' onclick='markSongAsPlayed(" + entry.id + ")'>Played</button>";
+                        // delete button
+                        tableentry += "<button id='queue_" + entry.id + "_remove' class='btn " + classes + "' style='border:1px solid rgb(174, 50, 0)' onclick='removeSongFromQueue(" + entry.id + ")'>Remove</button>"
+                        tableentry += "</td>";
+                        tableentry += "</tr>"
+                    }
+                    else
+                    {
+                        //console.log("Empty list song")
+                    }
+                });
+
+                queueTableBody.innerHTML = tableentry;
+            }
+            // ============================================================================
+            //                           FUNCTION: updateSingerSonglistList
+            // ============================================================================
+            function updateSingerSonglistList (songlist)
+            {
+                localConfig.setreamersonglist.songlist = songlist;
+            }
+            // ============================================================================
+            //                Songlist Autocomplete listener function
+            // ============================================================================
+            document.addEventListener("DOMContentLoaded", () => 
+            {
+                //add handler for when user types something
+                $('#autocomplete-input').on('input', function ()
+                {
+                    var input = $(this).val().toLowerCase();
+                    var autocompleteList = $('#autocomplete-list');
+                    // how many items to show in list
+                    var numbertodisplay = 5;
+                    autocompleteList.empty();
+
+                    if (input.length === 0)
+                        return;
+
+                    localConfig.setreamersonglist.songlist.some(function (item)
+                    {
+                        var itemLowerCase = item.title.toLowerCase();
+                        if (itemLowerCase.indexOf(input) !== -1)
+                        {
+                            var listItem = $('<a id="songlistsearch" href="#songlistsearch" class="list-group-item list-group-item-action"></a>');
+                            listItem.text(item.title);
+                            listItem.on('click', function ()
+                            {
+                                $('#autocomplete-input').val("");
+                                addSongToStreamersonglistQueue(item.id)
+                                autocompleteList.empty();
+                            });
+
+                            autocompleteList.append(listItem);
+                            numbertodisplay--;
+                            if (numbertodisplay < 1)
+                                return true
+
+                        }
+                    });
+                });
+            });
+            // ============================================================================
             //                           FUNCTION: heartBeat
             // ============================================================================
             heartBeatCallback()
@@ -1974,43 +2106,16 @@
                         ""
                     ));
             });
+
             // ============================================================================
-            //                  FUNCTION: Browser debug (send chat from dev console)
+            //                           FUNCTION: Power Button
             // ============================================================================
-            // test purposes only. 
-            // can be sent from browser console.
-            function testChatMessage (user, message)
+            function setCardsVisibility ()
             {
-                // fake twitch chat message
-                sr_api.sendMessage(DataCenterSocket,
-                    sr_api.ServerPacket("ChannelData",
-                        "twitchchat",
-                        sr_api.ExtensionPacket(
-                            "ChatMessage",
-                            "twitchchat",
-                            {
-                                channel: '#olddepressedgamer',
-                                message: message,
-                                data: {
-                                    'badge-info': { subscriber: '40' },
-                                    badges: { broadcaster: '1', subscriber: '3012' },
-                                    color: '#8A2BE2',
-                                    'display-name': user,
-                                    'emote-sets': '0,19313,1454048,1454049,1454050,300374282,300548761,390077889,461451828,472873131,477339272,488737509,537206155,564265402,592920959,610186276',
-                                    mod: false,
-                                    subscriber: true,
-                                    'user-type': null,
-                                    'badge-info-raw': 'subscriber/40',
-                                    'badges-raw': 'broadcaster/1,subscriber/3012',
-                                    username: user,
-                                    emotes: {},
-                                    'emotes-raw': null,
-                                    'message-type': 'chat'
-                                }
-                            },
-                            'TWITCH_CHAT'
-                        ),
-                        'TWITCH_CHAT'
-                    ));
+                ssl_card = document.getElementById("StreamerSongListCard")
+                if (serverConfig.streamersonglistdisplay == "on")
+                    ssl_card.style.display = "block";
+                else
+                    ssl_card.style.display = "none";
             }
         </script>
