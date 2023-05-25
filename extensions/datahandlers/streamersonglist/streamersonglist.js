@@ -1,0 +1,671 @@
+
+// ############################# STREAMERSONGLIST.js ##############################
+// Provides streamer songlist functionality
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/streamer
+// Date: 25-May-2023
+// --------------------------- functionality ----------------------------------
+// Current functionality:
+//
+// ----------------------------- notes ----------------------------------------
+// ============================================================================
+
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+// logger will allow you to log messages in the same format as the system messages
+import * as logger from "../../../backend/data_center/modules/logger.js";
+// extension helper provides some functions to save you having to write them.
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import fetch from 'node-fetch';
+import * as fs from "fs";
+// these lines are a fix so that ES6 has access to dirname etc
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const localConfig = {
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    status: {
+        connected: false,
+    },
+    pollSongQueueHandle: null,
+    pollSongListHandle: null,
+    songlist: [],
+    username: "",
+    clientId: "",
+    userId: "",
+    streamerId: ""
+};
+const serverConfig = {
+    extensionname: "streamersonglist",
+    channel: "STREAMERSONGLIST_CHANNEL",
+    enablestreamersonglist: "off",
+    pollSongQueueTimeout: 10000, // check queue every 10 seconds
+    pollSongListTimeout: 60000, // check for updated songs every minute
+    heartBeatTimeout: 5000,
+    //credentials variable names to use (in credentials modal)
+    credentialscount: "4",
+    cred1name: "username",
+    cred1value: "",
+    cred2name: "clientId",
+    cred2value: "",
+    cred3name: "userId",
+    cred3value: "",
+    cred4name: "streamerId",
+    cred4value: "",
+};
+const OverwriteDataCenterConfig = false;
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+/**
+ * initialise
+ * @param {Object} app 
+ * @param {String} host 
+ * @param {String} port 
+ */
+function initialise (app, host, port, heartbeat)
+{
+    localConfig.heartBeatTimeout = heartbeat
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
+    }
+}
+
+// ============================================================================
+//                           FUNCTION: onDataCenterDisconnect
+// ============================================================================
+/**
+ * Disconnection message sent from the server
+ * @param {String} reason 
+ */
+function onDataCenterDisconnect (reason)
+{
+    // do something here when disconnt happens if you want to handle them
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+// Desription: Received connect message
+// Parameters: socket 
+// ----------------------------- notes ----------------------------------------
+// When we connect to the StreamRoller server the first time (or if we reconnect)
+// we will get this function called.
+// it is also a good place to create/join channels we wish to use for data
+// monitoring/sending on.
+// ===========================================================================
+/**
+ * Connection message handler
+ * @param {*} socket 
+ */
+function onDataCenterConnect (socket)
+{
+    if (OverwriteDataCenterConfig)
+        SaveConfigToServer();
+    // Request our credentials from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+    // Request our config from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, serverConfig.heartBeatTimeout);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * receives message from the socket
+ * @param {data} server_packet 
+ */
+function onDataCenterMessage (server_packet)
+{
+    if (server_packet.type === "ConfigFile")
+    {
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        {
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
+            for (const [key] of Object.entries(serverConfig))
+                if (key in server_packet.data)
+                    serverConfig[key] = server_packet.data[key];
+            pollSongQueueCallback();
+            pollSongListCallback();
+            SaveConfigToServer();
+        }
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
+        {
+            localConfig.username = server_packet.data.username;
+            localConfig.clientId = server_packet.data.clientId;
+            localConfig.userId = server_packet.data.userId;
+            localConfig.streamerId = server_packet.data.streamerId;
+            pollSongQueueCallback();
+            pollSongListCallback();
+        }
+    }
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestAdminModalCode")
+            SendAdminModal(extension_packet.from);
+        else if (extension_packet.type === "RequestCredentialsModalsCode")
+            SendCredentialsModal(extension_packet.from);
+        else if (extension_packet.type === "AdminModalData")
+        {
+            // if we have enabled/disabled connection
+            if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
+            {
+                //we are currently enabled so lets stop polling
+                if (serverConfig.enablestreamersonglist == "on")
+                {
+                    serverConfig.enablestreamersonglist = "off";
+                    localConfig.status.connected = false;
+                    clearTimeout(localConfig.pollSongQueueTimeout)
+                }
+                //currently disabled so lets start
+                else
+                {
+                    localConfig.status.connected = true;
+                    serverConfig.enablestreamersonglist = "on";
+                    pollSongQueueCallback();
+                    pollSongListCallback();
+                }
+            }
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                serverConfig.enablestreamersonglist = "off";
+                for (const [key, value] of Object.entries(extension_packet.data))
+                    serverConfig[key] = value;
+                SaveConfigToServer();
+            }
+            //update anyone who is showing our code at the moment
+            SendAdminModal("");
+        }
+        else if (extension_packet.type === "RequestQueue")
+        {
+            localConfig.songlist = sendSongQueue(extension_packet.from);
+        }
+        else if (extension_packet.type === "RequestSonglist")
+        {
+            localConfig.songlist = sendSonglist(extension_packet.from);
+        }
+        else if (extension_packet.type === "AddSongToQueue")
+        {
+            addSongToQueue(extension_packet.data);
+        }
+        else if (extension_packet.type === "MarkSongAsPlayed")
+        {
+            markSongAsPlayed(extension_packet.data);
+        }
+        else if (extension_packet.type === "RemoveSongFromQueue")
+        {
+            removeSongFromQueue(extension_packet.data);
+        }
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+    }
+    else if (server_packet.type === "UnknownChannel")
+    {
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+        // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+        setTimeout(() =>
+        {
+            // resent the register command to see if the extension is up and running yet
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "JoinChannel", serverConfig.extensionname, server_packet.data
+                ));
+        }, 5000);
+
+    }
+    else if (server_packet.type === "InvalidMessage")
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "LoggingLevel"
+        || server_packet.type === "ExtensionMessage"
+    )
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+// ===========================================================================
+//                           FUNCTION: SendAdminModal
+// ===========================================================================
+/**
+ * send some modal code to be displayed on the admin page or somewhere else
+ * this is done as part of the webpage request for modal message we get from 
+ * extension. It is a way of getting some user feedback via submitted forms
+ * from a page that supports the modal system
+ * @param {String} tochannel 
+ */
+function SendAdminModal (tochannel)
+{
+    // read our modal file
+    fs.readFile(__dirname + "/streamersonglistadminmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                // replace text strings
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "AdminModalCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendCredentialsModal
+// ===========================================================================
+/**
+ * Send our CredentialsModal to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendCredentialsModal (extensionname)
+{
+    fs.readFile(__dirname + "/streamersonglistcredentialsmodal.html", function (err, filedata)
+    {
+        if (err)
+            throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) == "string" || typeof (value) == "number")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "CredentialsModalCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * savel config file to the server
+ */
+function SaveConfigToServer ()
+{
+    // saves our serverConfig to the server so we can load it again next time we startup
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
+        "SaveConfig",
+        serverConfig.extensionname,
+        serverConfig))
+}
+
+// ============================================================================
+//                      FUNCTION: sendSongQueue
+//                        Sends to extension
+// ============================================================================
+function sendSongQueue (extensionsname)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "SongQueue",
+                serverConfig.extensionname,
+                localConfig.songQueue,
+                "",
+                extensionsname
+            ),
+            "",
+            extensionsname
+        ));
+}
+// ============================================================================
+//                     FUNCTION: outputSongQueue
+//                      put queue out on channel
+// ============================================================================
+function outputSongQueue ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "SongQueue",
+                serverConfig.extensionname,
+                localConfig.songQueue,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: fetchSongQueue
+// ============================================================================
+function fetchSongQueue ()
+{
+    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/queue`, {
+        headers: { 'Client-ID': localConfig.clientId, },
+    })
+        .then(response =>
+        {
+            if (!response.ok)
+                throw new Error('Request failed with status ' + response.status);
+            return response.json();
+        })
+        .then(data =>
+        {
+            localConfig.songQueue = data;
+            outputSongQueue();
+            localConfig.status.connected = true;
+        })
+        .catch(e =>
+        {
+            localConfig.status.connected = false;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue", e.message);
+        });
+}
+// ============================================================================
+//                       FUNCTION: sendSonglist
+//                      send songlist to extension
+// ============================================================================
+function sendSonglist (extension)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "SongList",
+                serverConfig.extensionname,
+                localConfig.songlist,
+                "",
+                extension
+            ),
+            "",
+            extension
+        ));
+}
+// ============================================================================
+//                           FUNCTION: outputSongList
+// ============================================================================
+function outputSongList ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "SongList",
+                serverConfig.extensionname,
+                localConfig.songlist,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: fetchSongList
+// ============================================================================
+function fetchSongList ()
+{
+    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/songs`, {
+        headers: { 'Client-ID': localConfig.clientId, },
+    })
+        .then(response =>
+        {
+            if (!response.ok)
+                throw new Error('Request failed with status ' + response.status);
+            return response.json();
+        })
+        .then(data =>
+        {
+            localConfig.songlist = data;
+            outputSongList();
+            localConfig.status.connected = true;
+        })
+        .catch(e =>
+        {
+            localConfig.status.connected = false;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs queue", e.message);
+        });
+}
+// ============================================================================
+//                           FUNCTION: addSongToQueue
+// ============================================================================
+function addSongToQueue (songId)
+{
+    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
+        method: 'POST',
+        headers: {
+            "accept": "application/json",
+            "Authorization": "Bearer " + localConfig.clientId,
+            "origin": "StreamRoller",
+            "source": "StreamRoller",
+        }
+    })
+        .then(response =>
+        {
+            if (!response.ok)
+                throw new Error('Request failed with status ' + response.status);
+            return response.json();
+        })
+        .then(data =>
+        {
+            fetchSongQueue();
+            localConfig.status.connected = true;
+        })
+        .catch(e =>
+        {
+            localConfig.status.connected = false;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueue", "Error adding song", e.message);
+        });
+}
+
+// ============================================================================
+//                           FUNCTION: removeSongFromQueue
+// ============================================================================
+function removeSongFromQueue (queueId)
+{
+    const url = `https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
+    const headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localConfig.clientId,
+        "origin": "StreamRoller",
+        "queueId": queueId
+    };
+    fetch(url, { method: 'DELETE', headers: headers })
+        .then(response =>
+        {
+            if (!response.ok)
+                throw new Error('Request failed with status ' + response.status);
+            return response.json();
+        })
+        .then(data =>
+        {
+            fetchSongQueue()
+        })
+        .catch(e =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song", e.message);
+        });
+}
+
+// ============================================================================
+//                           FUNCTION: markSongAsPlayed
+// ============================================================================
+function markSongAsPlayed (queueId)
+{
+    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
+        method: 'POST',
+        headers: {
+            "accept": "application/json",
+            "Authorization": "Bearer " + localConfig.clientId,
+            "origin": "StreamRoller"
+        }
+    })
+        .then(response =>
+        {
+            if (!response.ok)
+            {
+                throw new Error('Request failed with status ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data =>
+        {
+            fetchSongQueue()
+        })
+        .catch(e =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error removing song", e.message);
+        });
+}
+
+// ============================================================================
+//                           FUNCTION: saveQueue
+// ============================================================================
+function saveQueue (queue)
+{
+    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Client-ID': localConfig.clientId,
+        },
+        body: JSON.stringify(queue),
+    })
+        .then(response =>
+        {
+            if (!response.ok)
+                throw new Error('Request failed with status ' + response.status);
+        })
+        .catch(e =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue", e.message);
+        });
+}
+// ============================================================================
+//                           FUNCTION: pollSongQueueCallback
+// ============================================================================
+function pollSongQueueCallback ()
+{
+    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "" && localConfig.clientId != "")
+    {
+        try
+        {
+            fetchSongQueue();
+            outputSongQueue();
+        }
+        catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pollSongQueueCallback", "callback failed:", err.message);
+        }
+    }
+    if (localConfig.pollSongQueueHandle)
+        clearTimeout(localConfig.pollSongQueueHandle)
+    localConfig.pollSongQueueHandle = setTimeout(pollSongQueueCallback, serverConfig.pollSongQueueTimeout)
+}
+// ============================================================================
+//                           FUNCTION: pollSongListCallback
+// ============================================================================
+function pollSongListCallback ()
+{
+    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "" && localConfig.clientId != "")
+    {
+        try
+        {
+            fetchSongList()
+        }
+        catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pollSongListCallback", "callback failed:", err.message);
+        }
+    }
+    if (localConfig.pollSongListHandle)
+        clearTimeout(localConfig.pollSongListHandle)
+    localConfig.pollSongListHandle = setTimeout(pollSongListCallback, serverConfig.pollSongListTimeout)
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback ()
+{
+    try
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "HeartBeat",
+                    serverConfig.extensionname,
+                    localConfig.status,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "callback failed:", err.message);
+    }
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, serverConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                                  EXPORTS
+// Note that initialise is mandatory to allow the server to start this extension
+// ============================================================================
+export { initialise };

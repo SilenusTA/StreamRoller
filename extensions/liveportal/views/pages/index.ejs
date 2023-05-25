@@ -14,19 +14,22 @@
         <h5 id="liveportaltitle">Live Streaming Portal</h5>
         <!--Row with two equal columns-->
         <div class="row border bg-light">
-            <!-- DataCenter message scrollable box -->
+
             <div class="col-md-10 border bg-light px-1">
                 <%- include('../cards/ChatMessagesCard'); %>
                     <%- include('../cards/ModMessagesCard'); %>
+
+                        <%- include('../cards/OBSControllsCard'); %>
+                            <%- include('../cards/StreamerSongListCard'); %>
+
             </div>
+
             <div class="col-md-2 border bg-light px-1">Extensions
                 <%- include('../cards/ExtensionsListCard'); %>
                     <%- include('../cards/AlertsCard'); %>
             </div>
         </div>
-        <div class="row border bg-light">
-            <%- include('../cards/OBSControllsCard'); %>
-        </div>
+
         <!-- end container -->
     </main>
     <%- include('../scripts/datahandler'); %>
