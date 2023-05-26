@@ -640,7 +640,7 @@ function processChatMessage (data)
 
 
     console.log(data)
-    if (data["message-type"] != "chat")
+    if (data.data["message-type"] != "chat")
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
