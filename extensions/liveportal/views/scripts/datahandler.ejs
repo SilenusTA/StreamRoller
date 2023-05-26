@@ -1156,8 +1156,8 @@
                     localConfig.modMessageBuffer.shift();
 
                 // add the buffer into the chat window
-                chatcardref.innerHTML = localConfig.chatMessageBuffer.join("<BR>");
-                modcardref.innerHTML = localConfig.modMessageBuffer.join("<BR>");
+                chatcardref.innerHTML = localConfig.chatMessageBuffer.join(" ");
+                modcardref.innerHTML = localConfig.modMessageBuffer.join(" ");
 
                 // Auto scroll the boxes unless we have a new buffer, then we scroll to theend
                 if (!localConfig.newTwitchChatBuffer)
@@ -1200,7 +1200,7 @@
                 {
                     parseTwitchChatMessage(ele);
                 })
-                localConfig.chatMessageBuffer.push("--------- buffer loaded --------");
+                localConfig.chatMessageBuffer.push("<BR>--------- buffer loaded --------");
 
             }
             // ============================================================================
@@ -1276,7 +1276,7 @@
                     {
                         parseDiscordChatMessage(ele);
                     })
-                localConfig.modMessageBuffer.push("--------- buffer loaded --------");
+                localConfig.modMessageBuffer.push("<BR>--------- buffer loaded --------");
             }
             // ============================================================================
             //                           FUNCTION: parseTwitchChatMessage
@@ -1312,13 +1312,13 @@
 
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    localConfig.chatMessageBuffer.push(time + chatdata.data['display-name'] + " " + message + "</span>");
+                    localConfig.chatMessageBuffer.push("<BR>" + time + chatdata.data['display-name'] + " " + message + "</span>");
                 }
                 else if (chatdata.data['display-name'] === "System")
                 {
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
-                    localConfig.chatMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
+                    localConfig.chatMessageBuffer.push("<BR><span style='color: red'>" + time + ":" + chatdata.data['display-name'] + " " + message + "</span>");
                 }
                 else
                 {
@@ -1336,12 +1336,12 @@
                     // set the card data
                     document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
                     if (chatdata.data["message-type"] != "chat")
-                        localConfig.chatMessageBuffer.push(time + username + " <span style = 'color: yellow' > " + message + "</span>");
+                        localConfig.chatMessageBuffer.push("<BR>" + time + username + " <span style = 'color: yellow' > " + message + "</span>");
                     else
-                        localConfig.chatMessageBuffer.push(time + username + " " + background_color + message + end_background_color);
+                        localConfig.chatMessageBuffer.push("<BR>" + time + username + " " + background_color + message + end_background_color);
                     // add mod messages to mod card if selected
                     if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
-                        localConfig.modMessageBuffer.push(time + username + " " + message);
+                        localConfig.modMessageBuffer.push("<BR>" + time + username + " " + message);
 
                 }
             }
@@ -1362,14 +1362,14 @@
                 // lets sanitise the message before we add the emotes
                 var sanitiser = document.createElement('div');
                 if (chatdata.name === "System")
-                    localConfig.modMessageBuffer.push("<span style='color: red'>" + time + ":" + chatdata.name + " " + message + "</span>");
+                    localConfig.modMessageBuffer.push("<BR><span style='color: red'>" + time + ":" + chatdata.name + " " + message + "</span>");
                 else
                 {
                     usercolor = "<span style='color: #6f42c1'>";
                     let username = usercolor + ' ' + chatdata.name + "&gt</span>";
                     time = timecolor + time + ":</span>";
 
-                    localConfig.modMessageBuffer.push(time + ":" + username + " " + message);
+                    localConfig.modMessageBuffer.push("<BR>" + time + ":" + username + " " + message);
 
                 }
             }
@@ -1487,7 +1487,7 @@
                     const newMessageHeight = newMessage.offsetHeight + newMessageMargin
                     const visibleHeight = messages.offsetHeight
                     const containerHeight = messages.scrollHeight
-                    const scrollOffset = messages.scrollTop + visibleHeight
+                    const scrollOffset = Math.ceil(messages.scrollTop + visibleHeight) + 5
                     if (containerHeight - newMessageHeight <= scrollOffset)
                     {
                         messages.scrollTop = messages.scrollHeight

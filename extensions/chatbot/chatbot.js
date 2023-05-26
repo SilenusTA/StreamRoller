@@ -638,6 +638,16 @@ function processChatMessage (data)
     let redColour = brightText + "\x1b[31m"
     let resetColour = "\x1b[0m";
 
+
+    console.log(data)
+    if (data["message-type"] != "chat")
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("ignoring message, non 'chat' message")
+        }
+        return;
+    }
     if (serverConfig.questionbotenabled === "off" ||
         serverConfig.chatbotenabled === "off")
     {
@@ -738,7 +748,7 @@ function processChatMessage (data)
             if (chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase()))
                 question = chatdata.message.toLowerCase().replaceAll(serverConfig.chatbotquerytag.toLowerCase(), "").trim()
             else
-                question = chatdata.message.toLowerCase().replaceAll("hey chatbot", "").trim()
+                question = chatdata.message.toLowerCase().replaceAll(serverConfig.chatbotquerytag.toLowerCase(), "").trim()
 
             //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
             let messages = [{ "role": "system", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].p }]
