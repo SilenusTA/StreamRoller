@@ -626,12 +626,15 @@ function heartBeatCallback ()
 // ============================================================================
 function processChatMessage (data)
 {
-    let starttime = Date.now();
+    // debug message colors
     let brightText = "\x1b[1m";
     let yellowColour = brightText + "\x1b[33m";
     let greenColour = brightText + "\x1b[32m";
     let redColour = brightText + "\x1b[31m"
     let resetColour = "\x1b[0m";
+    // used to work out expired time when calculating the virtual 'typed response'
+    let starttime = Date.now();
+    //check if we have a direct question to the bot from chat
     let directChatQuestion = (
         (serverConfig.chatbotquerytagstartofline == "off" &&
             data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
@@ -642,11 +645,11 @@ function processChatMessage (data)
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
             || data.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
         ));
-    if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG")
+    if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
-            console.log("ignoring message, non 'chat' message")
+            console.log("ignoring message, non 'chat'/direct question")
         }
         return;
     }
@@ -655,14 +658,6 @@ function processChatMessage (data)
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log("ignoring messages, chat and question bots disabled")
-        }
-        return;
-    }
-    else if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG")
-    {
-        if (serverConfig.DEBUG_MODE === "on")
-        {
-            console.log("ignoring non chat messages (ie subscription messages etc)")
         }
         return;
     }
@@ -863,6 +858,7 @@ async function callOpenAI (history_string, modelToUse, starttime)
                 .catch((err) => 
                 {
                     localConfig.requestPending = false;
+                    console.log(err)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )

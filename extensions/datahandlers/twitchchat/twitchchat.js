@@ -36,7 +36,8 @@ const localConfig = {
     channelConnectionAttempts: 20,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
-    saveDataHandle: null
+    saveDataHandle: null,
+    logRawMessages: false
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
@@ -547,8 +548,11 @@ function process_chat_data (channel, tags, chatmessage)
 {
     if (tags == null)
     {
-        console.log("############## NULL tags ################")
-        console.log("process_chat_data", channel, tags, chatmessage)
+        if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")   
+        {
+            console.log("############## NULL tags recieved in message ################")
+            console.log("process_chat_data", channel, tags, chatmessage)
+        }
         return;
     }
     // need to define our chat message format
@@ -791,26 +795,21 @@ function chatLogin (account)
     {
         ///subscription , resub, submysterygift, anongiftpaidupgrade , anonsubmysterygift, anonsubgift , subgift , giftpaidupgrade  and primepaidupgrade 
         // raw_message gives you every type of message in the sustem. use for debugging if you think you are missing messages
-        //localConfig.twitchClient[account].connection.on("raw_message", (messageCloned, message) => { console.log("chatLogin() raw_message", account, message) });
+        //localConfig.logRawMessages = true
+        //localConfig.twitchClient[account].connection.on("raw_message", (messageCloned, message) => { if (localConfig.logRawMessages) console.log("chatLogin() raw_message", account, message); });
 
         // "chat" and "message" messages appear to be the same
         //localConfig.twitchClient[account].connection.on("message", (channel, tags, message, self) => { process_chat_data(channel, tags, message); });
         localConfig.twitchClient[account].connection.on("action", (channel, userstate, message, self) => { process_chat_data(channel, userstate, message); });
         localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => { process_chat_data(channel, userstate, message); });
         localConfig.twitchClient[account].connection.on("messagedeleted", (channel, username, deletedMessage, userstate) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, "message deleted: (" + username + ") " + deletedMessage); });
-        localConfig.twitchClient[account].connection.on("resub", (channel, username, months, message, userstate, methods) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, userstate["system-msg"]); });
+        localConfig.twitchClient[account].connection.on("resub", (channel, username, months, message, userstate, methods) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, message + ""); });
         localConfig.twitchClient[account].connection.on("submysterygift", (channel, username, numbOfSubs, methods, userstate) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, userstate['system-msg']); });
         localConfig.twitchClient[account].connection.on("subscription", (channel, username, methods, message, userstate) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, userstate['system-msg'] + " " + ((message) ? message : "")); });
         localConfig.twitchClient[account].connection.on("timeout", (channel, username, reason, duration, userstate) => { userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, username + " timedout for " + duration + ". " + ((reason) ? reason : "")); });
 
-        localConfig.twitchClient[account].connection.on("redeem", (channel, username, rewardType, tags) =>
-        {
-            console.log("changing message type from", tags['message-type'], "to Redemption")
-            tags['message-type'] = "Redemption-1";
-            if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")
-                console.log("Redeem ", channel, username, rewardType, tags);
-            process_chat_data(channel, tags, username + " redeemed " + rewardType);
-        });
+
+
 
 
 
@@ -865,16 +864,7 @@ function chatLogin (account)
             process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
         });
 
-        localConfig.twitchClient[account].connection.on("connected", (address, port) =>
-        {
-            console.log("connected", address, port)
-            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connected" }, "connected:" + address + ": " + port);
-        });
-        localConfig.twitchClient[account].connection.on("connecting", (address, port) => 
-        {
-            console.log("connecting", address, port)
-            process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connecting" }, "connecting: " + address + ":" + port);
-        });
+
         localConfig.twitchClient[account].connection.on("disconnected", (reason) =>
         {
             console.log("disconnected", reason)
@@ -898,7 +888,6 @@ function chatLogin (account)
         localConfig.twitchClient[account].connection.on("giftpaidupgrade", (channel, username, sender, userstate) => { process_chat_data(channel, userstate, "giftpaidupgrade: " + sender + " updradeged " + username + " with a gift paid upgrade"); });
         localConfig.twitchClient[account].connection.on("hosted", (channel, username, viewers, autohost) => { process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "hosted" }, "hosted: Hosted " + username + " with " + viewers + " viewers auto:" + autohost); });
         localConfig.twitchClient[account].connection.on("hosting", (channel, target, viewers) => { process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "hosting" }, "hosting: Hosting " + target + " with " + viewers + "viewers"); });
-        localConfig.twitchClient[account].connection.on("logon", () => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "logon" }, "logon:"); });
 
         localConfig.twitchClient[account].connection.on("primepaidupgrade", (channel, username, methods, userstate) => { process_chat_data(channel, userstate, "primepaidupgrade: " + username + ": " + methods); });
         localConfig.twitchClient[account].connection.on("r9kbeta", (channel, tags, message, self) => { process_chat_data(channel, tags, "r9kbeta: " + message); });
@@ -914,10 +903,15 @@ function chatLogin (account)
 
     /* Not processing these by default
     
-    localConfig.twitchClient[account].connection.on("ping", () => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "ping" }, "ping"); });
-    localConfig.twitchClient[account].connection.on("pong", (latency) => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "pong" }, latency); });
+    localConfig.twitchClient[account].connection.on("connected", (address, port) => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connected" }, "connected:" + address + ": " + port); });
+    localConfig.twitchClient[account].connection.on("connecting", (address, port) => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connecting" }, "connecting: " + address + ":" + port); });
+    localConfig.twitchClient[account].connection.on("logon", () => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "logon" }, "logon:"); });
     localConfig.twitchClient[account].connection.on("join", (channel, username, self) => { process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel); });
     localConfig.twitchClient[account].connection.on("part", (channel, username, self) => { process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "part" }, "part: " + username); });
+    localConfig.twitchClient[account].connection.on("ping", () => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "ping" }, "ping"); });
+    localConfig.twitchClient[account].connection.on("pong", (latency) => { process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "pong" }, latency); });
+    localConfig.twitchClient[account].connection.on("redeem", (channel, username, rewardType, tags, message) =>        {            if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")                console.log("Redeem ", channel, username, rewardType, tags, message + " my redemption");        });
+    
     */
 
 
