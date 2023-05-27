@@ -316,8 +316,6 @@ function onDataCenterMessage (server_packet)
         }
         // first we check which channel the message came in on
         else if (server_packet.dest_channel === "TWITCH_CHAT")
-            // quiz isn't reliable. Answers are sometimes marked as correct when wrong
-            // processChatQuiz(extension_packet.data);
             // process the chat message from twitch
             processChatMessage(extension_packet.data);
         else
@@ -483,10 +481,7 @@ function SendAdminModal (tochannel)
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
-
-
             // set the curert profile name 
-
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
             modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
             modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
@@ -637,10 +632,17 @@ function processChatMessage (data)
     let greenColour = brightText + "\x1b[32m";
     let redColour = brightText + "\x1b[31m"
     let resetColour = "\x1b[0m";
-
-
-    console.log(data)
-    if (data.data["message-type"] != "chat")
+    let directChatQuestion = (
+        (serverConfig.chatbotquerytagstartofline == "off" &&
+            data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
+            || data.message.toLowerCase().includes("hey chatbot".toLowerCase())
+        )
+        ||
+        (serverConfig.chatbotquerytagstartofline == "on" &&
+            data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
+            || data.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
+        ));
+    if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG")
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -648,8 +650,7 @@ function processChatMessage (data)
         }
         return;
     }
-    if (serverConfig.questionbotenabled === "off" ||
-        serverConfig.chatbotenabled === "off")
+    if (serverConfig.questionbotenabled === "off" && serverConfig.chatbotenabled === "off")
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -665,8 +666,8 @@ function processChatMessage (data)
         }
         return;
     }
-    // if we are not processing chat (ie outside of the timer window) just return
-    if (localConfig.running === false)
+    // if we are not processing chat (ie outside of the timer window) and we are not a directed messge
+    if (localConfig.running === false && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -681,7 +682,6 @@ function processChatMessage (data)
         if (serverConfig.DEBUG_MODE === "on")
             console.log("Ignoring system/bot message", data.message)
         return;
-
     }
     if (data.message.length < serverConfig.chatbotminmessagelength)
     {
@@ -713,26 +713,7 @@ function processChatMessage (data)
         }
         return
     }
-    // check if we are triggering chatbot from a chat message
-    /*else if (chatdata.message.toLowerCase().startsWith(serverConfig.starttag.toLowerCase()))
-    {callOpenAI
-        //console.log("******* CHATBOT started via chat command *******");
-        if (serverConfig.chatbotenabled === "on")
-            startProcessing()
-        return;
-    }*/
-    // user initiated direct question
-    else if (
-        (serverConfig.chatbotquerytagstartofline == "off" &&
-            chatdata.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
-            || chatdata.message.toLowerCase().includes("hey chatbot".toLowerCase())
-        )
-        ||
-        (serverConfig.chatbotquerytagstartofline == "on" &&
-            chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
-            || chatdata.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
-        )
-    )
+    else if (directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
