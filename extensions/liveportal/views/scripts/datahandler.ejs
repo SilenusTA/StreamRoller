@@ -1381,7 +1381,7 @@
                     }
 
                     // check if someone @'d us
-                    if (chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+                    if (localConfig.usernamelist.user && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
                     {
                         var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
                         message = message.replace(myregex, "<span style='color:" + default_text_bright_color + ";background-color: " + default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
