@@ -25,9 +25,26 @@
                             id="streamersonglistdisplay" streamersonglistdisplaychecked>
                         <label class="form-check-label" for="streamersonglistdisplay">StreamerrSonglist</label>
                     </div>
+                    <BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="discordmodchatdisplay" type="checkbox"
+                            id="discordmodchatdisplay" discordmodchatdisplaychecked>
+                        <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
+                    </div>
+
                 </div>
                 <div class="form-group">
                 </div>
+
+
+                <h4 class="modal-title">Chat Settings</h4>
+                <h5 class="modal-title">Performance releated settings</h5>
+                <div class="form-group">
+                    <label for="chatmessagebuffermaxsize" class="col-form-label">Screen buffer size</label>
+                    <input type="text" name="chatmessagebuffermaxsize" class="form-control"
+                        id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
+                </div>
+
                 <h4 class="modal-title">OBS Settings</h4>
                 <h5 class="modal-title">Default Scene Names (for default buttons)</h5>
 
@@ -93,6 +110,11 @@
                             id="modchattomodwindow" modchattomodwindowchecked>
                         <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
                             window as well as discord</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="discordmessagebuffermaxsize" class="col-form-label">Screen buffer size</label>
+                        <input type="text" name="discordmessagebuffermaxsize" class="form-control"
+                            id="discordmessagebuffermaxsize" value="discordmessagebuffermaxsizetext">
                     </div>
                 </div>
                 <h5 class="modal-title">Alerts to post on discord</h5>
