@@ -21,35 +21,37 @@ import sr_api from "./public/streamroller-message-api.cjs";
 let config = cm.loadConfig("datacenter");
 let version = cm.loadSoftwareVersion();
 // old bug, need to remove the old setup if anyone has it.
-if (config === "" || config.HOST.startsWith("http") > 0)
+if (config.HOST.startsWith("http") > 0)
     config = ""
 
-// check we have a config. if this is a new instance the we need to create a config
+let defaultconfig = {
+    name: "StreamRoller",
+    extensionname: "datacenter",
+    SYSTEM_LOGGING_TAG: "DATA-CENTER",
+    HOST: "localhost",
+    PORT: 3000,
+    logginglevel: 0,
+    heartbeat: 5000, // heartbeat timers
+    apiVersion: sr_api.__api_version__,
+    softwareversion: version,
+    overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
+    testing: 0// used to import extra extensions during testing
+};
+
+// check we have a config. if this is a new instance the we need to create a config from the default
 if (config === "")
 {
-    config = {
-        name: "StreamRoller",
-        extensionname: "datacenter",
-        SYSTEM_LOGGING_TAG: "DATA-CENTER",
-        HOST: "localhost",
-        PORT: 3000,
-        logginglevel: 0,
-        heartbeat: 5000, // heartbeat timers
-        apiVersion: sr_api.__api_version__,
-        softwareversion: version,
-        overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
-        testing: 0// used to import extra extensions during testing
-    };
+    config = defaultconfig;
     cm.saveConfig(config.extensionname, config);
 }
-else
+// check if we have updated the software, if so we will reload the default config
+if (config.softwareversion != version)
 {
-    if (config.softwareversion != version)
-    {
-        config.softwareversion = version;
-        cm.saveConfig(config.extensionname, config);
-    }
+    console.log("New software version detected. resetting server config.")
+    config = defaultconfig;
+    cm.saveConfig(config.extensionname, config);
 }
+
 
 logger.setLoggingLevel(config.logginglevel);
 console.log("serverSettings: ", config);
