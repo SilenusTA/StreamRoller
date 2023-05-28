@@ -275,15 +275,23 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "UserAccountNames")
         {
-            // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
-            serverConfig.chatbotname = extension_packet.data.bot
-            changeBotName();
-        }
-        else if (extension_packet.type === "AdminModalData")
-        {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-
+                // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
+                serverConfig.chatbotname = extension_packet.data.bot
+                changeBotName();
+            }
+        }
+        else if (extension_packet.type === "ParseTextMessage")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                processTextMessage(extension_packet.data);
+            }
+        } else if (extension_packet.type === "AdminModalData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
                 handleAdminModalData(extension_packet.data)
                 SaveConfigToServer();
                 startChatbotTimer();
@@ -622,6 +630,60 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
+//                           FUNCTION: processTextMessage
+// ============================================================================
+/*
+data
+{
+    from: ... extension to send message back to
+    ident: used by the caller to identify the response to link it up with a sending message
+    message: message to parse
+    response: our response
+    personality_id : -1 for non or personality id
+    model: "" or openAI's config
+}
+
+*/
+function processTextMessage (data)
+{
+    // postback to extension/channel/direct to chat
+    let messages = data.message;
+    let model_to_use = serverConfig.settings.chatmodel;
+
+    if (data.personality_id && data.personality_id > -1)
+        messages = addPersonality(messages, serverConfig[data.personality_id])
+    if (data.model && data.model != "")
+    {
+        model_to_use = data.model;
+    }
+
+    callOpenAI([{ "role": "user", "content": messages }], model_to_use)
+        .then(chatMessageToPost =>
+        {
+            data.response = chatMessageToPost
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "AIChatbotResponse",
+                        serverConfig.extensionname,
+                        data,
+                        "",
+                        data.from,
+                        serverConfig.channel
+                    ),
+                    "",
+                    data.from)
+            )
+        })
+        .catch(e =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e.message);
+            return;
+        })
+}
+// ============================================================================
 //                           FUNCTION: processChatMessage
 // ============================================================================
 function processChatMessage (data)
@@ -634,7 +696,8 @@ function processChatMessage (data)
     let resetColour = "\x1b[0m";
     // used to work out expired time when calculating the virtual 'typed response'
     let starttime = Date.now();
-    //check if we have a direct question to the bot from chat
+
+    //variable check if we have a direct question to the bot from chat
     let directChatQuestion = (
         (serverConfig.chatbotquerytagstartofline == "off" &&
             data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
@@ -645,6 +708,8 @@ function processChatMessage (data)
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
             || data.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
         ));
+
+    // check if this is a chat or local message (don't parse subs etc)
     if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -653,6 +718,7 @@ function processChatMessage (data)
         }
         return;
     }
+    // check that we are enabled for chat or questions
     if (serverConfig.questionbotenabled === "off" && serverConfig.chatbotenabled === "off")
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -661,15 +727,7 @@ function processChatMessage (data)
         }
         return;
     }
-    // if we are not processing chat (ie outside of the timer window) and we are not a directed messge
-    if (localConfig.running === false && !directChatQuestion)
-    {
-        if (serverConfig.DEBUG_MODE === "on")
-        {
-            console.log("ignoring message, chatbot waiting for timer to go off")
-        }
-        return;
-    }
+
     // ignore messages from the bot or specified users
     if ((serverConfig.chatbotname != null && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1)
         || data.data["display-name"].toLowerCase().indexOf("system") != -1)
@@ -678,6 +736,19 @@ function processChatMessage (data)
             console.log("Ignoring system/bot message", data.message)
         return;
     }
+
+    // is this a chatmessage and inside of the time window
+    if (localConfig.running === false && !directChatQuestion)
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("ignoring message, chatbot waiting for timer to go off")
+        }
+        return;
+    }
+
+
+    // Is the message long enough to be considered
     if (data.message.length < serverConfig.chatbotminmessagelength)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -690,12 +761,14 @@ function processChatMessage (data)
         console.log("chat message to remove emotes, links, '@' symbols etc")
         console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
     }
-    // preprosess the messsage
-    let chatdata = parseChatData(data)
+
+    // preprosess Parse the messsage
+    let chatdata = parseData(data)
 
     if (chatdata && chatdata.message && serverConfig.DEBUG_MODE === "on")
         console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
 
+    // check the length again after parsing the message to make sure it is still long enough
     if (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -708,6 +781,7 @@ function processChatMessage (data)
         }
         return
     }
+    // is this a diect question from chat
     else if (directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -720,35 +794,24 @@ function processChatMessage (data)
             // ##############################################
             //         Processing a question message
             // ##############################################
-            let question = "";
-            if (chatdata.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase()))
-                question = chatdata.message.toLowerCase().replaceAll(serverConfig.chatbotquerytag.toLowerCase(), "").trim()
-            else
-                question = chatdata.message.toLowerCase().replaceAll(serverConfig.chatbotquerytag.toLowerCase(), "").trim()
+            let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
 
-            //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
-            let messages = [{ "role": "system", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].p }]
-
-            let CBBehaviour = [
-                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q1 },
-                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a1 },
-                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q2 },
-                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a2 },
-                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q3 },
-                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a3 },
-                { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q4 },
-                { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a4 }
-            ];
-            for (const obj of CBBehaviour)
-                messages.push(obj);
-
-            messages.push({ "role": "user", "content": question })
-            callOpenAI(messages, serverConfig.settings.questionmodel, starttime)
+            callOpenAI(messages, serverConfig.settings.chatmodel)
+                .then(chatMessageToPost =>
+                {
+                    postMessageToTwitch(chatMessageToPost)
+                    return;
+                })
+                .catch(e =>
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI question request failed:", e.message);
+                    return;
+                })
             return;
         }
-        //else
-        // add CD timer here to stop spam messages
-        //  postMessageToTwitch("Sorry, the bot is currently asleep")
+        else
+            // add CD timer here to stop spam messages
+            postMessageToTwitch("Sorry, the I'm currently asleep and can't answer your message, please try again later")
 
     }
     // chat bot is currently turned off
@@ -759,9 +822,8 @@ function processChatMessage (data)
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
             console.log("ignoring message, bot turned off")
         }
-        return
+        return;
     }
-
 
     if (serverConfig.DEBUG_MODE === "on")
         console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -792,28 +854,9 @@ function processChatMessage (data)
         // ##############################################
         // only get to here if we have enough messages and everything is set to enabled
         localConfig.requestPending = true;
+        let messages = addPersonality("", serverConfig.currentprofile)
 
 
-        //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
-        let messages = [{ "role": "system", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].p }]
-
-        let CBBehaviour = [
-            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q1 },
-            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a1 },
-            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q2 },
-            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a2 },
-            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q3 },
-            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a3 },
-            { "role": "user", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].q4 },
-            { "role": "assistant", "content": serverConfig.chatbotprofiles[serverConfig.currentprofile].a4 }
-        ];
-        // add behaviour messages
-        for (const obj of CBBehaviour)
-            messages.push(obj);
-
-        //add chat messages
-        for (const obj of localConfig.chatHistory)
-            messages.push(obj);
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(redColour + "--------- requesting chatGPT response for the following messages -------- " + resetColour)
@@ -824,7 +867,43 @@ function processChatMessage (data)
             console.log(redColour + "--------- requesting chatGPT response -------- " + resetColour)
 
         }
-        callOpenAI(messages, serverConfig.settings.chatmodel, starttime)
+
+        callOpenAI(messages, serverConfig.settings.chatmodel)
+            .then(chatMessageToPost =>
+            {
+                if (chatMessageToPost)
+                {
+                    console.log("Starttine for virtual typeing delay", starttime)
+                    let wordcount = chatMessageToPost.split(" ").length
+                    let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
+                    if (serverConfig.DEBUG_MODE === "on")
+                    {
+                        console.log("Checking the time to delay based on typing speed setting")
+                        console.log("processing time: ", Date.now() - starttime)
+                        console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
+                        console.log("delay response: ", delaytime / 1000, "s")
+                    }
+                    setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);
+                    // if we don't have a time running start a new one (might have been called from a chat question)
+                    if (localConfig.chatTimerHandle._destroyed)
+                        startChatbotTimer()
+                    localConfig.requestPending = false;
+                    localConfig.running = false
+                    //clear the buffer for next time (probably had some async messages while waiting for api to return)
+                    localConfig.chatHistory = []
+                }
+                else
+                {
+                    localConfig.requestPending = false;
+                    localConfig.running = false
+                }
+            })
+            .catch(e =>
+            {
+                localConfig.requestPending = false;
+                localConfig.running = false
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI chat request failed:", e.message);
+            })
 
     }
 }
@@ -832,10 +911,10 @@ function processChatMessage (data)
 // ============================================================================
 //                           FUNCTION: callOpenAI
 // ============================================================================
-async function callOpenAI (history_string, modelToUse, starttime)
+async function callOpenAI (message_string, modelToUse)
 {
     if (serverConfig.DEBUG_MODE === "on")
-        console.log("Calling OpenAI with model ", modelToUse)
+        console.log("Calling OpenAI with model ", message_string, modelToUse)
     try
     {
         if (localConfig.openAIKey)
@@ -846,11 +925,11 @@ async function callOpenAI (history_string, modelToUse, starttime)
                 }));
 
             //console.log("#'#'#'#'#'#'#' CHATBOT: sending following to OpenAI: #'#'#'#'#'#'#' ")
-            //console.log(history_string)
+            //console.log(message_string)
             const response = await localConfig.OpenAPIHandle.createChatCompletion(
                 {
                     model: modelToUse.model,
-                    messages: history_string,
+                    messages: message_string,
                     temperature: Number(modelToUse.chattemperature),
                     max_tokens: Number(modelToUse.max_tokens)
                     //stop: ["Human:", "AI:"]
@@ -874,46 +953,21 @@ async function callOpenAI (history_string, modelToUse, starttime)
                 console.log(response.data.choices)
             }
             // TBD May need to loop and join all the responses
-            let chatMessageToPost = response.data.choices[response.data.choices.length - 1].message.content.trim("?").trim("\n").trim()
+            let openAIResponce = response.data.choices[response.data.choices.length - 1].message.content.trim("?").trim("\n").trim()
 
             if (response.data.choices[0].finish_reason == 'stop' || response.data.choices[0].finish_reason == 'length')
             {
 
                 // ######################## SUCCESSFULL REQUEST LETS POST BACK TO CHAT ###########################
-                // replace teh chatbot name if it is there
-                let regEx = new RegExp(serverConfig.chatbotname, "ig")
-                chatMessageToPost = chatMessageToPost.replace(regEx, "");
-
                 //chatbottypingdelay
-                chatMessageToPost = chatMessageToPost.trim()
-                let wordcount = chatMessageToPost.split(" ").length
+                openAIResponce = openAIResponce.trim()
+
                 // if we ran over the buffer (openai didn't return the whole string) add a "..."
                 if (response.data.choices[0].finish_reason === "length")
-                    chatMessageToPost = chatMessageToPost + " ..."
+                    openAIResponce = openAIResponce + " ..."
                 // delay the message depending on how long it is and out delay factor
-                chatMessageToPost = chatMessageToPost.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
-                let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
-                if (serverConfig.DEBUG_MODE === "on")
-                {
-                    console.log("Checking the time to delay based on typing speed setting")
-                    console.log("processing time: ", Date.now() - starttime)
-                    console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
-                    console.log("delay response: ", delaytime / 1000, "s")
-                }
-                setTimeout(() =>
-                {
-                    postMessageToTwitch(chatMessageToPost)
-                }, delaytime);
-
-
-
-                localConfig.requestPending = false;
-                localConfig.running = false
-                //clear the buffer for next time (probably had some async messages while waiting for api to return)
-                localConfig.chatHistory = []
-                // if we don't have a time running start a new one (might have been called from a chat question)
-                if (localConfig.chatTimerHandle._destroyed)
-                    startChatbotTimer()
+                openAIResponce = openAIResponce.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
+                return openAIResponce;
             }
             else
                 localConfig.requestPending = false;
@@ -934,9 +988,44 @@ async function callOpenAI (history_string, modelToUse, starttime)
     }
 }
 // ============================================================================
-//                           FUNCTION: parseChatData
+//                           FUNCTION: addPersonality
+//          if message passed retunrs that message with the profile
+//          if message == "" return localConfig.chatHistory with the profile
 // ============================================================================
-function parseChatData (data)
+function addPersonality (message, profile)
+{
+
+    //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
+    let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
+
+    let CBBehaviour = [
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1 },
+        { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a1 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2 },
+        { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a2 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q3 },
+        { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a3 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4 },
+        { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a4 }
+    ];
+    // add behaviour messages
+    for (const obj of CBBehaviour)
+        outputmessage.push(obj);
+
+    if (message == "")
+    {
+        //add chat messages
+        for (const obj of localConfig.chatHistory)
+            outputmessage.push(obj);
+    }
+    else
+        outputmessage.push({ "role": "user", "content": message })
+    return outputmessage;
+}
+// ============================================================================
+//                           FUNCTION: parseData
+// ============================================================================
+function parseData (data)
 {
     let messageEmotes = data.data.emotes;
     let emoteposition = null

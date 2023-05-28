@@ -383,6 +383,30 @@
                     {
                         processRandomFact(extension_packet.data);
                     }
+
+                    // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED Discord chat buffer
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "AIChatbotResponse")
+                    {
+                        sr_api.sendMessage(DataCenterSocket,
+                            sr_api.ServerPacket("ExtensionMessage",
+                                serverConfig.extensionname,
+                                sr_api.ExtensionPacket(
+                                    "SendChatMessage",
+                                    serverConfig.extensionname,
+                                    // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                                    {
+                                        account: "bot",
+                                        message: extension_packet.data.response,
+                                        'message-type': "AIchatbotmessage"
+                                    },
+                                    "",
+                                    "twitchchat"),
+                                "",
+                                "twitchchat"
+                            ));
+                    }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED Unhandled extension message
                     // -------------------------------------------------------------------------------------------------
@@ -2241,7 +2265,7 @@
             });
 
             // ============================================================================
-            //                           FUNCTION: Power Button
+            //                           FUNCTION: setCardsVisibility
             // ============================================================================
             function setCardsVisibility ()
             {
@@ -2251,4 +2275,46 @@
                 card = document.getElementById("ModMessagesCard");
                 (serverConfig.discordmodchatdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
             }
+
+            // ============================================================================
+            //                           FUNCTION: sendMessageToChatbot
+            // ============================================================================
+            function sendMessageToChatbot (message, ident = "", personality_id = -1, model = "")
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "ParseTextMessage",
+                            serverConfig.extensionname,
+                            {
+                                from: serverConfig.extensionname,
+                                ident: ident,
+                                message: message,
+                                personality_id: personality_id,
+                                model: model
+                            },
+                            "",
+                            "chatbot"),
+                        "",
+                        "chatbot"
+                    ));
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </script>
