@@ -911,7 +911,9 @@ async function callOpenAI (history_string, modelToUse, starttime)
                 localConfig.running = false
                 //clear the buffer for next time (probably had some async messages while waiting for api to return)
                 localConfig.chatHistory = []
-                startChatbotTimer()
+                // if we don't have a time running start a new one (might have been called from a chat question)
+                if (localConfig.chatTimerHandle._destroyed)
+                    startChatbotTimer()
             }
             else
                 localConfig.requestPending = false;

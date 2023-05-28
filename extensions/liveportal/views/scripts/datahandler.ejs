@@ -1368,7 +1368,7 @@
                         console.log("Under Construction: Chat message still needs to be parsed.")
                         console.log(chatdata)
                         background_color = "<span style='color:" + default_TBD_text_color + "; background-color: " + default_TBD_background_color + "; '>";
-                        message = message + " <message-type>: " + chatdata.data["message-type"]
+                        message = message + " <message-type>: " + ((chatdata.data["message-type"]) ? chatdata.data["message-type"] : "")
                         end_background_color = "</span>"
                     }
 
@@ -1472,7 +1472,8 @@
 
                         // add mod messages to mod card if we have this option selected in the liveportal settings page
                         if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
-                            localConfig.modMessageBuffer.push("<BR>" + time + username + " " + message);
+                            //localConfig.modMessageBuffer.push("<BR>" + time + username + " " + message);
+                            localConfig.modMessageBuffer.push(line_field + time_field + name_field + message_field + "<" + chatdata.data["message-type"] + ">" + end_line_field);
 
                     }
                 }
