@@ -205,7 +205,9 @@ function onMessage (socket, server_packet)
     else if (server_packet.type == "RestartServer")
     {
         console.log("Restarting...");
-        const child = childprocess.exec('start "Streamroller" node backend\\data_center\\server.js 5',
+
+        //const child = childprocess.exec('start "Streamroller" node backend\\data_center\\server.js 5',
+        const child = childprocess.exec('start "Streamroller" node_modules\\.bin\\node.exe backend\\data_center\\server.js 5',
             {
                 detached: true,
                 stdio: 'ignore'
