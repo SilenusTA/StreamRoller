@@ -39,6 +39,9 @@
                 donations: "off",
                 chatAsUsername: "user",
 
+                // chatbot settings
+                processchatbotalerts: "off",
+
                 // random facts / twitter settings
                 randomfactsenabled: "off",
                 randomfactstimeout: 1800000,//30 min
@@ -463,6 +466,19 @@
                         }
                     }
                     // -------------------------------------------------------------------------------------------------
+                    //                           TWITCH_CHAT_EXTRA
+                    // -------------------------------------------------------------------------------------------------
+                    // twithc chat alerts etc
+                    else if (server_packet.dest_channel == "TWITCH_CHAT_EXTRA")
+                    {
+                        if (extension_packet.type === "ChatExtraMessage" && serverConfig.processchatbotalerts == "on")
+                        {
+                            parseTwitchChatExtaMessage(extension_packet.data);
+                        }
+                        else
+                            console.log("ignoring message, process chat bot alerts turned off in settings")
+                    }
+                    // -------------------------------------------------------------------------------------------------
                     //                           DISCORD_CHAT
                     // -------------------------------------------------------------------------------------------------
                     else if (server_packet.dest_channel == "DISCORD_CHAT")
@@ -563,8 +579,8 @@
                                 ));
                         }, 10000);
                     }
-                    else
-                        console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
+                    //else
+                    //console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
 
                     // -------------------------------------------------------------------------------------------------
                     //                           IGNORING THESE MESSAGE (to save loging them)
@@ -1447,7 +1463,7 @@
                     // ##################### redeem ##############################
                     else if (chatdata.data["custom-reward-id"])
                     {
-                        console.log(chatdata)
+                        console.log("custom-reward-id", chatdata)
                         line_field = "<BR><span style='color: " + default_reward_color + "'>"
                         name_field = "<b>" + chatdata.data['display-name'] + "> ";
                         message_field = "Redemption: " + message + "</b>";
@@ -1505,6 +1521,47 @@
                 {
                     console.log("ERROR:parseTwitchChatMessage:", error)
                     console.error(error)
+                }
+            }
+            // ============================================================================
+            //                           FUNCTION: parseTwitchChatExtaMessage
+            // ============================================================================
+            // updates the buffer with the messages
+            function parseTwitchChatExtaMessage (alertdata)
+            {
+                try
+                {
+                    let subsmessages = ["subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
+                    if (alertdata.data['message-type'] == "raided")
+                    {
+                        let msg = alertdata.data["display-name"] + " just raided " + alertdata.channel + " on twitch with " + alertdata.data.viewers + " viewers and we are all super happy about it"
+                        sendMessageToChatbot(msg)
+                    }
+                    else if (subsmessages.includes(alertdata.data['message-type']))
+                    {
+                        console.log("subscription message", alertdata.data['message-type'], alertdata.data["system-msg"]);
+                        let msg = alertdata.data["system-msg"];
+                        sendMessageToChatbot(msg)
+                    }
+                    else if (alertdata.data['message-type'] == "redeem")
+                    {
+                        console.log("redeem message", alertdata.data['message-type'], alertdata.data["system-msg"]);
+                        console.log(alertdata)
+                        let msg = alertdata.data["system-msg"] + "Someone redeemed something";
+                        // sendMessageToChatbot(msg)
+                    }
+                    else if (alertdata.data['message-type'] == "cheer")
+                    {
+                        console.log("cheer message", alertdata.data['message-type'], alertdata.data["system-msg"]);
+                        let msg = alertdata.data["system-msg"];
+                        sendMessageToChatbot(msg)
+                    }
+
+                }
+
+                catch (e)
+                {
+                    console.log("Error sub data not defined. please copy this message and notify the owner of StreamRoller to put a handler in for this messages", e)
                 }
             }
             // ============================================================================
@@ -2278,8 +2335,12 @@
 
             // ============================================================================
             //                           FUNCTION: sendMessageToChatbot
+            //  personality_id is either 
+            // num:     the id of the personality profile (starting from 0)
+            // "" :     for no profile
+            // default: for the currently set profiles
             // ============================================================================
-            function sendMessageToChatbot (message, ident = "", personality_id = -1, model = "")
+            function sendMessageToChatbot (message, ident = "", personality_id = "default", model = "")
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",

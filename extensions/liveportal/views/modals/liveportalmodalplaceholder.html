@@ -16,8 +16,9 @@
                         tabindex="-1" />
                     <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
                 </div>
+                <h4 class="modal-title">Display/Hide Extensions</h4>
                 <div class="form-group">
-                    <h5 class="modal-title">Display/Hide Extensions</h5>
+
                     <label class="col-form-label">Deselect the items you don't want to show on this page</label>
                     <BR>
                     <div class="form-check form-check-inline">
@@ -44,7 +45,19 @@
                     <input type="text" name="chatmessagebuffermaxsize" class="form-control"
                         id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
                 </div>
+                <BR>
+                <h4 class="modal-title">Chatbot Logic</h4>
+                <div class="form-group">
 
+                    <label class="col-form-label">Select optsions for chatbot processing</label>
+                    <BR>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="processchatbotalerts" type="checkbox"
+                            id="processchatbotalerts" processchatbotalertschecked>
+                        <label class="form-check-label" for="processchatbotalerts">Parse alert message through AI
+                            chatbot</label>
+                    </div>
+                </div>
                 <h4 class="modal-title">OBS Settings</h4>
                 <h5 class="modal-title">Default Scene Names (for default buttons)</h5>
 
@@ -69,7 +82,6 @@
                     <input type="text" name="obsdefaultendscenename" class="form-control" id="obsdefaultendscenename"
                         value="obsdefaultendscenenametext">
                 </div>
-
                 <BR>
                 <h4 class="modal-title">OBS Scene buttons</h4>
                 <div class="form-group">

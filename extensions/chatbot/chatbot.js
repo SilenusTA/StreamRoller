@@ -55,6 +55,7 @@ const defaultConfig = {
     chatbotenabled: "off",
     questionbotenabled: "off",
     chatbotquerytagstartofline: "on",
+    chatbotignorelist: "",
     // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
     // query tag is the chat text to look for to send a direct question/message to openAI GPT
     chatbotquerytag: "Hey CHATBOTNAME",
@@ -246,7 +247,6 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
-
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             // HACK: skip the update if user doesn't have the current config settings
@@ -258,6 +258,11 @@ function onDataCenterMessage (server_packet)
                 for (const [key] of Object.entries(serverConfig))
                     serverConfig[key] = server_packet.data[key];
             }
+            //Temp fix for new users with old config files
+            // delete once we have enough downloads
+            // removes varialble name from diallog on first run
+            if (!serverConfig.chatbotignorelist)
+                serverConfig.chatbotignorelist = ""
             SaveConfigToServer();
             startChatbotTimer();
         }
@@ -649,15 +654,17 @@ function processTextMessage (data)
     // postback to extension/channel/direct to chat
     let messages = data.message;
     let model_to_use = serverConfig.settings.chatmodel;
+    if (data.personality_id === "")
+        messages = [{ "role": "user", "content": messages }];
+    else if (typeof serverConfig.chatbotprofiles[Number(data.personality_id)] !== 'undefined')
+        messages = addPersonality(messages, data.personality_id)
+    else
+        messages = addPersonality(messages, serverConfig.currentprofile)
 
-    if (data.personality_id && data.personality_id > -1)
-        messages = addPersonality(messages, serverConfig[data.personality_id])
     if (data.model && data.model != "")
-    {
         model_to_use = data.model;
-    }
 
-    callOpenAI([{ "role": "user", "content": messages }], model_to_use)
+    callOpenAI(messages, model_to_use)
         .then(chatMessageToPost =>
         {
             data.response = chatMessageToPost
@@ -696,7 +703,14 @@ function processChatMessage (data)
     let resetColour = "\x1b[0m";
     // used to work out expired time when calculating the virtual 'typed response'
     let starttime = Date.now();
-
+    if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.indexOf(data.data["display-name"]) > -1)
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("ignoring message, user on blocked list")
+        }
+        return;
+    }
     //variable check if we have a direct question to the bot from chat
     let directChatQuestion = (
         (serverConfig.chatbotquerytagstartofline == "off" &&
@@ -911,10 +925,10 @@ function processChatMessage (data)
 // ============================================================================
 //                           FUNCTION: callOpenAI
 // ============================================================================
-async function callOpenAI (message_string, modelToUse)
+async function callOpenAI (string_array, modelToUse)
 {
     if (serverConfig.DEBUG_MODE === "on")
-        console.log("Calling OpenAI with model ", message_string, modelToUse)
+        console.log("Calling OpenAI with model ", string_array, modelToUse)
     try
     {
         if (localConfig.openAIKey)
@@ -929,7 +943,7 @@ async function callOpenAI (message_string, modelToUse)
             const response = await localConfig.OpenAPIHandle.createChatCompletion(
                 {
                     model: modelToUse.model,
-                    messages: message_string,
+                    messages: string_array,
                     temperature: Number(modelToUse.chattemperature),
                     max_tokens: Number(modelToUse.max_tokens)
                     //stop: ["Human:", "AI:"]
