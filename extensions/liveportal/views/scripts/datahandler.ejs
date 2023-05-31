@@ -1,6 +1,9 @@
 <script src="/streamroller-message-api.cjs"></script>
-<%- include('../modals/extensionsettingsplaceholdermodal'); %>
-    <%- include("../modals/liveportalmodalplaceholder.html"); %>
+<!-- placehold we will use for inserting widgets-->
+<%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
+
+    <!-- our settings widget -->
+    <%- include("../modals/liveportalsettingswidgetsmall.html"); %>
         <script>
             const serverConfig = {
                 // extensions vars
@@ -95,11 +98,11 @@
             let bugfix_extensionlist_count = -100;
 
             //global data store for the app
-            const adminData = {};
-            adminData.extensions = {};
+            const livePortalData = {};
+            livePortalData.extensions = {};
             // add our own card
 
-            adminData.channellist = {};
+            livePortalData.channellist = {};
             var host = '<%= host %>';
             var port = '<%= port %>';
             localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
@@ -137,8 +140,8 @@
             // ===========================================================================
             function onDataCenterDisconnect (reason)
             {
-                adminData.extensions = {};
-                adminData.channellist = {};
+                livePortalData.extensions = {};
+                livePortalData.channellist = {};
             }
             // ============================================================================
             //                           FUNCTION: onDataCenterConnect
@@ -151,7 +154,7 @@
             function onDataCenterConnect (socket)
             {
                 // we set this hear as it means the page has loaded at this point 
-                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('liveportalmodalplaceholder').innerHTML };
+                livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall: document.getElementById('LivePortalSettingsWidgetsSmallPlaceholder').innerHTML };
 
                 // DEBUGGING overwrite our config data on the server if the flag is set
                 if (OverwriteDataCenterConfig)
@@ -221,7 +224,7 @@
                                     serverConfig[key] = server_packet.data[key];
                             setCardsVisibility();
                             // update our modal to match the new data
-                            UpdateSettingsWidgetSmallData();
+                            UpdateOwnSettingsWidgetSmallData();
                             // update server log, mainly here if we have added new default options when a user
                             // updates their version of streamroller
                             SaveConfigToServer();
@@ -232,8 +235,8 @@
                 // -------------------------------------------------------------------------------------------------
                 else if (server_packet.type === "ChannelList")
                 {
-                    adminData.channellist = server_packet.data;
-                    adminData.channellist.forEach(element =>
+                    livePortalData.channellist = server_packet.data;
+                    livePortalData.channellist.forEach(element =>
                     {
                         if (element != serverConfig.channel)
                             sr_api.sendMessage(DataCenterSocket,
@@ -250,7 +253,7 @@
                 else if (server_packet.type === "LoggingLevel")
                 {
                     serverConfig.logginglevel = server_packet.data
-                    UpdateSettingsWidgetSmallData();
+                    UpdateOwnSettingsWidgetSmallData();
                     //send modal to everyone to update their own copies of out model
                     SendModal("");
                 }
@@ -298,7 +301,7 @@
                         // we process our own submits so don't do anything with the updates we send out if they come 
                         // back to us
                         if (extension_packet.from != serverConfig.extensionname)
-                            addModal(extension_packet.from, extension_packet.data);
+                            addSettingsWidgetSmall(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED EXTENSION MODAL CODE
@@ -338,7 +341,7 @@
                             // save our data to the server for next time we run
                             SaveConfigToServer();
                             //lets update our modal
-                            UpdateSettingsWidgetSmallData();
+                            UpdateOwnSettingsWidgetSmallData();
                             // update anyone that may have out modal
                             SendModal("");
                             // setup timeout for facts on stream
@@ -438,12 +441,12 @@
                     if (extension_packet.type === "HeartBeat")
                     {
                         //check if we have this extension
-                        if (typeof (adminData.extensions[extension_packet.from]) !== "undefined")
+                        if (typeof (livePortalData.extensions[extension_packet.from]) !== "undefined")
                         {
                             //clear the previous timeout handle
-                            clearTimeout(adminData.extensions[extension_packet.from].heartBeatHandle);
+                            clearTimeout(livePortalData.extensions[extension_packet.from].heartBeatHandle);
                             // setup a new timeout for this extension
-                            adminData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
+                            livePortalData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
                             {
                                 heartBeatCallback(extension_packet.from)
                             },
@@ -649,19 +652,19 @@
                 var html = "<div>";
                 for (var i = 0; i < extensions.length; i++)
                 {
-                    // if we have an extension and it is set to displayaddModal
-                    if (!adminData.extensions[extensions[i]])
+                    // if we dont currently have that extension add it to the list and request the code for its settings
+                    // displays if it has them (done via callbacks over the websocket)
+                    if (!livePortalData.extensions[extensions[i]])
                     {
-                        adminData.extensions[extensions[i]] = {};
-                        adminData.extensions[extensions[i]].display = false;
+                        livePortalData.extensions[extensions[i]] = {};
+                        livePortalData.extensions[extensions[i]].display = false;
                         RequestSettingsWidgetSmallsCode(extensions[i]);
                         RequestSettingsWidgetLargeCode(extensions[i]);
 
                     }
 
-                    html += "<div  id='" + extensions[i] + "_visibility_admincard' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
-                    html += " <span id='" + extensions[i] + "'>"
-                    html += extensions[i] + "</span></div>";
+                    html += "<div  id='" + extensions[i] + "_visibility_settingswidgetsmall' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+                    html += " <span id='" + extensions[i] + "_settingslinkname'>" + extensions[i] + "</span></div>";
 
                 };
                 //html += "</ul>";
@@ -669,11 +672,10 @@
                 document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
                 document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-                //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
                 // lets check if we have a previous settingswidgetsmall card for this extension and if so add it to the link above
                 for (var i = 0; i < extensions.length; i++)
-                    if (adminData.extensions[extensions[i]].admincard)
-                        addModal(extensions[i], adminData.extensions[extensions[i]].admincard)
+                    if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
+                        addSettingsWidgetSmall(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetsmall)
             }
             // ===========================================================================
             //                           FUNCTION: SendModal
@@ -686,7 +688,7 @@
             // ===========================================================================
             function SendModal (toextension)
             {
-                let modalstring = adminData.extensions[serverConfig.extensionname].admincard;
+                let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall;
                 // first lets update our modal to the current settings
                 for (const [key, value] of Object.entries(serverConfig))
                 {
@@ -714,7 +716,7 @@
                     ));
             }
             // ============================================================================
-            //                           FUNCTION: addModal
+            //                           FUNCTION: addSettingsWidgetSmall
             // ============================================================================
             // Desription: Add the modal code from the extension to the link
             // Parameters: 
@@ -723,17 +725,18 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function addModal (xname, data)
+            function addSettingsWidgetSmall (xname, data)
             {
                 // only update modals if we have received the extension name from the server
-                if (adminData.extensions[xname])
+                if (livePortalData.extensions[xname])
                 {
-                    let modalbox = document.getElementById("ExtensionSettingsPlaceholder").children[0];
-                    // grab the <li> element for this extension
-                    let extLiTag = document.getElementById(xname);
-                    if (document.getElementById(xname + "_visibility_admincard") == null)
+                    // grab the placeholder code we user to save us from writing all the code from scratch :P
+                    let modalbox = document.getElementById("LivePortalSettingsWidgetsSmallPlaceholder").children[0];
+                    // grab the <li> element for this extension added in when we got the extension list
+                    let extLiTag = document.getElementById(xname + "_settingslinkname");
+                    if (document.getElementById(xname + "_visibility_settingswidgetsmall") == null)
                         return
-                    document.getElementById(xname + "_visibility_admincard").style.display = "";
+                    document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "";
                     // remove the previous event listener (if there was one)
                     $('#' + xname + "_modal").off('submit');
                     //set the element contents to a blank extension placeholder
@@ -747,7 +750,8 @@
                     extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal";
                     // set the data from the extension
                     document.getElementById(xname + "_modal").innerHTML = data;
-                    // add a callback handle
+
+                    // add a callback handle when form is submitted
                     $('#' + xname + "_modal").on('submit', function (event)
                     {
                         event.preventDefault();
@@ -758,7 +762,7 @@
                             // process this data oursleves first
                             processOwnModalSubmit(xname);
                             // now it is processed we can parse it
-                            UpdateSettingsWidgetSmallData()
+                            UpdateOwnSettingsWidgetSmallData()
                             // As we have some updateded data we need to make sure that we refresh ourselves in case
                             // we have changed some settings (ie buttons to be shown)
                             ParseOBSScenesList(localConfig.OBSSceneslist);
@@ -770,8 +774,8 @@
                             parseExtensionModalData(xname, xname + "_modal");
                         return false;
                     });
-                    document.getElementById(xname + "_visibility_admincard").style.display = "block"
-                    adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
+                    document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "block"
+                    livePortalData.extensions[xname].settingswidgetsmall = document.getElementById(xname + "_settingslinkname").innerHTML
 
                 }
                 // need to update the mode in case we have received a light mode 
@@ -796,10 +800,10 @@
                 document.getElementById("SettingsPageTabs").innerHTML = "";
                 document.getElementById("SettingsPageContent").innerHTML = "";
                 // add/replace the existing data for this extensions
-                adminData.extensions[newwidgetname].settingswidgetlarge = data
+                livePortalData.extensions[newwidgetname].settingswidgetlarge = data
                 // loop through all our extensions and add them to the tabs and insert the widget in to the page
 
-                Object.entries(adminData.extensions).forEach(([xname, stuff]) =>
+                Object.entries(livePortalData.extensions).forEach(([xname, stuff]) =>
                 {
                     if (stuff.settingswidgetlarge)
                     {
@@ -811,7 +815,7 @@
                         else
                             document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
 
-                        //adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
+                        //livePortalData.extensions[xname].settingswidgetsmall = document.getElementById(xname).innerHTML
                         if (first)
                         {
                             first = false;
@@ -833,7 +837,7 @@
                                     // process this data oursleves first
                                     processOwnModalSubmit(xname);
                                     // now it is processed we can parse it
-                                    UpdateSettingsWidgetSmallData()
+                                    UpdateOwnSettingsWidgetLargeData()
                                     // As we have some updateded data we need to make sure that we refresh ourselves in case
                                     // we have changed some settings (ie buttons to be shown)
                                     ParseOBSScenesList(localConfig.OBSSceneslist);
@@ -883,7 +887,7 @@
                     document.getElementById(extension + "_status").style = "color:orange";
                 else
                     document.getElementById(extension + "_status").style = "color:green";
-                document.getElementById(extension + "_visibility_admincard").style.display = "";
+                document.getElementById(extension + "_visibility_settingswidgetsmall").style.display = "";
             }
             // ============================================================================
             //                           FUNCTION: UpdateOBSDefaultButtons
@@ -1205,17 +1209,18 @@
 
             }
             // ============================================================================
-            //                      FUNCTION: UpdateSettingsWidgetSmallData
+            //                      FUNCTION: UpdateOwnSettingsWidgetSmallData
             // ============================================================================
             // Desription: Update our own modal if our config has changed
             // Parameters: none
             // ----------------------------- notes ----------------------------------------
             // 
             // ===========================================================================
-            function UpdateSettingsWidgetSmallData ()
+            function UpdateOwnSettingsWidgetSmallData ()
             {
-                //get the updated dom we just changed and change the rest using sting replace
-                let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
+
+                //get our widget and use string replace to update the values
+                let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
                 for (const [key, value] of Object.entries(serverConfig))
                 {
                     // checkboxes
@@ -1227,11 +1232,12 @@
                     else if (typeof (value) == "string" || typeof (value) == "number")
                         modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
                 }
-                adminData.extensions[serverConfig.extensionname].admincard = modalstring;
+                livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
                 //document.getElementById(serverConfig.extensionname + "_modal").innerHTML = modalstring;
                 // Update the OBS channel list as we might have changed what we want to show
                 ParseOBSScenesList(localConfig.OBSSceneslist);
-                addModal(serverConfig.extensionname, modalstring)
+                addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
+
             }
             // ============================================================================
             //                      FUNCTION: processOwnModalSubmit
