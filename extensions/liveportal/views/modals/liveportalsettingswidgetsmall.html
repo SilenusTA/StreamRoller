@@ -1,4 +1,10 @@
-<div id="liveportalmodalplaceholder" hidden>
+<!-- This is our own small settings widget code for Live Portal -->
+<div id="LiveportalSettingsWidgetSmall" hidden>
+    <!-- 
+        we grab the code from here down to insert it Above link is just to allow us to use DOM to grab it
+        While the extensions canload the file from disk we can't on teh webpage so we just embed this and
+        use the dom to copy it. Bit of a hack but simpler than loading it from the server.
+    -->
     <div class="modal-dialog modal-xl">
         <div class="modal-content bg-light text-dark">
             <div class="modal-header">
@@ -234,13 +240,13 @@
                             tweet</label>
                     </div>
                     <div class="form-group">
-                        <label for="randomfactstwittermessage" class="col-form-label">Main Message</label>
-                        <input type="text" name="randomfactstwittermessage" class="form-control"
-                            id="randomfactstwittermessage" value="randomfactstwittermessagetext">
-                        <label for="randomfactstwittermessage_x" class="col-form-label">Extra message if there is
+                        <label for="twitterstartmessage" class="col-form-label">Main Message</label>
+                        <input type="text" name="twitterstartmessage" class="form-control" id="twitterstartmessage"
+                            value="twitterstartmessagetext">
+                        <label for="twitterstartmessage_x" class="col-form-label">Extra message if there is
                             space</label>
-                        <input type="text" name="randomfactstwittermessage_x" class="form-control"
-                            id="randomfactstwittermessage_x" value="randomfactstwittermessage_xtext">
+                        <input type="text" name="twitterstartmessage_x" class="form-control" id="twitterstartmessage_x"
+                            value="twitterstartmessage_xtext">
                     </div>
                 </div>
                 <HR>
