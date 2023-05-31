@@ -1,11 +1,10 @@
 <script src="/streamroller-message-api.cjs"></script>
 <!-- placehold we will use for inserting widgets-->
-<%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 
-<!-- our small settings widget -->
+<%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 <%- include("../modals/liveportalsettingswidgetsmall.html"); %>
-<!-- our large settings widget -->
 <%- include("../modals/liveportalsettingswidgetlarge.html"); %>
+
 <script>
     const serverConfig = {
         // extensions vars
@@ -155,8 +154,13 @@
     // ===========================================================================
     function onDataCenterConnect (socket)
     {
-        // we set this hear as it means the page has loaded at this point 
-        livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall: document.getElementById('LivePortalSettingsWidgetsSmallPlaceholder').innerHTML };
+        // we set this here as it means the page has loaded at this point 
+        livePortalData.extensions[serverConfig.extensionname] =
+        {
+            // load the forms inot our placeholders
+            settingswidgetsmall: document.getElementById('LiveportalSettingsWidgetSmall').innerHTML,
+            settingswidgetlarge: document.getElementById('LivePortalSettingsWidgetLarge').innerHTML
+        };
 
         // DEBUGGING overwrite our config data on the server if the flag is set
         if (OverwriteDataCenterConfig)
@@ -216,21 +220,28 @@
         // -------------------------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-            // update our config
-            if (server_packet.data != "")
-                // check it is our config
-                if (server_packet.to === serverConfig.extensionname)
+
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                // update our config
+                if (server_packet.data != "")
                 {
                     for (const [key, value] of Object.entries(serverConfig))
                         if (key in server_packet.data)
                             serverConfig[key] = server_packet.data[key];
-                    setCardsVisibility();
-                    // update our modal to match the new data
-                    UpdateOwnSettingsWidgetSmallData();
-                    // update server log, mainly here if we have added new default options when a user
-                    // updates their version of streamroller
-                    SaveConfigToServer();
                 }
+
+                setCardsVisibility();
+                // update our modal to match the new data
+                UpdateOwnSettingsWidgetSmallData();
+                UpdateOwnSettingsWidgetLargeData();
+
+                ParseOBSScenesList(localConfig.OBSSceneslist);
+                // update server log, mainly here if we have added new default options when a user
+                // updates their version of streamroller
+                SaveConfigToServer();
+            }
         }
         // -------------------------------------------------------------------------------------------------
         //                  RECEIVED CHANNEL LIST
@@ -254,10 +265,15 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "LoggingLevel")
         {
-            serverConfig.logginglevel = server_packet.data
-            UpdateOwnSettingsWidgetSmallData();
-            //send modal to everyone to update their own copies of out model
-            SendModal("");
+            if (serverConfig.logginglevel != server_packet.data)
+            {
+                serverConfig.logginglevel = server_packet.data
+                UpdateOwnSettingsWidgetSmallData();
+                UpdateOwnSettingsWidgetLargeData();
+                //send modal to everyone to update their own copies of out model
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
+            }
         }
         // -------------------------------------------------------------------------------------------------
         //                  RECEIVED LOGGING LEVEL
@@ -293,7 +309,14 @@
             // -------------------------------------------------------------------------------------------------
             if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             {
-                SendModal(extension_packet.from);
+                SendSettingsWidgetSmall(extension_packet.from);
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED SETTINGS WIDGET LARGE REQUEST
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            {
+                SendSettingsWidgetLarge(extension_packet.from);
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED EXTENSION MODAL CODE
@@ -316,9 +339,51 @@
                     addSettingsWidgetLarge(extension_packet.from, extension_packet.data);
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
+            //                   RECEIVED MODAL DATA (someone hit submit on our dialog)
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "SettingsWidgetSmallData")
+            {
+                // check that it is not from us as we process our own code internally
+                if (extension_packet.from != serverConfig.extensionname)
+                {
+                    consle.log("SettingsWidgetSmallData")
+                    // lets reset our config checkbox settings (modal will omit ones not
+                    // checked in checkboxes so set them to "off" here first if you have them)
+                    // set our config values to the ones in message
+                    //for (const [key, value] of Object.entries(extension_packet.data))
+                    //        serverConfig[key] = value;
+                    for (const [key, value] of Object.entries(serverConfig))
+                    {
+                        //lets check our settings and send out updates as required
+                        if (value === "on" && !extension_packet.data[key])
+                            serverConfig[key] = "off";
+                        else if (key === "randomfactstimeout")
+                            serverConfig[key] = extension_packet.data[key] * 60000
+                        else if (key in extension_packet.data)
+                            serverConfig[key] = extension_packet.data[key];
+                    }
+
+                    changeServerLogging(serverConfig.logginglevel)
+                    // save our data to the server for next time we run
+                    SaveConfigToServer();
+                    //lets update our modals
+                    UpdateOwnSettingsWidgetSmallData();
+                    UpdateOwnSettingsWidgetLargeData();
+                    // update anyone that may have out modal
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+
+                    ParseOBSScenesList(localConfig.OBSSceneslist);
+                    // setup timeout for facts on stream
+                    if (serverConfig.randomFactsEnabled === "on" && serverConfig.randomFactsTimeout > 0)
+                        twitchFactOfTheDay();
+
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED MODAL DATA (someone hit submit on our dialog (should be sent directly to us))
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "SettingsWidgetLargeData")
             {
                 // check that it is not from us as we process our own code internally
                 if (extension_packet.from != serverConfig.extensionname)
@@ -342,10 +407,14 @@
                     changeServerLogging(serverConfig.logginglevel)
                     // save our data to the server for next time we run
                     SaveConfigToServer();
-                    //lets update our modal
+                    //lets update our modals
                     UpdateOwnSettingsWidgetSmallData();
+                    UpdateOwnSettingsWidgetLargeData();
                     // update anyone that may have out modal
-                    SendModal("");
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+
+                    ParseOBSScenesList(localConfig.OBSSceneslist);
                     // setup timeout for facts on stream
                     if (serverConfig.randomFactsEnabled === "on" && serverConfig.randomFactsTimeout > 0)
                         twitchFactOfTheDay();
@@ -674,13 +743,17 @@
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-        // lets check if we have a previous settingswidgetsmall card for this extension and if so add it to the link above
+        // lets check if we have a previous settingswidgets cards for this extension and if so add it to the link above
         for (var i = 0; i < extensions.length; i++)
+        {
             if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
                 addSettingsWidgetSmall(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetsmall)
+            if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
+                addSettingsWidgetLarge(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetlarge)
+        }
     }
     // ===========================================================================
-    //                           FUNCTION: SendModal
+    //                           FUNCTION: SendSettingsWidgetSmall
     // ===========================================================================
     // Desription: Send the modal code back after setting the defaults according 
     // to our server settings
@@ -688,7 +761,7 @@
     // ----------------------------- notes ---------------------------------------
     // none
     // ===========================================================================
-    function SendModal (toextension)
+    function SendSettingsWidgetSmall (toextension)
     {
         let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall;
         // first lets update our modal to the current settings
@@ -696,9 +769,9 @@
         {
             // true values represent a checkbox so replace the "[key]checked" values with checked
             if (value === "on")
-                modalstring = modalstring.replace(key + "checked", "checked");
+                modalstring = modalstring.replaceAll(key + "checked", "checked");
             else if (typeof (value) == "string" || typeof (value) == "number")
-                modalstring = modalstring.replace('"' + key + 'text"', '"' + value + '"');
+                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
         }
         // send the modal data to the server
         // send the modal data to the server
@@ -708,6 +781,44 @@
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
                     "SettingsWidgetSmallCode",
+                    serverConfig.extensionname,
+                    modalstring,
+                    "",
+                    toextension
+                ),
+                "",
+                toextension
+            ));
+    }
+    // ===========================================================================
+    //                           FUNCTION: SendSettingsWidgetLarge
+    // ===========================================================================
+    // Desription: Send the modal code back after setting the defaults according 
+    // to our server settings
+    // Parameters: channel to send data to
+    // ----------------------------- notes ---------------------------------------
+    // none
+    // ===========================================================================
+    function SendSettingsWidgetLarge (toextension)
+    {
+        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge;
+        // first lets update our modal to the current settings
+        for (const [key, value] of Object.entries(serverConfig))
+        {
+            // true values represent a checkbox so replace the "[key]checked" values with checked
+            if (value === "on")
+                modalstring = modalstring.replaceAll(key + "checked", "checked");
+            else if (typeof (value) == "string" || typeof (value) == "number")
+                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
+        }
+        // send the modal data to the server
+        // send the modal data to the server
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "SettingsWidgetLargeCode",
                     serverConfig.extensionname,
                     modalstring,
                     "",
@@ -740,40 +851,42 @@
                 return
             document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "";
             // remove the previous event listener (if there was one)
-            $('#' + xname + "_modal").off('submit');
+            $('#' + xname + "_settingswidgetsmallmodal").off('submit');
             //set the element contents to a blank extension placeholder
             // if we have already set this element to the placeholder page we don't want to do it again
             // otherwise it will replace the submit callback and throw an error when updated a second time.
             if (extLiTag.innerHTML === xname)
                 extLiTag.innerHTML = modalbox.innerHTML;
             // setup the link to show the dialog
-            extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_modal";
+            extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_settingswidgetsmallmodal";
             extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
-            extLiTag.getElementsByClassName("modal")[0].id = xname + "_modal";
+            extLiTag.getElementsByClassName("modal")[0].id = xname + "_settingswidgetsmallmodal";
             // set the data from the extension
-            document.getElementById(xname + "_modal").innerHTML = data;
+            document.getElementById(xname + "_settingswidgetsmallmodal").innerHTML = data;
 
             // add a callback handle when form is submitted
-            $('#' + xname + "_modal").on('submit', function (event)
+            $('#' + xname + "_settingswidgetsmallmodal").on('submit', function (event)
             {
                 event.preventDefault();
-                // if it is our own modal that has changed (another page has submitted one
+                // if it is our own modal that has changed (another page has submitted one)
                 // we need to process it ourselves first
                 if (xname == serverConfig.extensionname)
                 {
                     // process this data oursleves first
-                    processOwnModalSubmit(xname);
+                    processOwnSettingsWidgetSmallSubmit(xname);
                     // now it is processed we can parse it
                     UpdateOwnSettingsWidgetSmallData()
-                    // As we have some updateded data we need to make sure that we refresh ourselves in case
-                    // we have changed some settings (ie buttons to be shown)
-                    ParseOBSScenesList(localConfig.OBSSceneslist);
+                    UpdateOwnSettingsWidgetLargeData()
+
                     // update anyone that has our modal
-                    SendModal("");
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+
+                    ParseOBSScenesList(localConfig.OBSSceneslist);
                     setCardsVisibility();
                 }
                 else
-                    parseExtensionModalData(xname, xname + "_modal");
+                    parseExtensionModalData(xname, xname + "_settingswidgetsmallmodal");
                 return false;
             });
             document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "block"
@@ -817,7 +930,7 @@
                 else
                     document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
 
-                //livePortalData.extensions[xname].settingswidgetsmall = document.getElementById(xname).innerHTML
+                //livePortalData.extensions[xname].settingswidgetlarge = document.getElementById(xname).innerHTML
                 if (first)
                 {
                     first = false;
@@ -826,9 +939,9 @@
                 else
                     document.getElementById("SettingsPageContent").innerHTML += "<div class='tab-pane fade' role='tabpanel' id='" + xname + "_settingswidgetlargecontent'>" + stuff.settingswidgetlarge + "</div>"
 
+                $('#' + xname + "_settingsform").off('submit');
                 setTimeout(() =>
                 {
-                    //$('#' + xname + "_settingsform").submit(function (event)
                     $('#' + xname + "_settingsform").on('submit', function (event)
                     {
                         event.preventDefault();
@@ -837,14 +950,16 @@
                         if (xname == serverConfig.extensionname)
                         {
                             // process this data oursleves first
-                            processOwnModalSubmit(xname);
+                            processOwnSettingsWidgetLargeSubmit(xname);
                             // now it is processed we can parse it
+                            UpdateOwnSettingsWidgetSmallData()
                             UpdateOwnSettingsWidgetLargeData()
-                            // As we have some updateded data we need to make sure that we refresh ourselves in case
-                            // we have changed some settings (ie buttons to be shown)
-                            ParseOBSScenesList(localConfig.OBSSceneslist);
+
                             // update anyone that has our modal
-                            SendModal("");
+                            SendSettingsWidgetSmall("");
+                            SendSettingsWidgetLarge("");
+
+                            ParseOBSScenesList(localConfig.OBSSceneslist);
                             setCardsVisibility();
                         }
                         else
@@ -1222,27 +1337,60 @@
     {
 
         //get our widget and use string replace to update the values
-        let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
+        //let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
+        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replace(key + 'checked', 'checked');
+                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
             else if (key === "randomfactstimeout")
-                modalstring = modalstring.replace('"' + key + 'text"', '"' + (value / 60000) + '"');
+                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
             else if (typeof (value) == "string" || typeof (value) == "number")
-                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
+                modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
         }
         livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
-        //document.getElementById(serverConfig.extensionname + "_modal").innerHTML = modalstring;
+        //document.getElementById(serverConfig.extensionname + "_settingswidgetsmallmodal").innerHTML = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
-        ParseOBSScenesList(localConfig.OBSSceneslist);
+
         addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
 
     }
     // ============================================================================
-    //                      FUNCTION: processOwnModalSubmit
+    //                      FUNCTION: UpdateOwnSettingsWidgetLargeData
+    // ============================================================================
+    // Desription: Update our own modal if our config has changed
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // 
+    // ===========================================================================
+    function UpdateOwnSettingsWidgetLargeData ()
+    {
+
+        //get our widget and use string replace to update the values
+        let modalstring = document.getElementById("LivePortalSettingsWidgetLarge").innerHTML;
+        for (const [key, value] of Object.entries(serverConfig))
+        {
+            // checkboxes
+            if (value === "on")
+                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
+            else if (key === "randomfactstimeout")
+                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
+            // replace text strings
+            else if (typeof (value) == "string" || typeof (value) == "number")
+                modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
+        }
+        livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge = modalstring;
+        //document.getElementById(serverConfig.extensionname + "_settingswidgetlargemodal").innerHTML = modalstring;
+        // Update the OBS channel list as we might have changed what we want to show
+
+        // re-add the widge so it is updated on screen
+        addSettingsWidgetLarge(serverConfig.extensionname, modalstring)
+
+    }
+    // ============================================================================
+    //                      FUNCTION: processOwnSettingsWidgetSmallSubmit
     // ============================================================================
     // Desription: This function will retireve the data from the modal and 
     // send save it in the serverConfig after we hit the submit button
@@ -1250,10 +1398,51 @@
     // ----------------------------- notes ----------------------------------------
     // None
     // ===========================================================================
-    function processOwnModalSubmit (name)
+    function processOwnSettingsWidgetSmallSubmit (name)
     {
         // get the modal data as an array
-        let fieldsAsArray = $('#' + name + "_modal").serializeArray();
+        let fieldsAsArray = $('#' + name + "_settingswidgetsmallmodal").serializeArray();
+        // convert our array of objects into a more usable object
+        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+        if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
+        {
+            // change server logging level
+            changeServerLogging(fieldsAsObject.logginglevel);
+            serverConfig.logginglevel = fieldsAsObject.logginglevel;
+        }
+        // loop though our keys and set them to match what is in the modal
+        for (const [key, value] of Object.entries(serverConfig))
+        {
+            //lets check our settings and send out updates as required
+            if (key === "modmessage_channel")
+            {
+                // udpate the server (or just refresh the value even if the same)
+                changeDiscordListeningChannel(serverConfig[key]);
+                serverConfig[key] = fieldsAsObject[key];
+            }
+            else if (key === "randomfactstimeout")
+                serverConfig[key] = fieldsAsObject[key] * 60000
+            else if (value === "on" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key in fieldsAsObject)
+                serverConfig[key] = fieldsAsObject[key];
+        }
+        //save the data to the server
+        SaveConfigToServer();
+    }
+    // ============================================================================
+    //                      FUNCTION: processOwnSettingsWidgetLargeSubmit
+    // ============================================================================
+    // Desription: This function will retireve the data from the modal and 
+    // send save it in the serverConfig after we hit the submit button
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // None
+    // ===========================================================================
+    function processOwnSettingsWidgetLargeSubmit (name)
+    {
+        // get the modal data as an array
+        let fieldsAsArray = $('#' + name + "_settingsform").serializeArray();
         // convert our array of objects into a more usable object
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
         if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
@@ -1519,7 +1708,7 @@
             // if we have a non chat or action message highlight it (indicates we still need to handle these messages)
             if (!(messages_handled.includes(chatdata.data["message-type"])))
             {
-                console.log("Under Construction: Chat message still needs to be parsed.")
+                console.log("Under Construction: Alert (subs/bits etc) messages message still needs to be parsed.")
                 console.log(chatdata)
                 background_color = "<span style='color:" + default_TBD_text_color + "; background-color: " + default_TBD_background_color + "; '>";
                 message = message + " <message-type>: " + ((chatdata.data["message-type"]) ? chatdata.data["message-type"] : "")

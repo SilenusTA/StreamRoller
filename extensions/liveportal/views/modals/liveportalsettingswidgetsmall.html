@@ -43,52 +43,6 @@
                 <div class="form-group">
                 </div>
 
-
-                <h4 class="modal-title">Chat Settings</h4>
-                <h5 class="modal-title">Performance releated settings</h5>
-                <div class="form-group">
-                    <label for="chatmessagebuffermaxsize" class="col-form-label">Screen buffer size</label>
-                    <input type="text" name="chatmessagebuffermaxsize" class="form-control"
-                        id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
-                </div>
-                <BR>
-                <h4 class="modal-title">Chatbot Logic</h4>
-                <div class="form-group">
-
-                    <label class="col-form-label">Select optsions for chatbot processing</label>
-                    <BR>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="processchatbotalerts" type="checkbox"
-                            id="processchatbotalerts" processchatbotalertschecked>
-                        <label class="form-check-label" for="processchatbotalerts">Parse alert message through AI
-                            chatbot</label>
-                    </div>
-                </div>
-                <h4 class="modal-title">OBS Settings</h4>
-                <h5 class="modal-title">Default Scene Names (for default buttons)</h5>
-
-                <div class="form-group">
-                    <label for="obsdefaultstartscenename" class="col-form-label">Start scene (OBS name)</label>
-                    <input type="text" name="obsdefaultstartscenename" class="form-control"
-                        id="obsdefaultstartscenename" value="obsdefaultstartscenenametext">
-                </div>
-                <div class="form-group">
-                    <label for="obsdefaultlivescenename" class="col-form-label">Live scene (OBS name)</label>
-                    <input type="text" name="obsdefaultlivescenename" class="form-control" id="obsdefaultlivescenename"
-                        value="obsdefaultlivescenenametext">
-                </div>
-                <div class="form-group">
-                    <label for="obsdefaultintermissionscenename" class="col-form-label">Intermission scene (OBS
-                        name)</label>
-                    <input type="text" name="obsdefaultintermissionscenename" class="form-control"
-                        id="obsdefaultintermissionscenename" value="obsdefaultintermissionscenenametext">
-                </div>
-                <div class="form-group">
-                    <label for="obsdefaultendscenename" class="col-form-label">End scene (OBS name)</label>
-                    <input type="text" name="obsdefaultendscenename" class="form-control" id="obsdefaultendscenename"
-                        value="obsdefaultendscenenametext">
-                </div>
-                <BR>
                 <h4 class="modal-title">OBS Scene buttons</h4>
                 <div class="form-group">
                     <label class="col-form-label">Extra scene buttons to display on top of defaults start, live,
@@ -110,90 +64,7 @@
                         <label class="form-check-label" for="showallscenes">Show All Scenes</label>
                     </div>
                 </div>
-                <h5 class="modal-title">OBS Mute button</h5>
-                <div class="form-group row">
-                    <div class="form-group">
-                        <label for="mutescene" class="col-form-label">'Source' to mute when button pressed (suggestion:
-                            Ideally this should be a scene with just the mic, then include that in your game/just
-                            chatting scenes etc)</label>
-                        <input type="text" name="mutescene" class="form-control" id="mutescene" value="mutescenetext">
-                    </div>
-                </div>
-                <HR>
-                <h4 class="modal-title">Discord</h4>
-                <h5 class="modal-title">Mod Chat Window</h5>
-                <div class="form-group">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="modchattomodwindow" type="checkbox"
-                            id="modchattomodwindow" modchattomodwindowchecked>
-                        <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
-                            window as well as discord</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="discordmessagebuffermaxsize" class="col-form-label">Screen buffer size</label>
-                        <input type="text" name="discordmessagebuffermaxsize" class="form-control"
-                            id="discordmessagebuffermaxsize" value="discordmessagebuffermaxsizetext">
-                    </div>
-                </div>
-                <h5 class="modal-title">Alerts to post on discord</h5>
-                <div class="form-group">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="follows" type="checkbox" id="follows" followschecked>
-                        <label class="form-check-label" for="follows">Follows</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="raids" type="checkbox" id="raids" raidschecked>
-                        <label class="form-check-label" for="raids">Raids</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="hosts" type="checkbox" id="hosts" hostschecked>
-                        <label class="form-check-label" for="hosts">Hosts</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="subs" type="checkbox" id="subs" subschecked>
-                        <label class="form-check-label" for="subs">Subs</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="resubs" type="checkbox" id="resubs" resubschecked>
-                        <label class="form-check-label" for="resubs">Resub</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="giftsubs" type="checkbox" id="giftsubs" giftsubschecked>
-                        <label class="form-check-label" for="giftsubs">GiftSub</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="bits" type="checkbox" id="bits" bitschecked>
-                        <label class="form-check-label" for="bits">Bits</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="donations" type="checkbox" id="donations"
-                            donationschecked>
-                        <label class="form-check-label" for="donations">Donation</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="merch" type="checkbox" id="merch" merchchecked>
-                        <label class="form-check-label" for="merch">Merch</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="cloudbotredemption" type="checkbox"
-                            id="cloudbotredemption" cloudbotredemptionchecked>
-                        <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
-                    </div>
-                </div>
-                <h5 class="modal-title">Discord Channels</h5>
-                <div class="form-group">
-                    <div class="form-group">
-                        <label for="donations_channel" class="col-form-label">Discord Donations Channel to use:</label>
-                        <input type="text" name="donations_channel" class="form-control" id="donations_channel"
-                            value="donations_channeltext">
-                    </div>
-                    <div class="form-group">
-                        <label for="modmessage_channel" class="col-form-label">Discord Channel to monitor:</label>
-                        <input type="text" name="modmessage_channel" class="form-control" id="modmessage_channel"
-                            value="modmessage_channeltext">
-                    </div>
-                </div>
-                <HR>
+
                 <h4 class="modal-title">Random Facts</h4>
                 <div class="form-group">
                     <div class="form-check form-check-inline">
@@ -206,59 +77,6 @@
                             chat(minutes)</label>
                         <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout"
                             value="randomfactstimeouttext">
-                    </div>
-                </div>
-                <HR>
-                <h4 class="modal-title">Twitter</h4>
-                <div class="form-group">
-                    On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
-                    <ol>
-                        <li>Main message</li>
-                        <li>Extra message</li>
-                        <li>Random fact (If enabled)</li>
-                    </ol>
-                    Streamroller will calculate the length of the tweet and do the following options in order depending
-                    on size
-                    <ol>
-                        <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
-                        <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
-                        <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
-                    </ol>
-
-
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="twitterstartenabled" type="checkbox"
-                            id="twitterstartenabled" twitterstartenabledchecked>
-                        <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
-                            start streaming in OBS).</label>
-                    </div>
-                    <BR>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
-                            id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
-                        <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
-                            tweet</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="twitterstartmessage" class="col-form-label">Main Message</label>
-                        <input type="text" name="twitterstartmessage" class="form-control" id="twitterstartmessage"
-                            value="twitterstartmessagetext">
-                        <label for="twitterstartmessage_x" class="col-form-label">Extra message if there is
-                            space</label>
-                        <input type="text" name="twitterstartmessage_x" class="form-control" id="twitterstartmessage_x"
-                            value="twitterstartmessage_xtext">
-                    </div>
-                </div>
-                <HR>
-                <h4 class="modal-title">Debug</h4>
-                <div class="form-group">
-                    <HR>
-                    <div class="form-group">
-                        <label for="logginglevel" class="col-sm-3 col-form-label">System Log Level</label>
-                        <div class="col-sm-2">
-                            <input type="text" name="logginglevel" class="form-control" id="logginglevel"
-                                value="loggingleveltext">
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
