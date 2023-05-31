@@ -843,8 +843,11 @@
                                 }
                                 else
                                     parseExtensionModalData(xname, xname + "_settingsform");
+
+                                $("#live-tab").tab('show');
                                 return false;
                             });
+
                         }, 200);
                     }
                 });
@@ -856,6 +859,12 @@
                         e.preventDefault();
                         $(this).tab('show');
                     })
+                    $('#closeSettings').on('click', function (event)
+                    {
+                        event.preventDefault();
+                        $("#live-tab").tab('show');
+                        return false;
+                    });
                 }
                     , 200);
 
