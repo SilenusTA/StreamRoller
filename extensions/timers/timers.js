@@ -109,10 +109,10 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let decoded_packet = server_packet.data;
-        if (decoded_packet.type === "RequestAdminModalCode")
+        if (decoded_packet.type === "RequestSettingsWidgetSmallCode")
             // TBD maintain list of all extensions that has requested Modals
-            SendAdminModal(decoded_packet.from);
-        else if (decoded_packet.type === "AdminModalData")
+            SendSettingsWidgetSmall(decoded_packet.from);
+        else if (decoded_packet.type === "SettingsWidgetSmallData")
         {
             if (decoded_packet.data.extensionname === serverConfig.extensionname)
             {
@@ -127,7 +127,7 @@ function onDataCenterMessage (server_packet)
 
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
-                SendAdminModal("");
+                SendSettingsWidgetSmall("");
 
                 // check any timers needed
                 CheckTimers(decoded_packet.data.TimerName);
@@ -138,7 +138,7 @@ function onDataCenterMessage (server_packet)
             // This is an extension message from the API. not currently used as timers are started from the settins modals
             CheckTimers(decoded_packet.data.TimerName);
         }
-        else if (decoded_packet.type === "AdminModalCode")
+        else if (decoded_packet.type === "SettingsWidgetSmallCode")
         {
             // ignore these messages
         }
@@ -183,18 +183,21 @@ function onDataCenterMessage (server_packet)
 }
 
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code 
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
-    fs.readFile(__dirname + '/timersadminmodal.html', function (err, filedata)
+
+    fs.readFile(__dirname + '/timerssettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -213,7 +216,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode",
+                        "SettingsWidgetSmallCode",
                         serverConfig.extensionname,
                         modalstring,
                         "",

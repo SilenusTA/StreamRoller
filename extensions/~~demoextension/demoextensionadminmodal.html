@@ -39,13 +39,15 @@ name=""
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
                     tabindex="-1" />
                 <!-- type of code that this form is fore. This is defined by the webpage that will request and use this
-                modal to display data. When a modal is requested (for this one the message is RequestAdminModal) this
+                modal to display data. When a modal is requested (for this one the message is RequestSettingsWidgetSmall) this
                 is the message type that needs to be sent back with this file as the data field -->
-                <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
                 <!-- This is the message type that the webpage will send when it processes the data from a form submit
                 on this page. The message will be sent to the extension name above, with the message type shown here and 
                 the form data in the data field of the message -->
-                <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData"
+                    tabindex="-1" />
                 <!-- This is the channel to be sent on. not currently used in this form submit as it is sent to the 
                 extension name socket directly but might be used in future so for now it is left here -->
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
@@ -53,7 +55,7 @@ name=""
             <!-- fields for user interaction
             some demo fields to show how this works.
             note the variable name from our cofig "demovar1" is used as part or all of some of the fields.
-            The 'name fields are madatory for the AdminModal code as it will simply pull all the 'name' fields
+            The 'name fields are madatory for the SettingsWidgetSmall code as it will simply pull all the 'name' fields
             and valyes out of the form to send back to us -->
             <div class="form-group">
                 <div class="form-check form-check-inline">

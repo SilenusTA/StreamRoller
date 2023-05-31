@@ -1,5 +1,5 @@
 <script src="/streamroller-message-api.cjs"></script>
-<%- include("../modals/adminmodalplaceholder.html"); %>
+<%- include("../modals/settingswidgetsmallplaceholder.html"); %>
     <%- include("../modals/settingsplaceholdermodal"); %>
         <%- include("../modals/credentialsplaceholdermodal"); %>
             <script>
@@ -33,8 +33,8 @@
                 const adminData = {};
                 adminData.extensions = {};
                 // add our own extension card in to the display as we won't get a request from ourselves
-                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('adminmodalplaceholder').innerHTML };
-                UpdateAdminModalData();
+                adminData.extensions[serverConfig.extensionname] = { admincard: document.getElementById('settingswidgetsmallplaceholder').innerHTML };
+                UpdateSettingsWidgetSmallData();
                 adminData.channellist = {};
                 var host = '<%= host %>';
                 var port = '<%= port %>';
@@ -138,7 +138,7 @@
                                     if (key in server_packet.data)
                                         serverConfig[key] = server_packet.data[key];
                                 // update our modal to match the new data
-                                UpdateAdminModalData();
+                                UpdateSettingsWidgetSmallData();
                                 //update the logging on the server
                                 SaveConfigToServer();
                             }
@@ -191,7 +191,7 @@
                     else if (server_packet.type === "LoggingLevel")
                     {
                         serverConfig.logginglevel = server_packet.data
-                        UpdateAdminModalData();
+                        UpdateSettingsWidgetSmallData();
                         //send modal to everyone to update their own copies of out model
                         SendModal("");
                     }
@@ -207,9 +207,9 @@
                         extension_packet = server_packet.data
                         //console.log(".onDataCenterMessage", "ExtensionMessage ", extension_packet.type);
                         // -------------------------------------------------------------------------------------------------
-                        //                   RECEIVED ADMIN MODAL REQUEST
+                        //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
                         // -------------------------------------------------------------------------------------------------
-                        if (extension_packet.type === "RequestAdminModalCode")
+                        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
                         {
                             //console.log("datahandler.onDataCenterMessage", extension_packet.type + " from " + extension_packet.from);
                             SendModal(extension_packet.from, extension_packet.data);
@@ -217,7 +217,7 @@
                         // -------------------------------------------------------------------------------------------------
                         //                   RECEIVED EXTENSION MODAL CODE
                         // -------------------------------------------------------------------------------------------------
-                        else if (extension_packet.type === "AdminModalCode")
+                        else if (extension_packet.type === "SettingsWidgetSmallCode")
                         {
                             // we process our own submits so don't do anything with the updates we send out if they come 
                             // back to us
@@ -232,7 +232,7 @@
                         // -------------------------------------------------------------------------------------------------
                         //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
                         // -------------------------------------------------------------------------------------------------
-                        else if (extension_packet.type === "AdminModalData")
+                        else if (extension_packet.type === "SettingsWidgetSmallData")
                         {
                             // check that this is not from us.
                             // we process our own submits so do'nt do anything with the updates we send out if they come
@@ -248,7 +248,7 @@
                                 SaveConfigToServer();
                                 changeServerLogging(serverConfig.logginglevel)
                                 //lets update our modal
-                                UpdateAdminModalData();
+                                UpdateSettingsWidgetSmallData();
                             }
                         }
                         else
@@ -375,7 +375,7 @@
                         // check if we have previously recorded this extension, if not we should add it
                         if (!adminData.extensions[extensions[i]])
                             adminData.extensions[extensions[i]] = { hasmodel: false };
-                        RequestAdminModalsCode(extensions[i]);
+                        RequestSettingsWidgetSmallsCode(extensions[i]);
                     };
                     //html += "</ul>";
                     html += "</div>";
@@ -384,7 +384,7 @@
                     document.getElementById("SettingsListCard").getElementsByClassName("card-title")[0].innerHTML = "Settings Links";
                     document.getElementById("SettingsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-                    // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
+                    // lets check if we have a previous settingswidgetsmall card for this extension and if so add it to the link above
                     for (var i = 0; i < extensions.length; i++)
                         if (adminData.extensions[extensions[i]].admincard)
                             addModal(extensions[i], adminData.extensions[extensions[i]].admincard, "SettingsPlaceholder", "admincard")
@@ -411,7 +411,7 @@
                     document.getElementById("CredentialsListCard").getElementsByClassName("card-title")[0].innerHTML = "Credentials links";
                     document.getElementById("CredentialsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-                    // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
+                    // lets check if we have a previous settingswidgetsmall card for this extension and if so add it to the link above
                     for (var i = 0; i < extensions.length; i++)
                         if (adminData.extensions[extensions[i]].credentialscard)
                             addModal(extensions[i], adminData.extensions[extensions[i]].credentialscard, "SettingsPlaceholder", "credentialscard")
@@ -448,7 +448,7 @@
                             "ExtensionMessage",
                             serverConfig.extensionname,
                             sr_api.ExtensionPacket(
-                                "AdminModalCode",
+                                "SettingsWidgetSmallCode",
                                 serverConfig.extensionname,
                                 modalstring,
                                 "",
@@ -625,16 +625,16 @@
 
                 }
                 // ============================================================================
-                //                      FUNCTION: UpdateAdminModalData
+                //                      FUNCTION: UpdateSettingsWidgetSmallData
                 // ============================================================================
                 // Desription: Update our own modal if our config has changed
                 // Parameters: none
                 // ----------------------------- notes ----------------------------------------
                 // 
                 // ===========================================================================
-                function UpdateAdminModalData ()
+                function UpdateSettingsWidgetSmallData ()
                 {
-                    let modalstring = document.getElementById("adminmodalplaceholder").innerHTML;
+                    let modalstring = document.getElementById("settingswidgetsmallplaceholder").innerHTML;
                     for (const [key, value] of Object.entries(serverConfig))
                     {
                         // checkboxes
@@ -771,8 +771,8 @@
                     if (data.type === "ExtensionMessage")
                     {
                         let extension_packet = data.data;
-                        if (extension_packet.type == "AdminModalCode")
-                            cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + " received Admin Modal Code<BR>";
+                        if (extension_packet.type == "SettingsWidgetSmallCode")
+                            cardref.innerHTML += msgoutput + "[" + extension_packet.from + "]" + " received SETTINGS WIDGET SMALL Code<BR>";
                         else
                             cardref.innerHTML += msgoutput + "[" + extension_packet.from + "] " + extension_packet.type + "<BR>";
                     }
@@ -833,20 +833,20 @@
                         ));
                 }
                 // ============================================================================
-                //                           FUNCTION: RequestAdminModalsCode
+                //                           FUNCTION: RequestSettingsWidgetSmallsCode
                 // ============================================================================
-                // Desription: Request the Admin Modal code from an extension
+                // Desription: Request the SETTINGS WIDGET SMALL code from an extension
                 // Parameters: none
                 // ----------------------------- notes ----------------------------------------
                 // none
                 // ===========================================================================
-                function RequestAdminModalsCode (extname)
+                function RequestSettingsWidgetSmallsCode (extname)
                 {
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket("ExtensionMessage",
                             serverConfig.extensionname,
                             sr_api.ExtensionPacket(
-                                "RequestAdminModalCode",
+                                "RequestSettingsWidgetSmallCode",
                                 serverConfig.extensionname,
                                 "",
                                 "",
@@ -858,7 +858,7 @@
                 // ============================================================================
                 //                           FUNCTION: RequestCredentialsModalsCode
                 // ============================================================================
-                // Desription: Request the Admin Modal code from an extension
+                // Desription: Request the SETTINGS WIDGET SMALL code from an extension
                 // Parameters: none
                 // ----------------------------- notes ----------------------------------------
                 // none

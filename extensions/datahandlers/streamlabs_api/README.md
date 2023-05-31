@@ -20,7 +20,7 @@ Note: You can also use this api for other streaming platoforms. ie youtube strea
 
 The following features are provided
 - creates a "STREAMLABS_ALERT" channel to send out streamlabs messages
-- Provides an AdminModal so that the adminpage can turn on or off the messages
+- Provides an SettingsWidgetSmall so that the adminpage can turn on or off the messages
 - Messages sent are of the following format
 ```
   {

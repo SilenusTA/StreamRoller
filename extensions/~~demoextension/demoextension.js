@@ -64,7 +64,7 @@ const serverConfig = {
     // add our name so we can tell if we receive this localConfig from the server
     extensionname: localConfig.EXTENSION_NAME,
     // the channel name this extension will use for sending/receiving data.
-    // this is also used in the admin modal code
+    // this is also used in the settings widget small code
     channel: localConfig.OUR_CHANNEL,
     // these are fields we will use in our bit of the admin page code (the modal)
     // good to store them so that we can keep the page up to date when 
@@ -205,18 +205,18 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let decoded_packet = server_packet.data;
-        // -------------------- PROCESSING ADMIN MODALS -----------------------
+        // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
         // Modals are the bit of html code we send to the server to be used on the webpages
         // it is not required to be used so these can be omitted if you wish.
         // if we have a modal file (a section of html we want to put on the admin page)
         // we need to send it back when requested so the page can update itself
         // this is normally inserted into a link on the main page so we can send/receive
         // data from the webpage (ie to change our settings etc)
-        if (decoded_packet.type === "RequestAdminModalCode")
-            // just call the SendAdminModal function below with the channel to send the message back on
-            SendAdminModal(decoded_packet.from);
-        // if we receive data back from our admin modal we process this here.
-        else if (decoded_packet.type === "AdminModalData")
+        if (decoded_packet.type === "RequestSettingsWidgetSmallCode")
+            // just call the SendSettingsWidgetSmall function below with the channel to send the message back on
+            SendSettingsWidgetSmall(decoded_packet.from);
+        // if we receive data back from our settings widget small we process this here.
+        else if (decoded_packet.type === "SettingsWidgetSmallData")
         {
             //make sure it is our modal
             if (decoded_packet.data.extensionname === serverConfig.extensionname)
@@ -238,8 +238,8 @@ function onDataCenterMessage (server_packet)
                 // Update our saved data to the server for next time we run.
                 // this is also the point were you make changes based on the settings the user has changed
                 SaveConfigToServer();
-                // the SendAdminModal function will update the admin page to match what is in our current settings
-                // SendAdminModal(server_packet.join);
+                // the SendSettingsWidgetSmall function will update the admin page to match what is in our current settings
+                // SendSettingsWidgetSmall(server_packet.join);
             }
         }
         else
@@ -317,9 +317,9 @@ function process_stream_alert (server_packet)
 
 }
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-// Desription: Send the admin modal code back after setting the defaults according 
+// Desription: Send the settings widget small code back after setting the defaults according 
 // to our server settings
 // Parameters: channel to send data to
 // ----------------------------- notes ---------------------------------------
@@ -332,13 +332,15 @@ function process_stream_alert (server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + '/demoextensionadminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + '/demoextensionsettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             //get the file as a string
@@ -369,7 +371,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetSmallCode", // message type
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",

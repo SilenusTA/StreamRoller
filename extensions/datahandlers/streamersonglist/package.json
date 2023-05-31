@@ -9,5 +9,7 @@
     },
     "author": "Twitch/OldDepressedGamer",
     "license": "",
-    "dependencies": {}
+    "dependencies": {
+        "socket.io-client": "^2.4.0"
+    }
 }

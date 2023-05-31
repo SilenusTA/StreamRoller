@@ -11,7 +11,7 @@ Contents
 - [About](#about)
 - [Features](#features)
   - [messages](#messages)
-  - [AdminModal (Settings)](#adminmodal-settings)
+  - [SettingsWidgetSmall (Settings)](#settingswidgetsmall-settings)
 # Setup
 
 ## Outgoing channel : "TWITCH_CHAT"
@@ -54,8 +54,8 @@ The messages will be sent out on the "TWITCH_CHAT" channel in the following form
       dest_channel: "TWITCH_CHAT",
   }
 ```
-## AdminModal (Settings)
-The admin modal povides the following settings
+## SettingsWidgetSmall (Settings)
+The settings widget small povides the following settings
 - Enable/Disable extension
 - Twitch channel to join
 - Chat buffer size (number of lines to save in the buffer)

@@ -39,6 +39,6 @@ These will be broadcast on the outgoing channel
 - "ScenesList" - on startup or in response to a "RequestScenes" message.
 ### Requests
 The following requests can be made to the exension
-- "RequestAdminModalCode" - provides the settinsg panel for webpages
+- "RequestSettingsWidgetSmallCode" - provides the settinsg panel for webpages
 - "RequestScenes" - request the list of scenes available
 - "ChangeScene" - request OBS to change to given scene

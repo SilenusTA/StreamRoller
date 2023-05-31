@@ -193,7 +193,7 @@ The format is similar for both server and extension messages
 }
 ```
 The main differences between the server packet and extension packet are
- - type is specific to the extension (ie "AdminModalCode" for the admin to define the data contains html code it will place on the screen, or "AdminModalData" if this is the results from a form submit)
+ - type is specific to the extension (ie "SettingsWidgetSmallCode" for the admin to define the data contains html code it will place on the screen, or "SettingsWidgetSmallData" if this is the results from a form submit)
  - It is up to the extension to define it's message types, data structures.
  - routing is done on priority of supplied fields IN THE SERVER MESSAGE, The fields in the extension message are used only by the extensions and not for routing
     1) "to" sent to the extension only
@@ -207,7 +207,7 @@ The main differences between the server packet and extension packet are
       type      : "ExtensionMessage"
       from      : "randomfact"
       data      : {
-                    type : "AdminModalCode"
+                    type : "SettingsWidgetSmallCode"
                     from : "randomfact"
                     data : "..."
                   }

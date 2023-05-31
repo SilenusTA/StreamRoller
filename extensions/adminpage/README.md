@@ -44,11 +44,11 @@ During the admin page loading it will send out a message on the system requestin
 ```
 {
     type: "ExtensionMessage",
-    from: "adminmodalpage",
+    from: "settingswidgetsmallpage",
     data:
     {
-        type: "RequestAdminModalCode"
-        from :"adminmodalpage"
+        type: "RequestSettingsWidgetSmallCode"
+        from :"settingswidgetsmallpage"
     } 
 }
 ```
@@ -65,7 +65,7 @@ sr_api.sendMessage
         <your extension name>,
         sr_api.ExtensionPacket
             (
-            "AdminModalCode",
+            "SettingsWidgetSmallCode",
              <your extension name>,
              {<modalstring>},
              "",
@@ -84,7 +84,7 @@ for clarity (without the code) the packet looks like
     from: <your extension name>,
     data: 
     {
-        "AdminModalCode",
+        "SettingsWidgetSmallCode",
         <your extension name>,
         {<modalstring>},
         "",
@@ -102,11 +102,11 @@ for clarity (without the code) the packet looks like
 ```
 {
     type: "ExtensionMessage",
-    from: "adminmodalpage",
+    from: "settingswidgetsmallpage",
     data:
     {
-        type: "AdminModalData",
-        from: "adminmodalpage",
+        type: "SettingsWidgetSmallData",
+        from: "settingswidgetsmallpage",
         data: 
         {
             <modal data>
@@ -123,7 +123,7 @@ for clarity (without the code) the packet looks like
 
 ![Tux, the Linux mascot](twitchchatmodal.png)
 
-The admin modal code sent is expectd to be used in the contents of a popup settings box (linked on the extension name in the list of extensions). 
+The settings widget small code sent is expectEd to be used in the contents of a popup settings box (linked on the extension name in the list of extensions). 
 In order to be processed correctly and allow form submission back there are a few fields required and some formatting requirements.
 Any field wishing to be returned needs to have a 'name' tag
 example modal for a twitch chat extension popup
@@ -143,8 +143,8 @@ example modal for a twitch chat extension popup
             <div class="form-group invisible">
                 <input type="hidden" name="extensionname" class="form-control" value="twitchchat"
                     tabindex="-1" />
-                <input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
-                <input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="TWITCH_CHAT" tabindex="-1" />
             </div>
             <div class="form-group">
@@ -174,13 +174,13 @@ type: "ExtensionMesssge",
 from: "adminpage",
 data:
     {
-        type: "AdminModalCode",
+        type: "SettingsWidgetSmallCode",
         from: "adminpage"
         data:
         {
             extensionname: 'twitchchat',
-            modalcodetype: 'AdminModalCode',
-            modaldatatype: 'AdminModalData',
+            modalcodetype: 'SettingsWidgetSmallCode',
+            modaldatatype: 'SettingsWidgetSmallData',
             channel: 'TWITCH_CHAT',
             enabletwitchchat: 'on',
             streamername: 'OldDepressedGamer'
@@ -193,7 +193,7 @@ data:
 }
 ...
 ```
-You can easily capture this in your message handler by looking for ExtensionMessage in the main packet and AdminModalData in the data packet
+You can easily capture this in your message handler by looking for ExtensionMessage in the main packet and SettingsWidgetSmallData in the data packet
 
 ### Description of the example
 Going through some important bits in the example above
@@ -211,8 +211,8 @@ This is where you put a short desription of the modal and maybe some explanation
 Hidden fields are used to know where to send the form back to and the type of data to report in the return message. You can add more if you want but these are the minimum required as they are needed to return the data
 ```
 <input type="hidden" name="extensionname" class="form-control" value="twitchchat" tabindex="-1" />
-<input type="hidden" name="modalcodetype" class="form-control" value="AdminModalCode" tabindex="-1" />
-<input type="hidden" name="modaldatatype" class="form-control" value="AdminModalData" tabindex="-1" />
+<input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+<input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
 <input type="hidden" name="channel" class="form-control" value="TWITCH_CHAT" tabindex="-1" />
 ```
 #### Extension data

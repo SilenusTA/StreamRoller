@@ -135,13 +135,13 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "RequestAdminModalCode")
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
             // adminmodel code not yet updated
-            //SendAdminModal(extension_packet.from);
+            //SendSettingsWidgetSmall(extension_packet.from);
 
         }
-        else if (extension_packet.type === "AdminModalData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
@@ -257,18 +257,21 @@ function process_streamlabs_alert (server_packet)
 }
 */
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code to be displayed on the admin page 
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
-    fs.readFile(__dirname + "/usersadminmodal.html", function (err, filedata)
+
+    fs.readFile(__dirname + "/userssettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -284,7 +287,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetSmallCode", // message type
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",

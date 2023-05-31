@@ -221,7 +221,7 @@
                                     serverConfig[key] = server_packet.data[key];
                             setCardsVisibility();
                             // update our modal to match the new data
-                            UpdateAdminModalData();
+                            UpdateSettingsWidgetSmallData();
                             // update server log, mainly here if we have added new default options when a user
                             // updates their version of streamroller
                             SaveConfigToServer();
@@ -250,7 +250,7 @@
                 else if (server_packet.type === "LoggingLevel")
                 {
                     serverConfig.logginglevel = server_packet.data
-                    UpdateAdminModalData();
+                    UpdateSettingsWidgetSmallData();
                     //send modal to everyone to update their own copies of out model
                     SendModal("");
                 }
@@ -284,16 +284,16 @@
                 {
                     let extension_packet = server_packet.data;
                     // -------------------------------------------------------------------------------------------------
-                    //                   RECEIVED ADMIN MODAL REQUEST
+                    //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
                     // -------------------------------------------------------------------------------------------------
-                    if (extension_packet.type === "RequestAdminModalCode")
+                    if (extension_packet.type === "RequestSettingsWidgetSmallCode")
                     {
                         SendModal(extension_packet.from);
                     }
                     // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED EXTENSION MODAL CODE
                     // -------------------------------------------------------------------------------------------------
-                    else if (extension_packet.type === "AdminModalCode")
+                    else if (extension_packet.type === "SettingsWidgetSmallCode")
                     {
                         // we process our own submits so don't do anything with the updates we send out if they come 
                         // back to us
@@ -301,9 +301,19 @@
                             addModal(extension_packet.from, extension_packet.data);
                     }
                     // -------------------------------------------------------------------------------------------------
+                    //                   RECEIVED EXTENSION MODAL CODE
+                    // -------------------------------------------------------------------------------------------------
+                    else if (extension_packet.type === "SettingsWidgetLargeCode")
+                    {
+                        // we process our own submits so don't do anything with the updates we send out if they come 
+                        // back to us
+                        if (extension_packet.from != serverConfig.extensionname)
+                            addSettingsWidgetLarge(extension_packet.from, extension_packet.data);
+                    }
+                    // -------------------------------------------------------------------------------------------------
                     //                   RECEIVED MODAL DATA (someone hit submit on a dialog)
                     // -------------------------------------------------------------------------------------------------
-                    else if (extension_packet.type === "AdminModalData")
+                    else if (extension_packet.type === "SettingsWidgetSmallData")
                     {
                         // check that it is not from us as we process our own code internally
                         if (extension_packet.from != serverConfig.extensionname)
@@ -328,7 +338,7 @@
                             // save our data to the server for next time we run
                             SaveConfigToServer();
                             //lets update our modal
-                            UpdateAdminModalData();
+                            UpdateSettingsWidgetSmallData();
                             // update anyone that may have out modal
                             SendModal("");
                             // setup timeout for facts on stream
@@ -450,7 +460,7 @@
                     else if (server_packet.dest_channel === "STREAMLABS_ALERT")
                         ProcessStreamAlert(server_packet);
                     // -------------------------------------------------------------------------------------------------
-                    //                           STREAMLABS_ALERT
+                    //                           CHATMOOD_CHANNEL
                     // -------------------------------------------------------------------------------------------------
                     else if (server_packet.dest_channel === "CHATMOOD_CHANNEL")
                         console.log(extension_packet.data)
@@ -644,7 +654,9 @@
                     {
                         adminData.extensions[extensions[i]] = {};
                         adminData.extensions[extensions[i]].display = false;
-                        RequestAdminModalsCode(extensions[i]);
+                        RequestSettingsWidgetSmallsCode(extensions[i]);
+                        RequestSettingsWidgetLargeCode(extensions[i]);
+
                     }
 
                     html += "<div  id='" + extensions[i] + "_visibility_admincard' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
@@ -658,7 +670,7 @@
                 document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
                 //document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].addRule('li:before', { 'color': 'red' });
-                // lets check if we have a previous adminmodal card for this extension and if so add it to the link above
+                // lets check if we have a previous settingswidgetsmall card for this extension and if so add it to the link above
                 for (var i = 0; i < extensions.length; i++)
                     if (adminData.extensions[extensions[i]].admincard)
                         addModal(extensions[i], adminData.extensions[extensions[i]].admincard)
@@ -691,7 +703,7 @@
                         "ExtensionMessage",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "AdminModalCode",
+                            "SettingsWidgetSmallCode",
                             serverConfig.extensionname,
                             modalstring,
                             "",
@@ -746,7 +758,7 @@
                             // process this data oursleves first
                             processOwnModalSubmit(xname);
                             // now it is processed we can parse it
-                            UpdateAdminModalData()
+                            UpdateSettingsWidgetSmallData()
                             // As we have some updateded data we need to make sure that we refresh ourselves in case
                             // we have changed some settings (ie buttons to be shown)
                             ParseOBSScenesList(localConfig.OBSSceneslist);
@@ -755,13 +767,98 @@
                             setCardsVisibility();
                         }
                         else
-                            parseExtensionModalData(xname);
+                            parseExtensionModalData(xname, xname + "_modal");
                         return false;
                     });
                     document.getElementById(xname + "_visibility_admincard").style.display = "block"
                     adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
 
                 }
+                // need to update the mode in case we have received a light mode 
+                // modal and we are in dark mode
+                refreshDarkMode();
+            }
+
+            // ============================================================================
+            //                           FUNCTION: addSettingsWidgetLarge
+            // ============================================================================
+            // Desription: Add the modal code from the extension
+            // Parameters: 
+            //          xname - name of extension
+            //          data  - data to add
+            // ----------------------------- notes ----------------------------------------
+            // None
+            // ===========================================================================
+            function addSettingsWidgetLarge (newwidgetname, data)
+            {
+                let first = true;
+                // clear the existing page data
+                document.getElementById("SettingsPageTabs").innerHTML = "";
+                document.getElementById("SettingsPageContent").innerHTML = "";
+                // add/replace the existing data for this extensions
+                adminData.extensions[newwidgetname].settingswidgetlarge = data
+                // loop through all our extensions and add them to the tabs and insert the widget in to the page
+
+                Object.entries(adminData.extensions).forEach(([xname, stuff]) =>
+                {
+                    if (stuff.settingswidgetlarge)
+                    {
+                        // ################# ADD TABS ##############
+                        if (first)
+                        {
+                            document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link active bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
+                        }
+                        else
+                            document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
+
+                        //adminData.extensions[xname].admincard = document.getElementById(xname).innerHTML
+                        if (first)
+                        {
+                            first = false;
+                            document.getElementById("SettingsPageContent").innerHTML += "<div class='tab-pane fade show active' role='tabpanel'  id='" + xname + "_settingswidgetlargecontent'>" + stuff.settingswidgetlarge + "</div>"
+                        }
+                        else
+                            document.getElementById("SettingsPageContent").innerHTML += "<div class='tab-pane fade' role='tabpanel' id='" + xname + "_settingswidgetlargecontent'>" + stuff.settingswidgetlarge + "</div>"
+
+                        setTimeout(() =>
+                        {
+                            //$('#' + xname + "_settingsform").submit(function (event)
+                            $('#' + xname + "_settingsform").on('submit', function (event)
+                            {
+                                event.preventDefault();
+                                // if it is our own modal that has changed (another page has submitted one
+                                // we need to process it ourselves first
+                                if (xname == serverConfig.extensionname)
+                                {
+                                    // process this data oursleves first
+                                    processOwnModalSubmit(xname);
+                                    // now it is processed we can parse it
+                                    UpdateSettingsWidgetSmallData()
+                                    // As we have some updateded data we need to make sure that we refresh ourselves in case
+                                    // we have changed some settings (ie buttons to be shown)
+                                    ParseOBSScenesList(localConfig.OBSSceneslist);
+                                    // update anyone that has our modal
+                                    SendModal("");
+                                    setCardsVisibility();
+                                }
+                                else
+                                    parseExtensionModalData(xname, xname + "_settingsform");
+                                return false;
+                            });
+                        }, 200);
+                    }
+                });
+
+                setTimeout(() =>
+                {
+                    $('#SettingsPageTabs a').click(function (e)
+                    {
+                        e.preventDefault();
+                        $(this).tab('show');
+                    })
+                }
+                    , 200);
+
                 // need to update the mode in case we have received a light mode 
                 // modal and we are in dark mode
                 refreshDarkMode();
@@ -1077,9 +1174,9 @@
             // ----------------------------- notes ----------------------------------------
             // None
             // ===========================================================================
-            function parseExtensionModalData (extension)
+            function parseExtensionModalData (extension, page_id)
             {
-                let fieldsAsArray = $('#' + extension + "_modal").serializeArray();
+                let fieldsAsArray = $('#' + page_id).serializeArray();
                 // convert our array of objects into a more usable objet
                 var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
                 if (fieldsAsObject.extensionname)
@@ -1099,14 +1196,14 @@
 
             }
             // ============================================================================
-            //                      FUNCTION: UpdateAdminModalData
+            //                      FUNCTION: UpdateSettingsWidgetSmallData
             // ============================================================================
             // Desription: Update our own modal if our config has changed
             // Parameters: none
             // ----------------------------- notes ----------------------------------------
             // 
             // ===========================================================================
-            function UpdateAdminModalData ()
+            function UpdateSettingsWidgetSmallData ()
             {
                 //get the updated dom we just changed and change the rest using sting replace
                 let modalstring = document.getElementById("liveportalmodalplaceholder").innerHTML;
@@ -1805,20 +1902,44 @@
                     ));
             }
             // ============================================================================
-            //                           FUNCTION: RequestAdminModalsCode
+            //                           FUNCTION: RequestSettingsWidgetSmallsCode
             // ============================================================================
-            // Desription: Sends a message to the data center to get the list of extensions
+            // Desription: Sends a message to the extension to gets its html code
             // Parameters: none
             // ----------------------------- notes ----------------------------------------
             // none
             // ===========================================================================
-            function RequestAdminModalsCode (extname)
+            function RequestSettingsWidgetSmallsCode (extname)
             {
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "RequestAdminModalCode",
+                            "RequestSettingsWidgetSmallCode",
+                            serverConfig.extensionname,
+                            "",
+                            "",
+                            extname),
+                        "",
+                        extname
+                    ));
+            }
+
+            // ============================================================================
+            //                           FUNCTION: RequestSettingsWidgetLargeCode
+            // ============================================================================
+            // Desription: Sends a message to the extension to gets its html code
+            // Parameters: none
+            // ----------------------------- notes ----------------------------------------
+            // none
+            // ===========================================================================
+            function RequestSettingsWidgetLargeCode (extname)
+            {
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "RequestSettingsWidgetLargeCode",
                             serverConfig.extensionname,
                             "",
                             "",

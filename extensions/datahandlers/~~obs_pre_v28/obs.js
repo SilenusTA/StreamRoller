@@ -152,9 +152,9 @@ function onDataCenterMessage (server_packet)
     {
         let decoded_packet = server_packet.data
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + '.onDataCenterMessage ExtensionMessage', decoded_packet.type);
-        if (decoded_packet.type === 'RequestAdminModalCode')
-            SendAdminModal(decoded_packet.from);
-        else if (decoded_packet.type === 'AdminModalData')
+        if (decoded_packet.type === 'RequestSettingsWidgetSmallCode')
+            SendSettingsWidgetSmall(decoded_packet.from);
+        else if (decoded_packet.type === 'SettingsWidgetSmallData')
         {
             if (decoded_packet.to === serverConfig.extensionname)
             {
@@ -231,7 +231,7 @@ function onDataCenterMessage (server_packet)
 }
 
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code to be displayed on the admin page or somewhere else
@@ -240,13 +240,16 @@ function onDataCenterMessage (server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + '/obsadminmodal.html', function (err, filedata)
+
+    fs.readFile(__dirname + '/obssettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -264,7 +267,7 @@ function SendAdminModal (tochannel)
                     'ExtensionMessage', // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        'AdminModalCode', // message type
+                        'SettingsWidgetSmallCode', // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         '',

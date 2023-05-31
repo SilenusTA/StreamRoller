@@ -3,9 +3,10 @@
 	font-family: 'Audiowide-Regular';
 	src: url(/liveportal/stylesheets/Audiowide-Regular.ttf);
 	}
-body 
+body,html
 {
   font-family: "Audiowide-Regular";
+  height: 100%;
 }
 .card-title
 {
@@ -14,6 +15,19 @@ body
   padding-bottom: 1px;
   margin-bottom: 0px;
 }
+input
+{
+  background-color:rgb(189, 189, 189);
+}
+.form-control
+{
+  background-color:rgb(189, 189, 189);
+}
+.form-check-input
+{
+  background-color:rgb(189, 189, 189);
+}
+
 
 #ChatMessagesCard
 {
@@ -30,6 +44,23 @@ a
 .navbar {
   padding-top: 0px;
   padding-bottom: 0px;
+}
+.nav-tabs
+{
+  border: 0px;
+  padding: 1px;
+}
+#SettingsPageTabs
+{
+  border: 1px dotted grey
+}
+.modal{
+      font-family: "Noto Sans";
+    font-size: large;
+}
+.settings-body{
+      font-family: "Noto Sans";
+    font-size: large;
 }
 .card-body{
   padding-top: 1px;
@@ -52,4 +83,28 @@ a
 .dropdown-menu 
 {
   border: 1px solid grey;
+}
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.box .row {
+  border: 1px dotted grey;
+}
+
+.box .row.header {
+  flex: 0 1 auto;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: auto
+  */
+}
+.box .row.content {
+  flex: 1 1 auto;
+}
+.box .row.footer {
+  flex: 0 1 40px;
 }

@@ -32,11 +32,11 @@ The Timers has the following features implemented in it
   You can always browse other extensions to see how they implement things in the system to get other ideas
   
 ### Extended features (working with adminpage extension)
-- Provide an AdminModal
-  - AdminModals are something that the adminpage extension can use to display a popup box (a modal) with code you provide. These are normally used for settings. This feature of the adminpage will put your code onto a link so that when a user clicks it your modal will be shown. If the modal is a form then when the user clicks the form the data will be sent back to you. Usefull for settings etc.
-- Process AdminModal data
+- Provide an SettingsWidgetSmall
+  - SettingsWidgetSmalls are something that the adminpage extension can use to display a popup box (a modal) with code you provide. These are normally used for settings. This feature of the adminpage will put your code onto a link so that when a user clicks it your modal will be shown. If the modal is a form then when the user clicks the form the data will be sent back to you. Usefull for settings etc.
+- Process SettingsWidgetSmall data
   - This is the data sent back from the modal (popup) when the user clicks the submit button. in this case our modal just has a checkbox and text field and all we do is save the data
   
-  Note that the AdminModal part of this extension is something that is only needed by the adminmodal page extension. It is not requied at all if you don't want any settings to be shown or changed from the admin page.
+  Note that the SettingsWidgetSmall part of this extension is something that is only needed by the settingswidgetsmall page extension. It is not requied at all if you don't want any settings to be shown or changed from the admin page.
   
   Other extension can implement their own style of this data. ie an Overaly could reqest code to be displayed. the livestreampage addon will probably use these to display status information in future.

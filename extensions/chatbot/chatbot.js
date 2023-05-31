@@ -272,8 +272,10 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(extension_packet.from);
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === 'RequestSettingsWidgetLargeCode')
+            SendSettingsWidgetLarge(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
         {
             SendCredentialsModal(extension_packet.from);
@@ -293,16 +295,30 @@ function onDataCenterMessage (server_packet)
             {
                 processTextMessage(extension_packet.data);
             }
-        } else if (extension_packet.type === "AdminModalData")
+        } else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                handleAdminModalData(extension_packet.data)
+                handleSettingsWidgetSmallData(extension_packet.data)
                 SaveConfigToServer();
                 startChatbotTimer();
 
                 // broadcast our modal out so anyone showing it can update it
-                SendAdminModal("");
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
+            }
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                handleSettingsWidgetLargeData(extension_packet.data)
+                SaveConfigToServer();
+                startChatbotTimer();
+
+                // broadcast our modal out so anyone showing it can update it
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
             }
         }
         else
@@ -385,14 +401,37 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
-//                           FUNCTION: handleAdminModalData
+//                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
 // due to the dropdown selector we have used we need special code to hadnlt the 
 // return from the modal.
 // =========================================================================== 
-function handleAdminModalData (modalcode)
+function handleSettingsWidgetSmallData (modalcode)
 {
-    //console.log(modalcode)
+    if (modalcode.restore_defaults == "on")
+    {
+        // deep copy here to avoid a reference copy
+        serverConfig = JSON.parse(JSON.stringify(defaultConfig));
+        return;
+    }
+    serverConfig.chatbotenabled = "off";
+    serverConfig.questionbotenabled = "off";
+
+    for (const [key, value] of Object.entries(modalcode))
+        serverConfig[key] = value;
+
+
+    // set our current profile value
+    serverConfig.currentprofile = modalcode.chatbotprofilepicker;
+}
+// ===========================================================================
+//                           FUNCTION: handleSettingsWidgetSmallData
+// ===========================================================================
+// due to the dropdown selector we have used we need special code to hadnlt the 
+// return from the modal.
+// =========================================================================== 
+function handleSettingsWidgetLargeData (modalcode)
+{
     if (modalcode.restore_defaults == "on")
     {
         // deep copy here to avoid a reference copy
@@ -460,7 +499,7 @@ function handleAdminModalData (modalcode)
     }
 }
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 // ===========================================================================
 /**
@@ -470,12 +509,104 @@ function handleAdminModalData (modalcode)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
-    fs.readFile(__dirname + "/chatbotadminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/chatbotsettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+            //throw err;
+        }
+        else
+        {
+            //get the file as a string
+            let modalstring = filedata.toString();
+
+            // mormal replaces
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (key === "chattemperature")
+                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                else if (key === "questiontemperature")
+                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                else if (typeof (value) === "string" || typeof (value) === "number")
+                    modalstring = modalstring.replaceAll(key + "text", value);
+            }
+            // set the curert profile name 
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
+            modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + "profilevisibility", "visibility:visible; display:block");
+            for (const [profile_id, value] of Object.entries(serverConfig.chatbotprofiles))
+            {
+                // looping profiles
+                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'nametext', value.name);
+                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'personalitytext', value.p);
+                //show the current profile on the modal box
+                if (profile_id === serverConfig.currentprofile)
+                {
+                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "selected");
+                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:visible; display:block");
+                }
+                //hide the current profile on the modal box
+                else
+                {
+                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "");
+                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:hidden; display:none");
+                }
+                for (const [i, x] of Object.entries(value))
+                {
+                    //(we skip the first name and text here as we did it above)
+                    if (i != "name" && i != "p")
+                        modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
+                }
+            }
+
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    localConfig.EXTENSION_NAME,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode", // message type
+                        localConfig.EXTENSION_NAME, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        localConfig.OUR_CHANNEL
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ===========================================================================
+// ===========================================================================
+/**
+ * send some modal code to be displayed on the admin page or somewhere else
+ * this is done as part of the webpage request for modal message we get from 
+ * extension. It is a way of getting some user feedback via submitted forms
+ * from a page that supports the modal system
+ * @param {String} tochannel 
+ */
+function SendSettingsWidgetLarge (tochannel)
+{
+    fs.readFile(__dirname + "/chatbotsettingswidgetlarge.html", function (err, filedata)
+    {
+        if (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
+            //throw err;
+        }
         else
         {
             //get the file as a string
@@ -537,7 +668,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetLargeCode", // message type
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
@@ -562,7 +693,9 @@ function SendCredentialsModal (extensionname)
     fs.readFile(__dirname + "/chatbotcredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();

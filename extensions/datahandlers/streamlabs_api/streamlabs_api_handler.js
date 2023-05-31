@@ -233,12 +233,12 @@ function onDataCenterMessage (server_packet)
     {
         let extension_packet = server_packet.data;
         // received a reqest for our admin bootstrap modal code
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(extension_packet.from);
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
-        // received data from our admin modal. A user has requested some settings be changedd
-        else if (extension_packet.type === "AdminModalData")
+        // received data from our settings widget small. A user has requested some settings be changedd
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
@@ -251,7 +251,7 @@ function onDataCenterMessage (server_packet)
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
-                SendAdminModal("");
+                SendSettingsWidgetSmall("");
             }
         }
 
@@ -297,7 +297,7 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ============================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ============================================================================
 // Desription: Send the modal code back after setting the defaults according 
 // to our server settings
@@ -305,12 +305,14 @@ function onDataCenterMessage (server_packet)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
-function SendAdminModal (toextension)
+function SendSettingsWidgetSmall (toextension)
 {
-    fs.readFile(__dirname + '/streamlabs_apiadminmodal.html', function (err, filedata)
+    fs.readFile(__dirname + '/streamlabs_apisettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -330,7 +332,7 @@ function SendAdminModal (toextension)
                     "ExtensionMessage",
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode",
+                        "SettingsWidgetSmallCode",
                         localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
@@ -352,10 +354,13 @@ function SendAdminModal (toextension)
  */
 function SendCredentialsModal (extensionname)
 {
+
     fs.readFile(__dirname + "/streamlabs_apicredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();

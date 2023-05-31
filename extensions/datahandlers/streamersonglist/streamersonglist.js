@@ -20,6 +20,7 @@ import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 import fetch from 'node-fetch';
 import * as fs from "fs";
+import io from 'socket.io-client';
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -28,6 +29,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
+    ssl_client: null,
     status: {
         connected: false,
     },
@@ -43,8 +45,8 @@ const serverConfig = {
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
     enablestreamersonglist: "off",
-    pollSongQueueTimeout: 10000, // check queue every 10 seconds
-    pollSongListTimeout: 60000, // check for updated songs every minute
+    pollSongQueueTimeout: 180000, // check for updated queue every 3 minutes in case the socket goes down
+    pollSongListTimeout: 300000, // check for updated songs every 5 minutes in case the socket goes down
     heartBeatTimeout: 5000,
     //credentials variable names to use (in credentials modal)
     credentialscount: "4",
@@ -58,6 +60,28 @@ const serverConfig = {
     cred4value: "",
 };
 const OverwriteDataCenterConfig = false;
+
+const SSL_SOCKET_EVENTS = {
+    JOIN_ROOM: 'join-room',
+    LEAVE_ROOM: 'leave-room',
+    NEW_SONG: 'new-song',
+    RELOAD_SONG_LIST: 'reload-song-list',
+    UPDATE_SONG: 'update-song',
+    UPDATE_SONGS: 'update-songs',
+    DELETE_SONG: 'delete-song',
+    UPDATE_QUEUE_LIST: 'queue-update',
+    RELOAD_SAVED_QUEUE_LIST: 'reload-saved-queue',
+    QUEUE_MESSAGE: 'queue-event',
+    NEW_PLAYHISTORY: 'new-playhistory',
+    UPDATE_PLAYHISTORY: 'update-playhistory',
+    DELETE_PLAYHISTORY: 'delete-playhistory',
+    UPDATE_STREAMER: 'update-streamer',
+    UPDATE_ATTRIBUTES: 'update-attributes',
+};
+// events we want to reload songlist or queue on 
+const SSL_RELOAD_EVENTS =
+    ['queue-event', 'reload-song-list']
+
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -150,6 +174,37 @@ function onDataCenterMessage (server_packet)
             localConfig.clientId = server_packet.data.clientId;
             localConfig.userId = server_packet.data.userId;
             localConfig.streamerId = server_packet.data.streamerId;
+
+            // now we have our credentials lets join the server for callbacks
+            localConfig.ssl_client = io("https://api.streamersonglist.com", {
+                transports: ["websocket"],
+                reconnection: true,
+            });
+            localConfig.ssl_client.on('connect', () =>
+            {
+                localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+                // Join all interfaces, just for the fun of it and testing
+                for (const [key] of Object.entries(SSL_SOCKET_EVENTS))
+                {
+                    //console.log("registering for", SSL_SOCKET_EVENTS[key])
+                    localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
+                    {
+                        //console.log("received ", SSL_SOCKET_EVENTS[key]);
+                        logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
+                        if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
+                        {
+                            //console.log("fetching. ..........");
+                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
+                            fetchSongList();
+                            fetchSongQueue();
+                        }
+                    });
+                }
+            });
+            // perform a fetch of the lists in case we get asked for them later
+            fetchSongList()
+            fetchSongQueue()
+            // start our times if we havent alreadly
             pollSongQueueCallback();
             pollSongListCallback();
         }
@@ -157,11 +212,11 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(extension_packet.from);
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
-        else if (extension_packet.type === "AdminModalData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             // if we have enabled/disabled connection
             if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
@@ -190,7 +245,7 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
             }
             //update anyone who is showing our code at the moment
-            SendAdminModal("");
+            SendSettingsWidgetSmall("");
         }
         else if (extension_packet.type === "RequestQueue")
         {
@@ -249,7 +304,7 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code to be displayed on the admin page or somewhere else
@@ -258,13 +313,15 @@ function onDataCenterMessage (server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + "/streamersonglistadminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/streamersonglistsettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -282,7 +339,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetSmallCode", // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
@@ -304,10 +361,13 @@ function SendAdminModal (tochannel)
  */
 function SendCredentialsModal (extensionname)
 {
+
     fs.readFile(__dirname + "/streamersonglistcredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -608,7 +668,6 @@ function pollSongQueueCallback ()
         try
         {
             fetchSongQueue();
-            outputSongQueue();
         }
         catch (err)
         {

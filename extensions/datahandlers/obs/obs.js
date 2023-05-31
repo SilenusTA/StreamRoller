@@ -165,11 +165,11 @@ function onDataCenterMessage (server_packet)
     {
         let extension_packet = server_packet.data
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(extension_packet.from);
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
-        else if (extension_packet.type === "AdminModalData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             // if we have enabled/disabled obs connection
             if (serverConfig.enableobs != extension_packet.data.enableobs)
@@ -200,7 +200,7 @@ function onDataCenterMessage (server_packet)
                 sendScenes();
             }
             //update anyone who is showing our code at the moment
-            SendAdminModal("");
+            SendSettingsWidgetSmall("");
         }
         else if (extension_packet.type === "RequestScenes")
         {
@@ -266,7 +266,7 @@ function onDataCenterMessage (server_packet)
 }
 
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code to be displayed on the admin page or somewhere else
@@ -275,13 +275,15 @@ function onDataCenterMessage (server_packet)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
     // read our modal file
-    fs.readFile(__dirname + "/obsadminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/obssettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -299,7 +301,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetSmallCode", // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
@@ -324,7 +326,9 @@ function SendCredentialsModal (extensionname)
     fs.readFile(__dirname + "/obscredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();

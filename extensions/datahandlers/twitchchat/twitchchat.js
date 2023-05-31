@@ -267,12 +267,12 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        // -------------------- PROCESSING ADMIN MODALS -----------------------
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(server_packet.from);
+        // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(server_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
-        else if (extension_packet.type === "AdminModalData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
@@ -298,7 +298,7 @@ function onDataCenterMessage (server_packet)
                 // restart the scheduler in case we changed it
                 SaveChatMessagesToServerScheduler();
                 // broadcast our modal out so anyone showing it can update it
-                SendAdminModal("");
+                SendSettingsWidgetSmall("");
             }
         }
         else if (extension_packet.type === "SendChatMessage")
@@ -359,7 +359,7 @@ function onDataCenterMessage (server_packet)
 //                           FUNCTION: sendChatBuffer
 // ===========================================================================
 /**
- * Send our AdminModal to the extension
+ * Send our SettingsWidgetSmall to the extension
  * @param {String} toExtension 
  */
 function sendChatBuffer (toExtension)
@@ -417,19 +417,22 @@ function sendAccountNames (toExtension)
     }
 }
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
- * Send our AdminModal to the extension
+ * Send our SettingsWidgetSmall to the extension
  * @param {String} toExtension 
  */
-function SendAdminModal (toExtension)
+function SendSettingsWidgetSmall (toExtension)
 {
+
     // read our modal file
-    fs.readFile(__dirname + "/twitchchatadminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/twitchchatsettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             //get the file as a string
@@ -449,7 +452,7 @@ function SendAdminModal (toExtension)
                     "ExtensionMessage",
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode",
+                        "SettingsWidgetSmallCode",
                         localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
@@ -470,10 +473,13 @@ function SendAdminModal (toExtension)
  */
 function SendCredentialsModal (extensionname)
 {
+
     fs.readFile(__dirname + "/twitchchatcredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();

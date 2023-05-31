@@ -53,9 +53,9 @@ The discordchat extension currently provides the following features
   - There are two channels the extension utilises. 
     - mod messages channel - used to read messages and output on our "DISCORD_CHAT' channel for other extension to use
     - alerts channel - used to post alerts to
-  - These channel names are defined in the settings files and can be updated buy the provided admin modal code
-- AdminModal.
-  - Provide an admin modal to the admin page to allow the user to set the following values
+  - These channel names are defined in the settings files and can be updated buy the provided settings widget small code
+- SettingsWidgetSmall.
+  - Provide an settings widget small to the admin page to allow the user to set the following values
     - streamlabs alerts to log
     - channelname for streamlabs alerts to be post on (on discord)
     - channelname to read on discord for message we will post out on our 'DISCORD_CHAT' channel

@@ -138,11 +138,11 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "RequestAdminModalCode")
-            SendAdminModal(extension_packet.from);
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
-        else if (extension_packet.type === "AdminModalData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             // check that it was our modal
             if (extension_packet.data.extensionname === serverConfig.extensionname)
@@ -152,7 +152,7 @@ function onDataCenterMessage (server_packet)
                     serverConfig[key] = value;
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
-                SendAdminModal("");
+                SendSettingsWidgetSmall("");
             }
         }
         else if (extension_packet.type === "PostTweet")
@@ -164,7 +164,7 @@ function onDataCenterMessage (server_packet)
                 else
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
         }
-        else if (extension_packet.type === "AdminModalCode")
+        else if (extension_packet.type === "SettingsWidgetSmallCode")
         {
             // ignore these messages
         }
@@ -227,7 +227,7 @@ function connectToTwitter (creds)
 }
 
 // ===========================================================================
-//                           FUNCTION: SendAdminModal
+//                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
 /**
  * send some modal code to be displayed on the admin page or somewhere else
@@ -236,13 +236,16 @@ function connectToTwitter (creds)
  * from a page that supports the modal system
  * @param {String} tochannel 
  */
-function SendAdminModal (tochannel)
+function SendSettingsWidgetSmall (tochannel)
 {
+
     // read our modal file
-    fs.readFile(__dirname + "/twitteradminmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/twittersettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
@@ -258,7 +261,7 @@ function SendAdminModal (tochannel)
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "AdminModalCode", // message type
+                        "SettingsWidgetSmallCode", // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
@@ -283,7 +286,9 @@ function SendCredentialsModal (extensionname)
     fs.readFile(__dirname + "/twittercredentialsmodal.html", function (err, filedata)
     {
         if (err)
-            throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendCredentialsModal", "failed to load modal", err);
+        //throw err;
         else
         {
             let modalstring = filedata.toString();
