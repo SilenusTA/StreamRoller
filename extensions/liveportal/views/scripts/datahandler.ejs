@@ -44,10 +44,10 @@
         chatAsUsername: "user",
 
         // chatbot settings
-        processchatbotalerts: "off",
+        processchatbotalerts: "on",
 
         // random facts / twitter settings
-        randomfactsenabled: "off",
+        randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
 
         randomfactstwitterstartenabled: "on",
@@ -165,12 +165,14 @@
         // DEBUGGING overwrite our config data on the server if the flag is set
         if (OverwriteDataCenterConfig)
             SaveConfigToServer();
+
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestConfig",
                 serverConfig.extensionname
             ));
 
+        /* we don't really need a channel as we don't output anything :P
         //register our channels
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
@@ -178,7 +180,7 @@
                 serverConfig.extensionname,
                 serverConfig.channel
             ));
-
+*/
         //request software version
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
@@ -187,27 +189,33 @@
                 serverConfig.channel
             ));
 
-        //Request lists once up and running, we delay a while so other extensions can load
+        // Request the stuff we need first here
+        // We give the system some time to get things in and delay some of the longer stuff till the end (like the chat buffers) 
+        // This is just to allow the extensions to get up and running
         setTimeout(() =>
         {
-            RequestChList();
             RequestExtList();
-            RequestRandomFact();
+            RequestChList();
             RequestLoggingLevel();
-            RequestTwitchAccountNames("twitchchat");
-            RequestChatBuffer("twitchchat");
-            RequestChatBuffer("discordchat");
-            // setup timeout for facts on stream
-            if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
-                twitchFactOfTheDay();
+            setTimeout(() =>
+            {
+                RequestRandomFact();
+                RequestTwitchAccountNames("twitchchat");
+                setTimeout(() =>
+                {
+                    RequestChatBuffer("twitchchat");
+                    setTimeout(() =>
+                    {
+                        RequestSongLists();
+                        RequestChatBuffer("discordchat");
+                        if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
+                            twitchFactOfTheDay();
+                    }, 1000);
+                }, 500);
+            }, 500);
+        }, 500);
 
-        }, 2000);
 
-        // songlist can take a while to get its data so give it time to get the lists before we request them.
-        setTimeout(() =>
-        {
-            RequestSongLists();
-        }, 10000);
 
 
     }
@@ -296,6 +304,7 @@
         {
             // we need to reload the page if we receive more than one list due to callback handler isses
             // on the form
+            console.log("Extension list received")
             if (bugfix_extensionlist_count > 0)
                 location.reload();
             else
@@ -314,23 +323,28 @@
             //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
             // -------------------------------------------------------------------------------------------------
             if (extension_packet.type == "SongQueue")
+            {
                 updateSingerSonglistQueue(extension_packet.data)
+            }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type == "SongList")
-                updateSingerSonglistList(extension_packet.data.items)
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             {
-                SendSettingsWidgetSmall(extension_packet.from);
+                if (extension_packet.data && extension_packet.data.items)
+                    updateSingerSonglistList(extension_packet.data.items)
+                // -------------------------------------------------------------------------------------------------
+                //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
+                // -------------------------------------------------------------------------------------------------
+                else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+                {
+                    SendSettingsWidgetSmall(extension_packet.from);
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED SETTINGS WIDGET LARGE REQUEST
             // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
             {
                 SendSettingsWidgetLarge(extension_packet.from);
             }
@@ -1840,7 +1854,7 @@
         catch (error)
         {
             console.log("ERROR:parseTwitchChatMessage:", error)
-            console.error(error)
+            console.err(error)
         }
     }
     // ============================================================================
