@@ -327,10 +327,10 @@ function SendSettingsWidgetSmall (tochannel)
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -376,10 +376,10 @@ function SendSettingsWidgetLarge (tochannel)
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -424,9 +424,9 @@ function SendCredentialsModal (extensionname)
             {
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 else if (typeof (value) == "string" || typeof (value) == "number")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,

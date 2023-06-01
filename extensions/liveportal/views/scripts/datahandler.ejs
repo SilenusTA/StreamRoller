@@ -585,7 +585,7 @@
             // twithc chat alerts etc
             else if (server_packet.dest_channel == "TWITCH_CHAT_EXTRA")
             {
-                if (extension_packet.type === "ChatExtraMessage" && serverConfig.processchatbotalerts == "on")
+                if (extension_packet.type === "ChatExtraMessage" && serverConfig.processchatbotalerts === "on")
                 {
                     parseTwitchChatExtaMessage(extension_packet.data);
                 }

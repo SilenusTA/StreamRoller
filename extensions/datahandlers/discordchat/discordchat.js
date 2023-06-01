@@ -186,8 +186,10 @@ function onDataCenterMessage (server_packet)
                 serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key] of Object.entries(serverConfig))
+                {
                     if (key in extension_packet.data)
                         serverConfig[key] = extension_packet.data[key];
+                }
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
@@ -200,8 +202,10 @@ function onDataCenterMessage (server_packet)
                 serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key] of Object.entries(serverConfig))
+                {
                     if (key in extension_packet.data)
                         serverConfig[key] = extension_packet.data[key];
+                }
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
@@ -322,10 +326,10 @@ function SendSettingsWidgetSmall (extensionname)
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
                 {
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 }   //value is a string then we need to replace the text
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -369,10 +373,10 @@ function SendSettingsWidgetLarge (extensionname)
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
                 {
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 }   //value is a string then we need to replace the text
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -418,11 +422,11 @@ function SendCredentialsModal (extensionname)
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
                 {
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalstring = modalstring.replaceAll(key + "checked", "checked");
                 }   //value is a string then we need to replace the text
                 else if (typeof (value) == "string")
                 {
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalstring = modalstring.replaceAll(key + "text", value);
                 }
             }
             // send the modal data to the server
