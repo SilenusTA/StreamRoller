@@ -1,0 +1,35 @@
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">OBS Settings</h4>
+    <p>Lots of room for future features here :D
+    <h5>Enable/Disable</h5>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="enableobs" type="checkbox" id="enableobs" enableobschecked>
+            <label class="form-check-label" for="enableobs">Enable/Disable</label>
+        </div>
+    </div>
+    <HR>
+    <h5>Scene identifiers</h5>
+    <p>These settings are used to be able to automatically group the scenes into Main, Secondary and 'others'
+        to allow quick switching between groups</p>
+    <div class="form-group py-2">
+        <label for="mainsceneselector" class="col-sm-3 col-form-label">Main Scene Identifier</label>
+        <input type="text" name="mainsceneselector" class="col-sm-3 col-form-label" id="mainsceneselector"
+            value="mainsceneselectortext">
+    </div>
+    <label for="secondarysceneselector" class="col-sm-3 col-form-label">Secondary Scene Identifier</label>
+    <div class="col-sm-2">
+        <input type="text" name="secondarysceneselector" class="col-sm-3 col-form-label" id="secondarysceneselector"
+            value="secondarysceneselectortext">
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" type="close" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

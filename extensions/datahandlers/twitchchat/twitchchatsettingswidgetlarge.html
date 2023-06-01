@@ -1,0 +1,73 @@
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">Twitchchat Settings</h4>
+    <p>Still need to do more with this extensions but for now we at least have a buffer lol </p>
+    <h5>Enable/Disable</h5>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="enabletwitchchat" type="checkbox" id="enabletwitchchat"
+                enabletwitchchatchecked>
+            <label class="form-check-label" for="enabletwitchchat">Enable/Disable</label>
+        </div>
+    </div>
+    <h5>Userlists</h5>
+    <p>Mostly for future updates, currenlty logs first and last time seen. Will be used for channel points or other
+        things in future</p>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="updateUserList" type="checkbox" id="updateUserList"
+                updateUserListchecked>
+            <label class="form-check-label" for="updateUserList">Keep Userlist upto data (requires 'users'
+                extension)</label>
+        </div>
+    </div>
+    <h4 class="text-center">User/Streamer settings</h4>
+    <p>Enter the name of the streamers chat you wish to join</p>
+    <div class="form-group py-2">
+        <label for="streamername" class="col-form-label">Streamer name (chatchannel to join)</label>
+        <input type="text" name="streamername" class="col-lg-4" id="streamername" value="streamernametext">
+    </div>
+    <div class="form-group">
+        <label for="chatMessageBufferMaxSize" class="col-form-label">Chat Buffer Size. How many messages to keep
+            on screen and over reloads of the server</label>
+        <input type="text" name="chatMessageBufferMaxSize" class="col-lg-1" id="chatMessageBufferMaxSize"
+            value="chatMessageBufferMaxSizetext">
+    </div>
+    <div class="form-group">
+        <label for="chatMessageBackupTimer" class="col-form-label">How often to save chat buffer. Default 60
+            seconds (1minute)</label>
+        <input type="text" name="chatMessageBackupTimer" class="col-lg-1" id="chatMessageBackupTimer"
+            value="chatMessageBackupTimertext">
+    </div>
+    <h4 class="text-center">Debug options</h4>
+    <p>Usefull to see what the system is doing and what messages it is skipping. ie maybe you want the message length
+        longer if chat is posting lots of short stuff that doesn't make sense sending to the bot. </p>
+    <div class="form-group py-2">
+        <div>
+            <BR>Enabling this will prevent messages being sent to twitch but they will propergate locally so it
+            appears like the
+            messages have been sent to twitch.<BR>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" type="checkbox"
+                    id="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" DEBUG_ONLY_MIMICK_POSTING_TO_TWITCHchecked>
+                <label class="form-check-label" for="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH">Enable/Disable</label>
+            </div>
+            <BR>Enable extra messages from the IRC client (subs, mod actions etc). Still going though these to check
+            what I need to do with them so it might crash if enabled :D<BR>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="DEBUG_EXTRA_CHAT_MESSAGE" type="checkbox"
+                    id="DEBUG_EXTRA_CHAT_MESSAGE" DEBUG_EXTRA_CHAT_MESSAGEchecked>
+                <label class="form-check-label" for="DEBUG_EXTRA_CHAT_MESSAGE">Enable/Disable</label>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettings" type="close" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

@@ -1020,7 +1020,6 @@ function processChatMessage (data)
             {
                 if (chatMessageToPost)
                 {
-                    console.log("Starttine for virtual typeing delay", starttime)
                     let wordcount = chatMessageToPost.split(" ").length
                     let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
                     if (serverConfig.DEBUG_MODE === "on")

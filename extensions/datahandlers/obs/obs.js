@@ -167,6 +167,8 @@ function onDataCenterMessage (server_packet)
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            SendSettingsWidgetLarge(extension_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
@@ -201,6 +203,41 @@ function onDataCenterMessage (server_packet)
             }
             //update anyone who is showing our code at the moment
             SendSettingsWidgetSmall("");
+            SendSettingsWidgetLarge("");
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            // if we have enabled/disabled obs connection
+            if (serverConfig.enableobs != extension_packet.data.enableobs)
+            {
+                //we are currently enabled so lets disconnect
+                if (serverConfig.enableobs == "on")
+                {
+                    serverConfig.enableobs = "off";
+                    clearTimeout(localConfig.obsTimeoutHandle)
+                    disconnectObs()
+                }
+                //currently disabled so connect to obs
+                else
+                {
+                    serverConfig.enableobs = "on";
+                    localConfig.obsConnecting = true
+                    connectToObs();
+                }
+            }
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                serverConfig.enableobs = "off";
+                for (const [key, value] of Object.entries(extension_packet.data))
+                    serverConfig[key] = value;
+                SaveConfigToServer();
+                if (localConfig.OBSAvailableScenes != null)
+                    processOBSSceneList(localConfig.OBSAvailableScenes);
+                sendScenes();
+            }
+            //update anyone who is showing our code at the moment
+            SendSettingsWidgetSmall("");
+            SendSettingsWidgetLarge("");
         }
         else if (extension_packet.type === "RequestScenes")
         {
@@ -302,6 +339,55 @@ function SendSettingsWidgetSmall (tochannel)
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ===========================================================================
+/**
+ * send some modal code to be displayed on the admin page or somewhere else
+ * this is done as part of the webpage request for modal message we get from 
+ * extension. It is a way of getting some user feedback via submitted forms
+ * from a page that supports the modal system
+ * @param {String} tochannel 
+ */
+function SendSettingsWidgetLarge (tochannel)
+{
+    // read our modal file
+    fs.readFile(__dirname + "/obssettingswidgetlarge.html", function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
+        //throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                // replace text strings
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetLargeCode", // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
@@ -472,9 +558,9 @@ function connectToObs ()
  */
 function disconnectObs ()
 {
+    localConfig.status.connected = false;
     localConfig.obsConnection.disconnect();
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".disconnectObs ", "disconnected from OBS");
-
 }
 // ============================================================================
 //                FUNCTION: StreamRoller Request Handlers

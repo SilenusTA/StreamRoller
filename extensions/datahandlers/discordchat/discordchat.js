@@ -175,6 +175,8 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.type === "RequestSettingsWidgetSmallCode")
                 SendSettingsWidgetSmall(extension_packet.from);
+            else if (extension_packet.type === 'RequestSettingsWidgetLargeCode')
+                SendSettingsWidgetLarge(extension_packet.from);
             else if (extension_packet.type === "RequestCredentialsModalsCode")
                 SendCredentialsModal(extension_packet.from);
             // received data from our settings widget small. A user has requested some settings be changedd
@@ -190,6 +192,21 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
+            }
+            else if (extension_packet.type === "SettingsWidgetLargeData")
+            {
+                // set our config values to the ones in message
+                serverConfig.discordenabled = "off";
+                // NOTE: this will ignore new items in the page that we don't currently have in our config
+                for (const [key] of Object.entries(serverConfig))
+                    if (key in extension_packet.data)
+                        serverConfig[key] = extension_packet.data[key];
+                // save our data to the server for next time we run
+                SaveConfigToServer();
+                // broadcast our modal out so anyone showing it can update it
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
             }
             else if (extension_packet.type === "PostMessage")
             {
@@ -316,6 +333,53 @@ function SendSettingsWidgetSmall (extensionname)
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        extensionname,
+                        serverConfig.channel
+                    ),
+                    "",
+                    extensionname)
+            )
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ===========================================================================
+/**
+ * Send our SettingsWidgetSmall to whoever requested it
+ * @param {String} extensionname 
+ */
+function SendSettingsWidgetLarge (extensionname)
+{
+    fs.readFile(__dirname + "/discordsettingswidgetlarge.html", function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
+        //throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            // send the modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetLargeCode",
                         serverConfig.extensionname,
                         modalstring,
                         "",

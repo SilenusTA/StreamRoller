@@ -1,5 +1,5 @@
 <!-- extra tag to other extensions here as we are going to load this from the page and not from a file -->
-<div id="LivePortalSettingsWidgetLarge" hidden>
+<div id="LivePortalSettingsWidgetLarge" tabindex='-1' hidden>
     <form id="extensionnametext_settingsform">
         <div class="form-group invisible">
             <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
@@ -173,90 +173,90 @@
                 <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
             </div>
         </div>
-        <h5>Discord Channels</h6>
-            <div class="form-group py-2">
-                <div class="form-group">
-                    <label for="donations_channel" class="col-lg-2">Discord Donations Channel:</label>
-                    <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel"
-                        value="donations_channeltext">
-                </div>
-                <div class="form-group">
-                    <label for="modmessage_channel" class="col-lg-2">Discord Channel to monitor:</label>
-                    <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel"
-                        value="modmessage_channeltext">
-                </div>
+        <h5>Discord Channels</h5>
+        <div class="form-group py-2">
+            <div class="form-group">
+                <label for="donations_channel" class="col-lg-2">Discord Donations Channel:</label>
+                <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel"
+                    value="donations_channeltext">
             </div>
-            <HR>
-            <h5 class="text-center">Random Facts</h5>
-            <div class="form-group py-2">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled"
-                        randomfactsenabledchecked>
-                    <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
-                </div>
-                <div class="form-group">
-                    <label for="randomfactstimeout" class="col-lg-2">How often to post random facts to twitch
-                        chat(minutes)</label>
-                    <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout"
-                        value="randomfactstimeouttext">
-                </div>
+            <div class="form-group">
+                <label for="modmessage_channel" class="col-lg-2">Discord Channel to monitor:</label>
+                <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel"
+                    value="modmessage_channeltext">
             </div>
-            <HR>
-            <h5 class="text-center">Twitter</h5>
-            <div class="form-group py-2">
-                On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
-                <ol>
-                    <li>Main message</li>
-                    <li>Extra message</li>
-                    <li>Random fact (If enabled)</li>
-                </ol>
-                Streamroller will calculate the length of the tweet and do the following options in order depending
-                on size
-                <ol>
-                    <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
-                    <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
-                    <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
-                </ol>
+        </div>
+        <HR>
+        <h5 class="text-center">Random Facts</h5>
+        <div class="form-group py-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled"
+                    randomfactsenabledchecked>
+                <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
+            </div>
+            <div class="form-group">
+                <label for="randomfactstimeout" class="col-lg-2">How often to post random facts to twitch
+                    chat(minutes)</label>
+                <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout"
+                    value="randomfactstimeouttext">
+            </div>
+        </div>
+        <HR>
+        <h5 class="text-center">Twitter</h5>
+        <div class="form-group py-2">
+            On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
+            <ol>
+                <li>Main message</li>
+                <li>Extra message</li>
+                <li>Random fact (If enabled)</li>
+            </ol>
+            Streamroller will calculate the length of the tweet and do the following options in order depending
+            on size
+            <ol>
+                <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
+                <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
+                <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
+            </ol>
 
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled"
-                        twitterstartenabledchecked>
-                    <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
-                        start streaming in OBS).</label>
-                </div>
-                <BR>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
-                        id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
-                    <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
-                        tweet</label>
-                </div>
-                <div class="form-group">
-                    <label for="twitterstartmessage" class="col-lg-2">Main Message</label>
-                    <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage"
-                        value="twitterstartmessagetext">
-                </div>
-                <div class="form-group">
-                    <label for="twitterstartmessage_x" class="col-lg-2">Extra message if there is
-                        space</label>
-                    <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x"
-                        value="twitterstartmessage_xtext">
-                </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled"
+                    twitterstartenabledchecked>
+                <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
+                    start streaming in OBS).</label>
             </div>
-            <HR>
-            <h5 class="text-center">Debug</h5>
-            <div class="form-group py-2">
-                <div class="form-group">
-                    <label for="logginglevel" class="col-lg-2 col-form-label">System Log Level</label>
+            <BR>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
+                    id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
+                <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
+                    tweet</label>
+            </div>
+            <div class="form-group">
+                <label for="twitterstartmessage" class="col-lg-2">Main Message</label>
+                <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage"
+                    value="twitterstartmessagetext">
+            </div>
+            <div class="form-group">
+                <label for="twitterstartmessage_x" class="col-lg-2">Extra message if there is
+                    space</label>
+                <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x"
+                    value="twitterstartmessage_xtext">
+            </div>
+        </div>
+        <HR>
+        <h5 class="text-center">Debug</h5>
+        <div class="form-group py-2">
+            <div class="form-group">
+                <label for="logginglevel" class="col-lg-2 col-form-label">System Log Level</label>
 
-                    <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel"
-                        value="loggingleveltext">
+                <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel"
+                    value="loggingleveltext">
 
-                </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Update</button>
-                <button id="closeSettings" type="close" class="btn btn-primary">Close</button>
-            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <button id="closeSettings" type="close" class="btn btn-secondary">Close</button>
+        </div>
     </form>
 </div>

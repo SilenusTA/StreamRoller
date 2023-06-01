@@ -1,0 +1,38 @@
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">Discord Settings</h4>
+    <p>Still need to do more with this extensions but for now we at least have a buffer lol </p>
+    <h5>Enable/Disable</h5>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="discordenabled" type="checkbox" id="discordenabled"
+                discordenabledchecked>
+            <label class="form-check-label" for="discordenabled">discordenabled</label>
+        </div>
+    </div>
+    <HR>
+    <h5>Buffer size</h5>
+    <p>Size of buffer to save over reboots</p>
+    <div class="form-group py-2">
+        <label for="discordMessageBufferMaxSize" class="col-form-label col-lg-3">Chat Buffer Size to save over
+            restarts</label>
+        <input type="text" class="col-lg-1" name="discordMessageBufferMaxSize" id="discordMessageBufferMaxSize"
+            value="discordMessageBufferMaxSizetext">
+    </div>
+    <div class="form-group py-2">
+        <label for="discordMessageBackupTimer" class="col-form-label col-lg-3">How often to save chat buffer. default 60
+            seconds</label>
+        <input type="text" class="col-lg-1" name="discordMessageBackupTimer" id="discordMessageBackupTimer"
+            value="discordMessageBackupTimertext">
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" type="close" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+
+</form>

@@ -164,7 +164,9 @@ function onDataCenterMessage (server_packet)
                 else
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
         }
-        else if (extension_packet.type === "SettingsWidgetSmallCode")
+        else if (extension_packet.type === "SettingsWidgetSmallCode"
+            || extension_packet.type === "RequestSettingsWidgetLargeCode"
+            || extension_packet.type === "SettingsWidgetLargeCode")
         {
             // ignore these messages
         }

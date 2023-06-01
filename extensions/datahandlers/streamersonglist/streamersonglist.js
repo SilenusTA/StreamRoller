@@ -174,7 +174,6 @@ function onDataCenterMessage (server_packet)
             localConfig.clientId = server_packet.data.clientId;
             localConfig.userId = server_packet.data.userId;
             localConfig.streamerId = server_packet.data.streamerId;
-
             // now we have our credentials lets join the server for callbacks
             localConfig.ssl_client = io("https://api.streamersonglist.com", {
                 transports: ["websocket"],
@@ -182,14 +181,10 @@ function onDataCenterMessage (server_packet)
             });
             localConfig.ssl_client.on('connect', () =>
             {
-                localConfig.ssl_client.emit("join-room", localConfig.streamerId);
-                // Join all interfaces, just for the fun of it and testing
                 for (const [key] of Object.entries(SSL_SOCKET_EVENTS))
                 {
-                    //console.log("registering for", SSL_SOCKET_EVENTS[key])
                     localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
                     {
-                        //console.log("received ", SSL_SOCKET_EVENTS[key]);
                         logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
                         if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
                         {
@@ -200,6 +195,9 @@ function onDataCenterMessage (server_packet)
                         }
                     });
                 }
+                localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+                // Join all interfaces, just for the fun of it and testing
+
             });
             // perform a fetch of the lists in case we get asked for them later
             fetchSongList()

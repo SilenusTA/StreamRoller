@@ -203,6 +203,12 @@
 
         }, 2000);
 
+        // songlist can take a while to get its data so give it time to get the lists before we request them.
+        setTimeout(() =>
+        {
+            RequestSongLists();
+        }, 10000);
+
 
     }
     // ============================================================================
@@ -307,7 +313,17 @@
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
             // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            if (extension_packet.type == "SongQueue")
+                updateSingerSonglistQueue(extension_packet.data)
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type == "SongList")
+                updateSingerSonglistList(extension_packet.data.items)
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             {
                 SendSettingsWidgetSmall(extension_packet.from);
             }
@@ -982,6 +998,7 @@
             })
             $('#closeSettings').on('click', function (event)
             {
+                console.log("closeSettings handler")
                 event.preventDefault();
                 $("#live-tab").tab('show');
                 return false;
@@ -2396,6 +2413,36 @@
         event.preventDefault();
         PostMessageToDiscord(document.getElementById("modInputText").value, serverConfig.modmessage_channel);
         document.getElementById("modInputText").value = ""
+    }
+    // ============================================================================
+    //                           FUNCTION: RequestSongLists
+    // ============================================================================
+    function RequestSongLists ()
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestSonglist",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "streamersonglist"),
+                "",
+                "streamersonglist"
+            ));
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestQueue",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "streamersonglist"),
+                "",
+                "streamersonglist"
+            ));
     }
     // ============================================================================
     //                           FUNCTION: RequestRandomFact

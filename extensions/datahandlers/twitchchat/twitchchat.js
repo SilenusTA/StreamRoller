@@ -270,6 +270,8 @@ function onDataCenterMessage (server_packet)
         // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(server_packet.from);
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            SendSettingsWidgetLarge(server_packet.from);
         else if (extension_packet.type === "RequestCredentialsModalsCode")
             SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
@@ -299,6 +301,37 @@ function onDataCenterMessage (server_packet)
                 SaveChatMessagesToServerScheduler();
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
+            }
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                // need to update these manually as the web page does not send unchecked box values
+                serverConfig.enabletwitchchat = "off";
+                serverConfig.updateUserList = "off";
+                serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off"
+                serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
+
+                for (const [key, value] of Object.entries(serverConfig))
+                    if (key in extension_packet.data)
+                    {
+                        serverConfig[key] = extension_packet.data[key];
+                    }
+                for (const [key, value] of Object.entries(localConfig.usernames))
+                {
+                    if (localConfig.twitchClient[key].state.connected)
+                        reconnectChat(key);
+                    else
+                        connectToTwtich(key);
+                }
+                SaveConfigToServer();
+                // restart the scheduler in case we changed it
+                SaveChatMessagesToServerScheduler();
+                // broadcast our modal out so anyone showing it can update it
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
             }
         }
         else if (extension_packet.type === "SendChatMessage")
@@ -359,7 +392,7 @@ function onDataCenterMessage (server_packet)
 //                           FUNCTION: sendChatBuffer
 // ===========================================================================
 /**
- * Send our SettingsWidgetSmall to the extension
+ * Send our chat buffer to the extension
  * @param {String} toExtension 
  */
 function sendChatBuffer (toExtension)
@@ -453,6 +486,54 @@ function SendSettingsWidgetSmall (toExtension)
                     localConfig.EXTENSION_NAME,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode",
+                        localConfig.EXTENSION_NAME,
+                        modalstring,
+                        "",
+                        toExtension,
+                        serverConfig.channel),
+                    "",
+                    toExtension
+                ));
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ===========================================================================
+/**
+ * Send our SettingsWidgetLarge to the extension
+ * @param {String} toExtension 
+ */
+function SendSettingsWidgetLarge (toExtension)
+{
+
+    // read our modal file
+    fs.readFile(__dirname + "/twitchchatsettingswidgetlarge.html", function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
+        //throw err;
+        else
+        {
+            //get the file as a string
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                // replace text strings
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    localConfig.EXTENSION_NAME,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetLargeCode",
                         localConfig.EXTENSION_NAME,
                         modalstring,
                         "",
