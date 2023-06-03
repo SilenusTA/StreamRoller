@@ -55,12 +55,15 @@ const defaultConfig = {
     chatbotenabled: "off",
     questionbotenabled: "off",
     chatbotquerytagstartofline: "on",
+    translatetoeng: "off",
+
     chatbotignorelist: "",
     // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
     // query tag is the chat text to look for to send a direct question/message to openAI GPT
     chatbotquerytag: "Hey CHATBOTNAME",
-    // start the chatbot now rather than when the timer runs out
-    starttag: "CHATBOTNAME start the bot",
+    // Translate the following text to english 
+    translatetoengtag: "ToEng",
+
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
     chatbotTimerMin: 1, // min delay before starting
     chatbotTimerMax: 2, // max delay before starting
@@ -441,6 +444,7 @@ function handleSettingsWidgetLargeData (modalcode)
     serverConfig.chatbotenabled = "off";
     serverConfig.questionbotenabled = "off";
     serverConfig.chatbotquerytagstartofline = "off";
+    serverConfig.translatetoeng = "off";
     serverConfig.DEBUG_MODE = "off";
     serverConfig.restore_defaults = "off";
 
@@ -836,25 +840,29 @@ function processChatMessage (data)
     let resetColour = "\x1b[0m";
     // used to work out expired time when calculating the virtual 'typed response'
     let starttime = Date.now();
+
+    // check ignore list
     if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.indexOf(data.data["display-name"]) > -1)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
-            console.log("ignoring message, user on blocked list")
+            console.log("ignoring message, user on ignore list")
         }
         return;
     }
     //variable check if we have a direct question to the bot from chat
     let directChatQuestion = (
+        // search the whole line
         (serverConfig.chatbotquerytagstartofline == "off" &&
-            data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase())
-            || data.message.toLowerCase().includes("hey chatbot".toLowerCase())
-        )
+            data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase()))
         ||
+        // search for start of line
         (serverConfig.chatbotquerytagstartofline == "on" &&
-            data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())
-            || data.message.toLowerCase().startsWith("hey chatbot".toLowerCase())
-        ));
+            data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
+
+    // user asked for a translation
+    let translateToEnglish = (serverConfig.translatetoeng == "on"
+        && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
 
     // check if this is a chat or local message (don't parse subs etc)
     if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
@@ -874,7 +882,6 @@ function processChatMessage (data)
         }
         return;
     }
-
     // ignore messages from the bot or specified users
     if ((serverConfig.chatbotname != null && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1)
         || data.data["display-name"].toLowerCase().indexOf("system") != -1)
@@ -884,8 +891,8 @@ function processChatMessage (data)
         return;
     }
 
-    // is this a chatmessage and inside of the time window
-    if (localConfig.running === false && !directChatQuestion)
+    // is this a chatmessage and inside of the time window (if not a direct question)
+    if (localConfig.running === false && !directChatQuestion && !translateToEnglish)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -893,7 +900,6 @@ function processChatMessage (data)
         }
         return;
     }
-
 
     // Is the message long enough to be considered
     if (data.message.length < serverConfig.chatbotminmessagelength)
@@ -912,11 +918,14 @@ function processChatMessage (data)
     // preprosess Parse the messsage
     let chatdata = parseData(data)
 
+    // debug logging
     if (chatdata && chatdata.message && serverConfig.DEBUG_MODE === "on")
         console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
 
-    // check the length again after parsing the message to make sure it is still long enough
-    if (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
+    // check the length again after parsing the message to make sure it is still long enough (if not a direct message)
+    if (
+        (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
+        && (!translateToEnglish || !directChatQuestion))
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -928,7 +937,42 @@ function processChatMessage (data)
         }
         return
     }
-    // is this a diect question from chat
+    // is this a direct question from chat
+    else if (translateToEnglish)
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
+            console.log("Tanslation Requested")
+        }
+        if (serverConfig.translatetoeng === "on")
+        {
+            // ##############################################
+            //         Processing a question message
+            // ##############################################
+            let messages = [{
+                "role": "user", "content": "Translate this into English :\n" + chatdata.message.replace(serverConfig.translatetoengtag, "")
+            }]
+
+
+            callOpenAI(messages, serverConfig.settings.chatmodel)
+                .then(chatMessageToPost =>
+                {
+                    postMessageToTwitch(chatMessageToPost)
+                    return;
+                })
+                .catch(e =>
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI question request failed:", e.message);
+                    return;
+                })
+            return;
+        }
+        else
+            // add CD timer here to stop spam messages
+            postMessageToTwitch("Sorry, the I'm currently asleep and can't answer your message, please try again later")
+
+    } // is this a diect question from chat
     else if (directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -1140,8 +1184,6 @@ async function callOpenAI (string_array, modelToUse)
 // ============================================================================
 function addPersonality (message, profile)
 {
-
-    //let messages = [{ "role": "system", "content": serverConfig.chatBotPersonality }]
     let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
 
     let CBBehaviour = [
@@ -1276,8 +1318,7 @@ function startProcessing ()
 function changeBotName ()
 {
     serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
-    serverConfig.starttag = serverConfig.starttag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
-    //serverConfig.chatBotPersonality = serverConfig.chatBotPersonality.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    serverConfig.translatetoeng = serverConfig.translatetoeng.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
 
 // ============================================================================
