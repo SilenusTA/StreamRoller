@@ -19,13 +19,6 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
-// ***************************************************
-// NOTE: ChatGBT as a quiz bot sometimes replies 'correct' for the wrong answer
-// two found (speed of light correct at 1000m/s where it should be 300km/s 
-// and average earth temp was 15 C but an answer of 26 C was reported as correct)
-// ***************************************************
-
 
 // ############################# chatbot.js ##############################
 // This is a chatbot aimed at making chat more interesting

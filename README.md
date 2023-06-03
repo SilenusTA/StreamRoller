@@ -1,196 +1,148 @@
-# Streamroller (current dev. stage: Prototyping v -0.000000001)
+# Streamroller (current dev. stage: Alpha)
 ## Table of Contents
 
-- [Streamroller (current dev. stage: Prototyping v -0.000000001)](#streamroller-current-dev-stage-prototyping-v--0000000001)
+- [Streamroller (current dev. stage: Alpha)](#streamroller-current-dev-stage-alpha)
   - [Table of Contents](#table-of-contents)
-  - [What is is?](#what-is-is)
-  - [Why did I start it](#why-did-i-start-it)
-  - [StreamRoller Direction/Development path](#streamroller-directiondevelopment-path)
-  - [Main Goals](#main-goals)
+- [Contacts: (For questions, suggestions etc.)](#contacts-for-questions-suggestions-etc)
+- [Download/Installing](#downloadinstalling)
+- [What is StreamRoller](#what-is-streamroller)
+  - [While streaming](#while-streaming)
+  - [Streaming setup (Getting it to do fun and interesting stuff while streaming)](#streaming-setup-getting-it-to-do-fun-and-interesting-stuff-while-streaming)
 - [Security](#security)
-- [Installing](#installing)
-  - [Step 1: Install node](#step-1-install-node)
-  - [Step 2: Download Streamroller](#step-2-download-streamroller)
-  - [Step 3: Intstall](#step-3-intstall)
-  - [Step 4: Start StreamRoller](#step-4-start-streamroller)
-  - [Step 5: Configure any extensions (password/tokens etc)](#step-5-configure-any-extensions-passwordtokens-etc)
-- [Current Functionality](#current-functionality)
-  - [Some of the current extensions](#some-of-the-current-extensions)
+- [Some of the current extensions](#some-of-the-current-extensions)
   - [Logic/Controller/Display style extensions](#logiccontrollerdisplay-style-extensions)
-    - [adminpage](#adminpage)
-    - [liveportal](#liveportal)
-  - [Datahander extensions](#datahander-extensions)
+  - [Webpages](#webpages)
+    - [Liveportal](#liveportal)
+    - [Adminpage](#adminpage)
+    - [Overlay](#overlay)
+  - [Feature/Datahander extensions](#featuredatahander-extensions)
     - [twitchchat](#twitchchat)
+    - [chatbot (The AI chatbot)](#chatbot-the-ai-chatbot)
     - [discordchat](#discordchat)
     - [streamlabs\_api](#streamlabs_api)
     - [twitter](#twitter)
     - [obs](#obs)
   - [Feature Extensions](#feature-extensions)
-    - [chatbot](#chatbot)
   - [In progress](#in-progress)
-  - [TBD](#tbd)
   - [Ideas for extensions](#ideas-for-extensions)
-- [Links](#links)
-  - [General links](#general-links)
-  - [Extension links](#extension-links)
-  - [Dev links](#dev-links)
+- [For the Dev's/Coders out there](#for-the-devscoders-out-there)
+  - [Server](#server)
+  - [functional extensions](#functional-extensions)
+  - [Extensions can be of different types](#extensions-can-be-of-different-types)
 
-## What is is?
-Contacts:(For questions, suggestions etc.)
+# Contacts: (For questions, suggestions etc.)
 - [Discord, (streamroller-stuff channel)](https://discord.gg/EyJy8brZ6R). 
 - [twitch.tv/OldDepressedGamer](https://twitch.tv/OldDepressedGamer). 
-  
+
+# Download/Installing
+You can find the releases on the relase page on the right of this screen or click [here](https://github.com/SilenusTA/StreamRoller/releases) to go right to them.
+To run streamroller just grab the zip (or exe) and save it somewhere. Double click to run the StreamRoller server and then head to you webbrowser and enter [localhost:3000](http://localhost:3000)
+
+In order to be useful you will need to enter your details for whatever parts of StreamRoller you wish to use. To do this click on the Admin link on the web page you loaded above. There is a list of credentials you can enter (depending on what parts of StreamRoller you want to use).
+
+On these links there will be instruction on where to find your tokens etc for each feature.
+
+I.e. if you only want the AI chatbot then you will need the twitchchat tokens (to enable posting into chat) and an openAI token (to perform requests for the chat messages)
+
+# What is StreamRoller
+Click for a (now old:D) Youtube video  
 [![Watch the video](https://img.youtube.com/vi/tGLe5n-Yyy8/hqdefault.jpg)](https://youtu.be/tGLe5n-Yyy8)
 
-StreamRoller is a tool designed to bring all the data needed for streaming into one system to make it easier to expand your streaming features. i.e. want to post your alerts to discord/twitter without having to code a discord and twitter bot? Just load the existing extensions for twitter and discord, then forward the alert message to them to do the work for you.
+## While streaming
+StreamRoller is designed to bring all the tools needed for streaming into one web page so when streaming you have all your controls on one screen and not have to worry about swapping programs (or even running them). Eventually the you will only need StreamRoller and OBS for all your streaming needs ... if I ever get round to coding up enough extensions:D
 
-As the core extensions are expand you should be able to turn any idea you might want to do into reality with a minimum of effort by controlling what messages/data go from and to.
+## Streaming setup (Getting it to do fun and interesting stuff while streaming)
 
-## Why did I start it
-I found while streaming I would have so many programs open (discord, twitch, chatty, UpDeck (ipad style streamdeck),StreamLabsChatbot). Fitting them all on one screen and or switching between them became a pain.
+The Main reason I started making StreamRoller was so I could have all my streaming tools on one webpage and be able to configure them easily.
 
-I was also finding I wanted to do things that I can't easily do. ie posting donation alerts on twitter or discord. Giving chat some extra contorols (maybe some OBS scene items they can turn on or off etc).
+I also wanted a easier way of making things happen. i.e. triggering things from donations (post a thanks on twitter/discord) or in future (when I get round to adding the code) maybe flash your Hue LED lights/stream lights when someone subs.
 
-## StreamRoller Direction/Development path
-Currently StreamRoller should be considered in prototyping stage (yup not even Alpha yet). There will probably be lots of big changes as the design ideas change.
+The plan is to extend StreamRoller extension list to cover all the things that might be needed. 
 
-The end goal will reamin the same, a simply and easy system to use to get your ideas working. Want to have donations written on a whiteboard behind you by a 3D printer style aparatus, a few lines of code will do it (assuming someone has written the extension for that devide already)
+Once an extension is made (ie the twitter one) then it is easy to do things like sending messages when something happens 'sendTwitterMessage("hi twitter")'
 
-## Main Goals
-The main goals of StreamRoller are the following:
+For now it is relativly easy for me to link together events just using simple javascript coding on the webpage. 
+It is almost at the point where I can write ...
 
-- Single full screen webapp with all live streaming controls on one page (OBS,chat,bots etc) for the streamer
-- Easy to configure by anyone with a minimal of coding experience. (currently JS, in future plans other language API's to be added. ie python API)
-- Distributed. Extensions run off sockets so they can be distributed if required. 
-  - Extensions can be run on any PC as long as they have internet access to the backend. ie. A moderator app can run on the moderators PC, a weather app can run on a RaberryPI in the shed, a game data app run on the gamers PC (esports style) etc.
-  - If IRL streaming the live control web page could be on a phone while the rest runs at home allowing an noSignal scene to kick in when your phone connection goes down.
-  - If two PC's are available the StreamRoller system can run on a second PC with only a webbrowser needing to connect to it for cotrolling everything.
+``` 
+if (alert.type="donation") 
+    sendtotwitter ("thanks for the donation" + alert.from)
+```
+Although this isn't great for people who don't code so I do plan (somewhere in the future) of trying to get the setup (ie what to do when a tweet comes in) in a more usable fashion. This will probably anothe webpage to configure what you want it do to for you (ie Flash my Philips Hugh lights when someone donates), if chat is happy (an inprogress extension to predict the mood of chat) then set the appropriate song list up to play or change the lighting etc.
+
 # Security
-
-_Note: Currently the system should be considered insecure._
-
-Security will be added later. 
 
 At it's current stage the use case for this software to be run in a controlled environment (ie at home behind your routers firewall). 
 
-Login/users and SSL security will be added later
+Any tokens, passwords entered stay on your system and are encrypted.
 
-# Installing
-Note for streaming: Additional sofware needed. The free broadcasting software [OBS Studio](https://obsproject.com/) is required. Also an overlay for your stream is recommended to show alers etc. There is a small overlay demo version included to show how to trigger alerts using StreamRoller to provide the data.
+_I would treat it like you would an encrypted password file you have on your PC. i.e you wouldn't put that text file on a public computer._
 
-Currently (as we are using StreamLabsAPI) you will receive alerts for both Twitch and Youtube (untested but you should also get provided with info for Mixer, facebook, Trovo and TikTok if from streamlabs)
-## Step 1: Install node
-Streamroller needs the [node.js](https://nodejs.org/en/download/) webserver installed to run. It is recommended to use [VSCode](https://code.visualstudio.com/download) to modify/change/add extra features. This VSCode editor provides a lot of nice features for development.
-## Step 2: Download Streamroller
-Grab a copy of this repo and unzip it somewhere ([Streamroller Download](https://github.com/SilenusTA/StreamRoller/archive/refs/heads/master.zip))
-## Step 3: Intstall
-cd into the StreamRoller directory and run the following commands
-
-These install the required dependancies needed. This may take a few minutes the first time it is run.
-
-```
-npm install
-```
-
-
-## Step 4: Start StreamRoller
-Start the server with the following comand on windows (run in the root folder)
-
-```
-run.cmd
-```
-or for linux
-```
-node /backend/datacenter/server.js
-```
-
-
-At this point the node webserver will start up and load any extensions currently in the extension directory. point a webrowser at http://localhost:3000 to see it running.
-
-## Step 5: Configure any extensions (password/tokens etc)
-
-Note: Credentials are set through the admin webpage http://localhost:3000/adminpage/
-
-If connecting to twitch/discord/youtube etc you will need to configure your login credentials/tokens etc as required by the extensions
-
-Most extensions require these keys/tokens to be set from the admin settings popup for each extension (note you may need to restart the StreamRoller service when changing them depending on the extension, most shouldn't need a restart though)
-
-To add credentials enter them on the admin page by clicking on the extension you wish to authorize.
-
-<img src="docs/images/credentials_1.png" alt="admin page" width="600">
-
-<img src="docs/images/credentials_2.png" alt="admin page" width="600">
-
-# Current Functionality
-At the time of writing the system has twitchchat, discord, twitter, streamlabs (for alerts etc) and obs datahandling extensions, a chatbot and demo overlay (if you want to use the system for your overlay). These extensions sit behind an API so that controller extensions like the existing Adminpage web page/Live Portal web page/and demo obs overlay files can easily send and received whatever messages they wish. 
-
-A lot of funtionality at this point is either non existant or in progress. If you have a play with the system and produce something useful or expand an existing extension please let me know.
-
-For development of existing functionality I'd expect people to focus on one extension rather than try and understand the whole system backend. i.e. a moderator extension that can be used by all chat extensions, such that if it needs to ban a user it will just send a message to the twitch/youtube API for that extension rather than connect to the IRC chat itself.
-
-## Some of the current extensions
-See the [Extension List](docs/EXTENSION_LIST.md) for the full list
+# Some of the current extensions
+Still being developed so list might be out of date by now
 ## Logic/Controller/Display style extensions
-### [adminpage](extensions/adminpage/README.md)
-
-Provides a webpage to configure the system
-### [liveportal](extensions/liveportal/README.md)
-
-The live streaming portal is a webpage that you can use on your second monitor to show all the information/settings you need on one page.
-## Datahander extensions
-### [twitchchat](extensions/datahandlers/twitchchat/README.md)
-- Join a twitch chat channel to send receive chat messages
-### [discordchat](extensions/datahandlers/discordchat/README.md)
-- Post alerts to a named discord channel
-- Receive messages from a given discord channel (currently used in live page as a Mod messages window)
-### [streamlabs_api](extensions/datahandlers/streamlabs_api/README.md)
-- Povides alerts data from streamlabs for twitch alerts and streamlab donations
-- Used in the discord chat extension to alerts them to discord
-- Used in demo-overlay (I also run my overlay off StreamRoller so that uses these as well
-### [twitter](extensions/datahandlers/twitter/README.md)
-- Post messages to twitter (need to add a reader output)
-### [obs](extensions/datahandlers/obs/README.md)
-- Receive status upadates from obs (stream started, scene changed etc)
-- Control obs (change scenes, mute scene)
-## Feature Extensions
-These are extension that use the data provided by the above extensions to do something usefull
-### [chatbot](extensions/chatbot/README.md)
+## Webpages
+### Liveportal
+- The live streaming portal is a webpage that you can use on your second monitor to show all the information/settings you need on one page.
+### Adminpage
+- Provides a webpage to configure the system
+### Overlay
+- There is a very basic overlay to that gives the bare bones to allow you to create your own, only needing to focuss on the art and animation aspects and not worry about the overlay server part of it.
+## Feature/Datahander extensions
+### twitchchat
+- Join a twitch chat channel to send receive chat messages on the main page. Also used to handle commands and post responces from the chatbot etc
+### chatbot (The AI chatbot)
 - Provides a chatbot using the openAI chatGPT system
 - Monitors chat and occasionally pops in with messages based on the conversation
 - Can be asked questions that are processed by the openAI system
+- The bot can be setup with a personality of your chosing (ie happy, sad, funny etc) to match your channel ethos
+### discordchat
+- connects to discord to allow things like alerts to be posted when they come in
+- receive messages from a given mod only discord channel (currently used in live page as a Mod messages window so mods can send easy to see messages without having to post in chat)
+### streamlabs_api
+- Povides alerts data from streamlabs for twitch alerts and streamlab donations
+- Used with the discord chat extension to alerts them to discord
+- I also run my overlay off StreamRoller so that uses these as well to trigger alerts while streaming
+### twitter
+- Post messages to twitter (need to add a reader output)
+- Used currently to send a message when you hit the start streaming button on OBS
+### obs
+- Used to control OBS from the live portal page (change scenes, mute ect)
+- Live portal receives status upadates from obs (stream started, scene changed etc)
+## Feature Extensions
+These are extension that use the data provided by the above extensions to do something usefull
 ## In progress
-- pretty much everything currently available
-## TBD
-Lots :D
-- Installation system to make it easier for people to install without having to do commandline stuff
-- proper messaging API so that dev's have an easier time expanding/writing extensions
+- chatmood extension to try and sense the mood of the chat and allow triggering of events (ie change the lighting, overlays, music etc when the chat's mood changes)
 - more data extensions (ie youtube, specific games, home control etc)
+
 ## Ideas for extensions
-
 The current focus in on twitch streaming (although the streamlabs api currently supports other platforms as is). Other platforms will be integrated in time (Youtube etc)
-
+Some things I still need to get sorted are
 - Twitch pub/sub: to allow twitch control (setting title, category, bannign users etc)
 - moderator chatbot: one bot that will work with all the chat extension to provide a single moderator bot for all chat channels (discord/twitch/youtube/facebook etc)
-- NDI stream extension to allow easy integration of external video feeds
+- NDI stream extension to allow easy integration of external video feeds for duel streaming
 - chat auto language conversion.
 - TextToSpeech for chat. So us streamers don't have to focus on chat all the time :P
-- Chat audio feedback. This will play sounds based on chat. ie laugh track, applause based on the % of people posting emotes.
-note: suggestions welcome for this list
-# Links
 
-## General links
-- [Getting Started](docs/GETTING_STARTED.md) 
-  
-  How to install/start/use the system
-- [Extension List](docs/EXTENSION_LIST.md)
-  
-  List of current extensions with links to additional documentation
-## Extension links
-  These can be found by following the Extension list above and clicking the extension name you are interested in.
-## Dev links
-- [Getting start with extensions](docs/EXTENSIONS_GETTING_STARTED.md)
+# For the Dev's/Coders out there
+If you would like to extend the functionality of StreamRoller feel free. All the code currently is in javascript and runs on websockets. This means it should be fairly simple for anyone with web page coding skills to add features, link things together etc.
 
-  Getting started with developing extensions
-- [Messages](docs/MESSAGES_DOC.md)
+There are three areas of StreamRoller
+## Server
+This is simply a message handing system that all other extensions/webpages/dataprocessors connect to.
+It mostly handles routing messages from one extension to another as well as storing persistant data/credentials etc.
+
+## functional extensions
+Every extension (like the live portal) sits on a websocket that connects to the server. On this socket it receives any messages it from extensions it has signed up for and can send messages to other extensions to request information or ask them to do things
+## Extensions can be of different types
+- A control extension that will use other extension to link functionality, The main one of these is the live portal, this listens to almost all extensions and provides the logic to do things like send a message to discord when someone donates
+- simple data producers (like the factoftheday extension that you can request a fact from)
+- other types might create an overlay to add to obs like the countdowntimer and setup via sending them a message, ie start a timer for 5 minutes called breaktime and it will create a breaktime.txt to add to your overlay
   
-  A description of how to use the message system to send/receive data
+A extension simply connects to the server and request the other extensions it wants to 'listen' to. After that it simply decides what it wants to do with the data it receives (ie chat messages)
+
+Extensions like twitch chat simply connect to the StreamRoller server, create a channel (for other to listen to), and then sends any chat messages out on that channel. It will also receive messages like SendChatMessage("user","hi) to send a twitch chat message from the user or bot that is set up.
+
+This means that any webpage or bit of code that can use a websocket can connect to the system, use the eisting extensions functionality or provide more functionality of their own.
+
+If you are interested in helping expand or configure these kind of things feel free to contact me. Maybe you just want to write a couple of overlay items, add some kind of LED sign extension that can display messages sent to it or even write your own live portal page that fits better for your type of streaming (ie music streamers will probabaly want an option for streamsonglist on there in place of the mod panel, currently working on that)
