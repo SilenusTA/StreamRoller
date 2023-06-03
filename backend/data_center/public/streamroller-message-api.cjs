@@ -1,3 +1,24 @@
+/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 /**
  * Summary. A common set of functions for use across server and client code. 
@@ -30,7 +51,7 @@ let __api_version__ = "0.2";
  * @param {string} version Interface version for debugging purposes only(optional)
  * @return {string} A JSON stringified version of the message object
  */
-function ServerPacket(type, from, data, dest_channel, to, ret_channel, version = __api_version__)
+function ServerPacket (type, from, data, dest_channel, to, ret_channel, version = __api_version__)
 {
     //console.log("ServerPacket data:", type, from, typeof (data))
     return {
@@ -58,7 +79,7 @@ function ServerPacket(type, from, data, dest_channel, to, ret_channel, version =
  * @param {string} version Interface version for debugging purposes only(optional)
  * @returns {string} A JSON stringified version of the message object
  */
-function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, version = __api_version__)
+function ExtensionPacket (type, from, data, dest_channel, to, ret_channel, version = __api_version__)
 {
     // console.log("ExtensionPacket data:", type, typeof (data), data)
     return {
@@ -79,7 +100,7 @@ function ExtensionPacket(type, from, data, dest_channel, to, ret_channel, versio
  * @param {socket} connection The socket connect
  * @param {string} data Data to be sent
  */
-function sendMessage(connection, data)
+function sendMessage (connection, data)
 {
     //console.log("sendMessage", data, "end sendMessage")
     connection.emit("message", data);
@@ -107,7 +128,7 @@ function sendMessage(connection, data)
  * @param {string} port  port to listen on (default 3000).
  * @returns 
  */
-function setupConnection(onMessage, onConnect, onDisconnect, host, port)
+function setupConnection (onMessage, onConnect, onDisconnect, host, port)
 {
     var DCSocket = null;
     try
