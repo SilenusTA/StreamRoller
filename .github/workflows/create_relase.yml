@@ -65,7 +65,7 @@ jobs:
         name: "StreamRoller${{ github.ref_name }}"
         tag_name: ${{ github.ref_name }}
         token: ${{secrets.API_TOKEN_GITHUB}}
-        repository: SilenusTA/StreamRoller
+        repository: SilenusTA/StreamRoller_Source
         files: |
           Release.txt
           StreamRoller.zip
