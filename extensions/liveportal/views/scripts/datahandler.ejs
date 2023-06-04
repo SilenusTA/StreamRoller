@@ -28,6 +28,7 @@
 <%- include("../modals/liveportalsettingswidgetlarge.html"); %>
 
 <script>
+    //"use strict"
     const serverConfig = {
         // extensions vars
         extensionname: "liveportal",
@@ -97,6 +98,24 @@
         newDiscordChatBuffer: false,
         // streamersonglist variables
         setreamersonglist: { songlist: [], queue: [] }
+    }
+    const chatcolors =
+    {
+        //general use colors
+        default_darkred_color: "darkred",
+        default_greyout_color: "#757875",
+        default_system_color: "red",
+        default_username_color: "#ffffff",//#6f42c1",
+        default_timecode_color: "#757875",
+        default_user_at_color: "red",
+        default_text_bright_color: "white",
+        default_sub_color: "limegreen",
+        default_reward_color: "red",
+        default_reward_bgcolor: "#fdff00",
+        default_mod_action: "yellow",
+        // yet to be processed colors
+        default_TBD_background_color: "purple",
+        default_TBD_text_color: "yellow",
     }
 
     // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
@@ -326,7 +345,6 @@
         {
             // we need to reload the page if we receive more than one list due to callback handler isses
             // on the form
-            console.log("Extension list received")
             if (bugfix_extensionlist_count > 0)
                 location.reload();
             else
@@ -388,7 +406,10 @@
                 // we process our own submits so don't do anything with the updates we send out if they come 
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname)
-                    addSettingsWidgetLarge(extension_packet.from, extension_packet.data);
+                {
+                    livePortalData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
+                    addSettingsWidgetLarge(extension_packet.from);
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED MODAL DATA (someone hit submit on our dialog)
@@ -602,19 +623,6 @@
                 }
             }
             // -------------------------------------------------------------------------------------------------
-            //                           TWITCH_CHAT_EXTRA
-            // -------------------------------------------------------------------------------------------------
-            // twithc chat alerts etc
-            else if (server_packet.dest_channel == "TWITCH_CHAT_EXTRA")
-            {
-                if (extension_packet.type === "ChatExtraMessage" && serverConfig.processchatbotalerts === "on")
-                {
-                    parseTwitchChatExtaMessage(extension_packet.data);
-                }
-                else
-                    console.log("ignoring message, process chat bot alerts turned off in settings")
-            }
-            // -------------------------------------------------------------------------------------------------
             //                           DISCORD_CHAT
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "DISCORD_CHAT")
@@ -801,7 +809,7 @@
             if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
                 addSettingsWidgetSmall(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetsmall)
             if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
-                addSettingsWidgetLarge(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetlarge)
+                addSettingsWidgetLarge(extensions[i])
         }
     }
     // ===========================================================================
@@ -949,7 +957,6 @@
         // modal and we are in dark mode
         refreshDarkMode();
     }
-
     // ============================================================================
     //                           FUNCTION: addSettingsWidgetLarge
     // ============================================================================
@@ -960,14 +967,14 @@
     // ----------------------------- notes ----------------------------------------
     // None
     // ===========================================================================
-    function addSettingsWidgetLarge (newwidgetname, data)
+    function addSettingsWidgetLarge (newwidgetname)
     {
         let first = true;
         // clear the existing page data
         document.getElementById("SettingsPageTabs").innerHTML = "";
         document.getElementById("SettingsPageContent").innerHTML = "";
         // add/replace the existing data for this extensions
-        livePortalData.extensions[newwidgetname].settingswidgetlarge = data
+        //livePortalData.extensions[newwidgetname].settingswidgetlarge = data
         // loop through all our extensions and add them to the tabs and insert the widget in to the page
 
         Object.entries(livePortalData.extensions).forEach(([xname, stuff]) =>
@@ -991,9 +998,9 @@
                 else
                     document.getElementById("SettingsPageContent").innerHTML += "<div class='tab-pane fade' role='tabpanel' id='" + xname + "_settingswidgetlargecontent'>" + stuff.settingswidgetlarge + "</div>"
 
-                $('#' + xname + "_settingsform").off('submit');
                 setTimeout(() =>
                 {
+                    $('#' + xname + "_settingsform").off('submit');
                     $('#' + xname + "_settingsform").on('submit', function (event)
                     {
                         event.preventDefault();
@@ -1020,6 +1027,13 @@
                         $("#live-tab").tab('show');
                         return false;
                     });
+                    $('#' + xname + "_settingsform").find('#closeSettings').on('click', function (event)
+                    {
+                        console.log("closeSettings handler")
+                        event.preventDefault();
+                        $("#live-tab").tab('show');
+                        return false;
+                    });
 
                 }, 200);
             }
@@ -1027,24 +1041,19 @@
 
         setTimeout(() =>
         {
+            $('#SettingsPageTabs a').off('click')
             $('#SettingsPageTabs a').click(function (e)
             {
                 e.preventDefault();
                 $(this).tab('show');
             })
-            $('#closeSettings').on('click', function (event)
-            {
-                console.log("closeSettings handler")
-                event.preventDefault();
-                $("#live-tab").tab('show');
-                return false;
-            });
+            // need to update the mode in case we have received a light mode 
+            // modal and we are in dark mode, done here in case we arn't loaded yet
+            refreshDarkMode();
         }
             , 200);
 
-        // need to update the mode in case we have received a light mode 
-        // modal and we are in dark mode
-        refreshDarkMode();
+
     }
     // ============================================================================
     //                           FUNCTION: setExtensionStatus
@@ -1149,7 +1158,7 @@
     // ============================================================================
     function addOBSSceneButton (element, displayname, scenename, current)
     {
-        button = document.createElement('input');
+        let button = document.createElement('input');
         button.type = 'button';
         button.value = displayname;
         if (scenename === current)
@@ -1184,7 +1193,7 @@
     // ============================================================================
     function addOBSMuteButton (muted)
     {
-        button = document.createElement('input');
+        let button = document.createElement('input');
         button.type = 'button';
         button.value = "Mute";
         if (muted)
@@ -1288,6 +1297,13 @@
     // ===========================================================================
     function ProcessOBSStats (data)
     {
+        var hour = "";
+        var min = "";
+        var sec = "";
+        var Uptime = "";
+        var missedframestxt = "";
+        var skippedframestxt = "";
+
         if (localConfig.obslive)
         {
             //let rate = data.outputBytes;
@@ -1439,7 +1455,7 @@
         // Update the OBS channel list as we might have changed what we want to show
 
         // re-add the widge so it is updated on screen
-        addSettingsWidgetLarge(serverConfig.extensionname, modalstring)
+        addSettingsWidgetLarge(serverConfig.extensionname)
 
     }
     // ============================================================================
@@ -1540,12 +1556,8 @@
     //                           FUNCTION: displayChatMessages
     // ============================================================================
     // display buffers on screen
-    // if parse=false is passed then the buffer isn't parsed, just update the screen
     function displayChatMessages ()
     {
-        // parse the messages and add them to the buffer
-        //        if (parse)
-        //            parseTwitchChatMessages(data.data);
         let chatcardref = document.getElementById("ChatMessagesCardText")
         let modcardref = document.getElementById("ModMessagesCardText")
 
@@ -1617,15 +1629,16 @@
     {
         // as we have received a bufer lets delete the old data
         let newchatternames = ""
+        let twitchnamedropdowns = ""
         localConfig.usernamelist = extension_packet.data;
         // if we have a username set in our config and that is in the current list of names lets use that one
         if (serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
         {
             document.getElementById("chatuserselect").innerHTML = serverConfig.chatAsUsername;
         }
-        // if we don't have a valid username then use the first one in the list passed in
         else if (extension_packet.data && extension_packet.data[0])
         {
+            // if we don't have a valid username then use the first one in the list passed in
             document.getElementById("chatuserselect").innerHTML = extension_packet.data[0];
             serverConfig.chatAsUsername = extension_packet.data[0];
         }
@@ -1682,39 +1695,37 @@
     }
     // ============================================================================
     //                           FUNCTION: parseTwitchChatMessage
+    //      this will take a chat message and parse it for colouring, 
+    //      sending to chatbot etc
     // ============================================================================
     // updates the buffer with the messages
     function parseTwitchChatMessage (chatdata)
     {
-        if (chatdata.data["message-type"] == "Redemption")
-            console.log("redemption messsage received")
+        if (!chatdata.message)
+        {
+            console.log("########### EMPTY MESSAGE ##########")
+            console.log("parseTwitchChatMessage: received", chatdata);
+            return
+        }
         try
         {
-            // highlights messages we have yet to put options in for
-            var messages_handled = ["chat", "action", "resub", "join", "connecting", "logon", "connected", "twitchchat_extension", "disconnected", "reconnect"]
+            // Message we have currently handled, use this to develope handling of new messages yet to be seen
+            // hard to test all messages as we can't generate them
+            var messages_handled = ["chat", "action", "resub", "join", "connecting", "logon", "connected",
+                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System"]
+
+            var modactions = ["messagedeleted", "timeout", "ban"]
+
+            if (!(messages_handled.includes(chatdata.data["message-type"])))
+                console.log("not handling these messages yet, still work in progress", chatdata)
+
             var sub_messages = ["sub", "resub"];
-            //colors
-            //general use colors
-            var default_darkred_color = "darkred"
 
-            //specific fields / tags color
-            var default_greyout_color = "#757875"
-            var default_system_color = "red"
-            var default_username_color = "#6f42c1"
-            var default_timecode_color = "#757875"
-
-            var default_user_at_color = "red"
-            var default_TBD_background_color = "purple"
-            var default_TBD_text_color = "yellow"
-            var default_text_bright_color = "white"
-            var default_sub_color = "limegreen"
-            var default_reward_color = "orange"
-
-
+            // setup the date field
             var today = new Date();
             var time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
-            // make it colorful
-            var time_color = "<span style='color: " + default_timecode_color + "'>";
+            // make setup our fields for parts of the message
+            var time_color = "<span style='color: " + chatcolors.default_timecode_color + "'>";
             var end_time_color = "</span>"
             var user_color = "";
             var end_user_color = "";
@@ -1723,10 +1734,7 @@
             var user_icons = "";
             var action = "";
             var endaction = "";
-            var highlight_message = "<span style='background-color: " + default_darkred_color + "; '>";
-            var highlight_message = "</>";
             var mod_badge = "<img src='liveportal/images/badge_mod.png'>";
-
             var greyout_line = "false";
 
             // three main parts of a message are built up into these tags
@@ -1746,88 +1754,96 @@
             // set the window title (might have updated)
             document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
 
-
-            // check for an action messge '/me'
+            //  #################################
+            //   check for an action messge '/me'
+            //  ################################
             if (chatdata.data["message-type"] == "action")
             {
                 action = "<i>";
                 endaction = "</i>"
             }
-            // check for highlighted message
-            if (chatdata.data["msg-id"] == "hightlithghted-message" || chatdata.data["message-type"] == "Redemption")
-            {
-                highlight_message = true
-            }
-            // if we have a non chat or action message highlight it (indicates we still need to handle these messages)
+            //  ########################################
+            //  Message NOT in our handled message array
+            //  if we have a non chat or action message 
+            //  highlight it (indicates we still need to 
+            //  handle these messages)
+            //  ########################################
             if (!(messages_handled.includes(chatdata.data["message-type"])))
             {
-                console.log("Under Construction: Alert (subs/bits etc) messages message still needs to be parsed.")
-                console.log(chatdata)
-                background_color = "<span style='color:" + default_TBD_text_color + "; background-color: " + default_TBD_background_color + "; '>";
+                background_color = "<span style='color:" + chatcolors.default_TBD_text_color + "; background-color: " + chatcolors.default_TBD_background_color + "; '>";
                 message = message + " <message-type>: " + ((chatdata.data["message-type"]) ? chatdata.data["message-type"] : "")
                 end_background_color = "</span>"
             }
 
-
-
-            if (!chatdata.message)
-            {
-                console.log("########### EMPTY MESSAGE ##########")
-                console.log(chatdata);
-            }
-
-            // check if someone @'d us
-            if (localConfig.usernamelist.user && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            //  ##################################
+            //  check if someone @'d us
+            //  ##################################
+            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
             {
                 var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
-                message = message.replace(myregex, "<span style='color:" + default_text_bright_color + ";background-color: " + default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
             }
 
-            // add any twitch emotes
+            //  ##################################
+            //      add any twitch emotes
+            //  ##################################
             message = addTwitchEmotes(message, chatdata.data.emotes);
 
-
-            // ##################### our bot messages ##############################
-            if (chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
+            //  ##################################
+            //     Bot Actions
+            //  ##################################
+            if ((modactions.includes(chatdata.data["message-type"])))
             {
                 user_color = mod_badge;
-                line_field = "<BR><span style='color: " + default_greyout_color + "'>"
+                line_field = "<BR><span style='color: " + chatcolors.default_mod_action + "'>"
                 name_field = chatdata.data['display-name'] + "> ";
-                if (highlight_message)
-                    message_field = message;
+                message_field = message;
                 // set the card data
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
             }
-            // ##################### system messages ##############################
+            else if (localConfig.usernamelist && chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
+            {
+                user_color = mod_badge;
+                line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
+                name_field = chatdata.data['display-name'] + "> ";
+                message_field = message;
+                // set the card data
+                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
+            }
+
+            // ##################### 
+            //  system messages 
+            // #####################
             else if (chatdata.data['display-name'] === "System")
             {
                 // set the card data
-                line_field = "<BR><span style='color: " + default_system_color + "'>"
+                line_field = "<BR><span style='color: " + chatcolors.default_system_color + "'>"
                 name_field = chatdata.data['display-name'] + "> ";
                 message_field = message;
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
                 //localConfig.chatMessageBuffer.push("<BR><span style='color: " + default_system_color + "'>" + time + "::: " + chatdata.data['display-name'] + " " + message + "</span>");
             }
-            // ##################### sub messages ##############################
+            // ##################### 
+            //     sub messages 
+            // #####################
             else if (sub_messages.includes(chatdata.data["message-type"]))
             {
-                line_field = "<BR><span style='color: " + default_sub_color + "'>"
+                console.log("SUB MESSAGE")
+                line_field = "<BR><span style='color: " + chatcolors.default_sub_color + "'>"
                 name_field = "<b>" + chatdata.data['display-name'] + "> ";
                 message_field = chatdata.data['system-msg'] + ": " + message + "</b>";
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
             }
-            // ##################### redeem ##############################
-            else if (chatdata.data["custom-reward-id"])
-            {
-                console.log("custom-reward-id", chatdata)
-                line_field = "<BR><span style='color: " + default_reward_color + "'>"
-                name_field = "<b>" + chatdata.data['display-name'] + "> ";
-                message_field = "Redemption: " + message + "</b>";
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
-            }
-            // ##################### chat messages ##############################
+            // ##################### 
+            //   chat messages 
+            // #####################
             else
             {
+                if (chatdata.data["msg-id"] || chatdata.data["custom-reward-id"])
+                {
+                    background_color = chatdata.data["msg-id"] + ": <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
+                    end_background_color = "</span></b>"
+                }
                 // ##################### username colors and icons
                 // if this is not a chat message (ie a sub etc) then set username color to yellow
                 if (chatdata.data["message-type"] != "chat")
@@ -1837,17 +1853,15 @@
                     user_color = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
                 // if we don't have a user color then lets use that instead
                 else if (chatdata.data.color === null)
-                    user_color = "<span style='color: " + default_username_color + "'>";
+                    user_color = "<span style='color: " + chatcolors.default_username_color + "'>";
                 // use standard color if no coler is available
                 else
                     user_color = "<span style='color: " + chatdata.data.color + "'>";
 
                 name_field = user_color + chatdata.data['display-name'] + "&gt</span> ";
 
-
                 // ########### create out message line
                 // set the card title (may have changed since last time around)
-
 
                 // if we have no nonchat or action message highlight it so we know we need to fix this
                 if (chatdata.data["message-type"] == "chat" && chatdata.data["message-type"] == "action")
@@ -1857,14 +1871,7 @@
                 else // unhandled message
                     message_field = background_color + action + message + endaction + end_background_color
 
-
-
-
-
-
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + "<" + chatdata.data["message-type"] + ">" + end_line_field);
-
-
 
                 // add mod messages to mod card if we have this option selected in the liveportal settings page
                 if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
@@ -1876,7 +1883,6 @@
         catch (error)
         {
             console.log("ERROR:parseTwitchChatMessage:", error)
-            console.err(error)
         }
     }
     // ============================================================================
@@ -2597,12 +2603,14 @@
     // ============================================================================
     function updateSingerSonglistQueue (queue)
     {
-        const tabletitle = document.getElementById("streamersonglisttitle")
+        const tabletitle = document.getElementById("streamersonglisttitle");
         const queueTableBody = document.querySelector('#queueTableBody');
         queueTableBody.innerHTML = '';
-        let tableentry = ""
-        let song = ""
-        let classes = "bg-light text-dark"
+        let tableentry = "";
+        let song = "";
+        let songtime = "";
+        let displaytime = "";
+        let classes = "bg-light text-dark";
         if (modeDark == "true")
             classes = "bg-dark text-light"
 

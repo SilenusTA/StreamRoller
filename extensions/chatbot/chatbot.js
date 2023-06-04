@@ -846,6 +846,7 @@ function processTextMessage (data)
 // ============================================================================
 function processChatMessage (data)
 {
+    //console.log("chatbot.processChatMessage", data)
     // debug message colors
     let brightText = "\x1b[1m";
     let yellowColour = brightText + "\x1b[33m";
