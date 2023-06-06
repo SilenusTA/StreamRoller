@@ -1027,7 +1027,7 @@ function file_log (type, tags, message)
         if (!fs.existsSync(basedir + type))
         {
             newfile = true;
-            fs.mkdirSync(basedir + type);
+            fs.mkdirSync(basedir + type, { recursive: true });
         }
 
         // check if we already have this handler
