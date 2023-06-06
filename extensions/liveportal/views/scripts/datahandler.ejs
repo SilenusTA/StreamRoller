@@ -1840,7 +1840,7 @@
                 }
                 // ##################### username colors and icons
                 // if this is not a chat message (ie a sub etc) then set username color to yellow
-                if (chatdata.data["message-type"] != "chat")
+                if (chatdata.data["message-type"] != "chat" && chatdata.data["message-type"] != "action")
                     user_color = "<span style='color: yellow'>";
                 // if the user is a mod then add the mod badge
                 else if (chatdata.data.mod)
