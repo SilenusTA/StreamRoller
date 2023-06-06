@@ -690,7 +690,7 @@ function process_chat_data (channel, tags, chatmessage)
             data.channel += " [Readonly]"
         if (localConfig.twitchClient["user"].state.emoteonly)
             data.channel += " [Emoteonly]"
-        if (localConfig.twitchClient["user"].state.followersonly != -1)
+        if (localConfig.twitchClient["user"].state.followersonly != -1 && localConfig.twitchClient["user"].state.followersonly)
             data.channel += " [Followersonly (" + localConfig.twitchClient["user"].state.followersonly + ")]"
         if (localConfig.twitchClient["user"].state.r9k)
             data.channel += " [r9k]"
@@ -949,6 +949,7 @@ function chatLogin (account)
         localConfig.twitchClient[account].connection.on("resub", (channel, username, months, message, userstate, methods) => { file_log("resub", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, ((message) ? message : "")); });
         localConfig.twitchClient[account].connection.on("roomstate", (channel, state) =>
         {
+            console.log(state)
             file_log("roomstate", state, channel);
             localConfig.twitchClient["user"].state.emoteonly = state["emote-only"];
             localConfig.twitchClient["user"].state.followersonly = state['followers-only'];
