@@ -3,7 +3,8 @@
         "datastore/*",
         "configstore/*",
         "credentialstore/*",
-        "test-ext/*"
+        "test-ext/*",
+        "chatdata/*"
     ],
     "ext": "js, json, html,ejs,cjs,mjs"
 }

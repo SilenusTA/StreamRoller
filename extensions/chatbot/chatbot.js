@@ -70,6 +70,7 @@ const defaultConfig = {
     questionbotenabled: "off",
     chatbotquerytagstartofline: "on",
     translatetoeng: "off",
+    submessageenabled: "off",
 
     chatbotignorelist: "",
     // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
@@ -433,6 +434,7 @@ function handleSettingsWidgetSmallData (modalcode)
     }
     serverConfig.chatbotenabled = "off";
     serverConfig.questionbotenabled = "off";
+    serverConfig.submessageenabled = "off";
 
     for (const [key, value] of Object.entries(modalcode))
         serverConfig[key] = value;
@@ -459,6 +461,7 @@ function handleSettingsWidgetLargeData (modalcode)
     serverConfig.questionbotenabled = "off";
     serverConfig.chatbotquerytagstartofline = "off";
     serverConfig.translatetoeng = "off";
+    serverConfig.submessageenabled = "off";
     serverConfig.DEBUG_MODE = "off";
     serverConfig.restore_defaults = "off";
 
@@ -768,7 +771,7 @@ function SaveConfigToServer ()
 function heartBeatCallback ()
 {
     let connected = true
-    if (serverConfig.chatbotenabled === "off" && serverConfig.questionbotenabled === "off")
+    if (serverConfig.chatbotenabled === "off" && serverConfig.questionbotenabled === "off" && serverConfig.submessageenabled === "off")
         connected = false;
     else
         connected = true
@@ -855,7 +858,30 @@ function processChatMessage (data)
     let resetColour = "\x1b[0m";
     // used to work out expired time when calculating the virtual 'typed response'
     let starttime = Date.now();
+    let messages_handled = ""
+    let sub_messages = "";
+    if (serverConfig.DEBUG_MODE === "on")
+    {
+        messages_handled = ["chat", "LOCAL_DEBUG", "sub", "subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
+        sub_messages = ["sub", "subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
+    }
+    else
+    {
+        messages_handled = ["chat", "LOCAL_DEBUG"]
+        sub_messages = ["sub", "subscription", "resub"];
+    }
 
+    let submessage = sub_messages.includes(data.data["message-type"]);
+    let handledmessage = messages_handled.includes(data.data["message-type"]);
+
+    if (!data.message)
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("received empty message")
+        }
+        return;
+    }
     // check ignore list
     if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.indexOf(data.data["display-name"]) > -1)
     {
@@ -875,12 +901,15 @@ function processChatMessage (data)
         (serverConfig.chatbotquerytagstartofline == "on" &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
+
+
     // user asked for a translation
     let translateToEnglish = (serverConfig.translatetoeng == "on"
         && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
 
-    // check if this is a chat or local message (don't parse subs etc)
-    if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
+    // skip messages we don't want to use for chatbot.
+    if (!handledmessage && !submessage && !directChatQuestion)
+    //if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -889,25 +918,32 @@ function processChatMessage (data)
         return;
     }
     // check that we are enabled for chat or questions
-    if (serverConfig.questionbotenabled === "off" && serverConfig.chatbotenabled === "off")
+    if (serverConfig.questionbotenabled === "off" && serverConfig.chatbotenabled === "off" && serverConfig.submessageenabled === "off")
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
-            console.log("ignoring messages, chat and question bots disabled")
+            console.log("ignoring messages, chat, question and subs bots disabled", data.data["message-type"])
         }
         return;
     }
-    // ignore messages from the bot or specified users
-    if ((serverConfig.chatbotname != null && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1)
-        || data.data["display-name"].toLowerCase().indexOf("system") != -1)
+    // ignore messages from the bot
+    if (!submessage &&
+        (// bot message
+            (serverConfig.chatbotname != null
+                && data.data["display-name"].toLowerCase().indexOf(serverConfig.chatbotname.toLowerCase()) != -1
+            )
+            // system message
+            || data.data["display-name"].toLowerCase().indexOf("system") != -1
+        )
+    )
     {
         if (serverConfig.DEBUG_MODE === "on")
-            console.log("Ignoring system/bot message", data.message)
+            console.log("Ignoring system/bot message", data)
         return;
     }
 
     // is this a chatmessage and inside of the time window (if not a direct question)
-    if (localConfig.running === false && !directChatQuestion && !translateToEnglish)
+    if (localConfig.running === false && !directChatQuestion && !translateToEnglish && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -940,7 +976,7 @@ function processChatMessage (data)
     // check the length again after parsing the message to make sure it is still long enough (if not a direct message)
     if (
         (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
-        && (!translateToEnglish || !directChatQuestion))
+        && (!translateToEnglish || !directChatQuestion || !submessage))
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -952,24 +988,38 @@ function processChatMessage (data)
         }
         return
     }
-    // is this a direct question from chat
-    else if (translateToEnglish)
+    // is this a direct question from chat or a sub
+    else if (translateToEnglish || submessage)
     {
+        let messages = ""
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
-            console.log("Tanslation Requested")
+            console.log("Performing Tanslation/submessage")
         }
-        if (serverConfig.translatetoeng === "on")
+
+        if (translateToEnglish)
         {
             // ##############################################
-            //         Processing a question message
+            //         Processing a translation message
             // ##############################################
-            let messages = [{
+            messages = [{
                 "role": "user", "content": "Translate this into English :\n" + chatdata.message.replace(serverConfig.translatetoengtag, "")
             }]
+        }
+        else if (submessage)
+        {
+            // ##############################################
+            //         Processing a sub/dono message message
+            // ##############################################
+            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!! chatbot: sub/dono message", chatdata.message)
+            messages = [{ "role": "user", "content": "Wow someone just :\n" + chatdata.message }];
+        }
 
 
+
+        if (serverConfig.translatetoeng === "on" || serverConfig.submessageenabled === "on")
+        {
             callOpenAI(messages, serverConfig.settings.chatmodel)
                 .then(chatMessageToPost =>
                 {

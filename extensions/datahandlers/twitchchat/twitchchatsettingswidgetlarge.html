@@ -42,9 +42,9 @@
         things in future</p>
     <div class="form-group py-2">
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="updateUserList" type="checkbox" id="updateUserList"
-                updateUserListchecked>
-            <label class="form-check-label" for="updateUserList">Keep Userlist upto data (requires 'users'
+            <input class="form-check-input" name="updateUserLists" type="checkbox" id="updateUserLists"
+                updateUserListschecked>
+            <label class="form-check-label" for="updateUserLists">Keep Userlist upto data (requires 'users'
                 extension)</label>
         </div>
     </div>
@@ -79,12 +79,18 @@
                     id="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" DEBUG_ONLY_MIMICK_POSTING_TO_TWITCHchecked>
                 <label class="form-check-label" for="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH">Enable/Disable</label>
             </div>
-            <BR>Enable extra messages from the IRC client (subs, mod actions etc). Still going though these to check
-            what I need to do with them so it might crash if enabled :D<BR>
+            <BR>Enable extra console logging<BR>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" name="DEBUG_EXTRA_CHAT_MESSAGE" type="checkbox"
                     id="DEBUG_EXTRA_CHAT_MESSAGE" DEBUG_EXTRA_CHAT_MESSAGEchecked>
                 <label class="form-check-label" for="DEBUG_EXTRA_CHAT_MESSAGE">Enable/Disable</label>
+            </div>
+            <BR>Log messages to file. This can slow your pc down and take up a lot of space over time if used on a busy
+            chat. stored in %LOCALAPPDATA%\StreamRoller\chatdata<BR>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="DEBUG_LOG_DATA_TO_FILE" type="checkbox"
+                    id="DEBUG_LOG_DATA_TO_FILE" DEBUG_LOG_DATA_TO_FILEchecked>
+                <label class="form-check-label" for="DEBUG_LOG_DATA_TO_FILE">Enable/Disable</label>
             </div>
         </div>
     </div>

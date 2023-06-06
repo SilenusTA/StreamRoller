@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# users.js ##############################
+// ############################# users.js ##############################
 // This extension handles users/viewers data. ie a place to store channel points etc
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -53,16 +53,8 @@ const serverConfig = {
     demovar1: "on",  // example of a checkbox. "on" or "off"
     demotext1: "demo text", // example of a text field
 };
-let userData = [
-    //{
-    // ie.
-    //    username: "", /* madatory */
-    //    platform: "", /* madatory */
-    //    firstseen: "",
-    //    lastseen: ""
-    //}
-]
-
+const serverData = { userData: { twitch: {}, youtube: {} } }
+// serverData.userData.twitch.bob = {firstseen,lastseen}
 const OverwriteDataCenterConfig = false;
 
 // ============================================================================
@@ -142,16 +134,13 @@ function onDataCenterMessage (server_packet)
 
         }
     }
-    else if (server_packet.type === "DataFile")
+    else if (server_packet.type === "DataFile" && server_packet.data != "")
     {
-        if (server_packet.data != "")
-        {
-
-            // check it is our data
-            if (server_packet.to === serverConfig.extensionname)
-                userData = server_packet.data
-            SaveDataToServer();
-        }
+        // check it is our data
+        if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.data.userData)
+                serverData.userData = JSON.parse(JSON.stringify(server_packet.data.userData));
+        SaveDataToServer();
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -176,39 +165,19 @@ function onDataCenterMessage (server_packet)
         {
             if (server_packet.to === localConfig.EXTENSION_NAME)
             {
-                let userfound = false;
-                // extension data will be a single user item.
-                let newdata = extension_packet.data
-                let x = 0
-                userData.every(element =>
+                let newuser = false
+                // new platform
+                if (!serverData.userData[extension_packet.data.platform])
+                    serverData.userData[extension_packet.data.platform] = [];
+                // new users
+                if (!serverData.userData[extension_packet.data.platform][extension_packet.data.username])
                 {
-                    //console.log("looping:", element, ":", x++)
-                    // EXISTING USER
-                    if (element.username === newdata.username
-                        && element.platform === newdata.platform)
-                    {
-                        newdata.lastseen = Date.now()
-                        for (const [key, value] of Object.entries(extension_packet.data))
-                            element[key] = value;
-                        userfound = true;
-                        return false; // break out of loop
-
-                    }
-                    return true // continue looping
-                })
-                //console.log("post loop:", userfound)
-                if (userfound === false)
-                {
-                    // NEW USER
-                    if (newdata.username && newdata.platform)
-                    {
-                        newdata.firstseen = Date.now()
-                        newdata.lastseen = Date.now()
-                        userData.push(extension_packet.data)
-                    }
-                    else
-                        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "UpdateUserData missing data ", newdata);
+                    newuser = true;
+                    serverData.userData[extension_packet.data.platform][extension_packet.data.username] = {};
                 }
+                if (newuser)
+                    serverData.userData[extension_packet.data.platform][extension_packet.data.username].firstseen = Date.now()
+                serverData.userData[extension_packet.data.platform][extension_packet.data.username].lastseen = Date.now()
                 SaveDataToServer();
             }
         }
@@ -349,7 +318,7 @@ function SaveDataToServer ()
         sr_api.ServerPacket(
             "SaveData",
             localConfig.EXTENSION_NAME,
-            userData));
+            serverData));
 }
 // ============================================================================
 //                                  EXPORTS

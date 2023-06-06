@@ -66,9 +66,6 @@
         donations: "off",
         chatAsUsername: "user",
 
-        // chatbot settings
-        processchatbotalerts: "on",
-
         // random facts / twitter settings
         randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
@@ -109,7 +106,7 @@
         default_timecode_color: "#757875",
         default_user_at_color: "red",
         default_text_bright_color: "white",
-        default_sub_color: "limegreen",
+        default_sub_color: "#03b503",
         default_reward_color: "red",
         default_reward_bgcolor: "#fdff00",
         default_mod_action: "yellow",
@@ -151,8 +148,12 @@
     // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
     document.body.onmousedown = function () { localConfig.mouseDown = true }
     document.body.onmouseup = function () { localConfig.mouseDown = false }
-
-    ConnectToDataCenter(host, port)
+    window.addEventListener('load',
+        function ()
+        {
+            ConnectToDataCenter(host, port);
+            heartBeatCallback();
+        });
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
     // ============================================================================
@@ -579,7 +580,7 @@
         else if (server_packet.type === "ChannelData")
         {
             // -------------------------------------------------------------------------------------------------
-            //                           HEATBEAT
+            //                           HEARTBEAT
             // -------------------------------------------------------------------------------------------------
             let extension_packet = server_packet.data;
             if (extension_packet.type === "HeartBeat")
@@ -1701,25 +1702,17 @@
     // updates the buffer with the messages
     function parseTwitchChatMessage (chatdata)
     {
-        if (!chatdata.message)
-        {
-            console.log("########### EMPTY MESSAGE ##########")
-            console.log("parseTwitchChatMessage: received", chatdata);
-            return
-        }
         try
         {
             // Message we have currently handled, use this to develope handling of new messages yet to be seen
             // hard to test all messages as we can't generate them
-            var messages_handled = ["chat", "action", "resub", "join", "connecting", "logon", "connected",
-                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System"]
-
-            var modactions = ["messagedeleted", "timeout", "ban"]
+            var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected",
+                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice"]
+            var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
+            var modactions = ["messagedeleted", "timeout", "ban", "notice"]
 
             if (!(messages_handled.includes(chatdata.data["message-type"])))
                 console.log("not handling these messages yet, still work in progress", chatdata)
-
-            var sub_messages = ["sub", "resub"];
 
             // setup the date field
             var today = new Date();
@@ -1762,12 +1755,9 @@
                 action = "<i>";
                 endaction = "</i>"
             }
-            //  ########################################
-            //  Message NOT in our handled message array
-            //  if we have a non chat or action message 
-            //  highlight it (indicates we still need to 
-            //  handle these messages)
-            //  ########################################
+            //  ################################################################################
+            //       UNHANDLED MESSAGES. NEED TO BE FORMATTED CORRECTLY
+            //  ################################################################################
             if (!(messages_handled.includes(chatdata.data["message-type"])))
             {
                 background_color = "<span style='color:" + chatcolors.default_TBD_text_color + "; background-color: " + chatcolors.default_TBD_background_color + "; '>";
@@ -1778,7 +1768,7 @@
             //  ##################################
             //  check if someone @'d us
             //  ##################################
-            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
             {
                 var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
                 message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
@@ -1790,7 +1780,7 @@
             message = addTwitchEmotes(message, chatdata.data.emotes);
 
             //  ##################################
-            //     Bot Actions
+            //     Mod Actions
             //  ##################################
             if ((modactions.includes(chatdata.data["message-type"])))
             {
@@ -1801,6 +1791,9 @@
                 // set the card data
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
             }
+            // ########################################## 
+            //  Our Bot messages (ie chatbot)
+            // ##########################################
             else if (localConfig.usernamelist && chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
             {
                 user_color = mod_badge;
@@ -1831,7 +1824,7 @@
                 console.log("SUB MESSAGE")
                 line_field = "<BR><span style='color: " + chatcolors.default_sub_color + "'>"
                 name_field = "<b>" + chatdata.data['display-name'] + "> ";
-                message_field = chatdata.data['system-msg'] + ": " + message + "</b>";
+                message_field = chatdata.data['system-msg'] + ((message) ? ": " + message : "") + "</b>";
                 localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
             }
             // ##################### 
@@ -1839,6 +1832,7 @@
             // #####################
             else
             {
+                // ######################### reward messages #########################
                 if (chatdata.data["msg-id"] || chatdata.data["custom-reward-id"])
                 {
                     background_color = chatdata.data["msg-id"] + ": <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
@@ -1866,8 +1860,8 @@
                 // if we have no nonchat or action message highlight it so we know we need to fix this
                 if (chatdata.data["message-type"] == "chat" && chatdata.data["message-type"] == "action")
                     message_field = background_color + action + message + endaction + end_background_color
-                else if (chatdata.data["message-type"] == "resub")
-                    message_field = background_color + action + message + endaction + end_background_color
+                //else if (chatdata.data["message-type"] == "resub")
+                //    message_field = background_color + action + message + endaction + end_background_color
                 else // unhandled message
                     message_field = background_color + action + message + endaction + end_background_color
 
@@ -1889,10 +1883,12 @@
     //                           FUNCTION: parseTwitchChatExtaMessage
     // ============================================================================
     // updates the buffer with the messages
+    /*
     function parseTwitchChatExtaMessage (alertdata)
     {
         try
         {
+            console.log(alertdata)
             let subsmessages = ["subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
             if (alertdata.data['message-type'] == "raided")
             {
@@ -1925,7 +1921,7 @@
         {
             console.log("Error sub data not defined. please copy this message and notify the owner of StreamRoller to put a handler in for this messages", e)
         }
-    }
+    }*/
     // ============================================================================
     //                           FUNCTION: parseDiscordChatMessage
     // ============================================================================
@@ -2063,7 +2059,7 @@
         // only scroll if the mouse isn't down (user srolling) or if we are already 
         // within 40 pixels of the new mesages coming in. 
         if (!localConfig.mouseDown && ((container.scrollHeight - (container.scrollTop + container.clientHeight)) < 40))
-            container.scrollTop = container.scrollHeight;
+            container.scrollTop = container.scrollHeight + 1;
 
     }
     // ============================================================================
@@ -2315,10 +2311,11 @@
                 alerttext = "<div class='text-primary'>Resub: " + alertcontents.name + " " + alertcontents.months + 'm (' + alertcontents.streak_months + '). "' + alertcontents.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
+
             case "subMysteryGift":
                 console.log(alertcontents)
                 messagetxt += alertcontents.gifter + " for the " + alertcontents.amount + " gifted subs"
-                postMessageToTwitch(messagetxt)
+                //postMessageToTwitch(messagetxt)
                 if (serverConfig.giftsubs === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-danger'>GiftSub: " + alertcontents.gifter + " gifted " + alertcontents.amount + " subs</div>"
@@ -2704,7 +2701,6 @@
     // ============================================================================
     //                           FUNCTION: heartBeat
     // ============================================================================
-    heartBeatCallback()
     function heartBeatCallback ()
     {
         if (DataCenterSocket.connected)
