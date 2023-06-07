@@ -50,12 +50,15 @@ const localConfig = {
     // number of messages added to history so far
     chatMessageCount: 0,
     chatHistory: [],
-    // are we currently running (ie time has expired and chatbot started)
-    running: false,
+    // are we currently inTimerWindow (ie time has expired and chatbot started)
+    inTimerWindow: false,
     // we currently have a reqest pending
     requestPending: false,
     chatTimerHandle: null,
-
+    // protect against sending too many requests
+    lastrequesttime: Date.now() - 500,
+    // min time between requests (to avoid 429 errors)
+    overloadprotection: 500,
 };
 const defaultConfig = {
     extensionname: localConfig.EXTENSION_NAME,
@@ -821,22 +824,25 @@ function processTextMessage (data)
     callOpenAI(messages, model_to_use)
         .then(chatMessageToPost =>
         {
-            data.response = chatMessageToPost
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "AIChatbotResponse",
+            if (chatMessageToPost)
+            {
+                data.response = chatMessageToPost
+                // send the modal data to the server
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
-                        data,
+                        sr_api.ExtensionPacket(
+                            "AIChatbotResponse",
+                            serverConfig.extensionname,
+                            data,
+                            "",
+                            data.from,
+                            serverConfig.channel
+                        ),
                         "",
-                        data.from,
-                        serverConfig.channel
-                    ),
-                    "",
-                    data.from)
-            )
+                        data.from)
+                )
+            }
         })
         .catch(e =>
         {
@@ -860,6 +866,20 @@ function processChatMessage (data)
     let starttime = Date.now();
     let messages_handled = ""
     let sub_messages = "";
+
+    // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
+    // this should really be a rollback timeout but this whole code needs re-writing at this point :P
+    if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection)
+    {
+        // random timeout between 200 and 500ms
+        var randomTimeout = (Math.random() * 300) + 200;
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log("waiting for rollback timeout:", randomTimeout)
+        setTimeout(() =>
+        {
+            processChatMessage(data)
+        }, randomTimeout);
+    }
     if (serverConfig.DEBUG_MODE === "on")
     {
         messages_handled = ["chat", "LOCAL_DEBUG", "sub", "subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
@@ -943,7 +963,7 @@ function processChatMessage (data)
     }
 
     // is this a chatmessage and inside of the time window (if not a direct question)
-    if (localConfig.running === false && !directChatQuestion && !translateToEnglish && !submessage)
+    if (localConfig.inTimerWindow === false && !directChatQuestion && !translateToEnglish && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1023,7 +1043,8 @@ function processChatMessage (data)
             callOpenAI(messages, serverConfig.settings.chatmodel)
                 .then(chatMessageToPost =>
                 {
-                    postMessageToTwitch(chatMessageToPost)
+                    if (chatMessageToPost)
+                        postMessageToTwitch(chatMessageToPost)
                     return;
                 })
                 .catch(e =>
@@ -1055,7 +1076,8 @@ function processChatMessage (data)
             callOpenAI(messages, serverConfig.settings.chatmodel)
                 .then(chatMessageToPost =>
                 {
-                    postMessageToTwitch(chatMessageToPost)
+                    if (chatMessageToPost)
+                        postMessageToTwitch(chatMessageToPost)
                     return;
                 })
                 .catch(e =>
@@ -1139,24 +1161,19 @@ function processChatMessage (data)
                         console.log("delay response: ", delaytime / 1000, "s")
                     }
                     setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);
-                    // if we don't have a time running start a new one (might have been called from a chat question)
+                    // if we don't have a time inTimerWindow start a new one (might have been called from a chat question)
                     if (localConfig.chatTimerHandle._destroyed)
                         startChatbotTimer()
-                    localConfig.requestPending = false;
-                    localConfig.running = false
+
                     //clear the buffer for next time (probably had some async messages while waiting for api to return)
                     localConfig.chatHistory = []
                 }
-                else
-                {
-                    localConfig.requestPending = false;
-                    localConfig.running = false
-                }
+                localConfig.requestPending = false;
             })
             .catch(e =>
             {
                 localConfig.requestPending = false;
-                localConfig.running = false
+                localConfig.inTimerWindow = false
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI chat request failed:", e.message);
             })
 
@@ -1196,6 +1213,8 @@ async function callOpenAI (string_array, modelToUse)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )
+            // min time between requests (to avoid 429 errors)
+            localConfig.lastrequesttime = Date.now();
             if (!response)
             {
                 localConfig.requestPending = false;
@@ -1225,7 +1244,10 @@ async function callOpenAI (string_array, modelToUse)
                 return openAIResponce;
             }
             else
+            {
+                localConfig.lastrequesttime = Date.now();
                 localConfig.requestPending = false;
+            }
         }
         else
         {
@@ -1343,7 +1365,7 @@ function postMessageToTwitch (msg)
 // ============================================================================
 function startChatbotTimer ()
 {
-
+    localConfig.inTimerWindow = false;
     var randomTimeout = Math.floor(Math.random() * ((serverConfig.chatbotTimerMax * 60000) - (serverConfig.chatbotTimerMin * 60000) + 1) + (serverConfig.chatbotTimerMin * 60000));
     //avoid spamming the API so set the maximum query time to 1 seconds
     if (randomTimeout < 1000)
@@ -1371,7 +1393,7 @@ function startProcessing ()
     localConfig.chatMessageCount = 0;
     if (localConfig.chatTimerHandle != null)
         clearTimeout(localConfig.chatTimerHandle);
-    localConfig.running = true;
+    localConfig.inTimerWindow = true;
     logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".startProcessing", "processing started");
 
 }
