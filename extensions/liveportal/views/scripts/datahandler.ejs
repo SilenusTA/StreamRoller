@@ -100,7 +100,7 @@
     {
         //general use colors
         default_darkred_color: "darkred",
-        default_greyout_color: "#757875",
+        default_greyout_color: "#adadad",
         default_system_color: "red",
         default_username_color: "#ffffff",//#6f42c1",
         default_timecode_color: "#757875",
@@ -1707,7 +1707,7 @@
             // Message we have currently handled, use this to develope handling of new messages yet to be seen
             // hard to test all messages as we can't generate them
             var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected",
-                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice"]
+                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "redeem"]
             var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
             var modactions = ["messagedeleted", "timeout", "ban", "notice"]
 
@@ -1835,7 +1835,7 @@
                 // ######################### reward messages #########################
                 if (chatdata.data["msg-id"] || chatdata.data["custom-reward-id"])
                 {
-                    background_color = chatdata.data["msg-id"] + ": <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
+                    background_color = ((chatdata.data["msg-id"]) ? chatdata.data["msg-id"] : "CustomReward:") + " <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
                     end_background_color = "</span></b>"
                 }
                 // ##################### username colors and icons
