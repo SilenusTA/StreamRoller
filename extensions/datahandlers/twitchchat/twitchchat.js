@@ -64,14 +64,24 @@ localConfig.twitchClient["bot"] = {
     connection: null,
     state: {
         readonly: true,
-        connected: false
+        connected: false,
+        emoteonly: false,
+        followersonly: -1,
+        r9k: false,
+        slowmode: false,
+        subsonly: false
     }
 }
 localConfig.twitchClient["user"] = {
     connection: null,
     state: {
         readonly: true,
-        connected: false
+        connected: false,
+        emoteonly: false,
+        followersonly: -1,
+        r9k: false,
+        slowmode: false,
+        subsonly: false
     }
 }
 const serverConfig = {
@@ -370,7 +380,7 @@ function onDataCenterMessage (server_packet)
                     name = extension_packet.data.account
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
                 console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet.data)
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": name, "emotes": "", "message-type": "LOCAL_DEBUG" }, extension_packet.data.message)
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": name, "emotes": "", "message-type": "chat" }, "::::LOCAL_DEBUG:::: " + extension_packet.data.message)
             }
         }
         else if (extension_packet.type === "RequestAccountNames")
@@ -690,7 +700,7 @@ function process_chat_data (channel, tags, chatmessage)
             data.channel += " [Readonly]"
         if (localConfig.twitchClient["user"].state.emoteonly)
             data.channel += " [Emoteonly]"
-        if (localConfig.twitchClient["user"].state.followersonly != -1 && localConfig.twitchClient["user"].state.followersonly)
+        if (localConfig.twitchClient["user"].state.followersonly != -1)
             data.channel += " [Followersonly (" + localConfig.twitchClient["user"].state.followersonly + ")]"
         if (localConfig.twitchClient["user"].state.r9k)
             data.channel += " [r9k]"
@@ -951,7 +961,7 @@ function chatLogin (account)
         {
             file_log("roomstate", state, channel);
             localConfig.twitchClient["user"].state.emoteonly = state["emote-only"];
-            localConfig.twitchClient["user"].state.followersonly = state['followers-only'];
+            localConfig.twitchClient["user"].state.followersonly = (state['followers-only'] === false) ? 0 : state['followers-only'];
             localConfig.twitchClient["user"].state.r9k = state.r9k;
             localConfig.twitchClient["user"].state.slowmode = state.slow;
             localConfig.twitchClient["user"].state.subsonly = state['subs-only'];
