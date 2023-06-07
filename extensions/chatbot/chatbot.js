@@ -867,19 +867,7 @@ function processChatMessage (data)
     let messages_handled = ""
     let sub_messages = "";
 
-    // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
-    // this should really be a rollback timeout but this whole code needs re-writing at this point :P
-    if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection)
-    {
-        // random timeout between 200 and 500ms
-        var randomTimeout = (Math.random() * 300) + 200;
-        if (serverConfig.DEBUG_MODE === "on")
-            console.log("waiting for rollback timeout:", randomTimeout)
-        setTimeout(() =>
-        {
-            processChatMessage(data)
-        }, randomTimeout);
-    }
+
     if (serverConfig.DEBUG_MODE === "on")
     {
         messages_handled = ["chat", "LOCAL_DEBUG", "sub", "subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
@@ -992,7 +980,20 @@ function processChatMessage (data)
     // debug logging
     if (chatdata && chatdata.message && serverConfig.DEBUG_MODE === "on")
         console.log(yellowColour + data.data['display-name'] + ">" + resetColour, data.message)
-
+    // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
+    // this should really be a rollback timeout but this whole code needs re-writing at this point :P
+    if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection
+        || localConfig.requestPending)
+    {
+        // random timeout between 200 and 500ms
+        var randomTimeout = (Math.random() * 300) + 200;
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log("waiting for rollback timeout:", randomTimeout)
+        setTimeout(() =>
+        {
+            processChatMessage(data)
+        }, randomTimeout);
+    }
     // check the length again after parsing the message to make sure it is still long enough (if not a direct message)
     if (
         (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
