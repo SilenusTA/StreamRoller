@@ -1444,7 +1444,7 @@
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
+                modalstring = modalstring.replaceAll(' ' + key + 'checked', ' checked');
             else if (key === "randomfactstimeout")
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
