@@ -61,13 +61,14 @@ const localConfig = {
 
 };
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: "philipshue",
     channel: "PHILIPSHUE",
     // sesttings dialog variables
     PhilipsHueenabled: "off",
     PhilipsHuePair: "off",
     PHILIPS_HUE_DEBUG: "on",
+    DEBUGGING_DATA: false
 };
 let serverConfig = default_serverConfig;
 let localCredentials = {
@@ -78,8 +79,8 @@ let localCredentials = {
     clientkey: null
 }
 // as I don't have a philips hue bridge to test I have to use test data
-let DEBUGGING_DATA = false;
-if (DEBUGGING_DATA)
+
+if (serverConfig.DEBUGGING_DATA)
 {
     // load a scenes list from file
     localConfig.allScenes = JSON.parse(fs.readFileSync(__dirname + '/debug_only_testing/DATA_allScenes.js', 'utf8'));
@@ -452,7 +453,7 @@ async function pair ()
 // ============================================================================
 async function connectToHub (perform_pairing = false)
 {
-    if (DEBUGGING_DATA) 
+    if (serverConfig.DEBUGGING_DATA) 
     {
         console.log("connectToHub:using debugging dataset")
         return;
@@ -501,7 +502,7 @@ async function getAllScenes ()
         if (serverConfig.PhilipsHueenabled == "on")
         {
             // test code as I have no other way of testing it
-            if (DEBUGGING_DATA)
+            if (serverConfig.DEBUGGING_DATA)
             {
                 let tmpscene = {}
                 console.log("!!!!!Test code!!!!! getAllScenes returning test data")
@@ -576,7 +577,7 @@ async function getAllGroups ()
         if (serverConfig.PhilipsHueenabled == "on")
         {
             // test code as I have no other way of testing it
-            if (DEBUGGING_DATA)
+            if (serverConfig.DEBUGGING_DATA)
             {
                 console.log("No group data available yet")
                 return;
