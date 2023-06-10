@@ -78,7 +78,7 @@ let localCredentials = {
     clientkey: null
 }
 // as I don't have a philips hue bridge to test I have to use test data
-let DEBUGGING_DATA = true;
+let DEBUGGING_DATA = false;
 if (DEBUGGING_DATA)
 {
     // load a scenes list from file
