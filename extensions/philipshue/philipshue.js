@@ -61,7 +61,7 @@ const localConfig = {
 
 };
 const default_serverConfig = {
-    __version__: 0.2,
+    __version__: 0.1,
     extensionname: "philipshue",
     channel: "PHILIPSHUE",
     // sesttings dialog variables
