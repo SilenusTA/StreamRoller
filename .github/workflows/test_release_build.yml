@@ -45,7 +45,6 @@ jobs:
           echo v0.0.0 > SoftwareVersion.txt
     - name: Creating exe
       run: |
-          cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
           npx caxa -m "Unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
@@ -58,5 +57,5 @@ jobs:
     - name: uploading artifact
       uses: actions/upload-artifact@v3
       with:
-        name: StreamRoller
+        name: StreamRoller.zip
         path: StreamRoller.exe
