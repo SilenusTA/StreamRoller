@@ -16,3 +16,4 @@ datastore/
 tempfiles/
 timerfiles/
 chatdata/
+debug_only_testing*

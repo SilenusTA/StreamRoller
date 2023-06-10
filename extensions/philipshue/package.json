@@ -1,0 +1,16 @@
+{
+  "name": "philipshue",
+  "version": "1.0.0",
+  "description": "controls philips hue lights",
+  "main": "philipshue.js",
+  "type": "module",
+  "scripts": {
+    "start": "echo This code is an extension and will be autloaded by the backend data server. "
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "",
+  "node-hue-api_1": "^5.0.0-beta.16",
+  "dependencies": {
+    "node-hue-api": "^4.0.1"
+  }
+}

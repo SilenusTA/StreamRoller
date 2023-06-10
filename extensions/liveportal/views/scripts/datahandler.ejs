@@ -29,15 +29,18 @@
 
 <script>
     //"use strict"
-    const serverConfig = {
+    const default_serverConfig = {
+        __version__: 1,
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
         logginglevel: 0,
 
-        // extensions to display on main page
+        // extensions visibility on main page
         streamersonglistdisplay: "on",
         discordmodchatdisplay: "on",
+        obsdisplay: "on",
+        philipshuedisplay: "on",
         // obs settings
         obsdefaultstartscenename: "##Starting Soon",
         obsdefaultlivescenename: "##Game",
@@ -79,6 +82,7 @@
         discordmessagebuffermaxsize: 300,
 
     };
+    let serverConfig = default_serverConfig;
     const localConfig =
     {
         OBSSceneslist: {},
@@ -94,7 +98,9 @@
         newTwitchChatBuffer: false,
         newDiscordChatBuffer: false,
         // streamersonglist variables
-        setreamersonglist: { songlist: [], queue: [] }
+        setreamersonglist: { songlist: [], queue: { status: { "songsPlayedToday": "0" }, list: [] } },
+        //philips hugh variables
+        philipsHueSceneList: []
     }
     const chatcolors =
     {
@@ -114,13 +120,6 @@
         default_TBD_background_color: "purple",
         default_TBD_text_color: "yellow",
     }
-
-    // DEBUGGING - Set this to true if you need your server data to be refreshed from above.
-    // during development you may find your server data gets messed up if changing it often.
-    // while uncommented your data will not presist and be overwritten by the above config
-    // every time the server runs up.
-
-    const OverwriteDataCenterConfig = false;
 
     // will hold the data center socket needed to send receive data
     // after refactoring the code this should hopefully not be needed anymore
@@ -204,25 +203,12 @@
             settingswidgetlarge: document.getElementById('LivePortalSettingsWidgetLarge').innerHTML
         };
 
-        // DEBUGGING overwrite our config data on the server if the flag is set
-        if (OverwriteDataCenterConfig)
-            SaveConfigToServer();
-
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestConfig",
                 serverConfig.extensionname
             ));
 
-        /* we don't really need a channel as we don't output anything :P
-        //register our channels
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "CreateChannel",
-                serverConfig.extensionname,
-                serverConfig.channel
-            ));
-*/
         //request software version
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
@@ -249,6 +235,7 @@
                     setTimeout(() =>
                     {
                         RequestSongLists();
+                        RquestPhilipsHueData();
                         RequestChatBuffer("discordchat");
                         if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
                             twitchFactOfTheDay();
@@ -280,14 +267,20 @@
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
             {
-                // update our config
-                if (server_packet.data != "")
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                    serverConfig = default_serverConfig;
+                else
                 {
-                    for (const [key, value] of Object.entries(serverConfig))
-                        if (key in server_packet.data)
-                            serverConfig[key] = server_packet.data[key];
+                    // update our config
+                    if (server_packet.data != "")
+                    {
+                        for (const [key, value] of Object.entries(serverConfig))
+                        {
+                            if (key in server_packet.data)
+                                serverConfig[key] = server_packet.data[key];
+                        }
+                    }
                 }
-
                 setCardsVisibility();
                 // update our modal to match the new data
                 UpdateOwnSettingsWidgetSmallData();
@@ -374,14 +367,15 @@
             {
                 if (extension_packet.data && extension_packet.data.items)
                     updateSingerSonglistList(extension_packet.data.items)
-                // -------------------------------------------------------------------------------------------------
-                //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
-                // -------------------------------------------------------------------------------------------------
-                else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
-                {
-                    SendSettingsWidgetSmall(extension_packet.from);
-                }
             }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            {
+                SendSettingsWidgetSmall(extension_packet.from);
+            }
+
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED SETTINGS WIDGET LARGE REQUEST
             // -------------------------------------------------------------------------------------------------
@@ -694,6 +688,17 @@
                     updateSingerSonglistQueue(extension_packet.data)
                 else if (extension_packet.type == "SongList")
                     updateSingerSonglistList(extension_packet.data.items)
+            }
+            else if (server_packet.dest_channel == "PHILIPSHUE")
+            {
+                // -------------------------------------------------------------------------------------------------
+                //                   RECEIVED Discord chat buffer
+                // -------------------------------------------------------------------------------------------------
+                if (extension_packet.type === "PhilipsHueScenes")
+                {
+                    localConfig.philipsHueSceneList = extension_packet.data
+                    processPhilipsHueScenes();
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA
@@ -1061,12 +1066,24 @@
     // ============================================================================
     function setExtensionStatus (extension, status)
     {
-        if (!status.connected || status == "false")
+        /* extensions can send vaious data here. The priority is
+        1) if they provide a color just use that
+        2) if they are not connected or status is false set red // backwards compatability here
+        3) if they have a readonly flag set to true set orange // for chat mostly
+        4) if connected or status is true set green
+        5) otherwise set red
+
+        */
+        if (status.color)
+            document.getElementById(extension + "_status").style = "color:" + status.color;
+        else if (!status.connected || status == "false")
             document.getElementById(extension + "_status").style = "color:red";
         else if (status.readonly)
             document.getElementById(extension + "_status").style = "color:orange";
-        else
+        else if (status.connected || status == true)
             document.getElementById(extension + "_status").style = "color:green";
+        else
+            document.getElementById(extension + "_status").style = "color:red";
         document.getElementById(extension + "_visibility_settingswidgetsmall").style.display = "";
     }
     // ============================================================================
@@ -1407,8 +1424,7 @@
     {
 
         //get our widget and use string replace to update the values
-        //let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
-        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall
+        let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1444,7 +1460,7 @@
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replaceAll(' ' + key + 'checked', ' checked');
+                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
             else if (key === "randomfactstimeout")
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
@@ -1474,12 +1490,6 @@
         let fieldsAsArray = $('#' + name + "_settingswidgetsmallmodal").serializeArray();
         // convert our array of objects into a more usable object
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
-        {
-            // change server logging level
-            changeServerLogging(fieldsAsObject.logginglevel);
-            serverConfig.logginglevel = fieldsAsObject.logginglevel;
-        }
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -1879,49 +1889,6 @@
             console.log("ERROR:parseTwitchChatMessage:", error)
         }
     }
-    // ============================================================================
-    //                           FUNCTION: parseTwitchChatExtaMessage
-    // ============================================================================
-    // updates the buffer with the messages
-    /*
-    function parseTwitchChatExtaMessage (alertdata)
-    {
-        try
-        {
-            console.log(alertdata)
-            let subsmessages = ["subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
-            if (alertdata.data['message-type'] == "raided")
-            {
-                let msg = alertdata.data["display-name"] + " just raided " + alertdata.channel + " on twitch with " + alertdata.data.viewers + " viewers and we are all super happy about it"
-                sendMessageToChatbot(msg)
-            }
-            else if (subsmessages.includes(alertdata.data['message-type']))
-            {
-                console.log("subscription message", alertdata.data['message-type'], alertdata.data["system-msg"]);
-                let msg = alertdata.data["system-msg"];
-                sendMessageToChatbot(msg)
-            }
-            else if (alertdata.data['message-type'] == "redeem")
-            {
-                console.log("redeem message", alertdata.data['message-type'], alertdata.data["system-msg"]);
-                console.log(alertdata)
-                let msg = alertdata.data["system-msg"] + "Someone redeemed something";
-                // sendMessageToChatbot(msg)
-            }
-            else if (alertdata.data['message-type'] == "cheer")
-            {
-                console.log("cheer message", alertdata.data['message-type'], alertdata.data["system-msg"]);
-                let msg = alertdata.data["system-msg"];
-                sendMessageToChatbot(msg)
-            }
-
-        }
-
-        catch (e)
-        {
-            console.log("Error sub data not defined. please copy this message and notify the owner of StreamRoller to put a handler in for this messages", e)
-        }
-    }*/
     // ============================================================================
     //                           FUNCTION: parseDiscordChatMessage
     // ============================================================================
@@ -2483,6 +2450,25 @@
                 "streamersonglist"
             ));
     }
+
+    // ============================================================================
+    //                           FUNCTION: RquestPhilipsHueData
+    // ============================================================================
+    function RquestPhilipsHueData ()
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "GetAllScenes",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "philipshue"),
+                "",
+                "philipshue"
+            ));
+    }
     // ============================================================================
     //                           FUNCTION: RequestRandomFact
     // ============================================================================
@@ -2612,7 +2598,7 @@
             classes = "bg-dark text-light"
 
         // if we havent been passed an array just use the stored one (might just be a refresh)
-        if (queue != [])
+        if (queue != [] && queue !== undefined)
             localConfig.setreamersonglist.queue = queue;
 
         tabletitle.innerHTML = "Song Queue (played today: " + localConfig.setreamersonglist.queue.status.songsPlayedToday
@@ -2745,6 +2731,12 @@
 
         card = document.getElementById("ModMessagesCard");
         (serverConfig.discordmodchatdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
+
+        card = document.getElementById("OBSControllsCard");
+        (serverConfig.obsdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
+
+        card = document.getElementById("PhilipsHueCard");
+        (serverConfig.philipshuedisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
     }
 
     // ============================================================================
@@ -2775,21 +2767,64 @@
                 "chatbot"
             ));
     }
+    // ============================================================================
+    //                           FUNCTION: processPhilipsHueScenes
+    // ============================================================================
+    function processPhilipsHueScenes ()
+    {
+        console.log("processPhilipsHueScenes received scenes", localConfig.philipsHueSceneList)
+        updatePhilipsHueDisplay()
+    }
+    // ============================================================================
+    //                           FUNCTION: activatePhilipsHueScene
+    // ============================================================================
+    function activatePhilipsHueScene (sceneId)
+    {
+        console.log("activatePhilipsHueScene ", sceneId)
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "ActivateScene",
+                    serverConfig.extensionname,
+                    {
+                        sceneID: sceneId
+                    },
+                    "",
+                    "philipshue"),
+                "",
+                "philipshue"
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: updatePhilipsHueDisplay
+    // ============================================================================
+    function updatePhilipsHueDisplay ()
+    {
+        // let card = document.getElementById("PhilipsHueCard");
+        console.log("updatePhilipsHueDisplay")
+        let scenesrow = document.getElementById("PhilipsHueScenesRow");
+        let rowdata = ""
+        let btnstate = "btn-outline-secondary";
+        // need to update this to show the current active scene when we know what kind of data we are getting
+        let first = true
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if (localConfig.philipsHueSceneList && localConfig.philipsHueSceneList.length > 0)
+        {
+            localConfig.philipsHueSceneList.forEach((element) =>
+            {
+                if (first)
+                {
+                    btnstate = "btn-outline-success";
+                    first = false
+                }
+                else
+                    btnstate = "btn-outline-secondary"
+                rowdata += '<div id="PhilipsHueScene_' + element.id + '" class="col-1 btn ' + btnstate + ' mx-1 my-1" role="button" data-toggle="tooltip" onclick="activatePhilipsHueScene(\'' + element.id + '\')" title="Scene Name">' + element.name + '</div>';
+            })
+        }
+        else
+            rowdata += '<div id="PhilipsHueScene_no_scense_available" class="col-1 btn ' + btnstate + ' mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Scenes availabe</div>';
+        document.getElementById("PhilipsHueScenesRow").innerHTML = rowdata;
+    }
 </script>
