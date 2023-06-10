@@ -67,7 +67,7 @@ const default_serverConfig = {
     // sesttings dialog variables
     PhilipsHueenabled: "off",
     PhilipsHuePair: "off",
-    PHILIPS_HUE_DEBUG: "on",
+    PHILIPS_HUE_DEBUG: "off",
     DEBUGGING_DATA: false
 };
 let serverConfig = default_serverConfig;
