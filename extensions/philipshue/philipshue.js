@@ -61,9 +61,9 @@ const localConfig = {
 
 };
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: "philipshue",
-    channel: "PHILIPSHUE",
+    channel: "PHILIPSHUE_CHANNEL",
     // sesttings dialog variables
     PhilipsHueenabled: "off",
     PhilipsHuePair: "off",
@@ -77,13 +77,6 @@ let localCredentials = {
     ipaddress: null,
     username: null,
     clientkey: null
-}
-// as I don't have a philips hue bridge to test I have to use test data
-
-if (serverConfig.DEBUGGING_DATA)
-{
-    // load a scenes list from file
-    localConfig.allScenes = JSON.parse(fs.readFileSync(__dirname + '/debug_only_testing/DATA_allScenes.js', 'utf8'));
 }
 // ============================================================================
 //                           FUNCTION: initialise
@@ -160,6 +153,7 @@ function onDataCenterMessage (server_packet)
                 serverConfig = server_packet.data
         }
         SaveConfigToServer();
+        console.log(serverConfig)
     }
     else if (server_packet.type === "CredentialsFile")
     {
@@ -504,24 +498,26 @@ async function getAllScenes ()
             // test code as I have no other way of testing it
             if (serverConfig.DEBUGGING_DATA)
             {
-                let tmpscene = {}
+                // as I don't have a philips hue bridge to test I have to use test data
+                // load a scenes list from file
                 console.log("!!!!!Test code!!!!! getAllScenes returning test data")
+                localConfig.allScenes = JSON.parse(fs.readFileSync(__dirname + '/debug_only_testing/DATA_allScenes.js', 'utf8'));
+
                 localConfig.allScenesSRAPIData = [];
                 localConfig.allScenes.forEach(element =>
                 {
-
                     if (element._data.recycle == false)
                     {
-                        tmpscene = {
+                        localConfig.allScenesSRAPIData.push({
                             id: element._data.id,
                             name: element._data.name,
                             group: element._data.group,
                             active: false
-                        }
-                        localConfig.allScenesSRAPIData.push(tmpscene)
+                        })
                     }
                 });
                 outputScenes();
+
                 return
             }
 
@@ -621,6 +617,7 @@ function processScenese ()
 // ============================================================================
 function outputScenes ()
 {
+    console.log("outputScenes:", localConfig.allScenesSRAPIData)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
