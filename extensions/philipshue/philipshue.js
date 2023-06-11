@@ -72,7 +72,6 @@ const default_serverConfig = {
 };
 let serverConfig = default_serverConfig;
 let localCredentials = {
-
     ExtensionName: serverConfig.extensionname,
     ipaddress: null,
     username: null,
@@ -160,12 +159,8 @@ function onDataCenterMessage (server_packet)
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
             localCredentials = server_packet.data;
-            // attempt to connet to the hubs
-            connectToHub()
-            getAllScenes()
-            getAllGroups()
-            processScenese()
-            outputScenes()
+            if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received credentialsfile, initialising hub")
+            initialiseHue()
         }
         else
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -197,15 +192,18 @@ function onDataCenterMessage (server_packet)
                 // pairing was requested or we need to pair
                 if (serverConfig.PhilipsHuePair == "on")
                 {
+                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, User requested pairing")
                     serverConfig.PhilipsHuePair = "off";
-                    connectToHub(true);
+                    initialiseHue(true);
                 }
-                // update our scenes
-                getAllScenes()
-                getAllGroups()
-                processScenese()
-                outputScenes()
-
+                else
+                {
+                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, Updating data from bridge and sending them out")
+                    // update our scenes
+                    UpdateHueData()
+                    processScenes()
+                    outputScenes()
+                }
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
@@ -219,9 +217,9 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname && serverConfig.PhilipsHueenabled == "on")
             {
-                getAllScenes()
-                getAllGroups()
-                processScenese()
+                if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received a request for scenes, Updating scene lists and sending them out")
+                UpdateHueData()
+                processScenes()
                 outputScenes()
             }
         }
@@ -335,12 +333,20 @@ function SaveConfigToServer ()
 // ============================================================================
 function UpdateCredentials ()
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "UpdateCredentials",
-            serverConfig.extensionname,
-            localCredentials,
-        ));
+    Object.keys(localCredentials).forEach(key =>
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "UpdateCredentials",
+                serverConfig.extensionname,
+                {
+                    ExtensionName: serverConfig.extensionname,
+                    CredentialName: key,
+                    CredentialValue: localCredentials[key]
+                },
+            ));
+
+    });
 }
 
 // ============================================================================
@@ -350,38 +356,84 @@ function UpdateCredentials ()
 // ============================================================================
 
 // ============================================================================
-//                           FUNCTION: discoverBridge
+//                           FUNCTION: initialiseHue
 // ============================================================================
-async function discoverBridge ()
+async function initialiseHue (force_paring = false)
 {
-    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("------------- discoverBridge --------------")
-    let discoveryResults = null;
-    try
-    {
-        discoveryResults = await HueAPI.v3.discovery.nupnpSearch();
-        if (discoveryResults.length === 0)
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge", "failed to locate any Philips Hue Bridges", discoveryResults);
-        } else
-        {
-            if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge: discoveryResults ", discoveryResults);
-            // Ignoring that you could have more than one Hue Bridge on a network as this is unlikely in 99.9% of users situations
-            localCredentials.ipaddress = discoveryResults[0].ipaddress
-        }
-    }
-    catch (error)
-    {
-        localCredentials.ipaddress = null;
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge", "nupnpSearch error", error.message);
-    }
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("initialiseHue()")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("initialiseHue: Starting up bridge")
+    await connectToHub(force_paring);
+    await UpdateHueData();
+    processScenes();
+    outputScenes();
 
 }
 
+// ============================================================================
+//                           FUNCTION: connectToHub
+// ============================================================================
+async function connectToHub (perform_pairing = false)
+{
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("connectToHub()")
+    if (serverConfig.DEBUGGING_DATA) 
+    {
+        console.log("connectToHub:using debugging dataset")
+        return;
+    }
+
+    // ############################ PAIRING - If Needed or Requested ############################
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") 
+    {
+        console.log("Testing we have credentials to see if we need to make a pairing call")
+        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        console.log("localCredentials.ipaddress", localCredentials.ipaddress)
+        console.log("localCredentials.username", localCredentials.username)
+        console.log("localCredentials.clientkey", localCredentials.clientkey)
+        console.log("perform_pairing", perform_pairing)
+        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    }
+    if (localCredentials.ipaddress == null || localCredentials.username == null || localCredentials.clientkey == null || perform_pairing)
+    {
+        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Pairing required")
+        localConfig.status.paired = false;
+        localConfig.status.connected = false;
+        await pair();
+    }
+    else
+        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Pairing NOT required")
+
+    try
+    {
+        // ################################ CONNECT TO THE HUB ##########################################
+        // Create a new API instance that is authenticated 
+
+        localConfig.authenticatedApi = await HueAPI.v3.api.createLocal(localCredentials.ipaddress).connect(localCredentials.username);
+
+        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("connectToHub: authenticatedApi succeeded")
+
+        // Do something with the authenticated user/api
+        // we get the bridge config as it is a good test and might be useful later
+        localConfig.bridgeConfig = await localConfig.authenticatedApi.configuration.getConfiguration();
+        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log('connectToHub: bridgeConfig succeeded ');
+
+        // safe to assume we are connected if we haven't thrown any errors at this point
+        localConfig.status.paired = true;
+        localConfig.status.connected = true;
+
+    }
+    catch (err)
+    {
+        localConfig.status.connected = false;
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToHub", "authenticatedApi failed", err.message);
+    }
+}
 // ============================================================================
 //                           FUNCTION: pair
 // ============================================================================
 async function pair ()
 {
+
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("pair()")
     let createdUser = null;
     let unauthenticatedApi = null;
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("------------- pair --------------")
@@ -391,11 +443,11 @@ async function pair ()
         return;
     }
     // get the bridge address if we don't have it already
-    if (!localCredentials.ipaddress)
-        await discoverBridge();
+    if (localCredentials.ipaddress == null)
+        await discoverBridge_nupnp();
 
     // check that we managed to get an address
-    if (!localCredentials.ipaddress)
+    if (localCredentials.ipaddress == null)
     {
         if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("pair: No IP address found, aboating connection")
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pair", "Failed to get ip of hue Bridge");
@@ -417,8 +469,8 @@ async function pair ()
         if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log('pair: unauthenticatedApi connected');
         try
         {
-            createdUser = await unauthenticatedApi.users.createUser('StreamRoller', "GodLikeStreamer");
             console.log('pair: *******************************************************************************\n');
+            createdUser = await unauthenticatedApi.users.createUser('StreamRoller', "GodLikeStreamer");
             console.log('pair: User has been created on the Hue Bridge ');
             console.log(`pair: User: ${createdUser.username}`);
             console.log('pair: *******************************************************************************\n');
@@ -426,9 +478,8 @@ async function pair ()
             // store the credentials for future use. Don't want the user to have to find their hub and press a button every time they start up StreamRoller
             localCredentials.username = createdUser.username;
             localCredentials.clientkey = createdUser.clientkey;
-            localConfig.status.paired = true;
             UpdateCredentials();
-
+            localConfig.status.paired = true;
         } catch (err)
         {
             localConfig.status.paired = false;
@@ -436,61 +487,90 @@ async function pair ()
             localCredentials.username = null;
             localCredentials.clientkey = null;
             if (err.getHueErrorType && err.getHueErrorType() === 101)
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getpairHubs", "The Link button on the bridge was not pressed. Please press the Link button and try again.");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pair", "The Link button on the bridge was not pressed. Please press the Link button and try again.", err);
             else
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pair", "Unexpected Error while creating user (linking with bridge):", err.message);
         }
     }
 }
 // ============================================================================
-//                           FUNCTION: connectToHub
+//                           FUNCTION: discoverBridge
 // ============================================================================
-async function connectToHub (perform_pairing = false)
+async function discoverBridge_nupnp ()
 {
-    if (serverConfig.DEBUGGING_DATA) 
-    {
-        console.log("connectToHub:using debugging dataset")
-        return;
-    }
-
-    // ############################ PAIRING - If Needed or Requested ############################
-    if (!localCredentials.username || !localCredentials.clientkey || !localConfig.status.paired || perform_pairing)
-    {
-        localConfig.status.paired = false;
-        localConfig.status.connected = false;
-        await pair();
-    }
-
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_nupnp()")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("------------- discoverBridge_nupnp --------------")
+    let discoveryResults = null;
     try
     {
-        // ################################ CONNECT TO THE HUB ##########################################
-        // Create a new API instance that is authenticated 
-
-        localConfig.authenticatedApi = await HueAPI.v3.api.createLocal(localCredentials.ipaddress).connect(localCredentials.username);
-
-        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("connectToHub: authenticatedApi", localConfig.authenticatedApi)
-
-        // Do something with the authenticated user/api
-        // we get the bridge config as it is a good test and might be useful later
-        localConfig.bridgeConfig = await localConfig.authenticatedApi.configuration.getConfiguration();
-        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log('connectToHub: bridgeConfig: ', localConfig.bridgeConfig);
-
-        // safe to assume we are connected if we haven't thrown any errors at this point
-        localConfig.status.connected = true;
-
+        discoveryResults = await HueAPI.v3.discovery.nupnpSearch();
+        if (discoveryResults.length === 0)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge_nupnp", "failed to locate any Philips Hue Bridges", discoveryResults);
+        } else
+        {
+            if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_nupnp: discoveryResults ", discoveryResults);
+            // Ignoring that you could have more than one Hue Bridge on a network as this is unlikely in 99.9% of users situations
+            localCredentials.ipaddress = discoveryResults[0].ipaddress
+        }
     }
-    catch (err)
+    catch (error)
     {
-        localConfig.status.connected = false;
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToHub", "authenticatedApi failed", err.message);
+        if (error.message.includes(429))
+        {
+
+            if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_nupnp", "hit meethue.com limit trying slow discovery. error was:", error.message);
+            discoverBridge_upnp(5000); // 10 second timeout
+        }
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge_nupnp", "nupnpSearch error", error.message);
     }
 }
 
+// ============================================================================
+//                           FUNCTION: getBridge
+// ============================================================================
+async function discoverBridge_upnp (timeout)
+{
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_upnp()")
+    let discoveryResults = [];
+    try
+    {
+        discoveryResults = await HueAPI.v3.discovery.upnpSearch(timeout);
+        if (discoveryResults.length === 0)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge_upnp", "failed to locate any Philips Hue Bridges", discoveryResults);
+        } else
+        {
+            if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_upnp: discoveryResults succeeded");
+            // Ignoring that you could have more than one Hue Bridge on a network as this is unlikely in 99.9% of users situations
+            localCredentials.ipaddress = discoveryResults[0].ipaddress
+        }
+    }
+    catch (error)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".discoverBridge_upnp", "nupnpSearch error", error.message);
+        // Results will be an array of bridges that were found
+    }
+}
+
+
+// ============================================================================
+//                           FUNCTION: UpdateHueData
+// ============================================================================
+async function UpdateHueData ()
+{
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("UpdateHueData()")
+    await getAllScenes()
+    await getAllGroups()
+
+}
 // ============================================================================
 //                           FUNCTION: getAllScenes
 // ============================================================================
 async function getAllScenes ()
 {
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllScenes()")
     try
     {
         if (serverConfig.PhilipsHueenabled == "on")
@@ -516,21 +596,24 @@ async function getAllScenes ()
                         })
                     }
                 });
+                localConfig.status.paired = true;
                 outputScenes();
 
                 return
             }
 
             // check we have an api to talk to
-            if (localConfig.authenticatedApi)
+            if (localConfig.authenticatedApi != null)
             {
+                if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log('getAllScenes: requesting scenes ');
                 // request all scenes
                 localConfig.allScenes = await localConfig.authenticatedApi.scenes.getAll()
 
-                if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received a scenes list")
+                if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllScenes: Received a scenes list")
 
                 // we don't want to be pushing all this data around all the time
                 // so we cut it down here to only stuff extensions are interested in
+                localConfig.allScenesSRAPIData = [];
                 localConfig.allScenes.forEach(element =>
                 {
                     // ignore the recycled stuff
@@ -545,8 +628,9 @@ async function getAllScenes ()
                             })
                     }
                 });
-
-                // safe to assume we are connected at this point
+                if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllScenes: Done getting scenes")
+                // safe to assume we are connected and paired at at this point
+                localConfig.status.paired = true;
                 localConfig.status.connected = true;
             }
             else
@@ -566,6 +650,7 @@ async function getAllScenes ()
 // ============================================================================
 async function getAllGroups ()
 {
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllGroups()")
     // YET TO BE TESTED OR DEBUGGED, AWAITING ON DATA PACKET TO SEE THE FORMAT OF IT.
     // new get groups need to debug this.
     try
@@ -580,7 +665,7 @@ async function getAllGroups ()
             }
 
             // check we have an api to talk to
-            if (localConfig.authenticatedApi)
+            if (localConfig.authenticatedApi != null)
             {
                 localConfig.allGroups = await localConfig.authenticatedApi.groups.getAll()
 
@@ -590,34 +675,38 @@ async function getAllGroups ()
                 // these will hopefully allow us to indicate which scenes are 'on' on the live portal
                 if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Outputting groups")
                 if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log(localConfig.allGroups)
+
+                localConfig.status.connected = true;
+                localConfig.status.paired = true;
             }
             else
             {
                 localConfig.status.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllScenes", "Cant get scenes, Have you paired to the hub");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGroups", "Cant get groups, Have you paired to the hub");
             }
         }
     }
     catch (error)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllScenes", "Error returned:", error.message);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGroups", "Error returned:", error.message);
     }
 
 }
 // ============================================================================
-//                           FUNCTION: processScenese
+//                           FUNCTION: processScenes
 // This function will go through the scenes and mark them as on, on_part, or off
 // ============================================================================
-function processScenese ()
+function processScenes ()
 {
-    console.log("Process scenes TBD")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("processScenes()")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Process scenes TBD")
 }
 // ============================================================================
 //                           FUNCTION: outputScenes
 // ============================================================================
 function outputScenes ()
 {
-    console.log("outputScenes:", localConfig.allScenesSRAPIData)
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("outputScenes()")
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
@@ -636,7 +725,7 @@ function outputScenes ()
 // ============================================================================
 function activateScene (scenedID)
 {
-
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateScene()")
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("!!!!!Test code!!!!! activating scene ", scenedID)
 
     if (localConfig.authenticatedApi)
