@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# COMMON.js ####################################
+// ############################# COMMON.js ####################################
 // Common code that is reused acrross modules
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -257,7 +257,10 @@ function loadCredentials (configname)
  */
 function saveCredentials (data)
 {
-    if (data.ExtensionName != "" && data.CredentialName != "" && data.CredentialValue != "")
+    if (
+        (data.ExtensionName != "" && data.CredentialName != "" && data.CredentialValue != "")
+        && (data.ExtensionName != null && data.CredentialName != null && data.CredentialValue != null)
+    )
     {
         let currentCredentials = loadCredentials(data.ExtensionName);
         if (currentCredentials === "")
@@ -272,7 +275,7 @@ function saveCredentials (data)
         saveConfig(data.ExtensionName, encryptedcreds, credentialFilesPath)
     }
     else
-        console.log("common.js: SaveCredentials failed, missing field", data.ExtensionName)
+        console.log("common.js: SaveCredentials failed, missing field in data", data.ExtensionName)
 }
 // ============================================================================
 //                           EXPORTS: 
