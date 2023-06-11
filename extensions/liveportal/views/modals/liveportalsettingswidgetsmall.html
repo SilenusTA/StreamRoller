@@ -36,9 +36,12 @@
             <div class="modal-body">
                 <!-- Invisible channel name data -->
                 <div class="form-group invisible">
-                    <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
-                    <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
-                    <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                    <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
+                        tabindex="-1" />
+                    <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode"
+                        tabindex="-1" />
+                    <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData"
+                        tabindex="-1" />
                     <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
                 </div>
                 <h4 class="modal-title">Display/Hide Extensions</h4>
@@ -47,64 +50,79 @@
                     <label class="col-form-label">Deselect the items you don't want to show on this page</label>
                     <BR>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay" streamersonglistdisplaychecked>
+                        <input class="form-check-input" name="streamersonglistdisplay" type="checkbox"
+                            id="streamersonglistdisplay" streamersonglistdisplaychecked>
                         <label class="form-check-label" for="streamersonglistdisplay">StreamerSonglist</label>
                     </div>
                     <BR>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay" discordmodchatdisplaychecked>
+                        <input class="form-check-input" name="discordmodchatdisplay" type="checkbox"
+                            id="discordmodchatdisplay" discordmodchatdisplaychecked>
                         <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
                     </div>
                     <BR>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="obsdisplay" type="checkbox" id="obsdisplay" obsdisplaychecked>
+                        <input class="form-check-input" name="obsdisplay" type="checkbox" id="obsdisplay"
+                            obsdisplaychecked>
                         <label class="form-check-label" for="obsdisplay">OBS</label>
                     </div>
                     <BR>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay" philipshuedisplaychecked>
+                        <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay"
+                            philipshuedisplaychecked>
                         <label class="form-check-label" for="philipshuedisplay">Philips Hue</label>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay"
+                        slalertsdisplaychecked>
+                    <label class="form-check-label" for="slalertsdisplay">StreamLabs Alerts</label>
                 </div>
+            </div>
+            <div class="form-group">
+            </div>
 
-                <h4 class="modal-title">OBS Scene buttons</h4>
-                <div class="form-group">
-                    <label class="col-form-label">Extra scene buttons to display on top of defaults start, live,
-                        intermission and end buttons (set identifier tags in the obs extension settings
-                        first)</label><BR>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes" showprimarysceneschecked>
-                        <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes" showsecondarysceneschecked>
-                        <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes" showallsceneschecked>
-                        <label class="form-check-label" for="showallscenes">Show All Scenes</label>
-                    </div>
+            <h4 class="modal-title">OBS Scene buttons</h4>
+            <div class="form-group">
+                <label class="col-form-label">Extra scene buttons to display on top of defaults start, live,
+                    intermission and end buttons (set identifier tags in the obs extension settings
+                    first)</label><BR>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes"
+                        showprimarysceneschecked>
+                    <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
                 </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes"
+                        showsecondarysceneschecked>
+                    <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes"
+                        showallsceneschecked>
+                    <label class="form-check-label" for="showallscenes">Show All Scenes</label>
+                </div>
+            </div>
 
-                <h4 class="modal-title">Random Facts</h4>
+            <h4 class="modal-title">Random Facts</h4>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled"
+                        randomfactsenabledchecked>
+                    <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
+                </div>
                 <div class="form-group">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled" randomfactsenabledchecked>
-                        <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="randomfactstimeout" class="col-form-label">How often to post random facts to twitch
-                            chat(minutes)</label>
-                        <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout" value="randomfactstimeouttext">
-                    </div>
+                    <label for="randomfactstimeout" class="col-form-label">How often to post random facts to twitch
+                        chat(minutes)</label>
+                    <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout"
+                        value="randomfactstimeouttext">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
             </div>
         </div>
     </div>
+</div>
 </div>

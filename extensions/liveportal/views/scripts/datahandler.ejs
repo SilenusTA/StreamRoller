@@ -41,6 +41,7 @@
         discordmodchatdisplay: "on",
         obsdisplay: "on",
         philipshuedisplay: "on",
+        slalertsdisplay: "on",
         // obs settings
         obsdefaultstartscenename: "##Starting Soon",
         obsdefaultlivescenename: "##Game",
@@ -2737,6 +2738,10 @@
 
         card = document.getElementById("PhilipsHueCard");
         (serverConfig.philipshuedisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
+
+        card = document.getElementById("AlertsCard");
+        (serverConfig.slalertsdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
+
     }
 
     // ============================================================================
