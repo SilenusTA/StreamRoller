@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 // ############################# STREAMERSONGLIST.js ##############################
 // Provides streamer songlist functionality
 // ---------------------------- creation --------------------------------------
@@ -36,9 +36,9 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 // logger will allow you to log messages in the same format as the system messages
-import * as logger from "../../../backend/data_center/modules/logger.js";
+import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import fetch from 'node-fetch';
 import * as fs from "fs";
 import io from 'socket.io-client';

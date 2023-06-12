@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# OBS.js ##############################
+// ############################# OBS.js ##############################
 // OBS extension for controlling OBS and information on OBS
 // output channel OBS_CHANNEL
 // ---------------------------- creation --------------------------------------
@@ -38,8 +38,8 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";

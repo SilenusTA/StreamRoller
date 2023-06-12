@@ -30,8 +30,8 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from "path";

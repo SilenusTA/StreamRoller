@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# TWITTER.js ##############################
+// ############################# TWITTER.js ##############################
 // Allows posting and reading twitter
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -30,8 +30,8 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import { TwitterClient } from "twitter-api-client";
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";

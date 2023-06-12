@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ######################### streamlabs_api_handler.js ################################
+// ######################### streamlabs_api_handler.js ################################
 // Handles the connection to streamlabs api and puts the messages into the
 // twitch alerts channel on the back end
 // -------------------------- Creation ----------------------------------------
@@ -45,8 +45,8 @@
 // ============================================================================
 // note this has to be socket.io-client version 2.0.3 to allow support for StreamLabs api.
 import StreamLabsIo from "socket.io-client_2.0.3";
-import * as logger from "../../../backend/data_center/modules/logger.js";
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs"
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
