@@ -190,7 +190,7 @@ const default_serverConfig = {
     // debug dialog variables
     // =============================
     DEBUG_MODE: "off",
-    restore_defaults: "off",
+    chatbot_restore_defaults: "off",
 
 };
 // need to make sure we have a proper clone of this object and not a reference
@@ -446,7 +446,7 @@ function handleSettingsWidgetSmallData (modalcode)
 // =========================================================================== 
 function handleSettingsWidgetLargeData (modalcode)
 {
-    if (modalcode.restore_defaults == "on")
+    if (modalcode.chatbot_restore_defaults == "on")
     {
         serverConfig = structuredClone(default_serverConfig);
         return;
@@ -457,7 +457,7 @@ function handleSettingsWidgetLargeData (modalcode)
     serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
     serverConfig.DEBUG_MODE = "off";
-    serverConfig.restore_defaults = "off";
+    serverConfig.chatbot_restore_defaults = "off";
 
 
 

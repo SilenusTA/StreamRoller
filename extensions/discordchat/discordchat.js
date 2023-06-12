@@ -60,18 +60,23 @@ const localConfig = {
     DataCenterSocket: null
 };
 //this object will be overwritten from the sever data if it exists
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
     discordenabled: "off",
     discordMessageBufferMaxSize: "300",
     discordMessageBackupTimer: "60",
+    discordchat_restore_defaults: "off",
     //credentials variable names to use (in credentials modal)
     credentialscount: "1",
     cred1name: "DISCORD_TOKEN",
     cred1value: ""
 };
+// need to make sure we have a proper clone of this object and not a reference
+// otherwise changes to server also change defaults
+let serverConfig = structuredClone(default_serverConfig)
 const OverwriteDataCenterConfig = false;
 const serverData =
 {
@@ -144,10 +149,13 @@ function onDataCenterMessage (server_packet)
         // if it is empty we will use our current default and send it to the server 
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
-            for (const [key] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
             SaveConfigToServer();
         }
     }
@@ -219,13 +227,20 @@ function onDataCenterMessage (server_packet)
             }
             else if (extension_packet.type === "SettingsWidgetLargeData")
             {
-                // set our config values to the ones in message
-                serverConfig.discordenabled = "off";
-                // NOTE: this will ignore new items in the page that we don't currently have in our config
-                for (const [key] of Object.entries(serverConfig))
+                if (extension_packet.data.discordchat_restore_defaults == "on")
+                    serverConfig = structuredClone(default_serverConfig);
+                else
                 {
-                    if (key in extension_packet.data)
-                        serverConfig[key] = extension_packet.data[key];
+                    // set our config values to the ones in message
+                    serverConfig.discordenabled = "off";
+                    serverConfig.discordchat_restore_defaults = "off";
+                    // NOTE: this will ignore new items in the page that we don't currently have in our config
+                    // and only performs a shallow copy
+                    for (const [key] of Object.entries(serverConfig))
+                    {
+                        if (key in extension_packet.data)
+                            serverConfig[key] = extension_packet.data[key];
+                    }
                 }
                 // save our data to the server for next time we run
                 SaveConfigToServer();
