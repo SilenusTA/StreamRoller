@@ -975,7 +975,7 @@ function processChatMessage (data)
     }
 
     // preprosess Parse the messsage
-    let chatdata = parseData(data)
+    let chatdata = parseData(data, translateToEnglish)
 
     // debug logging
     if (chatdata && chatdata.message && serverConfig.DEBUG_MODE === "on")
@@ -1301,7 +1301,7 @@ function addPersonality (message, profile)
 // ============================================================================
 //                           FUNCTION: parseData
 // ============================================================================
-function parseData (data)
+function parseData (data, translation = false)
 {
     let messageEmotes = data.data.emotes;
     let emoteposition = null
@@ -1328,7 +1328,8 @@ function parseData (data)
     // remove the @ messages but keep the names (might be better to remove them though still testing)
     data.message = data.message.replace("@", "");
     //remove non ascii chars (ie ascii art, unicode etc)
-    data.message = data.message.replace(/[^\x00-\x7F]/g, "");
+    if (!translation)
+        data.message = data.message.replace(/[^\x00-\x7F]/g, "");
     // strip all white spaces down to one
     data.message = data.message.replace(/\s+/g, ' ').trim();
 
