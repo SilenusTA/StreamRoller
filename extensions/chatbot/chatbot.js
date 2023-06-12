@@ -60,7 +60,8 @@ const localConfig = {
     // min time between requests (to avoid 429 errors)
     overloadprotection: 500,
 };
-const defaultConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
@@ -83,19 +84,19 @@ const defaultConfig = {
     translatetoengtag: "ToEng",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
-    chatbotTimerMin: 1, // min delay before starting
-    chatbotTimerMax: 2, // max delay before starting
+    chatbotTimerMin: "1", // min delay before starting
+    chatbotTimerMax: "2", // max delay before starting
     // how much chat history to send to chatGPT to use in the query
-    chatbotMessageMaxLines: 10,
+    chatbotMessageMaxLines: "5",
     // minimum number of charactors to consider before using the message for submission
-    chatbotminmessagelength: 20,
+    chatbotminmessagelength: "20",
     // slow the response down as if someone has actually type it
-    chatbottypingdelay: 0.3,
+    chatbottypingdelay: "0.2",
     //used to prefix GPT messages with a twitch icon to show what it is
     boticon: "MechaRobot",
     // setup the personality of the chatbot
 
-    currentprofile: 0,
+    currentprofile: "0",
     chatbotprofiles: [
         {
             name: "Vally Girl",
@@ -159,22 +160,22 @@ const defaultConfig = {
             a4: "Wasn't that those smelly bikers, Orville and someone. Back in December 17, 1903 my dad used to tell me but what does he know, he's just old PogChamp "
         }
     ],
-    chattemperature: 0.4,
-    questiontemperature: 0.1,
-    maxtokenstouse: 110,
+    chattemperature: "0.4",
+    questiontemperature: "0.1",
+    maxtokenstouse: "110",
     // openAI settings. we use different settings for a question to the general bot responses
     settings: {
         chatmodel: {
             //model: "text-davinci-003",
             model: "gpt-3.5-turbo",
-            temperature: 0.4, // will be overwritten by chattemperature
-            max_tokens: 110, // note twich chat is somewhere around 125 tokens +- lenght of words in responce
+            temperature: "0.4", // will be overwritten by chattemperature
+            max_tokens: "110", // note twich chat is somewhere around 125 tokens +- lenght of words in responce
         },
         // different settings available for direct questions
         questionmodel: {
             model: "gpt-3.5-turbo",
-            temperature: 0.1,// will be overwritten by questiontemperature
-            max_tokens: 110,
+            temperature: "0.1",// will be overwritten by questiontemperature
+            max_tokens: "110",
         },
     },
 
@@ -192,8 +193,9 @@ const defaultConfig = {
     restore_defaults: "off",
 
 };
-// deep copy here to avoid a reference copy in case we want to reset to defaults
-let serverConfig = JSON.parse(JSON.stringify(defaultConfig));
+// need to make sure we have a proper clone of this object and not a reference
+// otherwise changes to server also change defaults
+let serverConfig = structuredClone(default_serverConfig)
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -268,22 +270,18 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
+        // if we have data and it is for us ...
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            // HACK: skip the update if user doesn't have the current config settings
-            // currentprofile was added on 19-05-2023 v0.0.10
-            // of enough time has passed (and we have implemented the version checking)
-            // we can remove this check.
-            if (server_packet.data.currentprofile)
+            // check for updates to the version
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
-                for (const [key] of Object.entries(serverConfig))
-                    serverConfig[key] = server_packet.data[key];
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
             }
-            //Temp fix for new users with old config files
-            // delete once we have enough downloads
-            // removes varialble name from diallog on first run
-            if (!serverConfig.chatbotignorelist)
-                serverConfig.chatbotignorelist = ""
+            else
+                serverConfig = structuredClone(server_packet.data);
+
             SaveConfigToServer();
             startChatbotTimer();
         }
@@ -429,12 +427,6 @@ function onDataCenterMessage (server_packet)
 // =========================================================================== 
 function handleSettingsWidgetSmallData (modalcode)
 {
-    if (modalcode.restore_defaults == "on")
-    {
-        // deep copy here to avoid a reference copy
-        serverConfig = JSON.parse(JSON.stringify(defaultConfig));
-        return;
-    }
     serverConfig.chatbotenabled = "off";
     serverConfig.questionbotenabled = "off";
     serverConfig.submessageenabled = "off";
@@ -456,8 +448,7 @@ function handleSettingsWidgetLargeData (modalcode)
 {
     if (modalcode.restore_defaults == "on")
     {
-        // deep copy here to avoid a reference copy
-        serverConfig = JSON.parse(JSON.stringify(defaultConfig));
+        serverConfig = structuredClone(default_serverConfig);
         return;
     }
     serverConfig.chatbotenabled = "off";
@@ -855,7 +846,6 @@ function processTextMessage (data)
 // ============================================================================
 function processChatMessage (data)
 {
-    //console.log("chatbot.processChatMessage", data)
     // debug message colors
     let brightText = "\x1b[1m";
     let yellowColour = brightText + "\x1b[33m";
@@ -1210,7 +1200,6 @@ async function callOpenAI (string_array, modelToUse)
                 .catch((err) => 
                 {
                     localConfig.requestPending = false;
-                    console.log(err)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )

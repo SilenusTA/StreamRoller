@@ -152,7 +152,6 @@ function onDataCenterMessage (server_packet)
                 serverConfig = server_packet.data
         }
         SaveConfigToServer();
-        console.log(serverConfig)
     }
     else if (server_packet.type === "CredentialsFile")
     {
