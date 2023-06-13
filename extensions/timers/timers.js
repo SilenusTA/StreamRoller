@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# Timers.js ##############################
+// ############################# Timers.js ##############################
 // This extension creates timers for use in the system.
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -47,7 +47,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     DataCenterSocket: null,
 };
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: "timers",
     channel: "TIMERS",
     // default values for timer modal
@@ -55,7 +56,7 @@ const serverConfig = {
     TimerMessage: "Starting in",
     Timeout: "600"
 };
-
+let serverConfig = structuredClone(default_serverConfig);
 const timer = {
     name: "Timer",
     message: "message",
@@ -121,9 +122,13 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            for (const [key, value] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
             SaveConfigToServer();
         }
     }
