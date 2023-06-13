@@ -62,7 +62,8 @@ const localConfig = {
     userId: "",
     streamerId: ""
 };
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
     enablestreamersonglist: "off",
@@ -80,7 +81,7 @@ const serverConfig = {
     cred4name: "streamerId",
     cred4value: "",
 };
-const OverwriteDataCenterConfig = false;
+let serverConfig = structuredClone(default_serverConfig);
 
 const SSL_SOCKET_EVENTS = {
     JOIN_ROOM: 'join-room',
@@ -153,8 +154,6 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
     // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
@@ -179,9 +178,14 @@ function onDataCenterMessage (server_packet)
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
-            for (const [key] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+
             pollSongQueueCallback();
             pollSongListCallback();
             SaveConfigToServer();
