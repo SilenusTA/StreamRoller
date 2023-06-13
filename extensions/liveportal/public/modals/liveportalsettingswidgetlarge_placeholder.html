@@ -21,14 +21,12 @@
  
 -->
 <!-- extra tag to other extensions here as we are going to load this from the page and not from a file -->
-<div id="LivePortalSettingsWidgetLarge" tabindex='-1' hidden>
+<!--div id="LivePortalSettingsWidgetLarge_Placeholder" tabindex='-1' hidden-->
     <form id="extensionnametext_settingsform">
         <div class="form-group invisible">
             <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
-            <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode"
-                tabindex="-1" />
-            <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData"
-                tabindex="-1" />
+            <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+            <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
             <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
         </div>
         <h4 class="text-center">LivePortal Settings</h4>
@@ -42,13 +40,11 @@
         <p>De-select the items you don't want to show on the main Live page page</p>
         <!-- show hide on screen extension controls-->
         <div class="form-check form-check-inline ">
-            <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay"
-                streamersonglistdisplaychecked>
+            <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay" streamersonglistdisplaychecked>
             <label class="form-check-label" for="streamersonglistdisplay">StreamerSonglist</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay"
-                discordmodchatdisplaychecked>
+            <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay" discordmodchatdisplaychecked>
             <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
         </div>
         <div class="form-check form-check-inline">
@@ -56,13 +52,11 @@
             <label class="form-check-label" for="obsdisplay">OBS</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay"
-                philipshuedisplaychecked>
+            <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay" philipshuedisplaychecked>
             <label class="form-check-label" for="philipshuedisplay">Philips Hue</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay"
-                slalertsdisplaychecked>
+            <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay" slalertsdisplaychecked>
             <label class="form-check-label" for="slalertsdisplay">StreamLabs Alerts</label>
         </div>
         <HR>
@@ -72,8 +66,7 @@
         <div class="form-group py-2">
             <div class="col-xs-1">
                 <label for="chatmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
-                <input type="text" style="width: 40px;" class="col-lg-4" name="chatmessagebuffermaxsize"
-                    id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
+                <input type="text" style="width: 40px;" class="col-lg-4" name="chatmessagebuffermaxsize" id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
             </div>
         </div>
         <HR>
@@ -89,24 +82,20 @@
         <div class="form-group py-2">
             <div class="form-group">
                 <label for="obsdefaultstartscenename" class="col-lg-2">Start scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultstartscenename" id="obsdefaultstartscenename"
-                    value="obsdefaultstartscenenametext">
+                <input type="text" class="col-lg-4" name="obsdefaultstartscenename" id="obsdefaultstartscenename" value="obsdefaultstartscenenametext">
             </div>
             <div class="form-group">
                 <label for="obsdefaultlivescenename" class="col-lg-2">Live scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultlivescenename" id="obsdefaultlivescenename"
-                    value="obsdefaultlivescenenametext">
+                <input type="text" class="col-lg-4" name="obsdefaultlivescenename" id="obsdefaultlivescenename" value="obsdefaultlivescenenametext">
             </div>
             <div class="form-group">
                 <label for="obsdefaultintermissionscenename" class="col-lg-2">Intermission scene button (OBS
                     name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultintermissionscenename"
-                    id="obsdefaultintermissionscenename" value="obsdefaultintermissionscenenametext">
+                <input type="text" class="col-lg-4" name="obsdefaultintermissionscenename" id="obsdefaultintermissionscenename" value="obsdefaultintermissionscenenametext">
             </div>
             <div class="form-group">
                 <label for="obsdefaultendscenename" class="col-lg-2">End scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultendscenename" id="obsdefaultendscenename"
-                    value="obsdefaultendscenenametext">
+                <input type="text" class="col-lg-4" name="obsdefaultendscenename" id="obsdefaultendscenename" value="obsdefaultendscenenametext">
             </div>
         </div>
         <h4>OBS Scene buttons</h4>
@@ -115,18 +104,15 @@
             first)</p>
         <div class="form-group py-2">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes"
-                    showprimarysceneschecked>
+                <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes" showprimarysceneschecked>
                 <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes"
-                    showsecondarysceneschecked>
+                <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes" showsecondarysceneschecked>
                 <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes"
-                    showallsceneschecked>
+                <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes" showallsceneschecked>
                 <label class="form-check-label" for="showallscenes">Show All Scenes</label>
             </div>
         </div>
@@ -141,15 +127,13 @@
         <h5>Mod Chat Window</h5>
         <div class="form-group">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="modchattomodwindow" type="checkbox" id="modchattomodwindow"
-                    modchattomodwindowchecked>
+                <input class="form-check-input" name="modchattomodwindow" type="checkbox" id="modchattomodwindow" modchattomodwindowchecked>
                 <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
                     window as well as discord</label>
             </div>
             <div class="form-group">
                 <label for="discordmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
-                <input type="text" name="discordmessagebuffermaxsize" class="col-lg-4" id="discordmessagebuffermaxsize"
-                    value="discordmessagebuffermaxsizetext">
+                <input type="text" name="discordmessagebuffermaxsize" class="col-lg-4" id="discordmessagebuffermaxsize" value="discordmessagebuffermaxsizetext">
             </div>
         </div>
         <h5>Alerts to post on discord</h5>
@@ -191,8 +175,7 @@
                 <label class="form-check-label" for="merch">Merch</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="cloudbotredemption" type="checkbox" id="cloudbotredemption"
-                    cloudbotredemptionchecked>
+                <input class="form-check-input" name="cloudbotredemption" type="checkbox" id="cloudbotredemption" cloudbotredemptionchecked>
                 <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
             </div>
         </div>
@@ -200,28 +183,24 @@
         <div class="form-group py-2">
             <div class="form-group">
                 <label for="donations_channel" class="col-lg-2">Discord Donations Channel:</label>
-                <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel"
-                    value="donations_channeltext">
+                <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel" value="donations_channeltext">
             </div>
             <div class="form-group">
                 <label for="modmessage_channel" class="col-lg-2">Discord Channel to monitor:</label>
-                <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel"
-                    value="modmessage_channeltext">
+                <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel" value="modmessage_channeltext">
             </div>
         </div>
         <HR>
         <h5 class="text-center">Random Facts</h5>
         <div class="form-group py-2">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled"
-                    randomfactsenabledchecked>
+                <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled" randomfactsenabledchecked>
                 <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
             </div>
             <div class="form-group">
                 <label for="randomfactstimeout" class="col-lg-2">How often to post random facts to twitch
                     chat(minutes)</label>
-                <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout"
-                    value="randomfactstimeouttext">
+                <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout" value="randomfactstimeouttext">
             </div>
         </div>
         <HR>
@@ -242,28 +221,31 @@
             </ol>
 
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled"
-                    twitterstartenabledchecked>
+                <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled" twitterstartenabledchecked>
                 <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
                     start streaming in OBS).</label>
             </div>
             <BR>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
-                    id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
+                <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox" id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
                 <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
                     tweet</label>
             </div>
             <div class="form-group">
                 <label for="twitterstartmessage" class="col-lg-2">Main Message</label>
-                <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage"
-                    value="twitterstartmessagetext">
+                <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage" value="twitterstartmessagetext">
             </div>
             <div class="form-group">
                 <label for="twitterstartmessage_x" class="col-lg-2">Extra message if there is
                     space</label>
-                <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x"
-                    value="twitterstartmessage_xtext">
+                <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x" value="twitterstartmessage_xtext">
+            </div>
+        </div>
+        <HR>
+        <div class="form-group">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox" id="extensionnametext_restore_defaults" extensionnametext_restore_defaultschecked>
+                <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
             </div>
         </div>
         <HR>
@@ -272,8 +254,7 @@
             <div class="form-group">
                 <label for="logginglevel" class="col-lg-2 col-form-label">System Log Level</label>
 
-                <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel"
-                    value="loggingleveltext">
+                <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel" value="loggingleveltext">
 
             </div>
         </div>
@@ -282,4 +263,4 @@
             <button type="submit" class="btn btn-primary">Update</button>
         </div>
     </form>
-</div>
+<!-- /div -->

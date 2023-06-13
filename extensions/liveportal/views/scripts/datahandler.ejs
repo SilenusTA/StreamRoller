@@ -24,17 +24,17 @@
 <!-- placehold we will use for inserting widgets-->
 
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
-<%- include("../modals/liveportalsettingswidgetsmall.html"); %>
-<%- include("../modals/liveportalsettingswidgetlarge.html"); %>
+
 
 <script>
+
     //"use strict"
     const default_serverConfig = {
-        __version__: 0.1,
+        __version__: "0.1",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
-        logginglevel: 0,
+        logginglevel: "0",
 
         // extensions visibility on main page
         streamersonglistdisplay: "on",
@@ -81,9 +81,9 @@
         // max display size to maintain
         chatmessagebuffermaxsize: 300,
         discordmessagebuffermaxsize: 300,
-
+        liveportal_restore_defaults: "off",
     };
-    let serverConfig = default_serverConfig;
+    let serverConfig = structuredClone(default_serverConfig);
     const localConfig =
     {
         OBSSceneslist: {},
@@ -151,6 +151,17 @@
     window.addEventListener('load',
         function ()
         {
+            // lets load our placeholder modal code. This is so we can update our own code the same way as the extensions
+            livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall_placeholder: "", settingswidgetlarge_placeholder: "" }
+            $.get("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html", function (data)
+            {
+                livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
+            });
+
+            $.get("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html", function (data)
+            {
+                livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data;
+            });
             ConnectToDataCenter(host, port);
             heartBeatCallback();
         });
@@ -196,14 +207,6 @@
     // ===========================================================================
     function onDataCenterConnect (socket)
     {
-        // we set this here as it means the page has loaded at this point 
-        livePortalData.extensions[serverConfig.extensionname] =
-        {
-            // load the forms inot our placeholders
-            settingswidgetsmall: document.getElementById('LiveportalSettingsWidgetSmall').innerHTML,
-            settingswidgetlarge: document.getElementById('LivePortalSettingsWidgetLarge').innerHTML
-        };
-
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestConfig",
@@ -269,7 +272,10 @@
             if (server_packet.to === serverConfig.extensionname)
             {
                 if (server_packet.data.__version__ != default_serverConfig.__version__)
-                    serverConfig = default_serverConfig;
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                }
                 else
                 {
                     // update our config
@@ -404,7 +410,7 @@
                 if (extension_packet.from != serverConfig.extensionname)
                 {
                     livePortalData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
-                    addSettingsWidgetLarge(extension_packet.from);
+                    addALLSettingsWidgetLarge();
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -457,22 +463,24 @@
                 // check that it is not from us as we process our own code internally
                 if (extension_packet.from != serverConfig.extensionname)
                 {
-                    // lets reset our config checkbox settings (modal will omit ones not
-                    // checked in checkboxes so set them to "off" here first if you have them)
-                    // set our config values to the ones in message
-                    //for (const [key, value] of Object.entries(extension_packet.data))
-                    //        serverConfig[key] = value;
-                    for (const [key, value] of Object.entries(serverConfig))
+                    if (extension_packet.data.liveportal_restore_defaults == "on")
                     {
-                        //lets check our settings and send out updates as required
-                        if (value === "on" && !extension_packet.data[key])
-                            serverConfig[key] = "off";
-                        else if (key === "randomfactstimeout")
-                            serverConfig[key] = extension_packet.data[key] * 60000
-                        else if (key in extension_packet.data)
-                            serverConfig[key] = extension_packet.data[key];
+                        serverConfig = structuredClone(default_serverConfig);
+                        return;
                     }
-
+                    else
+                    {
+                        for (const [key, value] of Object.entries(serverConfig))
+                        {
+                            //lets check our settings and send out updates as required
+                            if (value === "on" && !extension_packet.data[key])
+                                serverConfig[key] = "off";
+                            else if (key === "randomfactstimeout")
+                                serverConfig[key] = extension_packet.data[key] * 60000
+                            else if (key in extension_packet.data)
+                                serverConfig[key] = extension_packet.data[key];
+                        }
+                    }
                     changeServerLogging(serverConfig.logginglevel)
                     // save our data to the server for next time we run
                     SaveConfigToServer();
@@ -815,9 +823,10 @@
         {
             if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
                 addSettingsWidgetSmall(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetsmall)
-            if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
-                addSettingsWidgetLarge(extensions[i])
         }
+        //        if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
+        addALLSettingsWidgetLarge()
+
     }
     // ===========================================================================
     //                           FUNCTION: SendSettingsWidgetSmall
@@ -974,7 +983,7 @@
     // ----------------------------- notes ----------------------------------------
     // None
     // ===========================================================================
-    function addSettingsWidgetLarge (newwidgetname)
+    function addALLSettingsWidgetLarge ()
     {
         let first = true;
         // clear the existing page data
@@ -1425,7 +1434,7 @@
     {
 
         //get our widget and use string replace to update the values
-        let modalstring = document.getElementById("LiveportalSettingsWidgetSmall").innerHTML;
+        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1456,7 +1465,7 @@
     {
 
         //get our widget and use string replace to update the values
-        let modalstring = document.getElementById("LivePortalSettingsWidgetLarge").innerHTML;
+        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1473,7 +1482,7 @@
         // Update the OBS channel list as we might have changed what we want to show
 
         // re-add the widge so it is updated on screen
-        addSettingsWidgetLarge(serverConfig.extensionname)
+        addALLSettingsWidgetLarge()
 
     }
     // ============================================================================
@@ -1526,28 +1535,40 @@
         let fieldsAsArray = $('#' + name + "_settingsform").serializeArray();
         // convert our array of objects into a more usable object
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
-        if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
+
+        // check for restore defaults being hit
+        if (fieldsAsObject.liveportal_restore_defaults == "on")
         {
-            // change server logging level
-            changeServerLogging(fieldsAsObject.logginglevel);
-            serverConfig.logginglevel = fieldsAsObject.logginglevel;
+            serverConfig = structuredClone(default_serverConfig);
+            changeServerLogging(serverConfig.logginglevel);
+            changeDiscordListeningChannel(serverConfig.modmessage_channel)
+            return;
         }
-        // loop though our keys and set them to match what is in the modal
-        for (const [key, value] of Object.entries(serverConfig))
+        else
         {
-            //lets check our settings and send out updates as required
-            if (key === "modmessage_channel")
+            if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
             {
-                // udpate the server (or just refresh the value even if the same)
-                changeDiscordListeningChannel(serverConfig[key]);
-                serverConfig[key] = fieldsAsObject[key];
+                // change server logging level
+                changeServerLogging(fieldsAsObject.logginglevel);
+                serverConfig.logginglevel = fieldsAsObject.logginglevel;
             }
-            else if (key === "randomfactstimeout")
-                serverConfig[key] = fieldsAsObject[key] * 60000
-            else if (value === "on" && !fieldsAsObject[key])
-                serverConfig[key] = "off";
-            else if (key in fieldsAsObject)
-                serverConfig[key] = fieldsAsObject[key];
+            // loop though our keys and set them to match what is in the modal
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                //lets check our settings and send out updates as required
+                if (key === "modmessage_channel")
+                {
+                    // udpate the server (or just refresh the value even if the same)
+                    changeDiscordListeningChannel(serverConfig[key]);
+                    serverConfig[key] = fieldsAsObject[key];
+                }
+                else if (key === "randomfactstimeout")
+                    serverConfig[key] = fieldsAsObject[key] * 60000
+                else if (value === "on" && !fieldsAsObject[key])
+                    serverConfig[key] = "off";
+                else if (key in fieldsAsObject)
+                    serverConfig[key] = fieldsAsObject[key];
+            }
         }
         //save the data to the server
         SaveConfigToServer();
