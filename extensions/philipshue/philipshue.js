@@ -67,6 +67,7 @@ const default_serverConfig = {
     // sesttings dialog variables
     PhilipsHueenabled: "off",
     PhilipsHuePair: "off",
+    philipshue_restore_defaults: "off",
     PHILIPS_HUE_DEBUG: "off",
     DEBUGGING_DATA: false
 };
@@ -147,9 +148,9 @@ function onDataCenterMessage (server_packet)
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
-                serverConfig = default_serverConfig;
+                serverConfig = structuredClone(default_serverConfig);
             else
-                serverConfig = server_packet.data
+                serverConfig = structuredClone(server_packet.data);
         }
         SaveConfigToServer();
     }
@@ -175,37 +176,46 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                serverConfig.PhilipsHueenabled = "off";
-                serverConfig.PhilipsHuePair = "off";
-                serverConfig.PHILIPS_HUE_DEBUG = "off";
-                for (const [key, value] of Object.entries(extension_packet.data))
+                if (extension_packet.data.philipshue_restore_defaults == "on")
                 {
-                    //lets check our settings and send out updates as required
-                    if (value === "on" && !extension_packet.data[key])
-                        serverConfig[key] = "off";
-                    else if (key === "randomfactstimeout")
-                        serverConfig[key] = extension_packet.data[key] * 60000
-                    else if (key in extension_packet.data)
-                        serverConfig[key] = extension_packet.data[key];
-                }
-                // pairing was requested or we need to pair
-                if (serverConfig.PhilipsHuePair == "on")
-                {
-                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, User requested pairing")
-                    serverConfig.PhilipsHuePair = "off";
-                    initialiseHue(true);
+                    serverConfig = structuredClone(default_serverConfig);
+                    // broadcast our modal out so anyone showing it can update it
+                    SendSettingsWidgetSmall("");
                 }
                 else
                 {
-                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, Updating data from bridge and sending them out")
-                    // update our scenes
-                    UpdateHueData()
-                    processScenes()
-                    outputScenes()
+                    serverConfig.PhilipsHueenabled = "off";
+                    serverConfig.PhilipsHuePair = "off";
+                    serverConfig.PHILIPS_HUE_DEBUG = "off";
+                    for (const [key, value] of Object.entries(extension_packet.data))
+                    {
+                        //lets check our settings and send out updates as required
+                        if (value === "on" && !extension_packet.data[key])
+                            serverConfig[key] = "off";
+                        else if (key === "randomfactstimeout")
+                            serverConfig[key] = extension_packet.data[key] * 60000
+                        else if (key in extension_packet.data)
+                            serverConfig[key] = extension_packet.data[key];
+                    }
+                    // pairing was requested or we need to pair
+                    if (serverConfig.PhilipsHuePair == "on")
+                    {
+                        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, User requested pairing")
+                        serverConfig.PhilipsHuePair = "off";
+                        initialiseHue(true);
+                    }
+                    else
+                    {
+                        if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received Settings Data, Updating data from bridge and sending them out")
+                        // update our scenes
+                        UpdateHueData()
+                        processScenes()
+                        outputScenes()
+                    }
+                    SaveConfigToServer();
+                    // broadcast our modal out so anyone showing it can update it
+                    SendSettingsWidgetSmall("");
                 }
-                SaveConfigToServer();
-                // broadcast our modal out so anyone showing it can update it
-                SendSettingsWidgetSmall("");
             }
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode")
