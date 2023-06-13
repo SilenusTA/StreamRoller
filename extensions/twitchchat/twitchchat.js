@@ -84,7 +84,8 @@ localConfig.twitchClient["user"] = {
         subsonly: false
     }
 }
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
@@ -92,7 +93,8 @@ const serverConfig = {
     streamername: "OldDepressedGamer",
     chatMessageBufferMaxSize: "300",
     chatMessageBackupTimer: "60",
-    //credentials variable names to use (in credentials modal)
+    twitchchat_restore_defaults: "off",
+    //credentials variable names to use (in credentials modal, data doesn't get stored here)
     credentialscount: "4",
     cred1name: "twitchchatbot",
     cred1value: "",
@@ -107,9 +109,8 @@ const serverConfig = {
     DEBUG_EXTRA_CHAT_MESSAGE: "off",
     DEBUG_LOG_DATA_TO_FILE: "off"
 };
+let serverConfig = structuredClone(default_serverConfig)
 
-//debug setting to overwrite the stored data with the serverConfig above. 
-const OverwriteDataCenterConfig = false;
 const serverData =
 {
     chatMessageBuffer: [{
@@ -172,8 +173,6 @@ function onDataCenterDisconnect (reason)
 // ===========================================================================
 function onDataCenterConnect (socket)
 {
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
     // create our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, serverConfig.channel));
@@ -201,17 +200,13 @@ function onDataCenterMessage (server_packet)
         // check it is our config
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
-            serverConfig.enabletwitchchat = "off";
-            serverConfig.updateUserLists = "off";
-            serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off";
-            serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
-            serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
-
-            for (const [key, value] of Object.entries(serverConfig))
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
             }
+            else
+                serverConfig = structuredClone(server_packet.data);
         }
         SaveConfigToServer();
         // restart the sceduler in case we changed the values
@@ -340,31 +335,43 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // need to update these manually as the web page does not send unchecked box values
-                serverConfig.enabletwitchchat = "off";
-                serverConfig.updateUserLists = "off";
-                serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off"
-                serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
-                serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
-
-                for (const [key, value] of Object.entries(serverConfig))
-                    if (key in extension_packet.data)
-                    {
-                        serverConfig[key] = extension_packet.data[key];
-                    }
-                for (const [key, value] of Object.entries(localConfig.usernames))
+                if (extension_packet.data.twitchchat_restore_defaults == "on")
                 {
-                    if (localConfig.twitchClient[key].state.connected)
-                        reconnectChat(key);
-                    else
-                        connectToTwtich(key);
+                    serverConfig = structuredClone(default_serverConfig);
+                    // restart the scheduler in case we changed it
+                    SaveChatMessagesToServerScheduler();
+                    // broadcast our modal out so anyone showing it can update it
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
                 }
-                SaveConfigToServer();
-                // restart the scheduler in case we changed it
-                SaveChatMessagesToServerScheduler();
-                // broadcast our modal out so anyone showing it can update it
-                SendSettingsWidgetSmall("");
-                SendSettingsWidgetLarge("");
+                else
+                {
+                    // need to update these manually as the web page does not send unchecked box values
+                    serverConfig.enabletwitchchat = "off";
+                    serverConfig.updateUserLists = "off";
+                    serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off"
+                    serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
+                    serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
+
+                    for (const [key, value] of Object.entries(serverConfig))
+                        if (key in extension_packet.data)
+                        {
+                            serverConfig[key] = extension_packet.data[key];
+                        }
+                    for (const [key, value] of Object.entries(localConfig.usernames))
+                    {
+                        if (localConfig.twitchClient[key].state.connected)
+                            reconnectChat(key);
+                        else
+                            connectToTwtich(key);
+                    }
+                    SaveConfigToServer();
+                    // restart the scheduler in case we changed it
+                    SaveChatMessagesToServerScheduler();
+                    // broadcast our modal out so anyone showing it can update it
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+                }
             }
         }
         else if (extension_packet.type === "SendChatMessage")

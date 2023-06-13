@@ -32,8 +32,7 @@
     <h5>Enable/Disable</h5>
     <div class="form-group py-2">
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="enabletwitchchat" type="checkbox" id="enabletwitchchat"
-                enabletwitchchatchecked>
+            <input class="form-check-input" name="enabletwitchchat" type="checkbox" id="enabletwitchchat" enabletwitchchatchecked>
             <label class="form-check-label" for="enabletwitchchat">Enable/Disable</label>
         </div>
     </div>
@@ -42,8 +41,7 @@
         things in future</p>
     <div class="form-group py-2">
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="updateUserLists" type="checkbox" id="updateUserLists"
-                updateUserListschecked>
+            <input class="form-check-input" name="updateUserLists" type="checkbox" id="updateUserLists" updateUserListschecked>
             <label class="form-check-label" for="updateUserLists">Keep Userlist upto data (requires 'users'
                 extension)</label>
         </div>
@@ -57,39 +55,41 @@
     <div class="form-group">
         <label for="chatMessageBufferMaxSize" class="col-form-label">Chat Buffer Size. How many messages to keep
             on screen and over reloads of the server</label>
-        <input type="text" name="chatMessageBufferMaxSize" class="col-lg-1" id="chatMessageBufferMaxSize"
-            value="chatMessageBufferMaxSizetext">
+        <input type="text" name="chatMessageBufferMaxSize" class="col-lg-1" id="chatMessageBufferMaxSize" value="chatMessageBufferMaxSizetext">
     </div>
     <div class="form-group">
         <label for="chatMessageBackupTimer" class="col-form-label">How often to save chat buffer. Default 60
             seconds (1minute)</label>
-        <input type="text" name="chatMessageBackupTimer" class="col-lg-1" id="chatMessageBackupTimer"
-            value="chatMessageBackupTimertext">
+        <input type="text" name="chatMessageBackupTimer" class="col-lg-1" id="chatMessageBackupTimer" value="chatMessageBackupTimertext">
     </div>
     <h4 class="text-center">Debug options</h4>
-    <p>Usefull to see what the system is doing and what messages it is skipping. ie maybe you want the message length
+    <p>Useful to see what the system is doing and what messages it is skipping. ie maybe you want the message length
         longer if chat is posting lots of short stuff that doesn't make sense sending to the bot. </p>
     <div class="form-group py-2">
         <div>
+            <HR>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox" id="extensionnametext_restore_defaults" extensionnametext_restore_defaultschecked>
+                    <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
+                </div>
+            </div>
             <BR>Enabling this will prevent messages being sent to twitch but they will propergate locally so it
             appears like the
             messages have been sent to twitch.<BR>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" type="checkbox"
-                    id="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" DEBUG_ONLY_MIMICK_POSTING_TO_TWITCHchecked>
+                <input class="form-check-input" name="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" type="checkbox" id="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH" DEBUG_ONLY_MIMICK_POSTING_TO_TWITCHchecked>
                 <label class="form-check-label" for="DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH">Enable/Disable</label>
             </div>
             <BR>Enable extra console logging<BR>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="DEBUG_EXTRA_CHAT_MESSAGE" type="checkbox"
-                    id="DEBUG_EXTRA_CHAT_MESSAGE" DEBUG_EXTRA_CHAT_MESSAGEchecked>
+                <input class="form-check-input" name="DEBUG_EXTRA_CHAT_MESSAGE" type="checkbox" id="DEBUG_EXTRA_CHAT_MESSAGE" DEBUG_EXTRA_CHAT_MESSAGEchecked>
                 <label class="form-check-label" for="DEBUG_EXTRA_CHAT_MESSAGE">Enable/Disable</label>
             </div>
             <BR>Log messages to file. This can slow your pc down and take up a lot of space over time if used on a busy
             chat. stored in %LOCALAPPDATA%\StreamRoller\chatdata<BR>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="DEBUG_LOG_DATA_TO_FILE" type="checkbox"
-                    id="DEBUG_LOG_DATA_TO_FILE" DEBUG_LOG_DATA_TO_FILEchecked>
+                <input class="form-check-input" name="DEBUG_LOG_DATA_TO_FILE" type="checkbox" id="DEBUG_LOG_DATA_TO_FILE" DEBUG_LOG_DATA_TO_FILEchecked>
                 <label class="form-check-label" for="DEBUG_LOG_DATA_TO_FILE">Enable/Disable</label>
             </div>
         </div>
