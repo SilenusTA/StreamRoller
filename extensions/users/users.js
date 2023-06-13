@@ -47,15 +47,16 @@ const localConfig = {
     DataCenterSocket: null,
     MaxServerConnectionAttempts: 20
 };
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     demovar1: "on",  // example of a checkbox. "on" or "off"
     demotext1: "demo text", // example of a text field
 };
+let serverConfig = structuredClone(default_serverConfig)
 const serverData = { userData: { twitch: {}, youtube: {} } }
-// serverData.userData.twitch.bob = {firstseen,lastseen}
-const OverwriteDataCenterConfig = false;
+
 
 // ============================================================================
 //                           FUNCTION: initialise
@@ -93,11 +94,6 @@ function onDataCenterDisconnect (reason)
 function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
-    if (OverwriteDataCenterConfig)
-    {
-        SaveConfigToServer();
-        SaveDataToServer();
-    }
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -127,10 +123,14 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            for (const [key, value] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
-            SaveConfigToServer();
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+
 
         }
     }

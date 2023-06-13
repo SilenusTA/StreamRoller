@@ -77,7 +77,6 @@ const default_serverConfig = {
 // need to make sure we have a proper clone of this object and not a reference
 // otherwise changes to server also change defaults
 let serverConfig = structuredClone(default_serverConfig)
-const OverwriteDataCenterConfig = false;
 const serverData =
 {
     discordMessageBuffer: [{ name: "system", message: "Start of buffer" }]
@@ -119,8 +118,6 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 function onDataCenterConnect ()
 {
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
