@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# SERVER.JS ####################################
+// ############################# SERVER.JS ####################################
 // This file starts up the http server, express app and then call the socket 
 // startup and import all the extension code needed
 // ---------------------------- creation --------------------------------------
@@ -166,13 +166,11 @@ if (config.testing > 0)
     console.log("#### running extera DEBUG extensions ####")
     logger.usecoloredlogs("default");
     loadExtensions(__dirname + "/../../test-ext")
-    loadExtensions(__dirname + "/../../extensions/datahandlers")
     loadExtensions(__dirname + "/../../extensions")
 }
 else
 {
     logger.usecoloredlogs("default");
-    loadExtensions(__dirname + "/../../extensions/datahandlers")
     loadExtensions(__dirname + "/../../extensions")
 }
 

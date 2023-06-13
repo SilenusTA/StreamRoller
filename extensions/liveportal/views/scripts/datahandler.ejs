@@ -148,22 +148,29 @@
     // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
     document.body.onmousedown = function () { localConfig.mouseDown = true }
     document.body.onmouseup = function () { localConfig.mouseDown = false }
+
+    /* This block is to avoid the extensions being loaded before we have loaded our own settings. Websocket is quicker than our webpage */
     window.addEventListener('load',
         function ()
         {
             // lets load our placeholder modal code. This is so we can update our own code the same way as the extensions
             livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall_placeholder: "", settingswidgetlarge_placeholder: "" }
-            $.get("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html", function (data)
-            {
-                livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
-            });
-
-            $.get("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html", function (data)
-            {
-                livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data;
-            });
-            ConnectToDataCenter(host, port);
-            heartBeatCallback();
+            $.get("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html")
+                .done(function (data)
+                {
+                    livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
+                })
+                .done(function ()
+                {
+                    $.get("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html", function (data)
+                    {
+                        livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data;
+                    }).done(function ()
+                    {
+                        ConnectToDataCenter(host, port);
+                        heartBeatCallback();
+                    });
+                });
         });
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
@@ -294,6 +301,7 @@
                 UpdateOwnSettingsWidgetLargeData();
 
                 ParseOBSScenesList(localConfig.OBSSceneslist);
+                updatePhilipsHueDisplay();
                 // update server log, mainly here if we have added new default options when a user
                 // updates their version of streamroller
                 SaveConfigToServer();
