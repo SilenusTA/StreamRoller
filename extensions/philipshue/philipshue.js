@@ -389,7 +389,11 @@ async function connectToHub (perform_pairing = false)
         console.log("connectToHub:using debugging dataset")
         return;
     }
-
+    if (serverConfig.PhilipsHueenabled == "off")
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".gepairtHubs", "Attempting to pair when extension is turned off in settings")
+        return;
+    }
     // ############################ PAIRING - If Needed or Requested ############################
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") 
     {
