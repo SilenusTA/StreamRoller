@@ -66,7 +66,8 @@ let localConfig = {
     StreamLabsSocket: null
 };
 
-let serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabled: "off",
@@ -75,7 +76,7 @@ let serverConfig = {
     cred1name: "SL_SOCKET_TOKEN",
     cred1value: "",
 };
-
+let serverConfig = structuredClone(default_serverConfig)
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -222,22 +223,20 @@ function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
     {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
-        //save our data if the server has no data
-        if (server_packet.data != "")
-            // check it is our config
-            if (server_packet.to === serverConfig.extensionname)
+
+        // check it is our config
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
-                // we could just assign the values here (ie serverConfig = extension_packet.message_contents)
-                // but if we change/remove an item it would never get removed from the store
-                for (const [key, value] of Object.entries(serverConfig))
-                    if (key in server_packet.data)
-                    {
-                        serverConfig[key] = server_packet.data[key];
-                    }
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
             }
-        SaveConfigToServer();
+            else
+                serverConfig = structuredClone(server_packet.data);
+
+            SaveConfigToServer();
+        }
     }
     else if (server_packet.type === "CredentialsFile")
     {
