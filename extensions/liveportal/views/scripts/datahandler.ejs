@@ -50,7 +50,7 @@
         showprimaryscenes: "off",
         showsecondaryscenes: "off",
         showallscenes: "on",
-        mutescene: "",
+        mutescene: "MIC-B1",
         muted: false,
         // chat window settings
         modchattomodwindow: "on",
@@ -148,30 +148,59 @@
     // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
     document.body.onmousedown = function () { localConfig.mouseDown = true }
     document.body.onmouseup = function () { localConfig.mouseDown = false }
-
     /* This block is to avoid the extensions being loaded before we have loaded our own settings. Websocket is quicker than our webpage */
     window.addEventListener('load',
         function ()
         {
+            LoadPages
+                .then((result) =>
+                {
+                    ConnectToDataCenter(host, port);
+                    heartBeatCallback();
+                })
+                .catch((error) =>
+                {
+                    ConnectToDataCenter(host, port);
+                    heartBeatCallback();
+                    console.log('LoadPages error:', error.message);
+                });
+
+        });
+    // ============================================================================
+    //                           FUNCTION: ConnectToDataCenter
+    // ============================================================================
+    // Desription: Connect to the data center socket
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    const LoadPages = new Promise((resolve, reject) =>
+    {
+        try
+        {
             // lets load our placeholder modal code. This is so we can update our own code the same way as the extensions
             livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall_placeholder: "", settingswidgetlarge_placeholder: "" }
-            $.get("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html")
-                .done(function (data)
+            fetch("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html")
+                .then(response => response.text())
+                .then(data => 
                 {
                     livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
+                    fetch("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html")
+                        .then(response => response.text())
+                        .then(data => 
+                        {
+                            livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data
+                            resolve("Success");
+                        })
                 })
-                .done(function ()
-                {
-                    $.get("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html", function (data)
-                    {
-                        livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data;
-                    }).done(function ()
-                    {
-                        ConnectToDataCenter(host, port);
-                        heartBeatCallback();
-                    });
-                });
-        });
+                .catch(error => console.log("LoadPages failed with error :", error))
+        }
+        catch (error)
+        {
+            reject(error)
+        }
+
+    });
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
     // ============================================================================
@@ -201,7 +230,12 @@
     // ===========================================================================
     function onDataCenterDisconnect (reason)
     {
-        livePortalData.extensions = {};
+        // remove all the other extensions but ours (lost datacenter means we only have ourselves to play with now)
+        for (const key in livePortalData.extensions)
+        {
+            if (key != serverConfig.extensionname)
+                delete livePortalData.extensions[key];
+        }
         livePortalData.channellist = {};
     }
     // ============================================================================
@@ -1440,7 +1474,6 @@
     // ===========================================================================
     function UpdateOwnSettingsWidgetSmallData ()
     {
-
         //get our widget and use string replace to update the values
         let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
         for (const [key, value] of Object.entries(serverConfig))

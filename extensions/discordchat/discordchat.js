@@ -233,7 +233,6 @@ function onDataCenterMessage (server_packet)
                 {
                     // set our config values to the ones in message
                     serverConfig.discordenabled = "off";
-                    serverConfig.discordchat_restore_defaults = "off";
                     // NOTE: this will ignore new items in the page that we don't currently have in our config
                     // and only performs a shallow copy
                     for (const [key] of Object.entries(serverConfig))
