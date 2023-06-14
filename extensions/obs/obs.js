@@ -200,6 +200,8 @@ function onDataCenterMessage (server_packet)
             SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
+            //debug function call
+            getFilters()
             // if we have enabled/disabled obs connection
             if (serverConfig.enableobs != extension_packet.data.enableobs)
             {
@@ -301,6 +303,8 @@ function onDataCenterMessage (server_packet)
             changeScene(extension_packet.data);
         else if (extension_packet.type === "ToggleMute")
             ToggleMute(extension_packet.data)
+        else if (extension_packet.type === "getFilters")
+            getFilters()
         else
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
     }
@@ -903,6 +907,27 @@ function ToggleMute (input)
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "ToggleInputMute failed", err.message); });
     localConfig.obsConnection.call("GetInputMute", { inputName: input })
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "GetInputMute failed", err.message); });
+}
+// ============================================================================
+//                           FUNCTION: getFilters
+// ============================================================================
+function getFilters ()
+{
+    console.log("GetSourcesList")
+    localConfig.obsConnection.call("GetSourcesList", null)
+        .then(data =>
+        {
+            console.log(data)
+        })
+        .catch(err =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err);
+            if (err.message === "Not connected")
+                localConfig.status.connected = false;
+        });
+    //localConfig.obsConnection.call("GetSourceFilters", { inputName: input })
+
 }
 // ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
