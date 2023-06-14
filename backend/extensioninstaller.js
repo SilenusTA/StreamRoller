@@ -19,7 +19,6 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // install the dependancies for each of the extensions
 import fs from "fs";
 import child_process from 'child_process';
 import { dirname } from 'path';
@@ -27,9 +26,9 @@ import { fileURLToPath } from 'url';
 const path = dirname(fileURLToPath(import.meta.url));
 const root = process.cwd() + "/../extensions";
 npm_install_recursive(root);
-npm_install_recursive(root + "/datahandlers");
+//npm_install_recursive(root + "/datahandlers");
 
-function npm_install_recursive(folder)
+function npm_install_recursive (folder)
 {
     console.log(folder);
     for (let subfolder of subfolders(folder))
@@ -49,12 +48,12 @@ function npm_install_recursive(folder)
     }
 }
 
-function npm_install(where)
+function npm_install (where)
 {
     child_process.execSync('npm install', { cwd: where, env: process.env, stdio: 'inherit' })
 }
 
-function subfolders(folder)
+function subfolders (folder)
 {
     return fs.readdirSync(folder)
         .filter(subfolder => fs.statSync(folder + "/" + subfolder).isDirectory())
