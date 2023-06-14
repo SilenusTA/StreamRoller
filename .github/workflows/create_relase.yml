@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '16.13.2'
     - name: minifying
       uses: nizarmah/auto-minify@v2.1
       with:
@@ -41,13 +38,12 @@ jobs:
         name: mini-artifacts
     - uses: actions/setup-node@v3
       with:
-        node-version: '16.13.2'
+        node-version: '18.6.0'
     - name: Create Version.txt
       run: |
           echo ${{ github.ref_name }} > SoftwareVersion.txt
     - name: Creating exe
       run: |
-          cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
           npx caxa -m "Unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
