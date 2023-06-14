@@ -55,8 +55,9 @@ const localConfig = {
     obsConnecting: false,
     obsTimeoutHandle: null,
     channelConnectionAttempts: 20,
-    OBSAvailableScenes: null,
-    sceneList: { current: "", main: [], secondary: [], rest: [] },
+    OBSAvailableScenes: null,// shorthand scene list 
+    sceneList: { current: "", main: [], secondary: [], rest: [] },// full organised list for sending to other extensions
+    filterList: [], // filters for each scene
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
@@ -200,8 +201,6 @@ function onDataCenterMessage (server_packet)
             SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
-            //debug function call
-            getFilters()
             // if we have enabled/disabled obs connection
             if (serverConfig.enableobs != extension_packet.data.enableobs)
             {
@@ -303,8 +302,8 @@ function onDataCenterMessage (server_packet)
             changeScene(extension_packet.data);
         else if (extension_packet.type === "ToggleMute")
             ToggleMute(extension_packet.data)
-        else if (extension_packet.type === "getFilters")
-            getFilters()
+        else if (extension_packet.type === "toggleFilter")
+            activateFilter(extension_packet.data)
         else
             logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
     }
@@ -718,6 +717,8 @@ function processOBSSceneList (scenes)
 
 
         })
+        // get the filters for each scene and add to the filters list
+        getFilters()
     } catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".processOBSSceneList", "Failed to process scene list", err.message); }
 }
 
@@ -743,7 +744,8 @@ localConfig.obsConnection.on("GetVersion", data => { logger.log(localConfig.SYST
 localConfig.obsConnection.on("CurrentProgramSceneChanged", data => { onSwitchedScenes(data) });
 localConfig.obsConnection.on("SceneListChanged", data => { onScenesListChanged(data) });
 localConfig.obsConnection.on("InputMuteStateChanged", data => { onSourceMuteStateChanged(data) });
-
+localConfig.obsConnection.on("Filters", data => { onSourceMuteStateChanged(data) });
+localConfig.obsConnection.on("SourceFilterEnableStateChanged", data => { onFilterChanged(data) })
 // ============================================================================
 //                           FUNCTION: obs error
 // ============================================================================
@@ -909,27 +911,6 @@ function ToggleMute (input)
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "GetInputMute failed", err.message); });
 }
 // ============================================================================
-//                           FUNCTION: getFilters
-// ============================================================================
-function getFilters ()
-{
-    console.log("GetSourcesList")
-    localConfig.obsConnection.call("GetSourcesList", null)
-        .then(data =>
-        {
-            console.log(data)
-        })
-        .catch(err =>
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err.message);
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err);
-            if (err.message === "Not connected")
-                localConfig.status.connected = false;
-        });
-    //localConfig.obsConnection.call("GetSourceFilters", { inputName: input })
-
-}
-// ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
 // ============================================================================
 function onSourceMuteStateChanged (data)
@@ -951,6 +932,123 @@ function onSourceMuteStateChanged (data)
             serverConfig.channel
         ));
 }
+
+// ============================================================================
+//                           FUNCTION: getFilters
+// ============================================================================
+function getFilters ()
+{
+    localConfig.OBSAvailableScenes.forEach((sceneName) =>
+    {
+        localConfig.obsConnection.call("GetSourceFilterList", { sourceName: sceneName.sceneName })
+            .then(data =>
+            {
+                if (data.filters.length > 0)
+                {
+                    // keep anoverall filter list (might be usefull later)
+                    localConfig.filterList[sceneName.sceneName] = data.filters
+                    // lets add this data to our scenes object so other extensions can see it
+                    // we have three sections in this array (I know, this is an annoying choice 
+                    // but it seemed to makes sense originally )
+                    for (const entry in localConfig.sceneList.main) 
+                    {
+                        if (localConfig.sceneList.main[entry].sceneName === sceneName.sceneName)
+                        {
+                            localConfig.sceneList.main[entry]["filters"] = data.filters;
+                            return;
+                        }
+                    }
+                    for (const entry in localConfig.sceneList.secondary) 
+                    {
+                        if (localConfig.sceneList.secondary[entry].sceneName === sceneName.sceneName)
+                        {
+                            localConfig.sceneList.secondary[entry]["filters"] = data.filters;
+                            return;
+                        }
+                    }
+                    for (const entry in localConfig.sceneList.rest) 
+                    {
+                        if (localConfig.sceneList.rest[entry].sceneName === sceneName.sceneName)
+                        {
+                            localConfig.sceneList.rest[entry]["filters"] = data.filters;
+                            return;
+                        }
+                    }
+                }
+            })
+            .catch(err =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err.message);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err);
+                if (err.message === "Not connected")
+                    localConfig.status.connected = false;
+            });
+    })
+}
+// ============================================================================
+//                           FUNCTION: activateFilter
+// ============================================================================
+function activateFilter (data)
+{
+    localConfig.obsConnection.call("SetSourceFilterEnabled",
+        {
+            sourceName: data.sourceName,//"#4x3_Cam",
+            filterName: data.filterName, //"mycolorCorrection",
+            filterEnabled: data.filterEnabled //false
+        })
+}
+// ============================================================================
+//                           FUNCTION: onFilterChanged
+//                      update our filter list and send out our scenes list
+// ============================================================================
+function onFilterChanged (data)
+{
+    // find the filter
+    for (const entry in localConfig.sceneList.main) 
+    {
+        if (localConfig.sceneList.main[entry].sceneName === data.sourceName)
+        {
+            for (let i = 0; i < localConfig.sceneList.main[entry].filters.length; i++)
+            {
+                if (localConfig.sceneList.main[entry].filters[i].filterName == data.filterName)
+                {
+                    localConfig.sceneList.main[entry].filters[i].filterEnabled = data.filterEnabled;
+                    sendScenes();
+                }
+            }
+        }
+    }
+    for (const entry in localConfig.sceneList.secondary) 
+    {
+        if (localConfig.sceneList.secondary[entry].sceneName === data.sourceName)
+        {
+            for (let i = 0; i < localConfig.sceneList.secondary[entry].filters.length; i++)
+            {
+                if (localConfig.sceneList.secondary[entry].filters[i].filterName == data.filterName)
+                {
+                    localConfig.sceneList.secondary[entry].filters[i].filterEnabled = data.filterEnabled;
+                    sendScenes();
+                }
+            }
+        }
+    }
+    for (const entry in localConfig.sceneList.rest) 
+    {
+        if (localConfig.sceneList.rest[entry].sceneName === data.sourceName)
+        {
+            for (let i = 0; i < localConfig.sceneList.rest[entry].filters.length; i++)
+            {
+                if (localConfig.sceneList.rest[entry].filters[i].filterName == data.filterName)
+                {
+                    localConfig.sceneList.rest[entry].filters[i].filterEnabled = data.filterEnabled;
+                    sendScenes();
+                }
+            }
+        }
+    }
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'onFilterChanged' received", data)
+}
+
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
@@ -958,17 +1056,14 @@ function heartBeatCallback ()
 {
     try
     {
-
         // if we are not currently trying to connect  and we are enabled we need to start the scheduler again
         if (localConfig.status.connected == false && serverConfig.enableobs == "on")
         {
-
             if (localConfig.obsConnecting == false)
             {
                 localConfig.obsConnecting = true;
                 connectToObs(localCredentials.cred1value, localCredentials.cred2value, localCredentials.cred3value);
             }
-
         }
         else if (serverConfig.enableobs == "off")
         {

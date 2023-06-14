@@ -1222,6 +1222,8 @@
             addOBSMuteButton(serverConfig.muted);
         // check if we are live and set the colors accordingly.
         OBSLiveCheck();
+        //update any filters we may have
+        UpdateOBSFilters();
     }
     // ============================================================================
     //                           FUNCTION: addOBSSceneButton
@@ -1433,6 +1435,91 @@
 
             document.getElementById("OBSStrain").style["background-color"] = "rgb(" + straincolor + "," + (255 - straincolor) + ",0)";
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: UpdateOBSFilters
+    // ============================================================================
+    function UpdateOBSFilters ()
+    {
+        if (localConfig.OBSSceneslist)
+        {
+            let currentscene = localConfig.OBSSceneslist.current
+            let element = document.getElementById("OBSFiltersRow");
+            element.textContent = "";
+            // need to find our scene to retrieve the filter list. who designed this structure ffs, I must have been drunk
+            for (const entry in localConfig.OBSSceneslist.main) 
+            {
+                if (localConfig.OBSSceneslist.main[entry].sceneName === currentscene)
+                {
+                    if (localConfig.OBSSceneslist.main[entry].filters)
+                        localConfig.OBSSceneslist.main[entry].filters.forEach((filter) =>
+                            addOBSFilterButton(element, filter.filterName, localConfig.OBSSceneslist.current, filter.filterEnabled)
+                        );
+                    return
+                }
+            }
+            for (const entry in localConfig.OBSSceneslist.secondary) 
+            {
+                if (localConfig.OBSSceneslist.secondary[entry].sceneName === currentscene)
+                {
+                    if (localConfig.OBSSceneslist.secondary[entry].filters)
+                        localConfig.OBSSceneslist.secondary[entry].filters.forEach((filter) =>
+                            addOBSFilterButton(element, filter.filterName, localConfig.OBSSceneslist.current, filter.filterEnabled)
+                        );
+                    return
+                }
+            }
+            for (const entry in localConfig.OBSSceneslist.rest) 
+            {
+                if (localConfig.OBSSceneslist.rest[entry].sceneName === currentscene)
+                {
+                    if (localConfig.OBSSceneslist.rest[entry].filters)
+                        localConfig.OBSSceneslist.rest[entry].filters.forEach((filter) =>
+                            addOBSFilterButton(element, filter.filterName, localConfig.OBSSceneslist.current, filter.filterEnabled)
+                        );
+                    return
+                }
+            }
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: addOBSFilterButton
+    // ============================================================================
+    function addOBSFilterButton (element, displayname, scenename, enabled)
+    {
+        let button = document.createElement('input');
+        button.type = 'button';
+        button.value = displayname;
+        if (enabled)
+            button.classList = "btn btn-sm btn-success mx-1";
+        else
+            button.classList = "btn btn-sm btn-secondary mx-1";
+        button.addEventListener('click', function ()
+        {
+            event.preventDefault();
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "toggleFilter",
+                        serverConfig.extensionname,
+                        {
+                            sourceName: scenename,//"#4x3_Cam",
+                            filterName: displayname, //"mycolorCorrection",
+                            filterEnabled: !enabled //false
+                        },
+                        "",
+                        "obs"
+                    ),
+                    "",
+                    "obs"
+                )
+            )
+            return false;
+        }, false);
+
+        element.appendChild(button);
     }
     // ============================================================================
     //                      FUNCTION: parseExtensionModalData
