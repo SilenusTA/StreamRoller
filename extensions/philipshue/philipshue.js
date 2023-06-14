@@ -575,7 +575,7 @@ async function UpdateHueData ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("UpdateHueData()")
     await getAllScenes()
-    await getAllGroups()
+    //await getAllGroups()
 
 }
 // ============================================================================
