@@ -274,7 +274,7 @@ function onDataCenterMessage (server_packet)
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", extension_packet.data);
             }
             else
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                     "Unable to process ExtensionMessage : ", server_packet);
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode")

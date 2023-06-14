@@ -198,7 +198,7 @@ function onDataCenterMessage (server_packet)
             // ignore these messages
         }
         else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "received Unhandled ExtensionMessage : ", server_packet);
     }
     else if (server_packet.type === "UnknownChannel")
