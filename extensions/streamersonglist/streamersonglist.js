@@ -57,6 +57,7 @@ const localConfig = {
     pollSongQueueHandle: null,
     pollSongListHandle: null,
     songlist: [],
+    currentsong: "",
     username: "",
     clientId: "",
     userId: "",
@@ -104,6 +105,46 @@ const SSL_SOCKET_EVENTS = {
 const SSL_RELOAD_EVENTS =
     ['queue-event', 'reload-song-list']
 
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Streamer songlist (SSL) is a tool for streamers to keep track of songs in a queue that viewers requests <a href='https://www.streamersonglist.com/'>SSL Website</a>",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "SSLSongAddedToQueue",
+                displaytitle: "Song Added To Queue",
+                messagetype: "SSLSongAddedToQueue",
+                parameters: { songName: "" }
+            }
+            ,
+            {
+                name: "SSLCurrentSongChanged",
+                displaytitle: "Current Song Changed",
+                messagetype: "SSLCurrentSongChange",
+                parameters: { songName: "" }
+            }
+
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "SSLCurrentSongChanged",
+                displaytitle: "Add Song To Queue",
+                messagetype: "AddSongToQueue",
+                parameters: { songName: "" }
+            }
+            ,
+            {
+                name: "SSLPlaySong",
+                displaytitle: "Mark Song as played",
+                messagetype: "MarkSongAsPlayed",
+                parameters: { songName: "" }
+            }
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -206,31 +247,54 @@ function onDataCenterMessage (server_packet)
             });
             localConfig.ssl_client.on('connect', () =>
             {
+                // add all our handlers
                 for (const [key] of Object.entries(SSL_SOCKET_EVENTS))
                 {
                     localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
                     {
                         logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
-                        if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
+                        if (SSL_RELOAD_EVENTS["QUEUE_MESSAGE"] == key)
+                        {
+                            console.log(msg)
+                            if (msg.added)
+                            {
+                                sr_api.sendMessage(localConfig.DataCenterSocket,
+                                    sr_api.ServerPacket("ChannelData",
+                                        serverConfig.extensionname,
+                                        sr_api.ExtensionPacket(
+                                            "SSLSongAddedToQueue",
+                                            serverConfig.extensionname,
+                                            { songName: msg.title },
+                                            serverConfig.channel),
+                                        serverConfig.channel
+                                    ),
+                                );
+                            }
+                            fetchSongQueue();
+
+                        }
+                        else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
                         {
                             //console.log("fetching. ..........");
                             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
                             fetchSongList();
                             fetchSongQueue();
                         }
-                    });
+                    })
                 }
-                localConfig.ssl_client.emit("join-room", localConfig.streamerId);
-                // Join all interfaces, just for the fun of it and testing
-
             });
-            // perform a fetch of the lists in case we get asked for them later
-            fetchSongList()
-            fetchSongQueue()
-            // start our times if we havent alreadly
-            pollSongQueueCallback();
-            pollSongListCallback();
         }
+        localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+        // Join all interfaces, just for the fun of it and testing
+
+
+        // perform a fetch of the lists in case we get asked for them later
+        fetchSongList()
+        fetchSongQueue()
+        // start our times if we havent alreadly
+        pollSongQueueCallback();
+        pollSongListCallback();
+
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -280,18 +344,36 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "AddSongToQueue")
         {
-            addSongToQueue(extension_packet.data);
+            addSongToQueue(extension_packet.data.songName);
         }
         else if (extension_packet.type === "MarkSongAsPlayed")
         {
-            markSongAsPlayed(extension_packet.data);
+            markSongAsPlayed(extension_packet.data.songName);
         }
         else if (extension_packet.type === "RemoveSongFromQueue")
         {
             removeSongFromQueue(extension_packet.data);
         }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            console.log("ReqestTriggers")
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -491,7 +573,16 @@ function fetchSongQueue ()
         })
         .then(data =>
         {
+
             localConfig.songQueue = data;
+            if (localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+            {
+
+                localConfig.currentsong = localConfig.songQueue.list[0].song.title
+                // if we have only just loaded lets not send any messages
+                if (localConfig.currentsong != "")
+                    sendCurrentSongChange("")
+            }
             outputSongQueue();
             localConfig.status.connected = true;
         })
@@ -515,6 +606,27 @@ function sendSonglist (extension)
                 "SongList",
                 serverConfig.extensionname,
                 localConfig.songlist,
+                "",
+                extension
+            ),
+            "",
+            extension
+        ));
+}
+// ============================================================================
+//                       FUNCTION: sendCurrentSongChange
+//                      send songlist to extension
+// ============================================================================
+function sendCurrentSongChange (extension)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "SSLCurrentSongChange",
+                serverConfig.extensionname,
+                { songName: localConfig.currentsong },
                 "",
                 extension
             ),

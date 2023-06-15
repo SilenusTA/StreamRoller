@@ -96,6 +96,47 @@ const default_serverConfig = {
 };
 let localCredentials = {};
 let serverConfig = structuredClone(default_serverConfig);
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "OBSStartStreaming",
+                displaytitle: "Start Streaming",
+                messagetype: "StreamStarted",
+                parameters: {}
+            }
+            ,
+            {
+                name: "OBSSceneChanged",
+                displaytitle: "Scene Changed",
+                messagetype: "SceneChanged",
+                parameters: { sceneName: "" }
+            }
+
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "OBSToggleFilter",
+                displaytitle: "Toggle Filter",
+                messagetype: "toggleFilter",
+                parameters: { sceneName: "", enabled: "" }
+            }
+            ,
+            {
+                name: "OBSChangeScene",
+                displaytitle: "Change Scene",
+                messagetype: "ChangeScene",
+                parameters: { sceneName: "", enabled: "" }
+            }
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -290,6 +331,24 @@ function onDataCenterMessage (server_packet)
                         "SceneList",
                         serverConfig.extensionname,
                         localConfig.sceneList,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            console.log("ReqestTriggers")
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
                         "",
                         server_packet.from
                     ),

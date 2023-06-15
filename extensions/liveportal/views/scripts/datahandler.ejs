@@ -21,6 +21,7 @@
  
 -->
 <script src="/streamroller-message-api.cjs"></script>
+<script src="/liveportal/scripts/triggers.js"></script>
 <!-- placehold we will use for inserting widgets-->
 
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
@@ -101,7 +102,8 @@
         // streamersonglist variables
         setreamersonglist: { songlist: [], queue: { status: { "songsPlayedToday": "0" }, list: [] } },
         //philips hugh variables
-        philipsHueSceneList: []
+        philipsHueSceneList: [],
+        triggersAndActions: { triggers: [], actions: [] }
     }
     const chatcolors =
     {
@@ -398,6 +400,8 @@
             {
                 RequestOBSScenes("obs");
             }
+            // call the extension cards to recieve the triggers/actions they can provide
+            initiTriggersAndActions(server_packet.data);
         }
         else if (server_packet.type === "ExtensionMessage")
         {
@@ -614,10 +618,21 @@
                     ));
             }
             // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED trigger and action data
+            // -------------------------------------------------------------------------------------------------
+
+            else if (extension_packet.type === "TriggerAndActions")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    receivedTrigger(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
             // -------------------------------------------------------------------------------------------------
             else
-                console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+            {
+                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+            }
         }
         // -------------------------------------------------------------------------------------------------
         //                   RECEIVED CHANNEL DATA
@@ -1870,9 +1885,8 @@
                 "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "redeem"]
             var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
             var modactions = ["messagedeleted", "timeout", "ban", "notice"]
-
-            if (!(messages_handled.includes(chatdata.data["message-type"])))
-                console.log("not handling these messages yet, still work in progress", chatdata)
+            if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System")
+                console.log("not handling these messages yet, still work in progress", chatdata.data)
 
             // setup the date field
             var today = new Date();

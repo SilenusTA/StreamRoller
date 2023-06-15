@@ -301,7 +301,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "UserAccountNames")
         {
-            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
             {
                 // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
                 serverConfig.chatbotname = extension_packet.data.bot
@@ -936,7 +936,7 @@ function processChatMessage (data)
     )
     {
         if (serverConfig.DEBUG_MODE === "on")
-            console.log("Ignoring system/bot message", data)
+            console.log("Ignoring system/bot message", serverConfig.chatbotname, data)
         return;
     }
 

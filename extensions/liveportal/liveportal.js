@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# LIVE.js ##############################
+// ############################# LIVE.js ##############################
 // A page for live streaming. This should contain all items needed while 
 // streaming. settings title, modding chatters, OBS controls etc
 // ---------------------------- creation --------------------------------------
@@ -68,6 +68,8 @@ function initialise (app, host, port, heartbeat)
     config.heartBeatTimeout = heartbeat;
     //app.use("/images/", express.static(__dirname + '/public/images'));
     app.use("/liveportal/", express.static(__dirname + "/public"));
+    app.use("/liveportal/scripts", express.static(__dirname + "/views/scripts"));
+
     config.dataCenterApp = app
 
     try
