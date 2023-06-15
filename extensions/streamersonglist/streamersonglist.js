@@ -283,8 +283,9 @@ function onDataCenterMessage (server_packet)
                     })
                 }
             });
+            localConfig.ssl_client.emit("join-room", localConfig.streamerId);
         }
-        localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+
         // Join all interfaces, just for the fun of it and testing
 
 
