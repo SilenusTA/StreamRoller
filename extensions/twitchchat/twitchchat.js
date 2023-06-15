@@ -90,7 +90,9 @@ const default_serverConfig = {
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
     updateUserLists: "off",
-    streamername: "OldDepressedGamer",
+    streamername: "OldDepressedGamer",// channel we are streaming on (set from settings submits by user)
+    botname: "Username", // only used so we can put a hint in the credentials box
+    username: "Botname",
     chatMessageBufferMaxSize: "300",
     chatMessageBackupTimer: "60",
     twitchchat_restore_defaults: "off",
@@ -223,12 +225,14 @@ function onDataCenterMessage (server_packet)
             {
                 if (server_packet.data.twitchchatuser && server_packet.data.twitchchatuseroauth)
                 {
+                    serverConfig.username = server_packet.data.twitchchatuser
                     localConfig.usernames.user = [];
                     localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
                     localConfig.usernames.user["oauth"] = server_packet.data.twitchchatuseroauth;
                 }
                 if (server_packet.data.twitchchatbot && server_packet.data.twitchchatbotoauth)
                 {
+                    serverConfig.botname = server_packet.data.twitchchatbot
                     localConfig.usernames.bot = [];
                     localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
                     localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
