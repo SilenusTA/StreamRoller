@@ -586,7 +586,7 @@ function fetchSongQueue ()
         {
 
             localConfig.songQueue = data;
-            if (localConfig.songQueue.list > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+            if (localConfig.songQueue.list.length > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
             {
                 localConfig.currentsong = localConfig.songQueue.list[0].song.title
                 // if we have only just loaded lets not send any messages
@@ -631,18 +631,17 @@ function sendCurrentSongChange (extension)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "ExtensionMessage",
+            "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "CurrentSongChange",
                 serverConfig.extensionname,
                 { songName: localConfig.currentsong },
-                "",
-                extension
+                serverConfig.channel
             ),
-            "",
-            extension
+            serverConfig.channel
         ));
+
 }
 // ============================================================================
 //                           FUNCTION: outputSongList

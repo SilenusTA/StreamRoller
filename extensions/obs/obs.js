@@ -57,7 +57,6 @@ const localConfig = {
     channelConnectionAttempts: 20,
     OBSAvailableScenes: null,// shorthand scene list 
     sceneList: { current: "", main: [], secondary: [], rest: [] },// full organised list for sending to other extensions
-    filterList: [], // filters for each scene
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
@@ -338,7 +337,7 @@ function onDataCenterMessage (server_packet)
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "SceneList",
+                            "ScenesList",
                             serverConfig.extensionname,
                             localConfig.sceneList,
                             "",
@@ -771,29 +770,30 @@ function processOBSSceneList (scenes)
         localConfig.sceneList.rest = [];
         scenes.forEach(scene =>
         {
-            if (scene.sceneName !== "currentProgramSceneName:")
-            {
-                if (scene.sceneName.startsWith(serverConfig.mainsceneselector))
-                    localConfig.sceneList.main.push({
-                        displayName: scene.sceneName.replace(serverConfig.mainsceneselector, ""),
-                        sceneName: scene.sceneName
+            // console.log(scene)
+            //if (scene.sceneName !== "currentProgramSceneName:")
+            // {
+            if (scene.sceneName.startsWith(serverConfig.mainsceneselector))
+                localConfig.sceneList.main.push({
+                    displayName: scene.sceneName.replace(serverConfig.mainsceneselector, ""),
+                    sceneName: scene.sceneName
+                }
+                )
+            else if (scene.sceneName.startsWith(serverConfig.secondarysceneselector))
+                localConfig.sceneList.secondary.push(
+                    {
+                        displayName: scene.sceneName.replace(serverConfig.secondarysceneselector, ""),
+                        sceneName: scene.sceneName,
                     }
-                    )
-                else if (scene.sceneName.startsWith(serverConfig.secondarysceneselector))
-                    localConfig.sceneList.secondary.push(
-                        {
-                            displayName: scene.sceneName.replace(serverConfig.secondarysceneselector, ""),
-                            sceneName: scene.sceneName,
-                        }
-                    )
-                else
-                    localConfig.sceneList.rest.push({ displayName: scene.sceneName, sceneName: scene.sceneName, muted: scene.muted })
-            }
+                )
+            else
+                localConfig.sceneList.rest.push({ displayName: scene.sceneName, sceneName: scene.sceneName, muted: scene.muted })
+            // }
 
 
         })
         // get the filters for each scene and add to the filters list
-        getFilters()
+        getFilters();
     } catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".processOBSSceneList", "Failed to process scene list", err.message); }
 }
 
@@ -891,7 +891,7 @@ function onScenesListChanged (data)
 function onSwitchedScenes (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
-    localConfig.sceneList.current = scene;
+    localConfig.sceneList.current = scene.sceneName;
     // send the information out on our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
@@ -1011,8 +1011,20 @@ function onSourceMuteStateChanged (data)
 // ============================================================================
 //                           FUNCTION: getFilters
 // ============================================================================
-function getFilters ()
+async function getFilters ()
 {
+    if (localConfig.obsConnection.socket._socket == null)
+    {
+        // if resetarting this might get called too soon
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "Sockect not ready, rescheduling");
+        setTimeout(() =>
+        {
+            getFilters();
+            sendScenes();
+        }, 50);
+        return
+    }
+
     localConfig.OBSAvailableScenes.forEach((sceneName) =>
     {
         localConfig.obsConnection.call("GetSourceFilterList", { sourceName: sceneName.sceneName })
@@ -1020,8 +1032,6 @@ function getFilters ()
             {
                 if (data.filters.length > 0)
                 {
-                    // keep anoverall filter list (might be usefull later)
-                    localConfig.filterList[sceneName.sceneName] = data.filters
                     // lets add this data to our scenes object so other extensions can see it
                     // we have three sections in this array (I know, this is an annoying choice 
                     // but it seemed to makes sense originally )
@@ -1057,6 +1067,7 @@ function getFilters ()
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err);
                 if (err.message === "Not connected")
                     localConfig.status.connected = false;
+                return;
             });
     })
 }
@@ -1065,7 +1076,6 @@ function getFilters ()
 // ============================================================================
 function activateFilter (data)
 {
-    console.log(data)
     // value could be a string and even capitalized. This is typed in by a streamer after all :P
     let isTrueSet = /^true$/i.test(data.filterEnabled)
 
@@ -1076,7 +1086,7 @@ function activateFilter (data)
             filterEnabled: isTrueSet  //false
         }).catch((e) =>
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
         })
 }
 // ============================================================================
