@@ -40,7 +40,7 @@ import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import * as HueAPI from "node-hue-api"
-
+// some comment
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
