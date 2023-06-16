@@ -115,14 +115,18 @@ const triggersandactions =
             {
                 name: "SSLSongAddedToQueue",
                 displaytitle: "Song Added To Queue",
-                messagetype: "SSLSongAddedToQueue",
+                description: "Song was added to queue",
+                messagetype: "SongAddedToQueue",
+                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
             ,
             {
                 name: "SSLCurrentSongChanged",
                 displaytitle: "Current Song Changed",
-                messagetype: "SSLCurrentSongChange",
+                description: "Current song changed",
+                messagetype: "CurrentSongChange",
+                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
 
@@ -133,14 +137,18 @@ const triggersandactions =
             {
                 name: "SSLCurrentSongChanged",
                 displaytitle: "Add Song To Queue",
+                description: "Add a song to the queue",
                 messagetype: "AddSongToQueue",
+                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
             ,
             {
                 name: "SSLPlaySong",
                 displaytitle: "Mark Song as played",
+                description: "Mark a song as played",
                 messagetype: "MarkSongAsPlayed",
+                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
         ],
@@ -253,16 +261,15 @@ function onDataCenterMessage (server_packet)
                     localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
                     {
                         logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
-                        if (SSL_RELOAD_EVENTS["QUEUE_MESSAGE"] == key)
+                        if ("QUEUE_MESSAGE" == key)
                         {
-                            console.log(msg)
                             if (msg.added)
                             {
                                 sr_api.sendMessage(localConfig.DataCenterSocket,
                                     sr_api.ServerPacket("ChannelData",
                                         serverConfig.extensionname,
                                         sr_api.ExtensionPacket(
-                                            "SSLSongAddedToQueue",
+                                            "SongAddedToQueue",
                                             serverConfig.extensionname,
                                             { songName: msg.title },
                                             serverConfig.channel),
@@ -276,26 +283,29 @@ function onDataCenterMessage (server_packet)
                         else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
                         {
                             //console.log("fetching. ..........");
-                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
+                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:CredentialsFile", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
                             fetchSongList();
                             fetchSongQueue();
                         }
-                    })
+                    });
+                }
+
+                try
+                {
+                    localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+                } catch (error)
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:CredentialsFile", "Failed to join room");
                 }
             });
-            localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+
+            // perform a fetch of the lists in case we get asked for them later
+            fetchSongList()
+            fetchSongQueue()
+            // start our times if we havent alreadly
+            pollSongQueueCallback();
+            pollSongListCallback();
         }
-
-        // Join all interfaces, just for the fun of it and testing
-
-
-        // perform a fetch of the lists in case we get asked for them later
-        fetchSongList()
-        fetchSongQueue()
-        // start our times if we havent alreadly
-        pollSongQueueCallback();
-        pollSongListCallback();
-
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -345,11 +355,11 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "AddSongToQueue")
         {
-            addSongToQueue(extension_packet.data.songName);
+            addSongToQueue(extension_packet.data);
         }
         else if (extension_packet.type === "MarkSongAsPlayed")
         {
-            markSongAsPlayed(extension_packet.data.songName);
+            markSongAsPlayed(extension_packet.data);
         }
         else if (extension_packet.type === "RemoveSongFromQueue")
         {
@@ -576,9 +586,8 @@ function fetchSongQueue ()
         {
 
             localConfig.songQueue = data;
-            if (localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+            if (localConfig.songQueue.list > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
             {
-
                 localConfig.currentsong = localConfig.songQueue.list[0].song.title
                 // if we have only just loaded lets not send any messages
                 if (localConfig.currentsong != "")
@@ -625,7 +634,7 @@ function sendCurrentSongChange (extension)
             "ExtensionMessage",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "SSLCurrentSongChange",
+                "CurrentSongChange",
                 serverConfig.extensionname,
                 { songName: localConfig.currentsong },
                 "",
@@ -767,7 +776,7 @@ function markSongAsPlayed (queueId)
         })
         .catch(e =>
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error removing song", e.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played", e.message);
         });
 }
 

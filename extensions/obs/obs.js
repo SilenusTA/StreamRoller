@@ -107,14 +107,18 @@ const triggersandactions =
             {
                 name: "OBSStartStreaming",
                 displaytitle: "Start Streaming",
+                description: "Start OBS Streaming",
                 messagetype: "StreamStarted",
+                channel: serverConfig.channel,
                 parameters: {}
             }
             ,
             {
                 name: "OBSSceneChanged",
                 displaytitle: "Scene Changed",
+                description: "Scene was changed",
                 messagetype: "SceneChanged",
+                channel: serverConfig.channel,
                 parameters: { sceneName: "" }
             }
 
@@ -125,14 +129,18 @@ const triggersandactions =
             {
                 name: "OBSToggleFilter",
                 displaytitle: "Toggle Filter",
-                messagetype: "toggleFilter",
-                parameters: { sceneName: "", enabled: "" }
+                description: "Enable/Disable a filter (true/false)",
+                messagetype: "ToggleFilter",
+                channel: serverConfig.channel,
+                parameters: { sourceName: "", filterName: "", filterEnabled: "" }
             }
             ,
             {
                 name: "OBSChangeScene",
                 displaytitle: "Change Scene",
+                description: "Switch to the OBS scene provided by sceneName",
                 messagetype: "ChangeScene",
+                channel: serverConfig.channel,
                 parameters: { sceneName: "", enabled: "" }
             }
         ],
@@ -204,205 +212,213 @@ function onDataCenterConnect ()
  */
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    try
     {
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.type === "ConfigFile")
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
-            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
             {
-                serverConfig = structuredClone(default_serverConfig);
-                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
-            }
-            else
-                serverConfig = structuredClone(server_packet.data);
-            SaveConfigToServer();
-        }
-    }
-    else if (server_packet.type === "CredentialsFile")
-    {
-        if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
-        {
-            localCredentials.cred1value = server_packet.data.obshost;
-            localCredentials.cred2value = server_packet.data.obsport;
-            localCredentials.cred3value = server_packet.data.obspass;
-            if (localConfig.obsConnecting == false && serverConfig.enableobs == "on")
-                connectToObs();
-        }
-    }
-    else if (server_packet.type === "ExtensionMessage")
-    {
-        let extension_packet = server_packet.data
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
-        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
-            SendSettingsWidgetSmall(extension_packet.from);
-        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
-            SendSettingsWidgetLarge(extension_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
-        else if (extension_packet.type === "SettingsWidgetSmallData")
-        {
-            // if we have enabled/disabled obs connection
-            if (serverConfig.enableobs != extension_packet.data.enableobs)
-            {
-                //we are currently enabled so lets disconnect
-                if (serverConfig.enableobs == "on")
-                {
-                    serverConfig.enableobs = "off";
-                    clearTimeout(localConfig.obsTimeoutHandle)
-                    disconnectObs()
-                }
-                //currently disabled so connect to obs
-                else
-                {
-                    serverConfig.enableobs = "on";
-                    localConfig.obsConnecting = true
-                    connectToObs();
-                }
-            }
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                serverConfig.enableobs = "off";
-                for (const [key, value] of Object.entries(extension_packet.data))
-                    serverConfig[key] = value;
-                SaveConfigToServer();
-                if (localConfig.OBSAvailableScenes != null)
-                    processOBSSceneList(localConfig.OBSAvailableScenes);
-                sendScenes();
-            }
-            //update anyone who is showing our code at the moment
-            SendSettingsWidgetSmall("");
-            SendSettingsWidgetLarge("");
-        }
-        else if (extension_packet.type === "SettingsWidgetLargeData")
-        {
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                // reset to defaults
-                if (extension_packet.data.obs_restore_defaults == "on")
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Received config");
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
                 {
                     serverConfig = structuredClone(default_serverConfig);
-                    // Request our credentials from the server as we are storing them in our serverconfig
-                    sr_api.sendMessage(localConfig.DataCenterSocket,
-                        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
                 }
                 else
+                    serverConfig = structuredClone(server_packet.data);
+                SaveConfigToServer();
+            }
+        }
+        else if (server_packet.type === "CredentialsFile")
+        {
+            if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
+            {
+                localCredentials.cred1value = server_packet.data.obshost;
+                localCredentials.cred2value = server_packet.data.obsport;
+                localCredentials.cred3value = server_packet.data.obspass;
+                if (localConfig.obsConnecting == false && serverConfig.enableobs == "on")
+                    connectToObs();
+            }
+        }
+        else if (server_packet.type === "ExtensionMessage")
+        {
+            let extension_packet = server_packet.data
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
+            if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+                SendSettingsWidgetSmall(extension_packet.from);
+            else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+                SendSettingsWidgetLarge(extension_packet.from);
+            else if (extension_packet.type === "RequestCredentialsModalsCode")
+                SendCredentialsModal(extension_packet.from);
+            else if (extension_packet.type === "SettingsWidgetSmallData")
+            {
+                // if we have enabled/disabled obs connection
+                if (serverConfig.enableobs != extension_packet.data.enableobs)
                 {
-                    //copy the data across
+                    //we are currently enabled so lets disconnect
+                    if (serverConfig.enableobs == "on")
+                    {
+                        serverConfig.enableobs = "off";
+                        clearTimeout(localConfig.obsTimeoutHandle)
+                        disconnectObs()
+                    }
+                    //currently disabled so connect to obs
+                    else
+                    {
+                        serverConfig.enableobs = "on";
+                        localConfig.obsConnecting = true
+                        connectToObs();
+                    }
+                }
+                if (extension_packet.to === serverConfig.extensionname)
+                {
                     serverConfig.enableobs = "off";
                     for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
                     SaveConfigToServer();
-
                     if (localConfig.OBSAvailableScenes != null)
                         processOBSSceneList(localConfig.OBSAvailableScenes);
                     sendScenes();
-
-                    // if we have enabled/disabled obs connection
-                    if (serverConfig.enableobs != extension_packet.data.enableobs)
-                    {
-                        //we are currently enabled so lets disconnect
-                        if (serverConfig.enableobs == "on")
-                        {
-                            serverConfig.enableobs = "off";
-                            clearTimeout(localConfig.obsTimeoutHandle)
-                            disconnectObs()
-                        }
-                        //currently disabled so connect to obs
-                        else
-                        {
-                            serverConfig.enableobs = "on";
-                            localConfig.obsConnecting = true
-                            connectToObs();
-                        }
-                    }
                 }
                 //update anyone who is showing our code at the moment
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
             }
-        }
-        else if (extension_packet.type === "RequestScenes")
-        {
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "SceneList",
-                        serverConfig.extensionname,
-                        localConfig.sceneList,
-                        "",
-                        server_packet.from
-                    ),
-                    "",
-                    server_packet.from
-                )
-            )
-        }
-        else if (extension_packet.type === "SendTriggerAndActions")
-        {
-            console.log("ReqestTriggers")
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "TriggerAndActions",
-                        serverConfig.extensionname,
-                        triggersandactions,
-                        "",
-                        server_packet.from
-                    ),
-                    "",
-                    server_packet.from
-                )
-            )
-        }
-        else if (extension_packet.type === "ChangeScene")
-            changeScene(extension_packet.data);
-        else if (extension_packet.type === "ToggleMute")
-            ToggleMute(extension_packet.data)
-        else if (extension_packet.type === "toggleFilter")
-            activateFilter(extension_packet.data)
-        else
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
-    }
-    else if (server_packet.type === "UnknownChannel")
-    {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
-        if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
-        {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-            setTimeout(() =>
+            else if (extension_packet.type === "SettingsWidgetLargeData")
+            {
+                if (extension_packet.to === serverConfig.extensionname)
+                {
+                    // reset to defaults
+                    if (extension_packet.data.obs_restore_defaults == "on")
+                    {
+                        serverConfig = structuredClone(default_serverConfig);
+                        // Request our credentials from the server as we are storing them in our serverconfig
+                        sr_api.sendMessage(localConfig.DataCenterSocket,
+                            sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+                    }
+                    else
+                    {
+                        //copy the data across
+                        serverConfig.enableobs = "off";
+                        for (const [key, value] of Object.entries(extension_packet.data))
+                            serverConfig[key] = value;
+                        SaveConfigToServer();
+
+                        if (localConfig.OBSAvailableScenes != null)
+                            processOBSSceneList(localConfig.OBSAvailableScenes);
+                        sendScenes();
+
+                        // if we have enabled/disabled obs connection
+                        if (serverConfig.enableobs != extension_packet.data.enableobs)
+                        {
+                            //we are currently enabled so lets disconnect
+                            if (serverConfig.enableobs == "on")
+                            {
+                                serverConfig.enableobs = "off";
+                                clearTimeout(localConfig.obsTimeoutHandle)
+                                disconnectObs()
+                            }
+                            //currently disabled so connect to obs
+                            else
+                            {
+                                serverConfig.enableobs = "on";
+                                localConfig.obsConnecting = true
+                                connectToObs();
+                            }
+                        }
+                    }
+                    //update anyone who is showing our code at the moment
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+                }
+            }
+            else if (extension_packet.type === "RequestScenes")
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "JoinChannel", serverConfig.extensionname, server_packet.data
-                    ));
-            }, 5000);
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "SceneList",
+                            serverConfig.extensionname,
+                            localConfig.sceneList,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+                )
+            }
+            else if (extension_packet.type === "SendTriggerAndActions")
+            {
+                console.log("ReqestTriggers")
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            serverConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+                )
+            }
+            else if (extension_packet.type === "ChangeScene")
+                changeScene(extension_packet.data);
+            else if (extension_packet.type === "ToggleMute")
+                ToggleMute(extension_packet.data)
+            else if (extension_packet.type === "ToggleFilter")
+                activateFilter(extension_packet.data)
+            else
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
         }
-    }    // we have received data from a channel we are listening to
-    else if (server_packet.type === "ChannelData")
+        else if (server_packet.type === "UnknownChannel")
+        {
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
+            if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
+            {
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+                setTimeout(() =>
+                {
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel", serverConfig.extensionname, server_packet.data
+                        ));
+                }, 5000);
+            }
+        }    // we have received data from a channel we are listening to
+        else if (server_packet.type === "ChannelData")
+        {
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
+        else if (server_packet.type === "InvalidMessage")
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                "InvalidMessage ", server_packet.data.error, server_packet);
+        }
+        else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+            || server_packet.type === "LoggingLevel"
+        )
+        {
+            //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", server_packet.type);
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+        // ------------------------------------------------ unknown message type received -----------------------------------------------
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".onDataCenterMessage", "Unhandled message type", server_packet.data.error);
+    } catch (error)
     {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
-    }
-    else if (server_packet.type === "InvalidMessage")
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-            "InvalidMessage ", server_packet.data.error, server_packet);
-    }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "LoggingLevel"
-    )
-    {
-        //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", server_packet.type);
-        // just a blank handler for items we are not using to avoid message from the catchall
-    }
-    // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.data.error);
+            ".onDataCenterMessage", "Error", error.message);
+
+    }
 }
 
 // ===========================================================================
@@ -1049,11 +1065,18 @@ function getFilters ()
 // ============================================================================
 function activateFilter (data)
 {
+    console.log(data)
+    // value could be a string and even capitalized. This is typed in by a streamer after all :P
+    let isTrueSet = /^true$/i.test(data.filterEnabled)
+
     localConfig.obsConnection.call("SetSourceFilterEnabled",
         {
             sourceName: data.sourceName,//"#4x3_Cam",
             filterName: data.filterName, //"mycolorCorrection",
-            filterEnabled: data.filterEnabled //false
+            filterEnabled: isTrueSet  //false
+        }).catch((e) =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
         })
 }
 // ============================================================================

@@ -83,6 +83,7 @@
         chatmessagebuffermaxsize: 300,
         discordmessagebuffermaxsize: 300,
         liveportal_restore_defaults: "off",
+        AllTriggersAndActions: []
     };
     let serverConfig = structuredClone(default_serverConfig);
     const localConfig =
@@ -103,7 +104,7 @@
         setreamersonglist: { songlist: [], queue: { status: { "songsPlayedToday": "0" }, list: [] } },
         //philips hugh variables
         philipsHueSceneList: [],
-        triggersAndActions: { triggers: [], actions: [] }
+        triggersAndActions: { descriptions: [], triggers: [], actions: [] }
     }
     const chatcolors =
     {
@@ -639,10 +640,15 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ChannelData")
         {
+            let extension_packet = server_packet.data;
+            // -------------------------------------------------------------------------------------------------
+            //                           CheckForTrigger
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type != "HeartBeat")
+                CheckTriggers(extension_packet)
             // -------------------------------------------------------------------------------------------------
             //                           HEARTBEAT
             // -------------------------------------------------------------------------------------------------
-            let extension_packet = server_packet.data;
             if (extension_packet.type === "HeartBeat")
             {
                 //check if we have this extension
@@ -1517,7 +1523,7 @@
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "toggleFilter",
+                        "ToggleFilter",
                         serverConfig.extensionname,
                         {
                             sourceName: scenename,//"#4x3_Cam",
@@ -1995,7 +2001,7 @@
             // #####################
             else if (sub_messages.includes(chatdata.data["message-type"]))
             {
-                console.log("SUB MESSAGE")
+                console.log("SUB MESSAGE", chatdata)
                 line_field = "<BR><span style='color: " + chatcolors.default_sub_color + "'>"
                 name_field = "<b>" + chatdata.data['display-name'] + "> ";
                 message_field = chatdata.data['system-msg'] + ((message) ? ": " + message : "") + "</b>";
