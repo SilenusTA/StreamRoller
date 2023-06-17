@@ -282,7 +282,6 @@ function onDataCenterMessage (server_packet)
                         }
                         else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
                         {
-                            //console.log("fetching. ..........");
                             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:CredentialsFile", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
                             fetchSongList();
                             fetchSongQueue();
@@ -347,15 +346,18 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "RequestQueue")
         {
-            localConfig.songlist = sendSongQueue(extension_packet.from);
+            sendSongQueue(extension_packet.from);
         }
         else if (extension_packet.type === "RequestSonglist")
         {
-            localConfig.songlist = sendSonglist(extension_packet.from);
+            sendSonglist(extension_packet.from);
         }
         else if (extension_packet.type === "AddSongToQueue")
         {
-            addSongToQueue(extension_packet.data);
+            if (extension_packet.data.songName)
+                addSongToQueuebyName(extension_packet.data.songName)
+            else
+                addSongToQueueById(extension_packet.data);
         }
         else if (extension_packet.type === "MarkSongAsPlayed")
         {
@@ -686,9 +688,26 @@ function fetchSongList ()
         });
 }
 // ============================================================================
+//                           FUNCTION: addSongToQueuebyName
+// ============================================================================
+function addSongToQueuebyName (songName)
+{
+    let found = false
+    localConfig.songlist.items.forEach((song) =>
+    {
+        if (songName.toLowerCase().indexOf(song.title.toLowerCase()) > -1)
+        {
+            addSongToQueueById(song.id)
+            found = true;
+        }
+    })
+    if (!found)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueuebyName", "Unknown Song", songName);
+}
+// ============================================================================
 //                           FUNCTION: addSongToQueue
 // ============================================================================
-function addSongToQueue (songId)
+function addSongToQueueById (songId)
 {
     fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
         method: 'POST',
@@ -713,7 +732,7 @@ function addSongToQueue (songId)
         .catch(e =>
         {
             localConfig.status.connected = false;
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueue", "Error adding song", e.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song", e.message);
         });
 }
 

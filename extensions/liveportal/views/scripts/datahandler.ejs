@@ -715,7 +715,7 @@
                     ParseOBSScenesList(extension_packet.data)
                 else if (extension_packet.type === "SceneChanged")
                 {
-                    localConfig.OBSSceneslist.current = extension_packet.data;
+                    localConfig.OBSSceneslist.current = extension_packet.data.sceneName;
                     ParseOBSScenesList(localConfig.OBSSceneslist);
                 }
                 else if (extension_packet.type === "OBSStats")
@@ -771,6 +771,14 @@
                     localConfig.philipsHueSceneList = extension_packet.data
                     processPhilipsHueScenes();
                 }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           IGNORED CHANNELS
+            //                      These are most likely ones we only use for triggers and alerts
+            // -------------------------------------------------------------------------------------------------
+            else if (server_packet.dest_channel == "RANDOMFACT_CHANNEL")
+            {
+                // ignoring these messages
             }
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA

@@ -82,6 +82,45 @@ const serverData =
     discordMessageBuffer: [{ name: "system", message: "Start of buffer" }]
 };
 
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Discord provides an easy way to talk over voice, video, and text. Talk, chat, hang out, and stay close with your friends and communities.",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "DiscordMessageRecieved",
+                displaytitle: "Discord Message Posted",
+                description: "A message was posted to a discord chat room",
+                messagetype: "MessageReceived",
+                channel: serverConfig.channel,
+                parameters:
+                {
+                    channel: "",
+                    name: "",
+                    message: ""
+                }
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "DiscordPostMessage",
+                displaytitle: "Post Message",
+                description: "Post a message to a discord channel",
+                messagetype: "PostMessage",
+                channel: serverConfig.channel,
+                parameters:
+                {
+                    channel: "",
+                    message: ""
+                }
+            }
+
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -273,11 +312,29 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "ChangeListeningChannel received ", extension_packet.data);
             }
+            else if (extension_packet.type === "SendTriggerAndActions")
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            serverConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+                )
+            }
             else
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                     "Unable to process ExtensionMessage : ", server_packet);
         }
-        else if (extension_packet.type === "SettingsWidgetSmallCode")
+        else if (extension_packet.type === "SettingsWidgetSmallCode"
+            || extension_packet.type === "SettingsWidgetLargeCode")
         {
             // ignore these messages
         }
@@ -608,6 +665,10 @@ function discordMessageHandler (message)
     // Stop bot responding to itself
     if (message.author.id === localConfig.discordClient.user.id)
         return;
+    if (serverConfig.discordenabled != "on")
+        return
+    sendAlertMessageReceived(message)
+
     //restrict to only channel the channel we want to
     if (message.channel.name === serverConfig.monitoring_channel)
     {
@@ -625,7 +686,27 @@ function discordMessageHandler (message)
 
     }
 }
-
+// ============================================================================
+//                           FUNCTION: sendAlertMessageReceived
+// ============================================================================
+function sendAlertMessageReceived (message)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "MessageReceived",
+                serverConfig.extensionname,
+                {
+                    channel: message.channel.name,
+                    name: message.author.username,
+                    message: message.content
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================

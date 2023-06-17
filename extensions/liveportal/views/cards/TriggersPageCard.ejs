@@ -26,11 +26,12 @@
     <p>This page allows you to control the triggers for events that happen within StreamRoller.
       Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending
       on chats mood etc.
+      <BR> Any empty field will match anything. ie, checking for discord messages an empty field will match all messages
+      <BR> If there is something you think is missing from the options here please let me know (either discord/twitch or
+      raise an issue on github). I'm have a long list of extension feature still left to add so I can push requests to
+      the top of the list
     </p>
     <h4>Trigger</h4>
-
-
-
 
     <form class="form-inline" onsubmit="return createTriggerAction(this)">
       <div class=" form-group d-flex">
@@ -87,7 +88,7 @@
         </div>
       </div>
       <HR>
-      <h4>Current Trigers and action</h4>
+      <h4>Current Triggers and actions</h4>
       <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
         <!--
         <thead>

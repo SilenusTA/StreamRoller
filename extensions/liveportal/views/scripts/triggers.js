@@ -53,8 +53,10 @@ function initiTriggersAndActions (extension_list)
 function receivedTrigger (triggers)
 {
     localConfig.triggersAndActions.descriptions[triggers.extensionname] = triggers.description;
-    localConfig.triggersAndActions.triggers[triggers.extensionname] = triggers.triggers;
-    localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
+    if (triggers.triggers)
+        localConfig.triggersAndActions.triggers[triggers.extensionname] = triggers.triggers;
+    if (triggers.actions)
+        localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
     // update the page with the new triggeroptions
     addTriggersWidgetLarge();
     addActionsWidgetLarge();
@@ -130,7 +132,7 @@ function triggersLoadParameters (id)
     let triggerextensionparameters = ""
     TriggerExtensionTriggerParameters.title = localConfig.triggersAndActions.triggers[extensionname][id].description
     // set the title of the calling dropdown
-    document.getElementById("triggerExtensionTriggers").title = localConfig.triggersAndActions.triggers[extensionname][id].displaytitle
+    document.getElementById("triggerExtensionTriggers").title = localConfig.triggersAndActions.triggers[extensionname][id].description
     document.getElementById("triggerExtensionChoserChannel").value = localConfig.triggersAndActions.triggers[extensionname][id].channel;
     document.getElementById("triggerExtensionChoserTriggerName").value = localConfig.triggersAndActions.triggers[extensionname][id].name;
 
@@ -281,8 +283,8 @@ function createTriggerAction (e)
 
 }
 // ============================================================================
-//                           FUNCTION: checkTriggerIsValid
-//                  check we have the channes and extensions required
+//                       FUNCTION: checkTriggerIsValid
+//                  check we have the channels and extensions required
 // ============================================================================
 function checkTriggerIsValid (trigger)
 {
@@ -319,7 +321,7 @@ function CheckTriggers (data)
                 for (var i in param)
                 {
                     // we have amtched the trigger
-                    if (data.data[i] === param[i])
+                    if (param[i] === "" || data.data[i].toLowerCase() === param[i].toLowerCase())
                         TriggerAction(entry.action)
                 }
             })

@@ -120,7 +120,6 @@ const triggersandactions =
                 channel: serverConfig.channel,
                 parameters: { sceneName: "" }
             }
-
         ],
     // these are messages we can receive to perform an action
     actions:
@@ -350,7 +349,6 @@ function onDataCenterMessage (server_packet)
             }
             else if (extension_packet.type === "SendTriggerAndActions")
             {
-                console.log("ReqestTriggers")
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
@@ -789,8 +787,6 @@ function processOBSSceneList (scenes)
             else
                 localConfig.sceneList.rest.push({ displayName: scene.sceneName, sceneName: scene.sceneName, muted: scene.muted })
             // }
-
-
         })
         // get the filters for each scene and add to the filters list
         getFilters();
@@ -899,7 +895,7 @@ function onSwitchedScenes (scene)
             sr_api.ExtensionPacket(
                 "SceneChanged",
                 serverConfig.extensionname,
-                scene.sceneName,
+                { sceneName: scene.sceneName },
                 serverConfig.channel
             ),
             serverConfig.channel)
