@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# RANDOMFACT.js ##############################
+// ############################# RANDOMFACT.js ##############################
 // Provides random facts and information on request
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -55,6 +55,35 @@ const serverConfig = {
     channel: "RANDOMFACT_CHANNEL"
 };
 
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Random fact will grab a random phrase or saying for your enjoyment",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "RandfactPoster",
+                displaytitle: "Random fact receieved",
+                description: "An interesting or amusing random fact was received",
+                messagetype: "RandomFact",
+                channel: serverConfig.channel,
+                parameters: { randomFact: "" }
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "RandfactRequest",
+                displaytitle: "Request Random Fact",
+                description: "Requests a random fact",
+                messagetype: "RequestRandomFact",
+                channel: serverConfig.channel,
+                parameters: {}
+            }
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -105,11 +134,10 @@ function onDataCenterDisconnect (reason)
 function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
-    // not using a channel yet. might add one we want to randomly send out facts later. For now we just receive and respond to
-    // direct messages
-    //sr_api.sendMessage(localConfig.DataCenterSocket,
-    //    sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, config.OUR_CHANNEL)
-    //);
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+    );
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH_CHAT")
@@ -132,7 +160,24 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestRandomFact")
         {
-            requestRandomFact(extension_packet.from);
+            requestRandomFact();
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -169,7 +214,6 @@ function onDataCenterMessage (server_packet)
                     send_chat_command(extension_packet.data)
             }
             // do something with the data
-
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
@@ -240,7 +284,7 @@ function send_chat_command (data)
     req.on("error", function (e)
     {
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".requestRandomFact", "Error getting quote", e.message);
+            ".send_chat_command", "Error getting quote", e.message);
     });
 }
 // ============================================================================
@@ -250,7 +294,7 @@ function send_chat_command (data)
  * sends a random fact to the extension
  * @param {String} from 
  */
-function requestRandomFact (from)
+function requestRandomFact ()
 {
     var body = "";
     let Buffer = "";
@@ -259,9 +303,6 @@ function requestRandomFact (from)
     {
         var req = https.get(options, function (res)
         {
-            /*console.log("from:", from);
-            console.log('STATUS: ' + res.statusCode);
-            console.log('HEADERS: ' + JSON.stringify(res.headers));*/
             var bodyChunks = [];
             res.on("data", function (chunk)
             {
@@ -270,20 +311,17 @@ function requestRandomFact (from)
             {
 
                 body = Buffer.concat(bodyChunks);
-
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "ExtensionMessage",
+                        "ChannelData",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
                             "RandomFact",
                             serverConfig.extensionname,
-                            JSON.parse(body).text,
-                            "",
-                            from
+                            { randomFact: JSON.parse(body).text },
+                            serverConfig.channel,
                         ),
-                        "",
-                        from
+                        serverConfig.channel,
                     ));
             })
             //console.log("body:", body)
