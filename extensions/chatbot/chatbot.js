@@ -168,7 +168,7 @@ const default_serverConfig = {
         chatmodel: {
             //model: "text-davinci-003",
             model: "gpt-3.5-turbo",
-            temperature: "0.4", // will be overwritten by chattemperature
+            temperature: "0.8", // will be overwritten by chattemperature
             max_tokens: "110", // note twich chat is somewhere around 125 tokens +- lenght of words in responce
         },
         // different settings available for direct questions
@@ -925,6 +925,12 @@ function processChatMessage (data)
         return;
     }
     // ignore messages from the bot
+    if (serverConfig.DEBUG_MODE === "on")
+    {
+        console.log(submessage);
+        console.log(serverConfig.chatbotname);
+        console.log(data.data["display-name"]);
+    }
     if (!submessage &&
         (// bot message
             (serverConfig.chatbotname != null
@@ -978,11 +984,12 @@ function processChatMessage (data)
         // random timeout between 200 and 500ms
         var randomTimeout = (Math.random() * 300) + 200;
         if (serverConfig.DEBUG_MODE === "on")
-            console.log("waiting for rollback timeout:", randomTimeout)
+            console.log(" ********************** waiting for rollback timeout:", randomTimeout)
         setTimeout(() =>
         {
             processChatMessage(data)
         }, randomTimeout);
+        return;
     }
     // check the length again after parsing the message to make sure it is still long enough (if not a direct message)
     if (
