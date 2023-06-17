@@ -61,7 +61,7 @@ const localConfig = {
 
 };
 const default_serverConfig = {
-    __version__: 0.2,
+    __version__: 0.1,
     extensionname: "philipshue",
     channel: "PHILIPSHUE_CHANNEL",
     // sesttings dialog variables
@@ -77,6 +77,33 @@ let localCredentials = {
     ipaddress: null,
     username: null,
     clientkey: null
+}
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Choose the bulbs, lamps or fixtures that fit your home and your personality. Customise the settings to fit your needs. Set automations to make life easier. Your home is personal (and your smart lighting should be too). <a href='https://www.philips-hue.com/'>Philips Hue</a>",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            // no actions currenly        
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "PhilipsHueActivateScene",
+                displaytitle: "Activate Scene",
+                description: "Activates a given scene in the Philips Hue hub",
+                messagetype: "ActivateScene",
+                channel: serverConfig.channel,
+                parameters:
+                {
+                    sceneName: ""
+                }
+            }
+
+        ],
 }
 // ============================================================================
 //                           FUNCTION: initialise
@@ -192,8 +219,6 @@ function onDataCenterMessage (server_packet)
                         //lets check our settings and send out updates as required
                         if (value === "on" && !extension_packet.data[key])
                             serverConfig[key] = "off";
-                        else if (key === "randomfactstimeout")
-                            serverConfig[key] = extension_packet.data[key] * 60000
                         else if (key in extension_packet.data)
                             serverConfig[key] = extension_packet.data[key];
                     }
@@ -235,7 +260,36 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "ActivateScene")
         {
             if (extension_packet.to === serverConfig.extensionname && serverConfig.PhilipsHueenabled == "on")
-                activateScene(extension_packet.data.sceneID)
+            {
+                // we might get passed a name or the scene id we need to check what we have
+                if (extension_packet.data.sceneName)
+                {
+                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("PH activateSceneByName")
+                    activateSceneByName(extension_packet.data.sceneName)
+                }
+                else
+                {
+                    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("PH activateSceneById", extension_packet.data.sceneID)
+                    activateSceneById(extension_packet.data.sceneID)
+                }
+            }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -386,6 +440,7 @@ async function connectToHub (perform_pairing = false)
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("connectToHub()")
     if (serverConfig.DEBUGGING_DATA) 
     {
+        console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         console.log("connectToHub:using debugging dataset")
         return;
     }
@@ -734,13 +789,12 @@ function outputScenes ()
         ))
 }
 // ============================================================================
-//                           FUNCTION: activateScene
+//                           FUNCTION: activateSceneById
 // ============================================================================
-function activateScene (scenedID)
+function activateSceneById (scenedID)
 {
-    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateScene()")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateSceneById()")
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("!!!!!Test code!!!!! activating scene ", scenedID)
-
     if (localConfig.authenticatedApi)
     {
         localConfig.authenticatedApi.scenes.activateScene(scenedID)
@@ -751,11 +805,27 @@ function activateScene (scenedID)
             })
             .error((err) =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateScene", "Failed to activate scene:", err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateSceneById", "Failed to activate scene:", err);
             });
     }
     else
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateScene", "No connection available");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateSceneById", "No connection available");
+}
+// ============================================================================
+//                           FUNCTION: activateSceneByName
+// ============================================================================
+function activateSceneByName (sceneName)
+{
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateSceneByName()")
+    if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("!!!!!Test code!!!!! activating scene by name", sceneName)
+
+    localConfig.allScenesSRAPIData.forEach((scene) =>
+    {
+        if (scene.name.toLocaleLowerCase().indexOf(sceneName.toLocaleLowerCase()) > -1)
+        {
+            activateSceneById(scene.id);
+        }
+    })
 }
 
 // ============================================================================

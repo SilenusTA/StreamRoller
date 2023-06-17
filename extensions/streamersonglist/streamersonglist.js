@@ -367,7 +367,6 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {
-            console.log("ReqestTriggers")
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
                     serverConfig.extensionname,
