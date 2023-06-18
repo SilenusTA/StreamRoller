@@ -416,25 +416,20 @@ function sendTimerData (timedata)
     let data = findactionByMessageType("TimerRunning")
     data.parameters = timedata
     data.parameters.Handle = null
-    try
-    {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ChannelData",
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TimerRunning",
                 serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "TimerRunning",
-                    serverConfig.extensionname,
-                    data,
-                    serverConfig.channel
-                ),
+                data,
                 serverConfig.channel
-            ));
-    } catch (e)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".sendTimerData", "error:", e.message);
-    }
+            ),
+            serverConfig.channel
+        ));
+
 }
 // ============================================================================
 //                           FUNCTION: sendStartTimer
@@ -443,25 +438,18 @@ function sendStartTimer (timedata)
 {
     let data = findactionByMessageType("TimerStarted")
     data.parameters = timedata
-    try
-    {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ChannelData",
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TimerStarted",
                 serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "TimerStarted",
-                    serverConfig.extensionname,
-                    data,
-                    serverConfig.channel
-                ),
+                data,
                 serverConfig.channel
-            ));
-    } catch (e)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".sendStartTimer", "error:", e.message);
-    }
+            ),
+            serverConfig.channel
+        ));
 }
 // ============================================================================
 //                           FUNCTION: sendEndTimer
@@ -470,25 +458,19 @@ function sendEndTimer (timedata)
 {
     let data = findactionByMessageType("TimerEnded")
     data.parameters = timedata
-    try
-    {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ChannelData",
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TimerEnded",
                 serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "TimerEnded",
-                    serverConfig.extensionname,
-                    data,
-                    serverConfig.channel
-                ),
+                data,
                 serverConfig.channel
-            ));
-    } catch (e)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".sendMessage", "error:", e.message);
-    }
+            ),
+            serverConfig.channel
+        ));
 }
 // ============================================================================
 //                           FUNCTION: sendEndTimer
