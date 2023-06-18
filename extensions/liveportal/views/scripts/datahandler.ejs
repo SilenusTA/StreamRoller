@@ -2382,14 +2382,14 @@
                 messagetxt += alertdata.parameters.username + " for the follow."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Follow: " + alertdata.parameters.username + "</div>";
+                alerttext = "<div class='text-secondary'>TwitchFollow: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
             case "TwitchRaidReceived":
                 messagetxt += alertdata.parameters.username + " for the raid " + alertdata.parameters.raiders + " raiders."
                 if (serverConfig.raids === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-success'>Raid: " + alertdata.parameters.username + " " + alertdata.parameters.raiders + "</div>";
+                alerttext = "<div class='text-success'>TwitchRaid: " + alertdata.parameters.username + " " + alertdata.parameters.raiders + "</div>";
                 DisplayAlertMessages(alerttext);
                 postMessageToTwitch("!so " + alertdata.parameters.username)
                 break;
@@ -2397,7 +2397,7 @@
                 messagetxt += alertdata.parameters.username + " for the host with " + alertdata.parameters.viewers + " viewers."
                 if (serverConfig.hosts === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-success'>Host: " + alertdata.parameters.username + " " + alertdata.parameters.viewers + "</div>";
+                alerttext = "<div class='text-success'>TwitchHost: " + alertdata.parameters.username + " " + alertdata.parameters.viewers + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
             case "StreamlabsDonationReceived":
@@ -2408,7 +2408,7 @@
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 postMessageToTwitch(messagetxt, "user")
-                alerttext = "<div class='text-danger'>Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
+                alerttext = "<div class='text-danger'>SLDonation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
             case "TwitchCharityDonationReceived":
@@ -2419,7 +2419,7 @@
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 postMessageToTwitch(messagetxt, "user")
-                alerttext = "<div class='text-danger'>Charity Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
+                alerttext = "<div class='text-danger'>Twitch Charity Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
             case "TwitchBitsReceived":
@@ -2429,7 +2429,7 @@
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"'
                 if (serverConfig.bits === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-danger'>Bits: " + alertdata.parameters.username + " " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"</div>';
+                alerttext = "<div class='text-danger'>TwitchBits: " + alertdata.parameters.username + " " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
             case "TwitchSubscriptionReceived":
@@ -2438,7 +2438,7 @@
                     messagetxt += alertdata.parameters.username + " was gifted a sub from " + alertdata.parameters.gifter
                     if (serverConfig.subs === "on")
                         PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                    alerttext = "<div class='text-secondary'>&nbsp&nbsp&nbsp" + alertdata.parameters.username + '</div>';
+                    alerttext = "<div class='text-secondary'TwitchSubGift" + alertdata.parameters.username + '</div>';
                     DisplayAlertMessages(alerttext);
                 }
                 else
@@ -2452,7 +2452,7 @@
                         messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subscriptions. "' + submessage + '"'
                     if (serverConfig.subs === "on")
                         PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                    alerttext = "<div class='text-primary'>Subscription: " + alertdata.parameters.username + " " + alertdata.parameters.months + 'm "' + submessage + '"</div>';
+                    alerttext = "<div class='text-primary'>TwitchSubscription: " + alertdata.parameters.username + " " + alertdata.parameters.months + 'm "' + submessage + '"</div>';
                     DisplayAlertMessages(alerttext);
                 }
                 break;
@@ -2463,7 +2463,7 @@
                     messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subcriptions (with a streak of ' + alertdata.parameters.streak_months + '). "' + alertdata.parameters.message + '"'
                 if (serverConfig.resubs === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-primary'>Resub: " + alertdata.parameters.username + " " + alertdata.parameters.months + 'm (' + alertdata.parameters.streak_months + ' streak). "' + alertdata.parameters.message + '"</div>';
+                alerttext = "<div class='text-primary'>TwitchResub: " + alertdata.parameters.username + " " + alertdata.parameters.months + 'm (' + alertdata.parameters.streak_months + ' streak). "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
 
@@ -2472,7 +2472,7 @@
                 //postMessageToTwitch(messagetxt)
                 if (serverConfig.giftsubs === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-danger'>GiftSub: " + alertdata.parameters.gifter + " gifted " + alertdata.parameters.amount + " subs</div>"
+                alerttext = "<div class='text-danger'>TwitchGiftSub: " + alertdata.parameters.gifter + " gifted " + alertdata.parameters.amount + " subs</div>"
                 DisplayAlertMessages(alerttext);
                 break;
             case "MerchPurchaseReceived"://trigger
@@ -2480,7 +2480,7 @@
                 if (serverConfig.merch === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 postMessageToTwitch(messagetxt, "user")
-                alerttext = "<div class='text-secondary'>Merch: " + alertdata.parameters.username + "  " + alertdata.parameters.product + "</div>"
+                alerttext = "<div class='text-secondary'>SLMerch: " + alertdata.parameters.username + "  " + alertdata.parameters.product + "</div>"
                 DisplayAlertMessages(alerttext);
                 break;
             case "LoyaltyStoreRedemptionReceived"://trigger
@@ -2488,21 +2488,21 @@
                 if (serverConfig.cloudbotredemption === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 postMessageToTwitch(messagetxt, "user")
-                alerttext = "<div class='text-secondary'>Loyalty: " + alertdata.parameters.username + " " + alertdata.parameters.product + "</div>"
+                alerttext = "<div class='text-secondary'>SLLoyalty: " + alertdata.parameters.username + " " + alertdata.parameters.product + "</div>"
                 DisplayAlertMessages(alerttext);
                 break;
             case "YouTubeSubscriptionReceived":
                 messagetxt += alertdata.parameters.username + " for the Subscription."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Subscription: " + alertdata.parameters.username + "</div>";
+                alerttext = "<div class='text-secondary'>YouTubeSubscription: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
             case "YouTubeMemberReceived":
                 messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.months + " Membership."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                alerttext = "<div class='text-secondary'>Membership: " + alertdata.parameters.username + " " + alertdata.parameters.months + "months</div>";
+                alerttext = "<div class='text-secondary'>YouTubeMembership: " + alertdata.parameters.username + " " + alertdata.parameters.months + "months</div>";
                 DisplayAlertMessages(alerttext);
                 break;
             case "YouTubeSuperchatReceived":
@@ -2513,7 +2513,7 @@
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 postMessageToTwitch(messagetxt, "user")
-                alerttext = "<div class='text-danger'>SuperChat: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
+                alerttext = "<div class='text-danger'>YouTubeSuperChat: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
         }
