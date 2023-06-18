@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# LOGGER.js ####################################
+// ############################# LOGGER.js ####################################
 // This file is to handle all our logging in one place. If you need to add
 // logging to the code use this inport to do it so it can easily be turn on
 // or off as required.
@@ -59,11 +59,14 @@ import process from 'node:process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const logfilename = __dirname + "/../../../streamroller.log"
-
+// This will pipe all normal logging to a common file
 const __createlogfile = false;
 let firstrun = true;
-// cap message to 300 chars max
 
+// this is for user specified logging
+let filestreams = [];
+
+// cap message to 300 chars max
 let cap_message_length = 300;
 //default level
 let loglevel = 5;
@@ -341,6 +344,27 @@ function addToLogfile (func, tag, message)
     })
 }
 // ============================================================================
+//                           FUNCTION: file_log
+//                       For debug purposes. logs raw message data
+// ============================================================================
+//logger.file_log("./", "streamlabstest", "some test data")
+function file_log (childdir, file_name, message)
+{
+    childdir += "/" + childdir
+    if (!fs.existsSync(childdir))
+    {
+        fs.mkdirSync(childdir, { recursive: true });
+    }
+
+    let msg = JSON.stringify(message, null, 2)
+    // check if we already have this handler
+    if (!filestreams.file_name)
+    {
+        filestreams[file_name] = fs.createWriteStream(childdir + file_name + ".log", { flags: 'a' });
+    }
+    filestreams[file_name].write(msg + "\n");
+}
+// ============================================================================
 //                           EXPORTS: 
 // ============================================================================
-export { log, err, warn, info, extra, loglevel, setLoggingLevel, getLoggingLevel, usecoloredlogs };
+export { log, err, warn, info, extra, loglevel, setLoggingLevel, getLoggingLevel, usecoloredlogs, file_log };

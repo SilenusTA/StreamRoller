@@ -426,9 +426,9 @@ function onDataCenterMessage (server_packet)
  * this is done as part of the webpage request for modal message we get from 
  * extension. It is a way of getting some user feedback via submitted forms
  * from a page that supports the modal system
- * @param {String} tochannel 
+ * @param {String} toextension 
  */
-function SendSettingsWidgetSmall (tochannel)
+function SendSettingsWidgetSmall (toextension)
 {
     // read our modal file
     fs.readFile(__dirname + "/obssettingswidgetsmall.html", function (err, filedata)
@@ -457,12 +457,12 @@ function SendSettingsWidgetSmall (tochannel)
                         "SettingsWidgetSmallCode", // message type
                         serverConfig.extensionname, //our name
                         modalstring,// data
-                        "",
-                        tochannel,
-                        serverConfig.channel
+                        serverConfig.channel,
+                        toextension
+
                     ),
-                    "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    serverConfig.channel,
+                    toextension
                 ))
         }
     });
@@ -1072,6 +1072,10 @@ async function getFilters ()
 // ============================================================================
 function activateFilter (data)
 {
+    if (data.filterEnabled === "")
+    {
+        console.log("activateFilter", findSceneData(data.sceneName))
+    }
     // value could be a string and even capitalized. This is typed in by a streamer after all :P
     let isTrueSet = /^true$/i.test(data.filterEnabled)
 
@@ -1079,7 +1083,7 @@ function activateFilter (data)
         {
             sourceName: data.sourceName,//"#4x3_Cam",
             filterName: data.filterName, //"mycolorCorrection",
-            filterEnabled: isTrueSet  //false
+            filterEnabled: isTrueSet  // true or false
         }).catch((e) =>
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
@@ -1207,6 +1211,19 @@ function heartBeatCallback ()
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "callback failed:", err.message);
     }
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+function findSceneData (sceneName)
+{
+    for (const entry in localConfig.sceneList.main)
+        if (localConfig.sceneList.main[entry].sceneName === sceneName)
+            return entry
+    for (const entry in localConfig.sceneList.secondary)
+        if (localConfig.sceneList.secondary[entry].sceneName === sceneName)
+            return entry
+    for (const entry in localConfig.sceneList.rest)
+        if (localConfig.sceneList.rest[entry].sceneName === sceneName)
+            return entry
+
 }
 // ============================================================================
 //                                  EXPORTS

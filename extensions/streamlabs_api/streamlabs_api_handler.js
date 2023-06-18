@@ -43,8 +43,8 @@
 // We have to iport two versions of socket.io due to streamlabs using an older
 // version.
 // ============================================================================
-// note this has to be socket.io-client version 2.0.3 to allow support for StreamLabs api.
-import StreamLabsIo from "socket.io-client_2.0.3";
+// note this has to be socket.io-client version 2.0.3 to allow support for Streamlabs api.
+import StreamlabsIo from "socket.io-client_2.0.3";
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
@@ -63,7 +63,7 @@ let localConfig = {
         connected: false // this is our connection indicator for discord
     },
     DataCenterSocket: null,
-    StreamLabsSocket: null
+    StreamlabsSocket: null
 };
 
 const default_serverConfig = {
@@ -77,6 +77,187 @@ const default_serverConfig = {
     cred1value: "",
 };
 let serverConfig = structuredClone(default_serverConfig)
+
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Random fact will grab a random phrase or saying for your enjoyment",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            //Streamlabs specific items
+            {
+                name: "StreamlabsDonationAlert",
+                displaytitle: "Streamlabs Donation Received",
+                description: "A Streamlabs donation was received",
+                messagetype: "StreamlabsDonationReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    amount: "",
+                    formatted_amount: "",
+                    message: ""
+                }
+            },
+            {
+                name: "StreamlabsMerchAlert",
+                displaytitle: "Merch Purchase",
+                description: "Someone purchased your Merch",
+                messagetype: "MerchPurchaseReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    message: "",
+                    product: "",
+                    imageHref: ""
+                }
+            },
+            {
+                name: "StreamlabsLoyaltyStoreRedemptionAlert",
+                displaytitle: "LoyaltyStore Redemption",
+                description: "Someone Reddemed something from your LoyaltyStore",
+                messagetype: "StreamlabsLoyaltyStoreRedemptionReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    viewcount: "",
+                }
+            },
+            //Twitch specific alerts
+            {
+                name: "StreamlabTwitchFollowAlert",
+                displaytitle: "Follow on Twitch",
+                description: "A Viewer Followed your twitch stream",
+                messagetype: "TwitchFollowReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: ""
+                }
+            },
+            {
+                name: "StreamlabsTwitchSubscriptionAlert",
+                displaytitle: "Subscription on Twitch",
+                description: "Someone Subscribed to your twitch stream",
+                messagetype: "TwitchSubscriptionReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    type: "",
+                    months: "",
+                    gifter: "",
+                }
+            },
+            {
+                name: "StreamlabsTwitchResubAlert",
+                displaytitle: "Resub on Twitch",
+                description: "Someone Resubed to your twitch stream",
+                messagetype: "TwitchResubReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    months: "",
+                    streak_months: "",
+                }
+            },
+            {
+                name: "StreamlabsTwitchHostAlert",
+                displaytitle: "Host on Twitch",
+                description: "Someone Hosted your stream on twitch",
+                messagetype: "TwitchHostReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    raiders: ""
+                }
+            },
+            {
+                name: "StreamlabsTwitchBitsAlert",
+                displaytitle: "Bits on Twitch",
+                description: "Someone Donated bits on Twitch",
+                messagetype: "TwitchBitsReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    amount: "",
+                    message: "",
+                }
+            },
+            {
+                name: "StreamlabsTwitchRaidAlert",
+                displaytitle: "Raid on Twitch",
+                description: "Someone Raided your stream on Twitch",
+                messagetype: "TwitchRaidReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    viewcount: "",
+                }
+            },
+            {
+                name: "StreamlabsTwitchCharityDonationAlert",
+                displaytitle: "CharityDonation on Twitch",
+                description: "Someone donated to charity on your Twitch stream",
+                messagetype: "TwitchCharityDonationReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    amount: "",
+                    formatted_amount: "",
+                    message: ""
+                }
+            },
+            {
+                name: "StreamlabsTwitchSubMysteryAlert",
+                displaytitle: "SubMystery gift on Twitch",
+                description: "Someone figted some subs on your Twitch stream",
+                messagetype: "TwitchTwitchSubMysteryGiftReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    gifter: "",
+                    amount: ""
+                }
+            },
+            //Youtube specific alerts
+            {
+                name: "StreamlabsYouTubeSubscriptionAlert",
+                displaytitle: "Subscription on YouTube",
+                description: "Someone Subscribed on YouTube",
+                messagetype: "YouTubeSubscriptionReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: ""
+                }
+            },
+            {
+                name: "StreamlabsYouTubeMemberAlert",
+                displaytitle: "Member on YouTube",
+                description: "A Member joined on YouTube",
+                messagetype: "YouTubeMemberReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    months: "",
+                    subplan: "",
+                    message: "",
+                }
+            },
+            {
+                name: "StreamlabsYouTubeSuperchatAlert",
+                displaytitle: "Superchat on YouTube",
+                description: "Someone Superchated on YouTube",
+                messagetype: "YouTubeSuperchatReceived",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: "",
+                    amount: "",
+                    formatted_amount: "",
+                    message: ""
+                }
+            }
+        ],
+    // these are messages we can receive to perform an action
+}
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -99,9 +280,9 @@ function start (host, port, heartbeat)
     }
 }
 // ============================================================================
-//                           FUNCTION: connectToStreamLabs
+//                           FUNCTION: connectToStreamlabs
 // ============================================================================
-function connectToStreamLabs (creds)
+function connectToStreamlabs (creds)
 {
     // ########################## SETUP STREAMLABS CONNECTION ###############################
     // The token can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token 
@@ -113,60 +294,62 @@ function connectToStreamLabs (creds)
         {
             if (localConfig.ENABLE_STREAMLABS_CONNECTION)
             {
-                localConfig.StreamLabsSocket = StreamLabsIo("https://sockets.streamlabs.com:443?token=" + creds.SL_SOCKET_TOKEN, { transports: ["websocket"] });
+                localConfig.StreamlabsSocket = StreamlabsIo("https://sockets.streamlabs.com:443?token=" + creds.SL_SOCKET_TOKEN, { transports: ["websocket"] });
                 // handlers
-                localConfig.StreamLabsSocket.on("connect", (data) => onStreamLabsConnect(data));
-                localConfig.StreamLabsSocket.on("disconnect", (reason) => onStreamLabsDisconnect(reason));
-                localConfig.StreamLabsSocket.on("event", (data) => onStreamLabsEvent(data));
+                localConfig.StreamlabsSocket.on("connect", (data) => onStreamlabsConnect(data));
+                localConfig.StreamlabsSocket.on("disconnect", (reason) => onStreamlabsDisconnect(reason));
+                localConfig.StreamlabsSocket.on("event", (data) => onStreamlabsEvent(data));
             }
             else
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.start", "Streamlabs disabled in config");
-            if (localConfig.StreamLabsSocket == "false")
+            if (localConfig.StreamlabsSocket == "false")
             {
-                console.log("connectToStreamLabs: failed to connect")
+                console.log("connectToStreamlabs: failed to connect")
             }
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectToStreamLabs", "clientio connection failed:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectToStreamlabs", "clientio connection failed:", err);
             throw ("streamlabs_api_handler.js failed to connect to streamlabs");
         }
     }
 }
 // ########################## STREAMLABS API CONNECTION #######################
 // ============================================================================
-//                           FUNCTION: onStreamLabsDisconnect
+//                           FUNCTION: onStreamlabsDisconnect
 // ============================================================================
-function onStreamLabsDisconnect (reason)
+function onStreamlabsDisconnect (reason)
 {
     localConfig.status.connected = false;
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsDisconnect", reason);
 }
 // ============================================================================
-//                           FUNCTION: onStreamLabsConnect
+//                           FUNCTION: onStreamlabsConnect
 // ============================================================================
 // Desription: Handles Connect message from the streamlabs api
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onStreamLabsConnect ()
+function onStreamlabsConnect ()
 {
     localConfig.status.connected = true;
     // start our heatbeat timer
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsConnect", "streamlabs api socket connected");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsConnect", "streamlabs api socket connected");
 }
 
 // ============================================================================
-//                           FUNCTION: onStreamLabsEvent
+//                           FUNCTION: onStreamlabsEvent
 // ============================================================================
 // Desription: Handles messaged from the streamlabs api
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-function onStreamLabsEvent (data)
+function onStreamlabsEvent (data)
 {
-    logger.info(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamLabsEvent", "received message: ", data);
+    logger.info(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsEvent", "received message: ", data);
     // Send this data to the channel for this
     if (serverConfig.enabled === "on")
+    {
+        // old depreciated system. Will be removed once I update my overlay to use the new trigger system
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "ChannelData",
@@ -174,6 +357,9 @@ function onStreamLabsEvent (data)
                 data,
                 localConfig.OUR_CHANNEL
             ));
+        // send alerts using trigger system
+        parseTriggers(data)
+    }
 }
 // ########################## DATACENTER CONNECTION #######################
 // ============================================================================
@@ -241,7 +427,7 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            connectToStreamLabs(server_packet.data);
+            connectToStreamlabs(server_packet.data);
         else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -274,7 +460,27 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
             }
         }
-
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+        else
+        {
+            //logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        }
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -453,6 +659,197 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+//logger.file_log("./", "streamlabstest", data)
+function parseTriggers (data)
+{
+    let trigger
+    // Streamlabs events
+    if (data.type === "donation" && data.for === "streamlabs")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsDonationAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].from;
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.amount = data.message[0].amount;
+            trigger.parameters.formatted_amount = data.message[0].formatted_amount;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type === "loyalty_store_redemption" && data.for === "streamlabs")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsLoyaltyStoreRedemptionReceived")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].from;
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.product = data.message[0].product;
+            trigger.parameters.imageHref = data.message[0].imageHref;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type === "merch" && data.for === "streamlabs")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsMerchAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].from;
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.product = data.message[0].product;
+            trigger.parameters.imageHref = data.message[0].imageHref;
+            outputTrigger(trigger)
+        }
+    }
+    // Twitch events
+    else if (data.type === "follow" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabTwitchFollowAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name;
+            outputTrigger(trigger)
+        }
+
+    }
+    else if (data.type === "subscription" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchSubscriptionAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.gifter = data.message[0].gifter
+            trigger.parameters.type = data.message[0].type
+            trigger.parameters.months = data.message[0].months
+            trigger.parameters.message = data.message[0].message
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type === "resub" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchResubAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.months = data.message[0].months
+            trigger.parameters.streak_months = data.message[0].streak_months
+            trigger.parameters.message = data.message[0].message
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type === "bits" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchBitsAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.amount = data.message[0].amount
+            trigger.parameters.message = data.message[0].message
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "host" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchHostAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.raiders = data.message[0].raiders
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "raid" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchRaidAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.raiders = data.message[0].raiders
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "twitchcharitydonation" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchCharityDonationAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message.from;
+            trigger.parameters.message = data.message.message;
+            trigger.parameters.amount = data.message.amount;
+            trigger.parameters.formatted_amount = data.message.formatted_amount;
+            outputTrigger(trigger)
+        }
+    }
+    // Youtube events
+    else if (data.type == "follow" && data.for === "youtube_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsYouTubeSubscriptionAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "subscription" && data.for === "youtube_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsYouTubeMemberAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name;
+            trigger.parameters.months = data.message[0].months;
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.subplan = data.message[0].sub_plan;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "subMysteryGift" && data.for === "youtube_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchSubMysteryAlert")
+        if (trigger)
+        {
+            trigger.parameters.gifter = data.message[0].gifter;
+            trigger.parameters.amount = data.message[0].amount;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "superchat" && data.for === "youtube_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsYouTubeSuperchatAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name;
+            trigger.parameters.amount = data.message[0].amount;
+            trigger.parameters.formatted_amount = data.message[0].displayString;
+            trigger.parameters.message = data.message[0].comment;
+            outputTrigger(trigger)
+        }
+    }
+    else
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".parseTriggers", "no tigger setup for streamlabs message type", data.type);
+    }
+}
+// ============================================================================
+//                           FUNCTION: outputTrigger
+// ============================================================================
+function outputTrigger (data)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                data.messagetype,
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+
 }
 // ============================================================================
 //                           EXPORTS: start

@@ -209,10 +209,11 @@ function onDataCenterMessage (server_packet)
             }
             else
                 serverConfig = structuredClone(server_packet.data);
+
+            SaveConfigToServer();
+            // restart the sceduler in case we changed the values
+            SaveChatMessagesToServerScheduler();
         }
-        SaveConfigToServer();
-        // restart the sceduler in case we changed the values
-        SaveChatMessagesToServerScheduler();
     }
     else if (server_packet.type === "CredentialsFile")
     {
@@ -821,7 +822,7 @@ function reconnectChat (account)
                     .catch((err) => 
                     {
                         localConfig.twitchClient[account].state.connected = false;
-                        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
                     });
             })
         }

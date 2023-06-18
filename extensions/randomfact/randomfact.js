@@ -180,7 +180,9 @@ function onDataCenterMessage (server_packet)
             )
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        {
+            //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        }
 
     }
     else if (server_packet.type === "UnknownChannel")
@@ -216,7 +218,9 @@ function onDataCenterMessage (server_packet)
             // do something with the data
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        {
+            //       logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
     }
     else if (server_packet.type === "InvalidMessage")
     {
