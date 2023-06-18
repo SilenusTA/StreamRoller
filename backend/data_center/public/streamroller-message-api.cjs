@@ -103,7 +103,16 @@ function ExtensionPacket (type, from, data, dest_channel, to, ret_channel, versi
 function sendMessage (connection, data)
 {
     //console.log("sendMessage", data, "end sendMessage")
-    connection.emit("message", data);
+    try
+    {
+        connection.emit("message", data);
+
+    } catch (e)
+    {
+        console.log("streamroller-message-api.sendMessage", "send message failed connection failed:", e.message);
+        console.log("streamroller-message-api.sendMessage", "data:", data);
+
+    }
 }
 // ============================================================================
 //                           FUNCTION: start
