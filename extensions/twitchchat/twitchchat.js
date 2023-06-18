@@ -123,6 +123,28 @@ const serverData =
     ],
 }
 
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Twitch chat and alerts (ie subs, redeeems etc)",
+
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "TwitchChatSendChatMessage",
+                displaytitle: "Post Twitch Message",
+                description: "Post a message to twitch chat",
+                messagetype: "SendChatMessage",
+                channel: serverConfig.channel,
+                parameters: {
+                    account: "",
+                    message: ""
+                }
+            },
+        ],
+}
+
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -388,6 +410,8 @@ function onDataCenterMessage (server_packet)
                 let name = ""
                 if (extension_packet.data.account == "bot" || extension_packet.data.account == "user")
                     name = localConfig.usernames[extension_packet.data.account].name
+                else if (extension_packet.data.account == "")
+                    name = localConfig.usernames.bot.name
                 else
                     name = extension_packet.data.account
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag");
@@ -402,6 +426,23 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "RequestChatBuffer")
         {
             sendChatBuffer(server_packet.from)
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -766,7 +807,7 @@ function sendChatMessage (channel, data)
     }
     try
     {
-        if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
+        if (data.account === "" || data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
             account = "bot"
         else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
             account = "user"
