@@ -46,6 +46,7 @@ import { clearTimeout } from "timers";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     DataCenterSocket: null,
+    timers: []
 };
 const default_serverConfig = {
     __version__: 0.1,
@@ -54,13 +55,79 @@ const default_serverConfig = {
     // default values for timer modal
     TimerName: "StartCountdownTimer",
     TimerMessage: "Starting in",
-    Timeout: "600"
+    TimerTimeout: "600"
 };
 let serverConfig = structuredClone(default_serverConfig);
-const timer = {
-    name: "Timer",
-    message: "message",
-    timeleft: 0
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Timers allow for actions to be triggered when a timer goes off",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "TimerStart",
+                displaytitle: "Timer Started",
+                description: "A timer was started",
+                messagetype: "TimerStarted",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: "",
+                    duration: ""
+                }
+            },
+            {
+                name: "TimerEnd",
+                displaytitle: "Timer Ended",
+                description: "A timer has finished",
+                messagetype: "TimerEnded",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: "",
+                    duration: ""
+                }
+            },
+            {
+                name: "TimerRunning",
+                displaytitle: "Timer Running",
+                description: "A timer is running",
+                messagetype: "TimerRunning",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: "",
+                    message: "",
+                    duration: "",
+                    timeout: "",
+                }
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "TimerStart",
+                displaytitle: "Timer Start",
+                description: "Start a countdown timer",
+                messagetype: "TimerStart",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: "",
+                    duration: "",
+                    message: ""
+                }
+            },
+            {
+                name: "TimerStop",
+                displaytitle: "Timer Stop",
+                description: "Stop a running timer",
+                messagetype: "TimerStop",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: ""
+                }
+            }
+        ],
 }
 // ============================================================================
 //                           FUNCTION: initialise
@@ -134,21 +201,22 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
-        if (decoded_packet.type === "RequestSettingsWidgetSmallCode")
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             // TBD maintain list of all extensions that has requested Modals
-            SendSettingsWidgetSmall(decoded_packet.from);
-        else if (decoded_packet.type === "SettingsWidgetSmallData")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
-            if (decoded_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-                if (localConfig[decoded_packet.data.TimerName] === undefined)
-                    localConfig[decoded_packet.data.TimerName] = {};
-                localConfig[decoded_packet.data.TimerName].name = decoded_packet.data.TimerName;
-                localConfig[decoded_packet.data.TimerName].message = decoded_packet.data.TimerMessage;
-                localConfig[decoded_packet.data.TimerName].timeout = decoded_packet.data.Timeout;
+                if (localConfig.timers[extension_packet.data.TimerName] === undefined)
+                    localConfig.timers[extension_packet.data.TimerName] = {};
+                localConfig.timers[extension_packet.data.TimerName].name = extension_packet.data.TimerName;
+                localConfig.timers[extension_packet.data.TimerName].message = extension_packet.data.TimerMessage;
+                localConfig.timers[extension_packet.data.TimerName].timeout = extension_packet.data.TimerTimeout;
+                localConfig.timers[extension_packet.data.TimerName].duration = extension_packet.data.TimerTimeout;
                 //serverConfig.checkbox = "off";
-                for (const [key, value] of Object.entries(decoded_packet.data))
+                for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
 
                 SaveConfigToServer();
@@ -156,17 +224,49 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
 
                 // check any timers needed
-                CheckTimers(decoded_packet.data.TimerName);
+                CheckTimers(extension_packet.data.TimerName);
             }
         }
-        else if (decoded_packet.type === "StartSomeTimerHere")
+        else if (extension_packet.type === "TimerStart")
         {
+            if (localConfig.timers[extension_packet.data.name] === undefined)
+                localConfig.timers[extension_packet.data.name] = {};
+            localConfig.timers[extension_packet.data.name].name = extension_packet.data.name;
+            localConfig.timers[extension_packet.data.name].message = extension_packet.data.message;
+            localConfig.timers[extension_packet.data.name].timeout = extension_packet.data.duration;
+            localConfig.timers[extension_packet.data.name].duration = extension_packet.data.duration;
+
             // This is an extension message from the API. not currently used as timers are started from the settins modals
-            CheckTimers(decoded_packet.data.TimerName);
+            CheckTimers(extension_packet.data.name);
         }
-        else if (decoded_packet.type === "SettingsWidgetSmallCode")
+        else if (extension_packet.type === "TimerStop")
+        {
+            if (localConfig.timers[extension_packet.data.name])
+                localConfig.timers[extension_packet.data.name].timeout = 0;
+
+            // This is an extension message from the API. not currently used as timers are started from the settins modals
+            CheckTimers(extension_packet.data.name);
+        }
+        else if (extension_packet.type === "SettingsWidgetSmallCode")
         {
             // ignore these messages
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -271,57 +371,137 @@ function SaveConfigToServer ()
 // ============================================================================
 function CheckTimers (timername)
 {
-    if (localConfig[timername].timeout > 0)
-    {
-        Timer(timername)
-    }
+    if (!localConfig.timers[timername])
+        return;
 
-    // setup new timer
+    if (localConfig.timers[timername].timeout == localConfig.timers[timername].duration)
+        sendStartTimer(localConfig.timers[timername])
+    Timer(timername)
 }
 // ============================================================================
 //                           FUNCTION: Timer
 // ============================================================================
 function Timer (timername)
 {
-    sendTimerData(timername, localConfig[timername].timeout);
-    localConfig[timername].timeout = localConfig[timername].timeout - 1;
+    sendTimerData(localConfig.timers[timername]);
+    localConfig.timers[timername].timeout = localConfig.timers[timername].timeout - 1;
     // write the file
-    clearTimeout(localConfig[timername].Handle);
-    if (localConfig[timername].timeout >= 0)
+    clearTimeout(localConfig.timers[timername].Handle);
+    if (localConfig.timers[timername].timeout >= 0)
     {
-        let minutes = Math.floor(localConfig[timername].timeout / 60);
-        let seconds = localConfig[timername].timeout - (minutes * 60);
-        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", localConfig[timername].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
-        localConfig[timername].Handle = setTimeout(() =>
+        let minutes = Math.floor(localConfig.timers[timername].timeout / 60);
+        let seconds = localConfig.timers[timername].timeout - (minutes * 60);
+        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", localConfig.timers[timername].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
+        localConfig.timers[timername].Handle = setTimeout(() =>
         {
             Timer(timername)
-        },
-            1000
-        )
+        }, 1000)
     }
     else
+    {   // timer has finished
+        sendEndTimer(localConfig.timers[timername])
+        const index = localConfig.timers.indexOf(timername);
+        if (index > -1)
+        { // only splice array when item is found
+            localConfig.timers.splice(index, 1); // 2nd parameter means remove one item only
+        }
         fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", " ")
+    }
 }
 // ============================================================================
 //                           FUNCTION: sendTimerData
 // ============================================================================
-function sendTimerData (timername, timedata)
+function sendTimerData (timedata)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "Timer",
+    let data = findactionByMessageType("TimerRunning")
+    data.parameters = timedata
+    data.parameters.Handle = null
+    try
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
                 serverConfig.extensionname,
-                {
-                    timername: timername,
-                    timerdata: timedata
-                },
+                sr_api.ExtensionPacket(
+                    "TimerRunning",
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel
+                ),
                 serverConfig.channel
-            ),
-            serverConfig.channel
-        ));
+            ));
+    } catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".sendTimerData", "error:", e.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: sendStartTimer
+// ============================================================================
+function sendStartTimer (timedata)
+{
+    let data = findactionByMessageType("TimerStarted")
+    data.parameters = timedata
+    try
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "TimerStarted",
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel
+                ),
+                serverConfig.channel
+            ));
+    } catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".sendStartTimer", "error:", e.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: sendEndTimer
+// ============================================================================
+function sendEndTimer (timedata)
+{
+    let data = findactionByMessageType("TimerEnded")
+    data.parameters = timedata
+    try
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "TimerEnded",
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel
+                ),
+                serverConfig.channel
+            ));
+    } catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".sendMessage", "error:", e.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: sendEndTimer
+// ============================================================================
+function findactionByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findactionByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

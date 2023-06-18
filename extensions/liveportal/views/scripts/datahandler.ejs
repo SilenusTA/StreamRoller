@@ -701,8 +701,11 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "TIMERS")
             {
-                processTimers(extension_packet.data);
-                UpdateOBSDefaultButtons();
+                if (extension_packet.type === "TimerRunning")
+                {
+                    processTimers(extension_packet.data.parameters);
+                    UpdateOBSDefaultButtons();
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                           OBS_CHANNEL
@@ -2710,7 +2713,7 @@
     // ============================================================================
     function processTimers (data)
     {
-        localConfig.timers[data.timername] = data.timerdata
+        localConfig.timers[data.name] = data.timeout
     }
 
     // ============================================================================
@@ -2987,7 +2990,6 @@
     // ============================================================================
     function processPhilipsHueScenes ()
     {
-        console.log("processPhilipsHueScenes received scenes", localConfig.philipsHueSceneList)
         updatePhilipsHueDisplay()
     }
     // ============================================================================
@@ -2995,7 +2997,6 @@
     // ============================================================================
     function activatePhilipsHueScene (sceneId)
     {
-        console.log("activatePhilipsHueScene ", sceneId)
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
@@ -3017,7 +3018,6 @@
     function updatePhilipsHueDisplay ()
     {
         // let card = document.getElementById("PhilipsHueCard");
-        console.log("updatePhilipsHueDisplay")
         let scenesrow = document.getElementById("PhilipsHueScenesRow");
         let rowdata = ""
         let btnstate = "btn-outline-secondary";
