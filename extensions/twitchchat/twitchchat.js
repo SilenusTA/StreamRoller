@@ -741,7 +741,7 @@ function process_chat_data (channel, tags, chatmessage)
     }
     //update the user data (ie last seen etc)
     if (serverConfig.updateUserLists === "on" && tags["display-name"])
-        updateUserList({ username: tags["display-name"], platform: "twitch" })
+        updateUserList({ name: tags["display-name"], platform: "twitch", message: chatmessage })
 
 }
 
@@ -1096,7 +1096,8 @@ function updateUserList (data)
                 localConfig.EXTENSION_NAME,
                 sr_api.ExtensionPacket(
                     "UpdateUserData",
-                    localConfig.EXTENSION_NAME, data,
+                    localConfig.EXTENSION_NAME,
+                    data,
                     "",
                     "users"
                 ),

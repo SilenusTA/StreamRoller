@@ -57,6 +57,28 @@ const default_serverConfig = {
 let serverConfig = structuredClone(default_serverConfig)
 const serverData = { userData: { twitch: {}, youtube: {} } }
 
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "User interactions",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    // these are messages we can receive to perform an action
+    triggers:
+        [
+            {
+                name: "UsersNewChatter",
+                displaytitle: "First Time Poster",
+                description: "Someone has posted in the chat for the first time",
+                messagetype: "NewChatter",
+                channel: serverConfig.channel,
+                parameters: {
+                    name: "",
+                    message: "",
+                    platform: ""
+                }
+            }
+        ],
+}
 
 // ============================================================================
 //                           FUNCTION: initialise
@@ -176,15 +198,43 @@ function onDataCenterMessage (server_packet)
                     serverData.userData[extension_packet.data.platform][extension_packet.data.username] = {};
                 }
                 if (newuser)
+                {
                     serverData.userData[extension_packet.data.platform][extension_packet.data.username].firstseen = Date.now()
+                    sendNewUserTrigger(extension_packet.data)
+                }
                 serverData.userData[extension_packet.data.platform][extension_packet.data.username].lastseen = Date.now()
                 SaveDataToServer();
             }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
+    /*    else if (server_packet.type === "ChannelData")
+    {
+        if (server_packet.dest_channel === "STREAMLABS_ALERT")
+            process_streamlabs_alert(server_packet);
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+    }
+*/
     else if (server_packet.type === "UnknownChannel")
     {
         if (ServerConnectionAttempts++ < localConfig.MaxServerConnectionAttempts)
@@ -199,14 +249,7 @@ function onDataCenterMessage (server_packet)
             }, 5000);
         }
     }
-    /*    else if (server_packet.type === "ChannelData")
-        {
-            if (server_packet.dest_channel === "STREAMLABS_ALERT")
-                process_streamlabs_alert(server_packet);
-            else
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
-        }
-    */
+
     else if (server_packet.type === "InvalidMessage")
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
@@ -230,22 +273,7 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
-// ============================================================================
-//                           FUNCTION: process_streamlabs_alert
-// ============================================================================
-/**
- * Just a function to log data from the streamlabs api messages
- * @param {String} server_packet 
- */
-/*
-function process_streamlabs_alert (server_packet)
-{
-    // for this type of message we need to know the format of the data packet. 
-    //and do something usefull with it 
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".process_streamlabs_alert", "empty function");
 
-}
-*/
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
@@ -290,7 +318,24 @@ function SendSettingsWidgetSmall (tochannel)
         }
     });
 }
-
+// ============================================================================
+//                           FUNCTION: sendNewUserTrigger
+// ============================================================================
+function sendNewUserTrigger (data)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "NewChatter",
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel
+            ),
+            serverConfig.channel
+        ));
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
