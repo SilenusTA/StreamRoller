@@ -67,6 +67,28 @@ const default_serverConfig = {
     cred4value: ""
 };
 let serverConfig = structuredClone(default_serverConfig);
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Send a tweet",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "TwitterPostTweet",
+                displaytitle: "Post a Tweet",
+                description: "Post a message to twtter",
+                messagetype: "PostTweet",
+                channel: serverConfig.channel,
+                parameters: {
+                    message: ""
+                }
+            }
+        ],
+}
+
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -187,9 +209,26 @@ function onDataCenterMessage (server_packet)
             // check this was sent to us 
             if (extension_packet.to === serverConfig.extensionname)
                 if (serverConfig.twitterenabled != "off")
-                    tweetmessage(extension_packet.data)
+                    tweetmessage(extension_packet.data.message)
                 else
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "tweeting disabled : ");
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode"
             || extension_packet.type === "RequestSettingsWidgetLargeCode"
