@@ -369,7 +369,8 @@ function onDataCenterMessage (server_packet)
                 // process the chat message from twitch
                 processChatMessage(extension_packet.data);
             else
-                console.log("chatbot ignoring", extension_packet.data)
+                if (serverConfig.DEBUG_MODE === "on")
+                    console.log("chatbot ignoring", extension_packet.data)
         }
         //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
@@ -1046,7 +1047,7 @@ function processChatMessage (data)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
-                        postMessageToTwitch(chatMessageToPost)
+                        postMessageToTwitch(" (" + data.data['display-name'] + ") " + chatMessageToPost)
                     return;
                 })
                 .catch(e =>
