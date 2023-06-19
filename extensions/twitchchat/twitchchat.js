@@ -448,6 +448,7 @@ function onDataCenterMessage (server_packet)
 
                 if (extension_packet.data.twitchchat_restore_defaults == "on")
                 {
+                    console.log("restoring defaults", extension_packet.data.twitchchat_restore_defaults)
                     serverConfig = structuredClone(default_serverConfig);
                     // restart the scheduler in case we changed it
                     SaveChatMessagesToServerScheduler();
