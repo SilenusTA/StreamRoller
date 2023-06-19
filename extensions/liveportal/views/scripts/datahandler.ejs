@@ -595,6 +595,7 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "AIChatbotResponse")
             {
+                // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,

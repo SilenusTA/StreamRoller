@@ -370,7 +370,7 @@ function onDataCenterMessage (server_packet)
                 processChatMessage(extension_packet.data);
             else
                 if (serverConfig.DEBUG_MODE === "on")
-                    console.log("chatbot ignoring", extension_packet.data)
+                    console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
         }
         //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
@@ -679,9 +679,6 @@ function SendSettingsWidgetLarge (tochannel)
                 }
 
             }
-
-
-
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -789,6 +786,7 @@ function heartBeatCallback ()
 }
 // ============================================================================
 //                           FUNCTION: processTextMessage
+//            A message sent direct to extension is processed through here
 // ============================================================================
 /*
 data
@@ -847,7 +845,8 @@ function processTextMessage (data)
         })
 }
 // ============================================================================
-//                           FUNCTION: processChatMessage
+//                    FUNCTION: processChatMessage
+// This function is called by monitoring the twitch chat output
 // ============================================================================
 function processChatMessage (data)
 {
@@ -862,7 +861,7 @@ function processChatMessage (data)
     let messages_handled = ""
     let sub_messages = "";
 
-
+    // lets work out what messages we want to push through the chatbot
     if (serverConfig.DEBUG_MODE === "on")
     {
         messages_handled = ["chat", "LOCAL_DEBUG", "sub", "subscription", "resub", "submysterygift", "anongiftpaidupgrade", "anonsubmysterygift", "anonsubgift", "subgift", "giftpaidupgrade", "primepaidupgrade"];
@@ -874,6 +873,7 @@ function processChatMessage (data)
         sub_messages = ["sub", "subscription", "resub"];
     }
 
+    // check what these messages are
     let submessage = sub_messages.includes(data.data["message-type"]);
     let handledmessage = messages_handled.includes(data.data["message-type"]);
 
@@ -911,7 +911,7 @@ function processChatMessage (data)
         && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
 
     // skip messages we don't want to use for chatbot.
-    if (!handledmessage && !submessage && !directChatQuestion)
+    if (!handledmessage && !submessage && !directChatQuestion && !translateToEnglish)
     //if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -929,13 +929,14 @@ function processChatMessage (data)
         }
         return;
     }
-    // ignore messages from the bot
+
     if (serverConfig.DEBUG_MODE === "on")
     {
         console.log(submessage);
         console.log(serverConfig.chatbotname);
         console.log(data.data["display-name"]);
     }
+    // ignore messages from the bot and system
     if (!submessage &&
         (// bot message
             (serverConfig.chatbotname != null
@@ -951,7 +952,7 @@ function processChatMessage (data)
         return;
     }
 
-    // is this a chatmessage and inside of the time window (if not a direct question)
+    // is this a chatmessage and inside of the time window (if not a direct question, translation or a sub message)
     if (localConfig.inTimerWindow === false && !directChatQuestion && !translateToEnglish && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -962,7 +963,7 @@ function processChatMessage (data)
     }
 
     // Is the message long enough to be considered
-    if (data.message.length < serverConfig.chatbotminmessagelength)
+    if (data.message.length < serverConfig.chatbotminmessagelength && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("message not long enough (char minimum limit in settings) " + data.message + "'", data.message.length + "<" + serverConfig.chatbotminmessagelength)
