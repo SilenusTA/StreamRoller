@@ -127,22 +127,33 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Twitch chat and alerts (ie subs, redeeems etc)",
-
+    triggers: [{
+        name: "TwitchChatChatMessageReceived",
+        displaytitle: "Chat Message",
+        description: "A chat message was received",
+        messagetype: "ChatMessageReceived",
+        channel: serverConfig.channel,
+        parameters: {
+            sender: "",
+            message: "",
+            color: "",
+            firstmessage: false,
+            mod: false,
+            subscriber: false
+        }
+    }],
     // these are messages we can receive to perform an action
-    actions:
-        [
-            {
-                name: "TwitchChatSendChatMessage",
-                displaytitle: "Post Twitch Message",
-                description: "Post a message to twitch chat",
-                messagetype: "SendChatMessage",
-                channel: serverConfig.channel,
-                parameters: {
-                    account: "",
-                    message: ""
-                }
-            },
-        ],
+    actions: [{
+        name: "TwitchChatSendChatMessage",
+        displaytitle: "Post Twitch Message",
+        description: "Post a message to twitch chat",
+        messagetype: "SendChatMessage",
+        channel: serverConfig.channel,
+        parameters: {
+            account: "",
+            message: ""
+        }
+    },],
 }
 
 // ============================================================================
@@ -718,6 +729,24 @@ function SaveChatMessagesToServerScheduler ()
     clearTimeout(localConfig.saveDataHandle)
     localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer * 1000)
 
+}// ============================================================================
+//                     FUNCTION: postChatTrigger
+// ============================================================================
+function postChatTrigger (type, data)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                type,
+                localConfig.EXTENSION_NAME,
+                data,
+                serverConfig.channel
+            ),
+            serverConfig.channel
+        ));
+
 }
 // ============================================================================
 //                     FUNCTION: process_chat_data
@@ -1002,9 +1031,26 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("message", (channel, userstate, message, self) => { file_log("message", userstate, message); });
         }
 
-        localConfig.twitchClient[account].connection.on("action", (channel, userstate, message, self) => { file_log("action", userstate, message); process_chat_data(channel, userstate, message); });
+        localConfig.twitchClient[account].connection.on("action", (channel, userstate, message, self) => 
+        {
+            file_log("action", userstate, message);
+            process_chat_data(channel, userstate, message);
+
+        });
         localConfig.twitchClient[account].connection.on("ban", (channel, username, reason, userstate) => { file_log("ban", userstate, reason); userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "ban"; process_chat_data(channel, userstate, " Ban: (" + username + ") " + userstate['ban-duration'] + ". " + ((reason) ? reason : "")); });
-        localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => { file_log("chat", userstate, message); process_chat_data(channel, userstate, message); });
+        localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
+        {
+            file_log("chat", userstate, message);
+            process_chat_data(channel, userstate, message);
+            postChatTrigger("ChatMessageReceived", {
+                sender: userstate['display-name'],
+                message: message,
+                firstmessage: userstate['first-msg'],
+                mod: userstate.mod,
+                color: userstate.color,
+                subscriber: userstate.subscriber
+            })
+        });
         localConfig.twitchClient[account].connection.on("messagedeleted", (channel, username, deletedMessage, userstate) => { file_log("messagedeleted", userstate, deletedMessage); userstate['display-name'] = localConfig.usernames.bot["name"]; process_chat_data(channel, userstate, "Message deleted: (" + username + ") " + deletedMessage); });
         localConfig.twitchClient[account].connection.on("primepaidupgrade", (channel, username, methods, userstate) => { file_log("primepaidupgrade", userstate, methods); process_chat_data(channel, userstate, ""); });
         localConfig.twitchClient[account].connection.on("raided", (channel, username, viewers) => { file_log("raided", username, viewers); process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "raided", "viewers": viewers }, "raided: Raid from " + username + " with " + viewers); });

@@ -364,10 +364,14 @@ function onDataCenterMessage (server_packet)
         }
         // first we check which channel the message came in on
         else if (server_packet.dest_channel === "TWITCH_CHAT")
-            // process the chat message from twitch
-            processChatMessage(extension_packet.data);
-        else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        {
+            if (extension_packet.data.data)
+                // process the chat message from twitch
+                processChatMessage(extension_packet.data);
+            else
+                console.log("chatbot ignoring", extension_packet.data)
+        }
+        //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
     else if (server_packet.type === "CredentialsFile")
     {
