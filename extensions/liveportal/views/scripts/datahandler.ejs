@@ -591,7 +591,7 @@
             }
 
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Discord chat buffer
+            //                   RECEIVED chatbot message directly to us
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "AIChatbotResponse")
             {
@@ -781,6 +781,35 @@
             else if (server_packet.dest_channel == "RANDOMFACT_CHANNEL")
             {
                 // ignoring these messages
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           IGNORED CHANNELS
+            //                      These are most likely ones we only use for triggers and alerts
+            // -------------------------------------------------------------------------------------------------
+            else if (server_packet.dest_channel == "CHATBOT_CHANNEL")
+            {
+
+                if (extension_packet.type === "AIChatbotResponse")
+                {
+                    // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket("ExtensionMessage",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "SendChatMessage",
+                                serverConfig.extensionname,
+                                // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                                {
+                                    account: "bot",
+                                    message: extension_packet.data.response,
+                                    'message-type': "AIchatbotmessage"
+                                },
+                                "",
+                                "twitchchat"),
+                            "",
+                            "twitchchat"
+                        ));
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA

@@ -343,9 +343,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "ParseTextMessage")
         {
             if (extension_packet.to === serverConfig.extensionname)
-            {
                 processTextMessage(extension_packet.data);
-            }
         }
         else if (extension_packet.type === "ProcessText_action")
         {
@@ -980,7 +978,6 @@ function processChatMessage (data)
         return;
     }
     // check ignore list
-
     if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.data["display-name"].toLowerCase()) > -1)
     {
         if (serverConfig.DEBUG_MODE === "on")

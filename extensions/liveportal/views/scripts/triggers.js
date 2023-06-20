@@ -320,9 +320,10 @@ function CheckTriggers (data)
             {
                 for (var i in param)
                 {
-                    // we have amtched the trigger
+                    // we have matched the trigger
+                    // check the params if we have them
                     if (param[i] === "" || data.data[i].toLowerCase() === param[i].toLowerCase())
-                        TriggerAction(entry.action)
+                        TriggerAction(entry.action, data)
                 }
             })
         }
@@ -333,13 +334,15 @@ function CheckTriggers (data)
 //                          FUNCTION: TriggerAction
 //                          Triggers an action 
 // ============================================================================
-function TriggerAction (action)
+function TriggerAction (action, triggerparams)
 {
     let params;
     for (var i in action.data)
     {
         params = { ...params, ...action.data[i] }
     }
+
+    params.triggerparams = triggerparams.data
     // all actions are handled through the SR socket interface
     sr_api.sendMessage(DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",

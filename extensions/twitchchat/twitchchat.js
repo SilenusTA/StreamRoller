@@ -132,7 +132,7 @@ const triggersandactions =
             name: "TwitchChatChatMessageReceived",
             displaytitle: "Chat Message",
             description: "A chat message was received",
-            messagetype: "ChatMessageReceived",
+            messagetype: "ChatMessageReceived_trigger",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -146,7 +146,7 @@ const triggersandactions =
             name: "TwitchChatActionReceived",
             displaytitle: "Chat Action",
             description: "A chat action was received (a /me message)",
-            messagetype: "ChatActionReceived",
+            messagetype: "ChatActionReceived_trigger",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -160,7 +160,7 @@ const triggersandactions =
             name: "TwitchChatBanReceived",
             displaytitle: "Chat Ban",
             description: "A chat users was banned",
-            messagetype: "ChatBanReceived",
+            messagetype: "ChatBanReceived_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -170,7 +170,7 @@ const triggersandactions =
             name: "TwitchChatMessageDeletedReceived",
             displaytitle: "Chat MessageDeleted",
             description: "A chat message was deleted ",
-            messagetype: "ChatMessageDeleted",
+            messagetype: "ChatMessageDeleted_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -180,7 +180,7 @@ const triggersandactions =
             name: "TwitchChatPrimePaidUpgradeReceived",
             displaytitle: "Chat PrimePaidUpgrade",
             description: "A user paid to upgrade their prime sub ",
-            messagetype: "ChatPrimePaidUpgrade",
+            messagetype: "ChatPrimePaidUpgrade_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -189,7 +189,7 @@ const triggersandactions =
             name: "TwitchChatRaidReceived",
             displaytitle: "Someone Raided",
             description: "Another streamer raided you",
-            messagetype: "ChatRaid",
+            messagetype: "ChatRaid_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -199,7 +199,7 @@ const triggersandactions =
             name: "TwitchChatRedeemReceived",
             displaytitle: "Points Redeemed",
             description: "Viewer reddemed chat points",
-            messagetype: "ChatRedeem",
+            messagetype: "ChatRedeem_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -210,7 +210,7 @@ const triggersandactions =
             name: "TwitchChatResubReceived",
             displaytitle: "Someone Resubbed",
             description: "Someone Resubbed",
-            messagetype: "ChatResub",
+            messagetype: "ChatResub_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -221,7 +221,7 @@ const triggersandactions =
             name: "TwitchChatRoomstateReceived",
             displaytitle: "Roomstate message",
             description: "This message contains things like sub-only mode etc",
-            messagetype: "ChatRoomstate",
+            messagetype: "ChatRoomstate_trigger",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -235,7 +235,7 @@ const triggersandactions =
             name: "TwitchChatSubscriptionReceived",
             displaytitle: "Someone Subscribed",
             description: "Someone Subscribed",
-            messagetype: "ChatSubscription",
+            messagetype: "ChatSubscription_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -246,7 +246,7 @@ const triggersandactions =
             name: "TwitchChatTimeoutReceived",
             displaytitle: "Viewer Timeout",
             description: "A viewer was timedout",
-            messagetype: "ChatTimeout",
+            messagetype: "ChatTimeout_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -257,7 +257,7 @@ const triggersandactions =
             name: "TwitchChatSubMysteryGiftReceived",
             displaytitle: "SubMysteryGift",
             description: "A viewer Gifted a sub",
-            messagetype: "ChatSubMysteryGift",
+            messagetype: "ChatSubMysteryGift_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -267,7 +267,7 @@ const triggersandactions =
             name: "TwitchChatAutoModReceived",
             displaytitle: "Automod action",
             description: "Automod action happened",
-            messagetype: "ChatAutoMod",
+            messagetype: "ChatAutoMod_trigger",
             channel: serverConfig.channel,
             parameters: {
                 msgID: "",
@@ -277,14 +277,14 @@ const triggersandactions =
             name: "TwitchChatReconnect",
             displaytitle: "Chat Reconnected",
             description: "Chat Reconnected",
-            messagetype: "ChatReconnect",
+            messagetype: "ChatReconnect_trigger",
             channel: serverConfig.channel,
             parameters: {}
         }, {
             name: "TwitchChatAnonGiftPaidUpgradeReceived",
             displaytitle: "Anon Gift Paid Upgrade",
             description: "Your guess is as good as mine on this one",
-            messagetype: "ChatAnonGiftPaidUpgrade",
+            messagetype: "ChatAnonGiftPaidUpgrade_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -293,7 +293,7 @@ const triggersandactions =
             name: "TwitchChatAnonSubMysteryGiftReceived",
             displaytitle: "Anon Sub Mystery Gift",
             description: "Someone Gifted an Sub Anonymously",
-            messagetype: "ChatAnonSubMysteryGift",
+            messagetype: "ChatAnonSubMysteryGift_trigger",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
@@ -302,7 +302,7 @@ const triggersandactions =
             name: "TwitchChatAnonSubGiftReceived",
             displaytitle: "Anon Sub Gift",
             description: "Someone Gifted an Sub",
-            messagetype: "ChatAnonSubGift",
+            messagetype: "ChatAnonSubGift_trigger",
             channel: serverConfig.channel,
             parameters: {
                 recipient: ""
@@ -311,7 +311,7 @@ const triggersandactions =
             name: "TwitchChatCheerReceived",
             displaytitle: "Somone Cheered",
             description: "Someone donated bits",
-            messagetype: "ChatCheer",
+            messagetype: "ChatCheer_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -321,7 +321,7 @@ const triggersandactions =
             name: "TwitchChatMod",
             displaytitle: "Mod?!?",
             description: "A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is",
-            messagetype: "ChatMod",
+            messagetype: "ChatMod_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -330,7 +330,7 @@ const triggersandactions =
             name: "TwitchChatMods",
             displaytitle: "Mods?!?",
             description: "A Mods message was received, possibly a list of mods in this channel. need to log it and see",
-            messagetype: "ChatMods",
+            messagetype: "ChatMods_trigger",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
@@ -339,7 +339,7 @@ const triggersandactions =
             name: "TwitchChatSubGift",
             displaytitle: "A sub was gifted",
             description: "Someone gifted a sub to another viewer",
-            messagetype: "ChatSubGift",
+            messagetype: "ChatSubGift_trigger",
             channel: serverConfig.channel,
             parameters: {
                 gifter: "",
@@ -350,7 +350,7 @@ const triggersandactions =
             name: "TwitchChatSubscribers",
             displaytitle: "Channel Subscribers",
             description: "Subscribers",
-            messagetype: "ChatSubscribers",
+            messagetype: "ChatSubscribers_trigger",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -360,7 +360,7 @@ const triggersandactions =
             name: "TwitchChatVipss",
             displaytitle: "Channel Vips",
             description: "Channel Vips",
-            messagetype: "ChatVips",
+            messagetype: "ChatVips_trigger",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -370,7 +370,7 @@ const triggersandactions =
             name: "TwitchChatClear",
             displaytitle: "Clear Chat",
             description: "Chat was cleared",
-            messagetype: "ChatClear",
+            messagetype: "ChatClear_trigger",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -379,7 +379,7 @@ const triggersandactions =
             name: "TwitchChatUnmod",
             displaytitle: "Unmod",
             description: "Someone was un-modded",
-            messagetype: "ChatUnmod",
+            messagetype: "ChatUnmod_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -388,7 +388,7 @@ const triggersandactions =
             name: "TwitchChatEmoteSet",
             displaytitle: "EmoteSet",
             description: "Emote set (currently passed through, if there is a need let me know)",
-            messagetype: "ChatEmoteSet",
+            messagetype: "ChatEmoteSet_trigger",
             channel: serverConfig.channel,
             parameters: {
                 message: "",
@@ -397,7 +397,7 @@ const triggersandactions =
             name: "TwitchChatFollowersOnly",
             displaytitle: "FollowersOnly",
             description: "FollowersOnly mode was changed",
-            messagetype: "ChatFollowersOnly",
+            messagetype: "ChatFollowersOnly_trigger",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false,
@@ -407,7 +407,7 @@ const triggersandactions =
             name: "TwitchChatGiftPaidUpgrade",
             displaytitle: "GiftPaidUpgrade",
             description: "Someone gifted a paid upgrade",
-            messagetype: "ChatGiftPaidUpgrade",
+            messagetype: "ChatGiftPaidUpgrade_trigger",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -417,7 +417,7 @@ const triggersandactions =
             name: "TwitchChatEmoteOnly",
             displaytitle: "EmoteOnly",
             description: "EmoteOnly mode changed",
-            messagetype: "ChatEmoteOnly",
+            messagetype: "ChatEmoteOnly_trigger",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false
@@ -426,7 +426,7 @@ const triggersandactions =
             name: "TwitchChatr9kbeta",
             displaytitle: "r9kbeta",
             description: "r9kbeta mode changed",
-            messagetype: "Chatr9kbeta",
+            messagetype: "Chatr9kbeta_trigger",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
@@ -435,7 +435,7 @@ const triggersandactions =
             name: "TwitchChatSlowmode",
             displaytitle: "Slowmode",
             description: "Slowmode mode changed",
-            messagetype: "ChatSlowmode",
+            messagetype: "ChatSlowmode_trigger",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false,
@@ -445,7 +445,7 @@ const triggersandactions =
             name: "TwitchChatWhisper",
             displaytitle: "Whisper",
             description: "Someone Whispered you or the bot",
-            messagetype: "ChatWhisper",
+            messagetype: "ChatWhisper_trigger",
             channel: serverConfig.channel,
             parameters: {
                 from: "",
@@ -455,7 +455,7 @@ const triggersandactions =
             name: "TwitchChatNotice",
             displaytitle: "Notice",
             description: "You received a notice (ie about chat being in follower mode etc)",
-            messagetype: "ChatNotice",
+            messagetype: "ChatNotice_trigger",
             channel: serverConfig.channel,
             parameters: {
                 msgid: "",
@@ -465,7 +465,7 @@ const triggersandactions =
             name: "TwitchChatDisconnected",
             displaytitle: "Disconnected",
             description: "Chat was Disconnected",
-            messagetype: "ChatDisconnected",
+            messagetype: "ChatDisconnected_trigger",
             channel: serverConfig.channel,
             parameters: {
                 reason: ""
@@ -474,7 +474,7 @@ const triggersandactions =
             name: "TwitchChatServerChange",
             displaytitle: "ServerChange",
             description: "Chat server changed",
-            messagetype: "ChatServerChange",
+            messagetype: "ChatServerChange_trigger",
             channel: serverConfig.channel,
             parameters: {
                 channel: ""
@@ -483,7 +483,7 @@ const triggersandactions =
             name: "TwitchChatConnected",
             displaytitle: "Connected",
             description: "Chat was connected",
-            messagetype: "ChatConnected",
+            messagetype: "ChatConnected_trigger",
             channel: serverConfig.channel,
             parameters: {
                 address: "",
@@ -493,7 +493,7 @@ const triggersandactions =
             name: "TwitchChatConnecting",
             displaytitle: "Connecting",
             description: "Chat is connecting",
-            messagetype: "ChatConnecting",
+            messagetype: "ChatConnecting_trigger",
             channel: serverConfig.channel,
             parameters: {
                 address: "",
@@ -503,14 +503,14 @@ const triggersandactions =
             name: "TwitchChatLogon",
             displaytitle: "Logon",
             description: "Logged in to chat",
-            messagetype: "ChatLogon",
+            messagetype: "ChatLogon_trigger",
             channel: serverConfig.channel,
             parameters: {}
         }, {
             name: "TwitchChatJoin",
             displaytitle: "Chat Join",
             description: "Somone Joined the chat",
-            messagetype: "ChatJoin",
+            messagetype: "ChatJoin_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -519,7 +519,7 @@ const triggersandactions =
             name: "TwitchChatPart",
             displaytitle: "Part",
             description: "Somone Left the chat",
-            messagetype: "ChatPart",
+            messagetype: "ChatPart_trigger",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -531,7 +531,7 @@ const triggersandactions =
             name: "TwitchChatSendChatMessage",
             displaytitle: "Post Twitch Message",
             description: "Post a message to twitch chat",
-            messagetype: "SendChatMessage",
+            messagetype: "SendChatMessage_action",
             channel: serverConfig.channel,
             parameters: {
                 account: "",

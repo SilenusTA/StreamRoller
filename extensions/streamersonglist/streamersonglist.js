@@ -61,7 +61,9 @@ const localConfig = {
     username: "",
     clientId: "",
     userId: "",
-    streamerId: ""
+    streamerId: "",
+    // set to ignore first load messages
+    firstload: true
 };
 const default_serverConfig = {
     __version__: 0.1,
@@ -825,7 +827,7 @@ function saveQueue (queue)
 // ============================================================================
 function pollSongQueueCallback ()
 {
-    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "" && localConfig.clientId != "")
+    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "")//&& localConfig.clientId != "")
     {
         try
         {
