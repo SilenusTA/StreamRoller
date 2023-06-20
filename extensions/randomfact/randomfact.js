@@ -247,7 +247,7 @@ function onDataCenterMessage (server_packet)
 //                           FUNCTION: send_chat_command
 // ============================================================================
 /**
- * send the random fact message to twitch
+ * send the random fact message to twitch when rquested in chat
  * @param {String} server_packet 
  */
 function send_chat_command (data)
@@ -298,10 +298,11 @@ function send_chat_command (data)
  * sends a random fact to the extension
  * @param {String} from 
  */
-function requestRandomFact ()
+function requestRandomFact (delay = 1000, counter = 5)
 {
     var body = "";
     let Buffer = "";
+    let fact = "";
     var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
     try
     {
@@ -313,8 +314,20 @@ function requestRandomFact ()
                 bodyChunks.push(chunk);
             }).on("end", function ()
             {
-
                 body = Buffer.concat(bodyChunks);
+                //fact = JSON.parse(body).text
+                if (fact == "")
+                {
+                    if (counter > 0)
+                    {
+                        setTimeout(() =>
+                        {
+                            requestRandomFact(delay + 500, counter - 1)
+
+                        }, delay)
+                    }
+                    return;
+                }
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
                         "ChannelData",
@@ -322,13 +335,12 @@ function requestRandomFact ()
                         sr_api.ExtensionPacket(
                             "RandomFact",
                             serverConfig.extensionname,
-                            { randomFact: JSON.parse(body).text },
+                            { randomFact: fact },
                             serverConfig.channel,
                         ),
                         serverConfig.channel,
                     ));
             })
-            //console.log("body:", body)
         });
         req.on("error", function (e)
         {

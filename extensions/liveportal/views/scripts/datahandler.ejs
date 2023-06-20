@@ -583,14 +583,6 @@
                     )
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Discord chat buffer
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "RandomFact")
-            {
-                processRandomFact(extension_packet.data);
-            }
-
-            // -------------------------------------------------------------------------------------------------
             //                   RECEIVED chatbot message directly to us
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "AIChatbotResponse")
@@ -771,7 +763,7 @@
                 if (extension_packet.type === "PhilipsHueScenes")
                 {
                     localConfig.philipsHueSceneList = extension_packet.data
-                    processPhilipsHueScenes();
+                    processPhilipsHueScenes(); processRandomFact
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -780,7 +772,11 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "RANDOMFACT_CHANNEL")
             {
-                // ignoring these messages
+                // -------------------------------------------------------------------------------------------------
+                //                   RECEIVED Received random fact
+                // -------------------------------------------------------------------------------------------------
+                if (extension_packet.type === "RandomFact")
+                    processRandomFact(extension_packet.data.randomFact);
             }
             // -------------------------------------------------------------------------------------------------
             //                           IGNORED CHANNELS
@@ -2756,12 +2752,15 @@
 
         localConfig.twitchRandomFactHandle = setTimeout(function ()
         {
-            postMessageToTwitch("Random Fact: " + localConfig.randomFact, "bot")
+            if (localConfig.randomFact != "")
+                postMessageToTwitch("Random Fact: " + localConfig.randomFact, "bot")
             RequestRandomFact();
             twitchFactOfTheDay();
+
         },
             serverConfig.randomfactstimeout
         )
+
     }
     // ============================================================================
     //                           FUNCTION: addSongToStreamersonglistQueue
