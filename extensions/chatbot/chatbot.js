@@ -196,6 +196,38 @@ const default_serverConfig = {
 // need to make sure we have a proper clone of this object and not a reference
 // otherwise changes to server also change defaults
 let serverConfig = structuredClone(default_serverConfig)
+
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "OpenAIChatbotResposeReceived",
+                displaytitle: "Response from chatbot",
+                description: "The OpenAI chatbot returned a response",
+                messagetype: "chatbotResponse_trigger",
+                channel: serverConfig.channel,
+                parameters: { message: "" }
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "OpenAIChatbotProcessText",
+                displaytitle: "Process text",
+                description: "Send some text through the chatbot",
+                messagetype: "ProcessText_action",
+                channel: serverConfig.channel,
+                parameters: { message: "" }
+            }
+
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -314,7 +346,29 @@ function onDataCenterMessage (server_packet)
             {
                 processTextMessage(extension_packet.data);
             }
-        } else if (extension_packet.type === "SettingsWidgetSmallData")
+        }
+        else if (extension_packet.type === "ProcessText_action")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                // was this a song request (this code can be removed once we have param passing sorted in the trigger code)
+                if (extension_packet.data.triggerparams.songName)
+                {
+                    if (extension_packet.data.triggerparams.messagetype == "SongAddedToQueue")
+                    {
+                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " song was added to the song request queue, what do you thinkof it (quote " + extension_packet.data.triggerparams.songName + " in your response and thank them for adding it)"
+                    }
+                    else
+                    {
+                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " has reached the front of the queue and Fern will play it next, what do you think about that(quote " + extension_packet.data.triggerparams.songName + " in your response and mention it is coming up next)"
+                    }
+                }
+
+                processTextMessage(extension_packet.data, true);
+
+            }
+        }
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
@@ -339,6 +393,23 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
             }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -365,12 +436,20 @@ function onDataCenterMessage (server_packet)
         // first we check which channel the message came in on
         else if (server_packet.dest_channel === "TWITCH_CHAT")
         {
-            if (extension_packet.data.data)
+            if (extension_packet.data.data && extension_packet.type.indexOf("_trigger") < 0)
                 // process the chat message from twitch
                 processChatMessage(extension_packet.data);
             else
+            {
                 if (serverConfig.DEBUG_MODE === "on")
-                    console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
+                {
+                    if (extension_packet.type.indexOf("_trigger") > -1)
+                        console.log("chatbot ignoring trigger message", extension_packet.type)
+                    else if (!extension_packet.data.data)
+                        console.log("chatbot ignoring as no data packet in message", extension_packet.type)
+                    //console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
+                }
+            }
         }
         //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
@@ -800,7 +879,7 @@ data
 }
 
 */
-function processTextMessage (data)
+function processTextMessage (data, triggerresponse = false)
 {
     // postback to extension/channel/direct to chat
     let messages = data.message;
@@ -818,9 +897,24 @@ function processTextMessage (data)
     callOpenAI(messages, model_to_use)
         .then(chatMessageToPost =>
         {
-            if (chatMessageToPost)
+            data.response = chatMessageToPost
+            if (triggerresponse)
             {
-                data.response = chatMessageToPost
+                // send the modal data to the server
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ChannelData",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "AIChatbotResponse",
+                            serverConfig.extensionname,
+                            data,
+                            serverConfig.channel,
+                        ),
+                        serverConfig.channel)
+                )
+            }
+            else
+            {
                 // send the modal data to the server
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -829,14 +923,14 @@ function processTextMessage (data)
                             "AIChatbotResponse",
                             serverConfig.extensionname,
                             data,
-                            "",
+                            serverConfig.channel,
                             data.from,
-                            serverConfig.channel
                         ),
-                        "",
+                        serverConfig.channel,
                         data.from)
                 )
             }
+
         })
         .catch(e =>
         {
@@ -886,7 +980,8 @@ function processChatMessage (data)
         return;
     }
     // check ignore list
-    if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.indexOf(data.data["display-name"]) > -1)
+
+    if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.data["display-name"].toLowerCase()) > -1)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
