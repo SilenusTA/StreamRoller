@@ -303,29 +303,42 @@ function checkTriggerIsValid (trigger)
 //                          FUNCTION: CheckTriggers
 //          This will receive all channel mesage to check against triggers
 // ============================================================================
-function CheckTriggers (data)
+function CheckTriggers (event)
 {
     serverConfig.AllTriggersAndActions.forEach((entry) =>
     {
 
-        if (data.dest_channel === entry.trigger.channel
-            && data.from === entry.trigger.extension
-            && data.type === entry.trigger.type
+        if (event.dest_channel === entry.trigger.channel
+            && event.from === entry.trigger.extension
+            && event.type === entry.trigger.type
         )
         {
+            // if parameters are entered we need to check that they all match
+            // before we trigger the action
+            let match = true
             // we have the correct extension, channel and message type
             // lets check the variables to see if those are a match
-
             entry.trigger.data.forEach((param) =>
             {
                 for (var i in param)
                 {
                     // we have matched the trigger
                     // check the params if we have them
-                    if (param[i] === "" || data.data[i].toLowerCase() === param[i].toLowerCase())
-                        TriggerAction(entry.action, data)
+                    // if we have a string entered and it doesn't match the don't trigger
+                    if (typeof event.data[i] == "string")// && typeof param[i] === "string")
+                    {
+                        if (param[i] != "" && event.data[i].toLowerCase() != param[i].toLowerCase())
+                            match = false;
+                    }
+                    //check non string types for non matching
+                    else if (param[i] != "" && event.data[i] != param[i])
+                        match = false;
+
+
                 }
             })
+            if (match)
+                TriggerAction(entry.action, event)
         }
 
     })
@@ -337,6 +350,7 @@ function CheckTriggers (data)
 function TriggerAction (action, triggerparams)
 {
     let params;
+    // copy params in to the action
     for (var i in action.data)
     {
         params = { ...params, ...action.data[i] }

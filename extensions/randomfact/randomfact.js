@@ -270,7 +270,7 @@ function send_chat_command (data)
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "SendChatMessage",
+                        "action_SendChatMessage",
                         serverConfig.extensionname,
                         {
                             account: "bot",
@@ -306,7 +306,7 @@ function requestRandomFact (delay = 1000, counter = 5)
     var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
     try
     {
-        var req = https.get(options, function (res)
+        var req = https.get(options, function (res, delay)
         {
             var bodyChunks = [];
             res.on("data", function (chunk)

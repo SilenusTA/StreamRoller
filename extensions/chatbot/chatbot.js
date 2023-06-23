@@ -882,6 +882,23 @@ function processTextMessage (data, triggerresponse = false)
     // postback to extension/channel/direct to chat
     let messages = data.message;
     let model_to_use = serverConfig.settings.chatmodel;
+    let starttime = Date.now();
+    // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
+    // this should really be a rollback timeout but this whole code needs re-writing at this point :P
+    if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection
+        || localConfig.requestPending)
+    {
+        // random timeout between 200 and 500ms
+        var randomTimeout = (Math.random() * 300) + 200;
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log(" ********************** waiting for rollback timeout:", randomTimeout)
+        setTimeout(() =>
+        {
+            processTextMessage(data, triggerresponse)
+        }, randomTimeout);
+        return;
+    }
+
     if (data.personality_id === "")
         messages = [{ "role": "user", "content": messages }];
     else if (typeof serverConfig.chatbotprofiles[Number(data.personality_id)] !== 'undefined')
@@ -1445,7 +1462,7 @@ function postMessageToTwitch (msg)
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "SendChatMessage",
+                "action_SendChatMessage",
                 serverConfig.extensionname,
                 { account: "bot", message: msg },
                 "",

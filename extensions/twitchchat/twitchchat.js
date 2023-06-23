@@ -132,7 +132,7 @@ const triggersandactions =
             name: "TwitchChatChatMessageReceived",
             displaytitle: "Chat Message",
             description: "A chat message was received",
-            messagetype: "ChatMessageReceived_trigger",
+            messagetype: "trigger_ChatMessageReceived",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -146,7 +146,7 @@ const triggersandactions =
             name: "TwitchChatActionReceived",
             displaytitle: "Chat Action",
             description: "A chat action was received (a /me message)",
-            messagetype: "ChatActionReceived_trigger",
+            messagetype: "trigger_ChatActionReceived",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -160,7 +160,7 @@ const triggersandactions =
             name: "TwitchChatBanReceived",
             displaytitle: "Chat Ban",
             description: "A chat users was banned",
-            messagetype: "ChatBanReceived_trigger",
+            messagetype: "trigger_ChatBanReceived",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -170,7 +170,7 @@ const triggersandactions =
             name: "TwitchChatMessageDeletedReceived",
             displaytitle: "Chat MessageDeleted",
             description: "A chat message was deleted ",
-            messagetype: "ChatMessageDeleted_trigger",
+            messagetype: "trigger_ChatMessageDeleted",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -180,7 +180,7 @@ const triggersandactions =
             name: "TwitchChatPrimePaidUpgradeReceived",
             displaytitle: "Chat PrimePaidUpgrade",
             description: "A user paid to upgrade their prime sub ",
-            messagetype: "ChatPrimePaidUpgrade_trigger",
+            messagetype: "trigger_ChatPrimePaidUpgrade",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -189,7 +189,7 @@ const triggersandactions =
             name: "TwitchChatRaidReceived",
             displaytitle: "Someone Raided",
             description: "Another streamer raided you",
-            messagetype: "ChatRaid_trigger",
+            messagetype: "trigger_ChatRaid",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -199,7 +199,7 @@ const triggersandactions =
             name: "TwitchChatRedeemReceived",
             displaytitle: "Points Redeemed",
             description: "Viewer reddemed chat points",
-            messagetype: "ChatRedeem_trigger",
+            messagetype: "trigger_ChatRedeem",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -210,7 +210,7 @@ const triggersandactions =
             name: "TwitchChatResubReceived",
             displaytitle: "Someone Resubbed",
             description: "Someone Resubbed",
-            messagetype: "ChatResub_trigger",
+            messagetype: "trigger_ChatResub",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -221,7 +221,7 @@ const triggersandactions =
             name: "TwitchChatRoomstateReceived",
             displaytitle: "Roomstate message",
             description: "This message contains things like sub-only mode etc",
-            messagetype: "ChatRoomstate_trigger",
+            messagetype: "trigger_ChatRoomstate",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -235,7 +235,7 @@ const triggersandactions =
             name: "TwitchChatSubscriptionReceived",
             displaytitle: "Someone Subscribed",
             description: "Someone Subscribed",
-            messagetype: "ChatSubscription_trigger",
+            messagetype: "trigger_ChatSubscription",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -246,7 +246,7 @@ const triggersandactions =
             name: "TwitchChatTimeoutReceived",
             displaytitle: "Viewer Timeout",
             description: "A viewer was timedout",
-            messagetype: "ChatTimeout_trigger",
+            messagetype: "trigger_ChatTimeout",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
@@ -257,34 +257,36 @@ const triggersandactions =
             name: "TwitchChatSubMysteryGiftReceived",
             displaytitle: "SubMysteryGift",
             description: "A viewer Gifted a sub",
-            messagetype: "ChatSubMysteryGift_trigger",
+            messagetype: "trigger_ChatSubMysteryGift",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
                 message: ""
             }
-        }, {
+        },
+        /* {
             name: "TwitchChatAutoModReceived",
             displaytitle: "Automod action",
             description: "Automod action happened",
-            messagetype: "ChatAutoMod_trigger",
+            messagetype: "trigger_ChatAutoMod",
             channel: serverConfig.channel,
             parameters: {
                 msgID: "",
                 message: ""
             }
-        }, {
+        },*/
+        {
             name: "TwitchChatReconnect",
             displaytitle: "Chat Reconnected",
             description: "Chat Reconnected",
-            messagetype: "ChatReconnect_trigger",
+            messagetype: "trigger_ChatReconnect",
             channel: serverConfig.channel,
             parameters: {}
         }, {
             name: "TwitchChatAnonGiftPaidUpgradeReceived",
             displaytitle: "Anon Gift Paid Upgrade",
             description: "Your guess is as good as mine on this one",
-            messagetype: "ChatAnonGiftPaidUpgrade_trigger",
+            messagetype: "trigger_ChatAnonGiftPaidUpgrade",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -293,7 +295,7 @@ const triggersandactions =
             name: "TwitchChatAnonSubMysteryGiftReceived",
             displaytitle: "Anon Sub Mystery Gift",
             description: "Someone Gifted an Sub Anonymously",
-            messagetype: "ChatAnonSubMysteryGift_trigger",
+            messagetype: "trigger_ChatAnonSubMysteryGift",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
@@ -302,7 +304,7 @@ const triggersandactions =
             name: "TwitchChatAnonSubGiftReceived",
             displaytitle: "Anon Sub Gift",
             description: "Someone Gifted an Sub",
-            messagetype: "ChatAnonSubGift_trigger",
+            messagetype: "trigger_ChatAnonSubGift",
             channel: serverConfig.channel,
             parameters: {
                 recipient: ""
@@ -311,17 +313,18 @@ const triggersandactions =
             name: "TwitchChatCheerReceived",
             displaytitle: "Somone Cheered",
             description: "Someone donated bits",
-            messagetype: "ChatCheer_trigger",
+            messagetype: "trigger_ChatCheer",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
                 message: ""
             }
-        }, {
+        },
+        /*{
             name: "TwitchChatMod",
             displaytitle: "Mod?!?",
             description: "A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is",
-            messagetype: "ChatMod_trigger",
+            messagetype: "trigger_ChatMod",
             channel: serverConfig.channel,
             parameters: {
                 username: ""
@@ -330,16 +333,17 @@ const triggersandactions =
             name: "TwitchChatMods",
             displaytitle: "Mods?!?",
             description: "A Mods message was received, possibly a list of mods in this channel. need to log it and see",
-            messagetype: "ChatMods_trigger",
+            messagetype: "trigger_ChatMods",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
             }
-        }, {
+        },*/
+        {
             name: "TwitchChatSubGift",
             displaytitle: "A sub was gifted",
             description: "Someone gifted a sub to another viewer",
-            messagetype: "ChatSubGift_trigger",
+            messagetype: "trigger_ChatSubGift",
             channel: serverConfig.channel,
             parameters: {
                 gifter: "",
@@ -350,7 +354,7 @@ const triggersandactions =
             name: "TwitchChatSubscribers",
             displaytitle: "Channel Subscribers",
             description: "Subscribers",
-            messagetype: "ChatSubscribers_trigger",
+            messagetype: "trigger_ChatSubscribers",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -360,7 +364,7 @@ const triggersandactions =
             name: "TwitchChatVipss",
             displaytitle: "Channel Vips",
             description: "Channel Vips",
-            messagetype: "ChatVips_trigger",
+            messagetype: "trigger_ChatVips",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
@@ -370,34 +374,36 @@ const triggersandactions =
             name: "TwitchChatClear",
             displaytitle: "Clear Chat",
             description: "Chat was cleared",
-            messagetype: "ChatClear_trigger",
+            messagetype: "trigger_ChatClear",
             channel: serverConfig.channel,
             parameters: {
                 channel: "",
             }
-        }, {
+        },
+        /* {
             name: "TwitchChatUnmod",
             displaytitle: "Unmod",
             description: "Someone was un-modded",
-            messagetype: "ChatUnmod_trigger",
+            messagetype: "trigger_ChatUnmod",
             channel: serverConfig.channel,
             parameters: {
                 username: "",
             }
-        }, {
+        },         {
             name: "TwitchChatEmoteSet",
             displaytitle: "EmoteSet",
             description: "Emote set (currently passed through, if there is a need let me know)",
-            messagetype: "ChatEmoteSet_trigger",
+            messagetype: "trigger_ChatEmoteSet",
             channel: serverConfig.channel,
             parameters: {
                 message: "",
             }
-        }, {
+        }, */
+        {
             name: "TwitchChatFollowersOnly",
             displaytitle: "FollowersOnly",
             description: "FollowersOnly mode was changed",
-            messagetype: "ChatFollowersOnly_trigger",
+            messagetype: "trigger_ChatFollowersOnly",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false,
@@ -407,7 +413,7 @@ const triggersandactions =
             name: "TwitchChatGiftPaidUpgrade",
             displaytitle: "GiftPaidUpgrade",
             description: "Someone gifted a paid upgrade",
-            messagetype: "ChatGiftPaidUpgrade_trigger",
+            messagetype: "trigger_ChatGiftPaidUpgrade",
             channel: serverConfig.channel,
             parameters: {
                 sender: "",
@@ -417,7 +423,7 @@ const triggersandactions =
             name: "TwitchChatEmoteOnly",
             displaytitle: "EmoteOnly",
             description: "EmoteOnly mode changed",
-            messagetype: "ChatEmoteOnly_trigger",
+            messagetype: "trigger_ChatEmoteOnly",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false
@@ -426,7 +432,7 @@ const triggersandactions =
             name: "TwitchChatr9kbeta",
             displaytitle: "r9kbeta",
             description: "r9kbeta mode changed",
-            messagetype: "Chatr9kbeta_trigger",
+            messagetype: "trigger_Chatr9kbeta",
             channel: serverConfig.channel,
             parameters: {
                 message: ""
@@ -435,7 +441,7 @@ const triggersandactions =
             name: "TwitchChatSlowmode",
             displaytitle: "Slowmode",
             description: "Slowmode mode changed",
-            messagetype: "ChatSlowmode_trigger",
+            messagetype: "trigger_ChatSlowmode",
             channel: serverConfig.channel,
             parameters: {
                 enabled: false,
@@ -445,7 +451,7 @@ const triggersandactions =
             name: "TwitchChatWhisper",
             displaytitle: "Whisper",
             description: "Someone Whispered you or the bot",
-            messagetype: "ChatWhisper_trigger",
+            messagetype: "trigger_ChatWhisper",
             channel: serverConfig.channel,
             parameters: {
                 from: "",
@@ -455,7 +461,7 @@ const triggersandactions =
             name: "TwitchChatNotice",
             displaytitle: "Notice",
             description: "You received a notice (ie about chat being in follower mode etc)",
-            messagetype: "ChatNotice_trigger",
+            messagetype: "trigger_ChatNotice",
             channel: serverConfig.channel,
             parameters: {
                 msgid: "",
@@ -465,73 +471,77 @@ const triggersandactions =
             name: "TwitchChatDisconnected",
             displaytitle: "Disconnected",
             description: "Chat was Disconnected",
-            messagetype: "ChatDisconnected_trigger",
+            messagetype: "trigger_ChatDisconnected",
             channel: serverConfig.channel,
             parameters: {
                 reason: ""
             }
-        }, {
+        },
+        /*{
             name: "TwitchChatServerChange",
             displaytitle: "ServerChange",
             description: "Chat server changed",
-            messagetype: "ChatServerChange_trigger",
+            messagetype: "trigger_ChatServerChange",
             channel: serverConfig.channel,
             parameters: {
                 channel: ""
             }
-        }, {
+        },*/
+        {
             name: "TwitchChatConnected",
             displaytitle: "Connected",
             description: "Chat was connected",
-            messagetype: "ChatConnected_trigger",
+            messagetype: "trigger_ChatConnected",
             channel: serverConfig.channel,
             parameters: {
                 address: "",
                 port: ""
             }
-        }, {
-            name: "TwitchChatConnecting",
-            displaytitle: "Connecting",
-            description: "Chat is connecting",
-            messagetype: "ChatConnecting_trigger",
-            channel: serverConfig.channel,
-            parameters: {
-                address: "",
-                port: ""
-            }
-        }, {
-            name: "TwitchChatLogon",
-            displaytitle: "Logon",
-            description: "Logged in to chat",
-            messagetype: "ChatLogon_trigger",
-            channel: serverConfig.channel,
-            parameters: {}
-        }, {
-            name: "TwitchChatJoin",
-            displaytitle: "Chat Join",
-            description: "Somone Joined the chat",
-            messagetype: "ChatJoin_trigger",
-            channel: serverConfig.channel,
-            parameters: {
-                username: ""
-            }
-        }, {
-            name: "TwitchChatPart",
-            displaytitle: "Part",
-            description: "Somone Left the chat",
-            messagetype: "ChatPart_trigger",
-            channel: serverConfig.channel,
-            parameters: {
-                username: ""
-            }
-        }],
+        },
+            /* {
+                name: "TwitchChatConnecting",
+                displaytitle: "Connecting",
+                description: "Chat is connecting",
+                messagetype: "trigger_ChatConnecting",
+                channel: serverConfig.channel,
+                parameters: {
+                    address: "",
+                    port: ""
+                }
+            },   {
+                name: "TwitchChatLogon",
+                displaytitle: "Logon",
+                description: "Logged in to chat",
+                messagetype: "trigger_ChatLogon",
+                channel: serverConfig.channel,
+                parameters: {}
+            }, {
+                name: "TwitchChatJoin",
+                displaytitle: "Chat Join",
+                description: "Somone Joined the chat",
+                messagetype: "trigger_ChatJoin",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: ""
+                }
+            }, {
+                name: "TwitchChatPart",
+                displaytitle: "Part",
+                description: "Somone Left the chat",
+                messagetype: "trigger_ChatPart",
+                channel: serverConfig.channel,
+                parameters: {
+                    username: ""
+                }
+            }*/
+        ],
     // these are messages we can receive to perform an action
     actions:
         [{
             name: "TwitchChatSendChatMessage",
             displaytitle: "Post Twitch Message",
             description: "Post a message to twitch chat",
-            messagetype: "SendChatMessage_action",
+            messagetype: "action_SendChatMessage",
             channel: serverConfig.channel,
             parameters: {
                 account: "",
@@ -824,10 +834,10 @@ function onDataCenterMessage (server_packet)
                 }
             }
         }
-        else if (extension_packet.type === "SendChatMessage")
+        else if (extension_packet.type === "action_SendChatMessage")
         {
             if (serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH === "off")
-                sendChatMessage(serverConfig.streamername, extension_packet.data)
+                action_SendChatMessage(serverConfig.streamername, extension_packet.data)
             else
             {
                 let name = ""
@@ -837,7 +847,7 @@ function onDataCenterMessage (server_packet)
                     name = localConfig.usernames.bot.name
                 else
                     name = extension_packet.data.account
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "SendChatMessage diverted due to debug message flag", extension_packet.data.message);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage diverted due to debug message flag", extension_packet.data.message);
                 console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
             }
@@ -1228,11 +1238,11 @@ function process_chat_data (channel, tags, chatmessage)
 }
 
 // ============================================================================
-//                     FUNCTION: sendChatMessage
+//                     FUNCTION: action_SendChatMessage
 // ============================================================================
 // Desription: Send message to twitch
 // ===========================================================================
-function sendChatMessage (channel, data)
+function action_SendChatMessage (channel, data)
 {
     let sent = false
     let account = null;
@@ -1257,7 +1267,7 @@ function sendChatMessage (channel, data)
         {
             localConfig.twitchClient[account].connection.say(channel, data.message)
                 .then(logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "message sent ", channel, data.message))
-                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "sendChatMessage error", e) })
+                .catch((e) => { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + "action_SendChatMessage error", e) })
             sent = true;
         }
         if (!sent)
@@ -1449,7 +1459,7 @@ function chatLogin (account)
             {
                 file_log("action", userstate, message);
                 process_chat_data(channel, userstate, message);
-                postChatTrigger("ChatActionReceived", {
+                postChatTrigger("trigger_ChatActionReceived", {
                     sender: userstate['display-name'],
                     message: message,
                     firstmessage: userstate['first-msg'],
@@ -1465,7 +1475,7 @@ function chatLogin (account)
                 userstate["message-type"] = "ban";
                 process_chat_data(channel, userstate, " Ban: (" + username + ") " + userstate['ban-duration'] + ". " + ((reason) ? reason : ""));
 
-                postChatTrigger("ChatBanReceived", {
+                postChatTrigger("trigger_ChatBanReceived", {
                     username: username,
                     message: reason
                 })
@@ -1474,7 +1484,7 @@ function chatLogin (account)
             {
                 //file_log("chat", userstate, message);
                 process_chat_data(channel, userstate, message);
-                postChatTrigger("ChatMessageReceived", {
+                postChatTrigger("trigger_ChatMessageReceived", {
                     sender: userstate['display-name'],
                     message: message,
                     firstmessage: userstate['first-msg'],
@@ -1487,7 +1497,7 @@ function chatLogin (account)
             {
                 file_log("messagedeleted", userstate, deletedMessage); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, "Message deleted: (" + username + ") " + deletedMessage);
-                postChatTrigger("ChatMessageDeleted", {
+                postChatTrigger("trigger_ChatMessageDeleted", {
                     username: username,
                     message: deletedMessage,
                 })
@@ -1496,7 +1506,7 @@ function chatLogin (account)
             {
                 file_log("primepaidupgrade", userstate, methods);
                 process_chat_data(channel, userstate, "");
-                postChatTrigger("ChatPrimePaidUpgrade", {
+                postChatTrigger("trigger_ChatPrimePaidUpgrade", {
                     username: username
                 })
             });
@@ -1504,7 +1514,7 @@ function chatLogin (account)
             {
                 file_log("raided", username, viewers);
                 process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "raided", "viewers": viewers }, "raided: Raid from " + username + " with " + viewers);
-                postChatTrigger("ChatPrimePaidUpgrade", {
+                postChatTrigger("trigger_ChatRaid", {
                     username: username,
                     viewers: viewers
                 })
@@ -1515,7 +1525,7 @@ function chatLogin (account)
                 file_log("redeem", tags, rewardType);
 
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "redeem", tags: tags }, message + "");
-                postChatTrigger("ChatRedeem", {
+                postChatTrigger("trigger_ChatRedeem", {
                     username: username,
                     message: message,
                     rewardType: rewardType
@@ -1525,7 +1535,7 @@ function chatLogin (account)
             {
                 file_log("resub", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, ((message) ? message : ""));
-                postChatTrigger("ChatResub", {
+                postChatTrigger("trigger_ChatResub", {
                     username: username,
                     message: message,
                     months: months
@@ -1539,7 +1549,7 @@ function chatLogin (account)
                 localConfig.twitchClient["user"].state.r9k = state.r9k;
                 localConfig.twitchClient["user"].state.slowmode = state.slow;
                 localConfig.twitchClient["user"].state.subsonly = state['subs-only'];
-                postChatTrigger("ChatRoomstate", {
+                postChatTrigger("trigger_ChatRoomstate", {
                     channel: channel,
                     emoteonly: state["emote-only"],
                     followersonly: (state['followers-only'] === false) ? 0 : state['followers-only'],
@@ -1552,7 +1562,7 @@ function chatLogin (account)
             {
                 file_log("subscription", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, message);
-                postChatTrigger("ChatSubscription", {
+                postChatTrigger("trigger_ChatSubscription", {
                     username: username,
                     message: message,
                     subplan: userstate["msg-param-sub-plan"]
@@ -1562,7 +1572,7 @@ function chatLogin (account)
             {
                 file_log("timeout", userstate, reason); userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
                 process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
-                postChatTrigger("ChatTimeout", {
+                postChatTrigger("trigger_ChatTimeout", {
                     username: username,
                     message: reason,
                     duration: duration
@@ -1574,32 +1584,32 @@ function chatLogin (account)
             {
                 file_log("submysterygift", userstate, username); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, userstate['system-msg']);
-                postChatTrigger("ChatSubMysteryGift", {
+                postChatTrigger("trigger_ChatSubMysteryGift", {
                     username: username,
                     message: userstate['system-msg'],
                 })
             });
 
             // still working on these single user ones
-            localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
-            {
-                file_log("automod", msgID, message);
-                process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
-                postChatTrigger("ChatAutoMod", {
-                    msgID: msgID,
-                    message: message,
-                });
-            });
+            /*   localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
+               {
+                   file_log("automod", msgID, message);
+                   process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
+                   postChatTrigger("trigger_ChatAutoMod", {
+                       msgID: msgID,
+                       message: message,
+                   });
+               });*/
             localConfig.twitchClient[account].connection.on("reconnect", () => 
             {
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "reconnect" }, "reconnect: Reconnect");
-                postChatTrigger("ChatReconnect", {});
+                postChatTrigger("trigger_ChatReconnect", {});
             });
             localConfig.twitchClient[account].connection.on("anongiftpaidupgrade", (channel, username, userstate) => 
             {
                 file_log("anongiftpaidupgrade", userstate, username);
                 process_chat_data(channel, userstate, "anongiftpaidupgrade: " + username);
-                postChatTrigger("ChatAnonGiftPaidUpgrade", {
+                postChatTrigger("trigger_ChatAnonGiftPaidUpgrade", {
                     username: username
                 });
             });
@@ -1607,7 +1617,7 @@ function chatLogin (account)
             {
                 file_log("anonsubmysterygift", userstate, methods);
                 process_chat_data(channel, userstate, "anonsubmysterygift: " + numbOfSubs);
-                postChatTrigger("ChatAnonSubMysteryGift", {
+                postChatTrigger("trigger_ChatAnonSubMysteryGift", {
                     message: "anonsubmysterygift: " + numbOfSubs
                 });
 
@@ -1616,7 +1626,7 @@ function chatLogin (account)
             {
                 file_log("anonsubgift", userstate, methods);
                 process_chat_data(channel, userstate, "anonsubgift: " + streakMonths + " : " + recipient);
-                postChatTrigger("ChatAnonSubGift", {
+                postChatTrigger("trigger_ChatAnonSubGift", {
                     recipient: recipient
                 });
             });
@@ -1624,32 +1634,33 @@ function chatLogin (account)
             {
                 file_log("cheer", userstate, message);
                 process_chat_data(channel, userstate, "cheer: " + message);
-                postChatTrigger("ChatCheer", {
+                postChatTrigger("trigger_ChatAnonSubGift", {
                     username: userstate["username"],
                     message: message
                 });
             });
-            localConfig.twitchClient[account].connection.on("mod", (channel, username) => 
-            {
-                file_log("mod", username, "");
-                process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
-                postChatTrigger("ChatMod", {
-                    username: username
-                });
-            });
-            localConfig.twitchClient[account].connection.on("mods", (channel, tags, message, self) => 
-            {
-                file_log("mods", tags, message);
-                process_chat_data(channel, tags, "mods: " + message);
-                postChatTrigger("ChatMods", {
-                    message: message
-                });
-            });
+            /*  localConfig.twitchClient[account].connection.on("mod", (channel, username) => 
+              {
+                  file_log("mod", username, "");
+                  process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
+                  postChatTrigger("trigger_ChatMod", {
+                      username: username
+                  });
+              });
+              localConfig.twitchClient[account].connection.on("mods", (channel, tags, message, self) => 
+              {
+                  file_log("mods", tags, message);
+                  process_chat_data(channel, tags, "mods: " + message);
+                  postChatTrigger("trigger_ChatMods", {
+                      message: message
+                  });
+              });
+  */
             localConfig.twitchClient[account].connection.on("subgift", (channel, username, streakMonths, self, recipient, methods, userstate) => 
             {
                 file_log("subgift", userstate, username + ":" + streakMonths + ":" + recipient);
                 process_chat_data(channel, userstate, "subgift: Subgift from " + username + " for " + recipient + " months " + streakMonths);
-                postChatTrigger("ChatSubGift", {
+                postChatTrigger("trigger_ChatSubGift", {
                     gifter: username,
                     recipient: recipient,
                 });
@@ -1658,7 +1669,7 @@ function chatLogin (account)
             {
                 file_log("subscribers", channel, enabled);
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "subscribers" }, "subscribers: " + enabled);
-                postChatTrigger("ChatSubscribers", {
+                postChatTrigger("trigger_ChatSubscribers", {
                     channel: channel,
                     enabled: enabled,
                 });
@@ -1667,7 +1678,7 @@ function chatLogin (account)
             {
                 file_log("vips", vips, "");
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "vips" }, "vips: VIPS are :" + vips.join(" : "));
-                postChatTrigger("ChatVips", {
+                postChatTrigger("trigger_ChatVips", {
                     channel: channel,
                     vips: vips
                 });
@@ -1676,17 +1687,17 @@ function chatLogin (account)
             {
                 file_log("clear", channel, "");
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "clearchat" }, "clearchat: Chat has been cleared");
-                postChatTrigger("ChatClear", {
+                postChatTrigger("trigger_ChatClear", {
                     channel: channel
                 });
             });
 
             //localConfig.twitchClient[account].connection.on("unhost", (channel, viewers) => { file_log("unhost", viewers, ""); process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "unhost" }, "unhost: Unhosted for " + viewers + "viewers"); });
-            localConfig.twitchClient[account].connection.on("unmod", (channel, username) =>
+            /*localConfig.twitchClient[account].connection.on("unmod", (channel, username) =>
             {
                 file_log("unmod", username, "");
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "unmod" }, "unmod: " + username + " UnModded");
-                postChatTrigger("ChatUnmod", {
+                postChatTrigger("trigger_ChatUnmod", {
                     username: username
                 });
             });
@@ -1694,15 +1705,15 @@ function chatLogin (account)
             {
                 file_log("emotesets", sets, obj);
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "emotesets" }, "emotesets: " + sets);
-                postChatTrigger("ChatEmoteSet", {
+                postChatTrigger("trigger_ChatEmoteSet", {
                     message: "TBD"
                 });
-            });
+            });*/
             localConfig.twitchClient[account].connection.on("followersonly", (channel, enabled, length) => 
             {
                 file_log("followersonly", enabled, length);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "followersonly" }, "followersonly: " + length + " Follower Only mode : " + enabled);
-                postChatTrigger("ChatFollowersOnly", {
+                postChatTrigger("trigger_ChatFollowersOnly", {
                     enabled: enabled,
                     length: length
                 });
@@ -1711,7 +1722,7 @@ function chatLogin (account)
             {
                 file_log("giftpaidupgrade", userstate, sender + ":" + username);
                 process_chat_data(channel, userstate, "giftpaidupgrade: " + sender + " updradeged " + username + " with a gift paid upgrade");
-                postChatTrigger("ChatGiftPaidUpgrade", {
+                postChatTrigger("trigger_ChatGiftPaidUpgrade", {
                     sender: sender,
                     recipient: username,
                 });
@@ -1722,7 +1733,7 @@ function chatLogin (account)
             {
                 file_log("emoteonly", channel, enabled);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "emoteonly" }, "emoteonly: Chat emote only mode :" + enabled);
-                postChatTrigger("ChatEmoteOnly", {
+                postChatTrigger("trigger_ChatEmoteOnly", {
                     enabled: enabled
                 });
             });
@@ -1730,7 +1741,7 @@ function chatLogin (account)
             {
                 file_log("r9kbeta", tags, message);
                 process_chat_data(channel, tags, "r9kbeta: " + message);
-                postChatTrigger("Chatr9kbeta", {
+                postChatTrigger("trigger_Chatr9kbeta", {
                     message: message
                 });
             });
@@ -1738,7 +1749,7 @@ function chatLogin (account)
             {
                 file_log("slowmode", enabled, length);
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "slowmode" }, "slowmode: " + enabled + " enabled for " + length);
-                postChatTrigger("ChatSlowmode", {
+                postChatTrigger("trigger_ChatSlowmode", {
                     enabled: enabled,
                     length: length
 
@@ -1754,7 +1765,7 @@ function chatLogin (account)
         {
             file_log("whisper", userstate, message);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": from, "emotes": "", "message-type": "whisper" }, "whisper: " + message);
-            postChatTrigger("ChatWhisper", {
+            postChatTrigger("trigger_ChatWhisper", {
                 from: from,
                 message: message
             });
@@ -1763,7 +1774,7 @@ function chatLogin (account)
         {
             file_log("notice", msgid, message);
             process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
-            postChatTrigger("ChatNotice", {
+            postChatTrigger("trigger_ChatNotice", {
                 msgid: msgid,
                 message: message
             });
@@ -1773,32 +1784,32 @@ function chatLogin (account)
         localConfig.twitchClient[account].connection.on("disconnected", (reason) =>
         {
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "disconnected" }, "disconnected: " + reason);
-            postChatTrigger("ChatDisconnected", {
+            postChatTrigger("trigger_ChatDisconnected", {
                 reason: reason
             });
         });
-        localConfig.twitchClient[account].connection.on("serverchange", (channel) => 
+        /*localConfig.twitchClient[account].connection.on("serverchange", (channel) => 
         {
             file_log("serverchange", channel, channel);
             process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "serverchange" }, "serverchange: " + channel);
-            postChatTrigger("ChatServerChange", {
+            postChatTrigger("trigger_ChatServerChange", {
                 channel: channel
             });
-        });
+        });*/
         localConfig.twitchClient[account].connection.on("connected", (address, port) => 
         {
             file_log("connected", address, port);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connected" }, "connected:" + address + ": " + port);
-            postChatTrigger("ChatConnected", {
+            postChatTrigger("trigger_ChatConnected", {
                 address: address,
                 port: port
             });
         });
-        localConfig.twitchClient[account].connection.on("connecting", (address, port) => 
+        /*localConfig.twitchClient[account].connection.on("connecting", (address, port) => 
         {
             file_log("connecting", address, port);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connecting" }, "connecting: " + address + ":" + port);
-            postChatTrigger("ChatConnecting", {
+            postChatTrigger("trigger_ChatConnecting", {
                 address: address,
                 port: port
             });
@@ -1807,23 +1818,25 @@ function chatLogin (account)
         {
             file_log("logon", "", "");
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "logon" }, "logon:");
-            postChatTrigger("ChatLogon", {});
+            postChatTrigger("trigger_ChatLogon", {});
         });
         localConfig.twitchClient[account].connection.on("join", (channel, username, self) =>
         {
             file_log("join", channel, username);
-            updateUserList({ username: username, platform: 'twitch' }) /*process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel);*/
-            postChatTrigger("ChatJoin", {
+            updateUserList({ username: username, platform: 'twitch' }) 
+            //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel);
+            postChatTrigger("trigger_ChatJoin", {
                 username: username
             });
         });
         localConfig.twitchClient[account].connection.on("part", (channel, username, self) =>
         {
-            file_log("part", channel, username); /*process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "part" }, "part: " + username);*/
-            postChatTrigger("ChatPart", {
+            file_log("part", channel, username); 
+            //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "part" }, "part: " + username);
+            postChatTrigger("trigger_ChatPart", {
                 username: username
             });
-        });
+        });*/
         //localConfig.twitchClient[account].connection.on("ping", () => { file_log("ping", "", "");/* process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "ping" }, "ping"); */ });
         //localConfig.twitchClient[account].connection.on("pong", (latency) => { file_log("pong", String(latency), "");/* process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "pong" }, String(latency));*/ });
     }
