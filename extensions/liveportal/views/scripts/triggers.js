@@ -22,7 +22,7 @@ sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePor
 */
 
 // ============================================================================
-//                           FUNCTION: receivedTrigger
+//                           FUNCTION: initiTriggersAndActions
 // ============================================================================
 function initiTriggersAndActions (extension_list)
 {
@@ -49,6 +49,7 @@ function initiTriggersAndActions (extension_list)
 }
 // ============================================================================
 //                           FUNCTION: receivedTrigger
+//                           received triggers/actions from extension
 // ============================================================================
 function receivedTrigger (triggers)
 {
@@ -58,6 +59,8 @@ function receivedTrigger (triggers)
     if (triggers.actions)
         localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
     // update the page with the new triggeroptions
+
+    PopulateGroupNamesDropdown();
     addTriggersWidgetLarge();
     addActionsWidgetLarge();
     PopulateTriggersTable();
@@ -226,11 +229,39 @@ function actionLoadParameters (id)
 
 }
 // ============================================================================
+//                FUNCTION: PopulateGroupNamesDropdown
+//                  populates the group dropdown
+// ============================================================================
+function PopulateGroupNamesDropdown ()
+{
+    // clear the existing page data
+    let GroupChoser = document.getElementById("triggerExtensionGroupName")
+    // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
+    let groupnames
+    for (var key in serverData.AllTriggersAndActions)
+    {
+        if (groupnames == "")
+        {
+            groupnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
+            GroupChoser.title = key
+        }
+        else
+            groupnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
+    }
+    GroupChoser.innerHTML = groupnames;
+}
+
+
+// end create trigger form
+
+
+// ============================================================================
 //                           FUNCTION: createTriggerAction
 //                           called when form submitted
 // ============================================================================
 function createTriggerAction (e)
 {
+    let groupname = document.getElementById("triggerExtensionGroupName").value
     let SingleEvent = {
         trigger:
         {
@@ -274,8 +305,13 @@ function createTriggerAction (e)
         }
     }
     // add this action to the list
-    if (checkTriggerIsValid(SingleEvent))
-        serverData.AllTriggersAndActions.default.push(SingleEvent);
+    if (checkTriggerIsValid(SingleEvent) && groupname != "")
+    {
+        if (!serverData.AllTriggersAndActions[groupname])
+            alert("group doesn't exist", groupname)
+        else
+            serverData.AllTriggersAndActions[groupname].list.push(SingleEvent);
+    }
 
     SaveDataToServer();
     PopulateTriggersTable();
@@ -305,43 +341,43 @@ function checkTriggerIsValid (trigger)
 // ============================================================================
 function CheckTriggers (event)
 {
-    serverData.AllTriggersAndActions.default.forEach((entry) =>
+    for (var group in serverData.AllTriggersAndActions)
     {
-
-        if (event.dest_channel === entry.trigger.channel
-            && event.from === entry.trigger.extension
-            && event.type === entry.trigger.type
-        )
+        serverData.AllTriggersAndActions[group].list.forEach((entry) =>
         {
-            // if parameters are entered we need to check that they all match
-            // before we trigger the action
-            let match = true
-            // we have the correct extension, channel and message type
-            // lets check the variables to see if those are a match
-            entry.trigger.data.forEach((param) =>
+
+            if (event.dest_channel === entry.trigger.channel
+                && event.from === entry.trigger.extension
+                && event.type === entry.trigger.type
+            )
             {
-                for (var i in param)
+                // if parameters are entered we need to check that they all match
+                // before we trigger the action
+                let match = true
+                // we have the correct extension, channel and message type
+                // lets check the variables to see if those are a match
+                entry.trigger.data.forEach((param) =>
                 {
-                    // we have matched the trigger
-                    // check the params if we have them
-                    // if we have a string entered and it doesn't match the don't trigger
-                    if (typeof event.data[i] == "string")// && typeof param[i] === "string")
+                    for (var i in param)
                     {
-                        if (param[i] != "" && event.data[i].toLowerCase() != param[i].toLowerCase())
+                        // we have matched the trigger
+                        // check the params if we have them
+                        // if we have a string entered and it doesn't match the don't trigger
+                        if (typeof event.data[i] == "string")// && typeof param[i] === "string")
+                        {
+                            if (param[i] != "" && event.data[i].toLowerCase() != param[i].toLowerCase())
+                                match = false;
+                        }
+                        //check non string types for non matching
+                        else if (param[i] != "" && event.data[i] != param[i])
                             match = false;
                     }
-                    //check non string types for non matching
-                    else if (param[i] != "" && event.data[i] != param[i])
-                        match = false;
-
-
-                }
-            })
-            if (match)
-                TriggerAction(entry.action, event)
-        }
-
-    })
+                })
+                if (match)
+                    TriggerAction(entry.action, event)
+            }
+        })
+    }
 }
 // ============================================================================
 //                          FUNCTION: TriggerAction
@@ -379,70 +415,125 @@ function TriggerAction (action, triggerparams)
 function PopulateTriggersTable ()
 {
     let table = document.getElementById("TriggersAndActionsTable")
-    let TandAs = serverData.AllTriggersAndActions.default
-
-    let tablerows = "<tbody>";
-    // tablerows += "<div col-md-1'>"
-    // tablerows += "<div placeholder='" + TandAs[i].trigger.extension + "'>" + TandAs[i].trigger.extension + "</div>"
-
-    for (let i = 0; i < TandAs.length; i++) 
+    table.innerHTML = "";
+    let TandAs = serverData.AllTriggersAndActions
+    let tablerows = ""
+    for (let g in TandAs)
     {
-        tablerows += "<tr>"
-        tablerows += "<td scope='row'>" + i + "</td>"
-        tablerows += "<td scope='row' role='button' onclick='delteTriggerAction(" + i + ")'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z'/><path d='M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z'/></svg ></td > "
-        // TRIGGERS
-        tablerows += "<td>" + TandAs[i].trigger.extension + "</td>"
-        tablerows += "<td>" + TandAs[i].trigger.type + "</td>"
-        tablerows += "<td>"
-        let morethanoneentry = false
-        for (let j = 0; j < TandAs[i].trigger.data.length; j++) 
+        let group = serverData.AllTriggersAndActions[g]
+        let list = group.list
+
+        // show hide link for the table
+        tablerows += "<div><H5>Group: " + g + " </h5><a href='javascript:ShowHideTriggerGroup(\"" + g + "\");'>Show/Hide</a><a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> ";
+        if (group.show)
+            tablerows += "</div><tbody id='" + g + "_TriggerGroupDisplay'style='display: block;'>";
+        else
+            tablerows += "</div><tbody id='" + g + "_TriggerGroupDisplay'style='display: none;'>";
+
+        // table data
+        for (let i = 0; i < list.length; i++) 
         {
-            if (morethanoneentry)
-                tablerows += ", ";
-            morethanoneentry = true;
+            tablerows += "<tr>"
+            tablerows += "<td scope='row'>" + i + "</td>"
+            tablerows += "<td scope='row' role='button' onclick='delteTriggerAction(\"" + g + "\"," + i + ")'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z'/><path d='M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z'/></svg ></td > "
+            // TRIGGERS
+            tablerows += "<td>" + list[i].trigger.extension + "</td>"
+            tablerows += "<td>" + list[i].trigger.type + "</td>"
+            tablerows += "<td>"
+            let morethanoneentry = false
+            for (let j = 0; j < list[i].trigger.data.length; j++) 
+            {
+                if (morethanoneentry)
+                    tablerows += ", ";
+                morethanoneentry = true;
 
-            // we have amtched the trigger
-            for (let item in TandAs[i].trigger.data[j])
-                //tablerows += TandAs[i].trigger.data[j] + " "
-                tablerows += item + " = " + TandAs[i].trigger.data[j][item];
+                // we have amtched the trigger
+                for (let item in list[i].trigger.data[j])
+                    //tablerows += list[i].trigger.data[j] + " "
+                    tablerows += item + " = " + list[i].trigger.data[j][item];
+            }
+            tablerows += "</td>"
+
+            // ACTIONS
+            tablerows += "<td>" + list[i].action.extension + "</td>"
+            tablerows += "<td>" + list[i].action.type + "</td>"
+            tablerows += "<td>"
+            morethanoneentry = false
+            for (let j = 0; j < list[i].action.data.length; j++) 
+            {
+                if (morethanoneentry)
+                    tablerows += ", ";
+                morethanoneentry = true;
+                // we have amtched the action
+                for (let item in list[i].action.data[j])
+                    //tablerows += list[i].action.data[j] + " "
+                    tablerows += item + " = " + list[i].action.data[j][item];
+            }
+            tablerows += "</td>"
+            tablerows += "</tr >"
         }
-        tablerows += "</td>"
-
-        // ACTIONS
-        tablerows += "<td>" + TandAs[i].action.extension + "</td>"
-        tablerows += "<td>" + TandAs[i].action.type + "</td>"
-        tablerows += "<td>"
-        morethanoneentry = false
-        for (let j = 0; j < TandAs[i].action.data.length; j++) 
-        {
-            if (morethanoneentry)
-                tablerows += ", ";
-            morethanoneentry = true;
-            // we have amtched the action
-            for (let item in TandAs[i].action.data[j])
-                //tablerows += TandAs[i].action.data[j] + " "
-                tablerows += item + " = " + TandAs[i].action.data[j][item];
-        }
-        tablerows += "</td>"
-
-
-
-
-
-        tablerows += "</tr >"
-
-
-
-
+        // tablerows += "</div>";
+        tablerows += "</tbody>";
     }
-    // tablerows += "</div>";
-    tablerows += "</tbody>";
+    // new group option
+    tablerows += "<form><div class='form-group d-flex py-2'><div class='col-xs-1'>"
+    tablerows += "New Group name :<input type='text' id='triggergroupcreatename' style='width: 200px;' onkeypress='return /[0-9a-zA-Z]/i.test(event.key)'></div>"
+    tablerows += "<a class='btn btn-primary' href = 'javascript:createNewTriggerGroup();' role = 'button'> Create</a></form>"
     table.innerHTML = tablerows
+    PopulateGroupNamesDropdown();
 }
 
-function delteTriggerAction (id)
+// ============================================================================
+//                          FUNCTION: ShowHideTriggerGroup
+//                          callback for show/hide button
+// ============================================================================
+function ShowHideTriggerGroup (name)
 {
-    serverData.AllTriggersAndActions.default.splice(id, 1)
+    let group = document.getElementById(name + "_TriggerGroupDisplay")
+    serverData.AllTriggersAndActions[name].show = !serverData.AllTriggersAndActions[name].show;
+    if (serverData.AllTriggersAndActions[name].show)
+        group.style.display = "block"
+    else
+        group.style.display = "none"
+    SaveDataToServer()
+}
+// ============================================================================
+//                          FUNCTION: DeleteTriggerGroup
+//                          callback for show/hide button
+// ============================================================================
+function DeleteTriggerGroup (name)
+{
+    if (serverData.AllTriggersAndActions[name])
+    {
+        if (serverData.AllTriggersAndActions[name].list.length > 0)
+            alert("Group: not empty")
+        else
+            delete serverData.AllTriggersAndActions[name]
+    }
+    else
+        alert("can't find group")
+    PopulateTriggersTable()
+    PopulateGroupNamesDropdown();
+    SaveDataToServer()
+}
+// ============================================================================
+//                          FUNCTION: createNewTriggerGroup
+//                          Create new trigger group
+// ============================================================================
+function createNewTriggerGroup ()
+{
+    let groupname = document.getElementById("triggergroupcreatename").value
+    serverData.AllTriggersAndActions[groupname] = { show: true, list: [] }
+    SaveDataToServer()
+    PopulateTriggersTable()
+}
+// ============================================================================
+//                          FUNCTION: delteTriggerAction
+//                          delete a trigger entry
+// ============================================================================
+function delteTriggerAction (group, id)
+{
+    serverData.AllTriggersAndActions[group].list.splice(id, 1)
     SaveDataToServer();
     PopulateTriggersTable();
 }

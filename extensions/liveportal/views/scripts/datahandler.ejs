@@ -86,7 +86,7 @@
     };
     let serverConfig = structuredClone(default_serverConfig);
     let serverData = {}
-    serverData.AllTriggersAndActions = { "default": [] };
+    serverData.AllTriggersAndActions = { "default": { show: true, list: [] } };
 
     const localConfig =
     {
@@ -348,6 +348,7 @@
                 if (server_packet.to === serverConfig.extensionname)
                 {
                     serverData = structuredClone(server_packet.data);
+                    SaveDataToServer();
                 }
             }
         }

@@ -32,6 +32,17 @@
         raise an issue on github). I have a long list of extension feature still left to add so I can push requests to
         the top of the list for you</B>
     </p>
+    <h4>Group to add to (groups just help keep the lists tidy)</h4>
+    <form class="form-inline">
+      <div class=" form-group d-flex">
+        <div class="form-group">
+          <!-- group option list-->
+          <select id="triggerExtensionGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger"
+            title="box one" value="1" name="triggerExtensionGroupName">
+          </select>
+        </div>
+      </div>
+    </form>
     <h4>Trigger</h4>
 
     <form class="form-inline" onsubmit="return createTriggerAction(this)">
@@ -39,9 +50,9 @@
         <div class="form-group">
           <!-- hidden varialbes set when user changes the options -->
           <input id="triggerExtensionChoserTriggerName" type="hidden" name="triggerExtensionChoserTriggerName"
-            class="form-control" value="somvalue" tabindex="-1" />
+            class="form-control" value="somevalue" tabindex="-1" />
           <input id="triggerExtensionChoserChannel" type="hidden" name="triggerExtensionChoserChannel"
-            class="form-control" value="somvalue" tabindex="-1" />
+            class="form-control" value="somevalue" tabindex="-1" />
           <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
             title="box one" value="1" name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
           </select>
@@ -63,9 +74,9 @@
       <div class="form-group d-flex">
         <div class="form-group">
           <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName"
-            class="form-control" value="somvalue" tabindex="-1" />
+            class="form-control" value="somevalue" tabindex="-1" />
           <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
-            class="form-control" value="somvalue" tabindex="-1" />
+            class="form-control" value="somevalue" tabindex="-1" />
           <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
             title="box one" value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
           </select>
@@ -91,32 +102,6 @@
       <HR>
       <h4>Current Triggers and actions</h4>
       <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
-        <!--
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">extension</th>
-            <th scope="col">type</th>
-            <th scope="col">data</th>
-          </tr>
-
-        </thead>
-      -->
-
-
-        <tr>
-          <th scope="row">2</th>
-          <td>Jacob</td>
-          <td>Thornton</td>
-          <td>@fat</td>
-        </tr>
-        <tr>
-          <th scope="row">3</th>
-          <td>Larry</td>
-          <td>the Bird</td>
-          <td>@twitter</td>
-        </tr>
-        </tbody>
       </table>
     </form>
   </div>
