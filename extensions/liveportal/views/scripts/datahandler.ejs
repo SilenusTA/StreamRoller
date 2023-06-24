@@ -83,9 +83,11 @@
         chatmessagebuffermaxsize: 300,
         discordmessagebuffermaxsize: 300,
         liveportal_restore_defaults: "off",
-        AllTriggersAndActions: []
     };
     let serverConfig = structuredClone(default_serverConfig);
+    let serverData = {}
+    serverData.AllTriggersAndActions = { "default": [] };
+
     const localConfig =
     {
         OBSSceneslist: {},
@@ -260,6 +262,9 @@
                 serverConfig.channel
             ));
 
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("RequestData", serverConfig.extensionname));
+
         // Request the stuff we need first here
         // We give the system some time to get things in and delay some of the longer stuff till the end (like the chat buffers) 
         // This is just to allow the extensions to get up and running
@@ -320,11 +325,12 @@
                     // update our config
                     if (server_packet.data != "")
                     {
-                        for (const [key, value] of Object.entries(serverConfig))
+                        serverConfig = structuredClone(server_packet.data)
+                        /*for (const [key, value] of Object.entries(serverConfig))
                         {
                             if (key in server_packet.data)
                                 serverConfig[key] = server_packet.data[key];
-                        }
+                        }*/
                     }
                 }
                 setCardsVisibility();
@@ -338,6 +344,18 @@
                 // updates their version of streamroller
                 SaveConfigToServer();
             }
+        }
+        else if (server_packet.type === "DataFile")
+        {
+            if (server_packet.data != "")
+            {
+                // check it is our data
+                if (server_packet.to === serverConfig.extensionname)
+                {
+                    serverData = structuredClone(server_packet.data);
+                }
+            }
+            console.log("test", serverData)
         }
         // -------------------------------------------------------------------------------------------------
         //                  RECEIVED CHANNEL LIST
@@ -707,7 +725,7 @@
             {
                 if (extension_packet.type === "ScenesList")
                     ParseOBSScenesList(extension_packet.data)
-                else if (extension_packet.type === "SceneChanged")
+                else if (extension_packet.type === "trigger_SceneChanged")
                 {
                     localConfig.OBSSceneslist.current = extension_packet.data.sceneName;
                     ParseOBSScenesList(localConfig.OBSSceneslist);
@@ -723,7 +741,7 @@
 
                     ProcessOBSStats(extension_packet.data);
                 }
-                else if (extension_packet.type === "StreamStarted")
+                else if (extension_packet.type === "trigger_StreamStarted")
                 {
                     localConfig.obslive = true;
                     OBSLiveCheck();
@@ -877,6 +895,22 @@
                 serverConfig.extensionname,
                 serverConfig,
             ));
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveDataToServer
+    // ============================================================================
+    // Desription:save data on backend data store
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function SaveDataToServer ()
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveData",
+                serverConfig.extensionname,
+                serverData));
     }
     // ============================================================================
     //                           FUNCTION: loadExtensionCards
@@ -1558,7 +1592,7 @@
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "ToggleFilter",
+                        "action_ToggleFilter",
                         serverConfig.extensionname,
                         {
                             sourceName: scenename,//"#4x3_Cam",
@@ -2771,7 +2805,7 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "AddSongToQueue",
+                    "action_AddSongToQueue",
                     serverConfig.extensionname,
                     songId,
                     "",
@@ -2815,7 +2849,7 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "MarkSongAsPlayed",
+                    "action_MarkSongAsPlayed",
                     serverConfig.extensionname,
                     queueId,
                     "",

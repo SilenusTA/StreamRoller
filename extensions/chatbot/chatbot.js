@@ -352,7 +352,7 @@ function onDataCenterMessage (server_packet)
                 // was this a song request (this code can be removed once we have param passing sorted in the trigger code)
                 if (extension_packet.data.triggerparams.songName)
                 {
-                    if (extension_packet.data.triggerparams.messagetype == "SongAddedToQueue")
+                    if (extension_packet.data.triggerparams.messagetype == "trigger_SongAddedToQueue")
                     {
                         extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " song was added to the song request queue, what do you thinkof it (quote " + extension_packet.data.triggerparams.songName + " in your response and thank them for adding it)"
                     }

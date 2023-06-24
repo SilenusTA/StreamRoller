@@ -118,7 +118,7 @@ const triggersandactions =
                 name: "SSLSongAddedToQueue",
                 displaytitle: "Song Added To Queue",
                 description: "Song was added to queue",
-                messagetype: "SongAddedToQueue",
+                messagetype: "trigger_SongAddedToQueue",
                 channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
@@ -127,7 +127,7 @@ const triggersandactions =
                 name: "SSLCurrentSongChanged",
                 displaytitle: "Current Song Changed",
                 description: "Current song changed",
-                messagetype: "CurrentSongChange",
+                messagetype: "trigger_CurrentSongChange",
                 channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
@@ -140,7 +140,7 @@ const triggersandactions =
                 name: "SSLCurrentSongChanged",
                 displaytitle: "Add Song To Queue",
                 description: "Add a song to the queue",
-                messagetype: "AddSongToQueue",
+                messagetype: "action_AddSongToQueue",
                 channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
@@ -149,7 +149,7 @@ const triggersandactions =
                 name: "SSLPlaySong",
                 displaytitle: "Mark Song as played",
                 description: "Mark a song as played",
-                messagetype: "MarkSongAsPlayed",
+                messagetype: "action_MarkSongAsPlayed",
                 channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
@@ -250,6 +250,8 @@ function onDataCenterMessage (server_packet)
             localConfig.clientId = server_packet.data.clientId;
             localConfig.userId = server_packet.data.userId;
             localConfig.streamerId = server_packet.data.streamerId;
+            // testing with a real songlist
+
             // now we have our credentials lets join the server for callbacks
             localConfig.ssl_client = io("https://api.streamersonglist.com", {
                 transports: ["websocket"],
@@ -271,7 +273,7 @@ function onDataCenterMessage (server_packet)
                                     sr_api.ServerPacket("ChannelData",
                                         serverConfig.extensionname,
                                         sr_api.ExtensionPacket(
-                                            "SongAddedToQueue",
+                                            "trigger_SongAddedToQueue",
                                             serverConfig.extensionname,
                                             { songName: msg.title },
                                             serverConfig.channel),
@@ -354,14 +356,14 @@ function onDataCenterMessage (server_packet)
         {
             sendSonglist(extension_packet.from);
         }
-        else if (extension_packet.type === "AddSongToQueue")
+        else if (extension_packet.type === "action_AddSongToQueue")
         {
             if (extension_packet.data.songName)
                 addSongToQueuebyName(extension_packet.data.songName)
             else
                 addSongToQueueById(extension_packet.data);
         }
-        else if (extension_packet.type === "MarkSongAsPlayed")
+        else if (extension_packet.type === "action_MarkSongAsPlayed")
         {
             markSongAsPlayed(extension_packet.data);
         }
@@ -637,7 +639,7 @@ function sendCurrentSongChange (extension)
             "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "CurrentSongChange",
+                "trigger_CurrentSongChange",
                 serverConfig.extensionname,
                 { songName: localConfig.currentsong },
                 serverConfig.channel
@@ -755,7 +757,7 @@ function removeSongFromQueue (queueId)
         .then(response =>
         {
             if (!response.ok)
-                throw new Error('Request failed with status ' + response.status);
+                throw new Error('Request failed with status ' + response.status, response.statusText);
             return response.json();
         })
         .then(data =>
