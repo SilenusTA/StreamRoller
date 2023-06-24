@@ -107,7 +107,7 @@ const triggersandactions =
                 name: "OBSStartStreaming",
                 displaytitle: "Start Streaming",
                 description: "Start OBS Streaming",
-                messagetype: "StreamStarted",
+                messagetype: "trigger_StreamStarted",
                 channel: serverConfig.channel,
                 parameters: {}
             }
@@ -116,7 +116,7 @@ const triggersandactions =
                 name: "OBSSceneChanged",
                 displaytitle: "Scene Changed",
                 description: "Scene was changed",
-                messagetype: "SceneChanged",
+                messagetype: "trigger_SceneChanged",
                 channel: serverConfig.channel,
                 parameters: { sceneName: "" }
             }
@@ -128,7 +128,7 @@ const triggersandactions =
                 name: "OBSToggleFilter",
                 displaytitle: "Toggle Filter",
                 description: "Enable/Disable a filter (true/false)",
-                messagetype: "ToggleFilter",
+                messagetype: "action_ToggleFilter",
                 channel: serverConfig.channel,
                 parameters: { sourceName: "", filterName: "", filterEnabled: "" }
             }
@@ -137,7 +137,7 @@ const triggersandactions =
                 name: "OBSChangeScene",
                 displaytitle: "Change Scene",
                 description: "Switch to the OBS scene provided by sceneName",
-                messagetype: "ChangeScene",
+                messagetype: "action_ChangeScene",
                 channel: serverConfig.channel,
                 parameters: { sceneName: "", enabled: "" }
             }
@@ -368,7 +368,7 @@ function onDataCenterMessage (server_packet)
                 changeScene(extension_packet.data);
             else if (extension_packet.type === "ToggleMute")
                 ToggleMute(extension_packet.data)
-            else if (extension_packet.type === "ToggleFilter")
+            else if (extension_packet.type === "action_ToggleFilter")
                 activateFilter(extension_packet.data)
             else
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
@@ -893,7 +893,7 @@ function onSwitchedScenes (scene)
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "SceneChanged",
+                "trigger_SceneChanged",
                 serverConfig.extensionname,
                 { sceneName: scene.sceneName },
                 serverConfig.channel
@@ -939,9 +939,9 @@ function StreamStarted ()
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "StreamStarted",
+                "trigger_StreamStarted",
                 serverConfig.extensionname,
-                "StreamStarted",
+                "trigger_StreamStarted",
                 serverConfig.channel),
             serverConfig.channel
         ));
