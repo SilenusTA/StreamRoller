@@ -18,7 +18,7 @@
 /*
 global 
 SaveConfigToServer
-sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalData
+sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalData, serverData, SaveDataToServer
 */
 
 // ============================================================================
@@ -275,9 +275,9 @@ function createTriggerAction (e)
     }
     // add this action to the list
     if (checkTriggerIsValid(SingleEvent))
-        serverConfig.AllTriggersAndActions.push(SingleEvent);
+        serverData.AllTriggersAndActions.default.push(SingleEvent);
 
-    SaveConfigToServer();
+    SaveDataToServer();
     PopulateTriggersTable();
     return false;
 
@@ -305,7 +305,7 @@ function checkTriggerIsValid (trigger)
 // ============================================================================
 function CheckTriggers (event)
 {
-    serverConfig.AllTriggersAndActions.forEach((entry) =>
+    serverData.AllTriggersAndActions.default.forEach((entry) =>
     {
 
         if (event.dest_channel === entry.trigger.channel
@@ -379,7 +379,7 @@ function TriggerAction (action, triggerparams)
 function PopulateTriggersTable ()
 {
     let table = document.getElementById("TriggersAndActionsTable")
-    let TandAs = serverConfig.AllTriggersAndActions
+    let TandAs = serverData.AllTriggersAndActions.default
 
     let tablerows = "<tbody>";
     // tablerows += "<div col-md-1'>"
@@ -442,7 +442,7 @@ function PopulateTriggersTable ()
 
 function delteTriggerAction (id)
 {
-    serverConfig.AllTriggersAndActions.splice(id, 1)
-    SaveConfigToServer();
+    serverData.AllTriggersAndActions.default.splice(id, 1)
+    SaveDataToServer();
     PopulateTriggersTable();
 }
