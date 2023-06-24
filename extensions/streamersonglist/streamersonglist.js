@@ -250,6 +250,8 @@ function onDataCenterMessage (server_packet)
             localConfig.clientId = server_packet.data.clientId;
             localConfig.userId = server_packet.data.userId;
             localConfig.streamerId = server_packet.data.streamerId;
+            // testing with a real songlist
+
             // now we have our credentials lets join the server for callbacks
             localConfig.ssl_client = io("https://api.streamersonglist.com", {
                 transports: ["websocket"],
