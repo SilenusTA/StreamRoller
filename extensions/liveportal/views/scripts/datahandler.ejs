@@ -88,9 +88,6 @@
     let serverData = {}
     serverData.AllTriggersAndActions = { "default": [] };
 
-    let serverData = {}
-    serverData.AllTriggersAndActions = { "default": [] };
-
     const localConfig =
     {
         OBSSceneslist: {},
@@ -264,9 +261,6 @@
                 serverConfig.extensionname,
                 serverConfig.channel
             ));
-
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("RequestData", serverConfig.extensionname));
 
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("RequestData", serverConfig.extensionname));
