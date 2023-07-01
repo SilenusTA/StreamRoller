@@ -106,7 +106,7 @@ let serverConfig = structuredClone(default_serverConfig)
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
