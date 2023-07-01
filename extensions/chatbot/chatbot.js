@@ -1057,7 +1057,7 @@ function processChatMessage (data)
     )
     {
         if (serverConfig.DEBUG_MODE === "on")
-            console.log("Ignoring system/bot message", serverConfig.chatbotname, data)
+            console.log("Ignoring system/bot message", serverConfig.chatbotname, data.message)
         return;
     }
 
