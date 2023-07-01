@@ -530,6 +530,8 @@ function handleSettingsWidgetLargeData (modalcode)
 {
     if (modalcode.chatbot_restore_defaults == "on")
     {
+        console.log("Chatbot defaults restored")
+        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
         serverConfig = structuredClone(default_serverConfig);
         return;
     }

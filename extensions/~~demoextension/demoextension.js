@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# DEMOEXTENSION.js ##############################
+// ############################# DEMOEXTENSION.js ##############################
 // This is a demo extension you can copy to start a new extension. It is
 // designed to make creating a new extension easier by habing all the templates 
 // you might need.
@@ -81,7 +81,9 @@ const localConfig = {
 // serverConfig is how we store our data that is needed to persist
 // accross a restart or changed via a webpage (ie the admin or live 
 // pages that the backend server gives access to in the browser)
-const serverConfig = {
+const default_serverConfig = {
+    // version number. when updated the first run will force an overwrite of config data
+    __version__: "0.1",
     // add our name so we can tell if we receive this localConfig from the server
     extensionname: localConfig.EXTENSION_NAME,
     // the channel name this extension will use for sending/receiving data.
@@ -91,15 +93,46 @@ const serverConfig = {
     // good to store them so that we can keep the page up to date when 
     // we send it back
     demovar1: "on",  // example of a checkbox. "on" or "off"
-    demotext1: "demo text" // example of a text field
+    demotext1: "demo text", // example of a text field
+
+    demoextension_restore_defaults: "off"
 };
+// need to make sure we have a proper clone of this object and not a reference
+// otherwise changes to server also change defaults
+let serverConfig = structuredClone(default_serverConfig)
 
-// DEBUGGING - Set this to true if you need your server data to be refreshed from above.
-// during development you may find your server data gets messed up if changing it often.
-// while uncommented your data will not presist and be overwritten by the above config
-// every time the server runs up.
-const OverwriteDataCenterConfig = false;
+// triggers and actions are what are used by the main extension (default is the live portal)
+// to allow the user to link extensions together (ie when trigger A happens call trigger B)
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "demoextensionSomethingHappened",
+                displaytitle: "Somthing happened",
+                description: "The Demo extension did something that you might like to know about",
+                messagetype: "DemoextensionSomethingHappened_trigger",
+                channel: serverConfig.channel,
+                parameters: { message: "" }
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "demoextensionDoSomething",
+                displaytitle: "Do your Stuff",
+                description: "A request for the demo extension to do something useful",
+                messagetype: "DemoextensionDoStuff_action",
+                channel: serverConfig.channel,
+                parameters: { message: "" }
+            }
 
+        ],
+}
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -161,9 +194,7 @@ function onDataCenterConnect (socket)
     // log a message for debugging purposes. Once you have your extension up and running
     // please delete any spurious messages like this to save on the spam in the log window
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
-    // DEBUGGING overwrite our config data on the server if the flag is set
-    if (OverwriteDataCenterConfig)
-        SaveConfigToServer();
+
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
@@ -208,12 +239,15 @@ function onDataCenterMessage (server_packet)
         // if it is empty we will use our current default and send it to the server 
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            // we could just assign the values here (ie serverConfig = decoded_packet.data)
-            // but if we change/remove an item it would never get removed from the store.
-            // we will update any fields we have that are in the message passed to us
-            for (const [key, value] of Object.entries(serverConfig))
-                if (key in server_packet.data)
-                    serverConfig[key] = server_packet.data[key];
+            // check for updates to the version. if the version has changed we need to 
+            // load the defaults instead.
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
 
             // send the config back to the server. This is only need if the server config
             // and our raw congig elements differ sending back is quick and not done often
@@ -225,7 +259,7 @@ function onDataCenterMessage (server_packet)
     // This is a message from an extension. the content format will be described by the extension
     else if (server_packet.type === "ExtensionMessage")
     {
-        let decoded_packet = server_packet.data;
+        let extension_packet = server_packet.data;
         // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
         // Modals are the bit of html code we send to the server to be used on the webpages
         // it is not required to be used so these can be omitted if you wish.
@@ -233,34 +267,50 @@ function onDataCenterMessage (server_packet)
         // we need to send it back when requested so the page can update itself
         // this is normally inserted into a link on the main page so we can send/receive
         // data from the webpage (ie to change our settings etc)
-        if (decoded_packet.type === "RequestSettingsWidgetSmallCode")
+        // there are currently three types of pages that can be requested/sent/processed
+        // 1. SettingsWidgetSmall - a popup page, added to the link on the main portal page
+        // 2. SettingsWidgetLarge - a full screen page, added to the settings tab on the main portal page
+        // 3. CredentialsModals - a popup page where the user can add their credentials for login to services etc
+
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             // just call the SendSettingsWidgetSmall function below with the channel to send the message back on
-            SendSettingsWidgetSmall(decoded_packet.from);
+            SendSettingsWidgetSmall(extension_packet.from);
         // if we receive data back from our settings widget small we process this here.
-        else if (decoded_packet.type === "SettingsWidgetSmallData")
+        else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             //make sure it is our modal
-            if (decoded_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-                // This data has come from the html modal for sumit action (user clicked submit on the page)
-                // It will only contain items we have set in our modal html file we sent above
-                // lets reset our config checkbox settings (modal will omit ones not checked so 
-                // they wont get changed below if the user has deselcted them so we do it here and 
-                // set them back on as we loop through the data if they are there)
-                serverConfig.demovar1 = "off";
+                if (extension_packet.data.demoextension_restore_defaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    // This data has come from the html modal for sumit action (user clicked submit on the page)
+                    // It will only contain items we have set in our modal html file we sent above
+                    // lets reset our config checkbox settings (modal will omit ones not checked so 
+                    // they wont get changed below if the user has deselcted them so we do it here and 
+                    // set them back on as we loop through the data if they are there)
+                    serverConfig.demovar1 = "off";
 
-                // set our config values to the ones in message
-                // note this for loop requires the modal html code names to match what we want in the config variable
-                // means we can just assign them here without having to work out what the config name is 
-                // for the given name in the modal html
-                for (const [key, value] of Object.entries(decoded_packet.data))
-                    serverConfig[key] = value;
+                    // set our config values to the ones in message
+                    // note this for loop requires the modal html code names to match what we want in the config variable
+                    // means we can just assign them here without having to work out what the config name is 
+                    // for the given name in the modal html (note: only if we have a flat stucture in our config)
+                    for (const [key, value] of Object.entries(extension_packet.data))
+                        serverConfig[key] = value;
+
+                }
 
                 // Update our saved data to the server for next time we run.
                 // this is also the point were you make changes based on the settings the user has changed
                 SaveConfigToServer();
-                // the SendSettingsWidgetSmall function will update the admin page to match what is in our current settings
-                // SendSettingsWidgetSmall(server_packet.join);
+                // the SendSettingsWidgetSmall function will update pages that have our settings widget on it
+                // ideally it should only be sent if our settings have changed but we just send it here as it is low
+                // bandwidth overally
+                SendSettingsWidgetSmall("");
             }
         }
         else
@@ -272,7 +322,7 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
-        if (connectionAttempts.STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
+        if (server_packet.data == "STREAMLABS_ALERT" && connectionAttempts[0].STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
         {
             logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
@@ -288,12 +338,20 @@ function onDataCenterMessage (server_packet)
     }    // we have received data from a channel we are listening to
     else if (server_packet.type === "ChannelData")
     {
-        // first we check which channel the message came in on
-        if (server_packet.dest_channel === "STREAMLABS_ALERT")
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "HeartBeat")
+        {
+            //Just ignore messages we know we don't want to handle
+        }
+        else if (server_packet.dest_channel === "STREAMLABS_ALERT")
             // do something with the data
             process_stream_alert(server_packet);
+
         else
+        {
+            // might want to log message to see if we are not handling something we should be
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
     }
     else if (server_packet.type === "InvalidMessage")
     {
