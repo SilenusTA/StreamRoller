@@ -163,7 +163,7 @@ app.use(express.static(webfiles));
 // Just some debugging code
 if (config.testing > 0)
 {
-    console.log("#### running extera DEBUG extensions ####")
+    console.log("#### running extra DEBUG extensions ####")
     logger.usecoloredlogs("default");
     loadExtensions(__dirname + "/../../test-ext")
     loadExtensions(__dirname + "/../../extensions")
