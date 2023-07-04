@@ -68,7 +68,7 @@ const default_serverConfig = {
     __version__: "0.1",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    msfs2020ennabled: "on",
+    msfs2020ennabled: "off",
     msfs2020SimPollInterval: "5",
     msfs2020extension_restore_defaults: "off"
 };
@@ -205,11 +205,12 @@ function onDataCenterMessage (server_packet)
                     MSFS2020Connect()
                     pollMSFS()
                 }
-                else
+                else if (disconnect)
                 {
-                    clearTimeout(localConfig.pollMSFSHandle)
                     MSFS2020Disconnect()
                 }
+                else
+                    pollMSFS()
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
             }
@@ -401,21 +402,13 @@ function handleSettingsWidgetLargeData (modalcode)
     /////////////////////////////////////////////////
     const activeKeys = Object.keys(serverData.triggersNamesArray);
     // loop through all our keys as we need to know what has been changed
-    console.log("serverData.triggersNamesArray:1", serverData.triggersNamesArray)
-    console.log("serverData.triggersNamesArray:1", modalcode)
     for (let i = 0; i < activeKeys.length; i++)
     {
         let triggerKey = serverData.triggersNamesArray[activeKeys[i]]
-        console.log("checking", triggerKey)
-        console.log("result", "remove_" + triggerKey in modalcode)
         // check if we have been sent one (must be checked/set to "on" to be sent)
         if ("remove_" + triggerKey in modalcode)
-        {
-            console.log("Removing", triggerKey)
             removeTriggersArray(triggerKey)
-        }
     }
-    console.log("serverData.triggersNamesArray:2", serverData.triggersNamesArray)
     /////////////////////////////////////////////////
     //          get SimVar values
     /////////////////////////////////////////////////
@@ -439,7 +432,6 @@ function handleSettingsWidgetLargeData (modalcode)
             if (serverData.SimVars[varKeys[i]].enabled == "on")
             {
                 // we are currently set to on and need to turn off
-                console.log("NEED TO DE-REGISTER FOR", varKeys[i])
                 serverData.SimVars[varKeys[i]].enabled = "off"
             }
 
@@ -677,7 +669,6 @@ function heartBeatCallback ()
 // ============================================================================
 function MSFS2020Connect ()
 {
-    console.log("MSFS2020Connect()")
     if (serverConfig.msfs2020ennabled == "on")
     {
         // make a clone of the objects
@@ -835,18 +826,18 @@ async function MSFS2020Connected (handle)
         //console.log(JSON.stringify(airportData, null, 2));
         //console.log(JSON.stringify(await localConfig.msfs_api.get(`AIRPORT:CYYJ`), null, 2));
 
-        console.log("in range airports", SystemEvents.AIRPORTS_IN_RANGE)
-        const inRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_IN_RANGE, (data) =>
+        /* const inRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_IN_RANGE, (data) =>
         {
-            console.log(data);
+            console.log("in range airports:",data);
             inRange();
         });
 
         const outOfRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_OUT_OF_RANGE, (data) =>
         {
-            console.log(data);
+            console.log("outOfRange",data);
             outOfRange();
         });
+        */
     }
     catch (err)
     {
@@ -859,7 +850,6 @@ async function MSFS2020Connected (handle)
 // ============================================================================
 function addToTriggersArray (name, index = 0)
 {
-    console.log("addToTriggersArray(name, index)", name, index)
     if (name.indexOf(":index") > 0)
         name = name.replace(":index", ":" + index)
 
@@ -971,7 +961,6 @@ function performAction (data)
         action = data.type.replace("action_", "")
         if (action.indexOf(":index") > 0)
             action = action.replace("index", data.data.index)
-        console.log("calling set with", action, data.data.data)
         localConfig.msfs_api.set(action, data.data.data)
     }
     catch (err)
@@ -985,7 +974,8 @@ function performAction (data)
 function pollMSFS ()
 {
     clearTimeout(localConfig.pollMSFSHandle);
-    postTriggers();
+    if (serverConfig.msfs2020ennabled == "on")
+        postTriggers();
     localConfig.pollMSFSHandle = setTimeout(pollMSFS, serverConfig.msfs2020SimPollInterval * 1000)
 }
 
