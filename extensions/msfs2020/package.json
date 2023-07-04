@@ -1,0 +1,13 @@
+{
+  "name": "msfs2020",
+  "version": "1.0.0",
+  "description": "",
+  "main": "msfs2020.js",
+  "type": "module",
+  "scripts": {},
+  "author": "Twitch/OldDepressedGamer",
+  "license": "",
+  "dependencies": {
+    "msfs-simconnect-api-wrapper": "^2.0.4"
+  }
+}

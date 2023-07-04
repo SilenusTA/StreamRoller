@@ -290,7 +290,7 @@
                     }, 1000);
                 }, 500);
             }, 500);
-        }, 500);
+        }, 1000);
 
 
 
@@ -667,6 +667,12 @@
                     // set the on screen status for this extension
                     setExtensionStatus(extension_packet.from, extension_packet.data)
 
+                }
+                else
+                {
+                    console.log("missing extensions, requesting again")
+                    RequestExtList();
+                    RequestChList();
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -2209,11 +2215,12 @@
                 parseInt(start, 10),
                 parseInt(end, 10) + 1
             );
-            stringReplacements.push({
-                stringToReplace: stringToReplace,
-                //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
-                replacement: "<img src='https://static-cdn.jtvnw.net/emoticons/v2/" + id + "/default/" + theme + "/1.0'>"
-            });
+            if (stringToReplace != ":/")
+                stringReplacements.push({
+                    stringToReplace: stringToReplace,
+                    //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
+                    replacement: "<img src='https://static-cdn.jtvnw.net/emoticons/v2/" + id + "/default/" + theme + "/1.0'>"
+                });
         });
 
         // generate HTML and replace all emote keywords with image elements
@@ -2225,7 +2232,6 @@
             },
             message
         );
-
         return messageHTML.replaceAll("\n", " ");;
     }
 

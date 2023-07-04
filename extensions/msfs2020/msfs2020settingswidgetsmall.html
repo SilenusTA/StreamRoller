@@ -1,0 +1,73 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">MSFS Extension Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>MSFS2020 Settings
+            </p>
+            <div class="form-group invisible">
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
+                    tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData"
+                    tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="msfs2020ennabled" type="checkbox" id="msfs2020ennabled"
+                        msfs2020ennabledchecked>
+                    <label class="form-check-label" for="msfs2020ennabled">Enabled</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="msfs2020SimPollInterval" class="col-form-label">Base Polling interval for MSFS</label>
+                <input type="text" name="msfs2020SimPollInterval" class="form-control" id="msfs2020SimPollInterval"
+                    value="msfs2020SimPollIntervaltext">
+            </div>
+
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="msfs2020_restore_defaults" type="checkbox"
+                        id="msfs2020_restore_defaults" msfs2020_restore_defaultschecked>
+                    <label class="form-check-label" for="msfs2020_restore_defaults">Restore Defaults</label>
+                </div>
+            </div>
+        </div>
+        <HR>
+        <!-- Standard footer with submit and cancel buttons -->
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+<!-- END: -->

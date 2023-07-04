@@ -4,7 +4,8 @@
         "configstore/*",
         "credentialstore/*",
         "test-ext/*",
-        "chatdata/*"
+        "chatdata/*",
+        "msfsdata/*"
     ],
     "ext": "js, json, html,ejs,cjs,mjs"
 }

@@ -250,26 +250,26 @@ function onDataCenterMessage (server_packet)
                 SendCredentialsModal(extension_packet.from);
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
-                // if we have enabled/disabled obs connection
-                if (serverConfig.enableobs != extension_packet.data.enableobs)
-                {
-                    //we are currently enabled so lets disconnect
-                    if (serverConfig.enableobs == "on")
-                    {
-                        serverConfig.enableobs = "off";
-                        clearTimeout(localConfig.obsTimeoutHandle)
-                        disconnectObs()
-                    }
-                    //currently disabled so connect to obs
-                    else
-                    {
-                        serverConfig.enableobs = "on";
-                        localConfig.obsConnecting = true
-                        connectToObs();
-                    }
-                }
                 if (extension_packet.to === serverConfig.extensionname)
-                {
+                {            // if we have enabled/disabled obs connection
+                    if (serverConfig.enableobs != extension_packet.data.enableobs)
+                    {
+                        //we are currently enabled so lets disconnect
+                        if (serverConfig.enableobs == "on")
+                        {
+                            serverConfig.enableobs = "off";
+                            clearTimeout(localConfig.obsTimeoutHandle)
+                            disconnectObs()
+                        }
+                        //currently disabled so connect to obs
+                        else
+                        {
+                            serverConfig.enableobs = "on";
+                            localConfig.obsConnecting = true
+                            connectToObs();
+                        }
+                    }
+
                     serverConfig.enableobs = "off";
                     for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
@@ -1009,7 +1009,7 @@ function onSourceMuteStateChanged (data)
 // ============================================================================
 async function getFilters ()
 {
-    if (localConfig.obsConnection.socket._socket == null)
+    if (typeof localConfig.obsConnection.socket != "undefined" && localConfig.obsConnection.socket._socket == null)
     {
         // if resetarting this might get called too soon
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "Sockect not ready, rescheduling");

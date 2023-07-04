@@ -779,24 +779,10 @@ function onDataCenterMessage (server_packet)
 
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // need to indicate we have changed user in header even if we are turned off.
-                if (serverConfig.enabletwitchchat == "off")
-                {
-                    if (serverConfig.streamername != extension_packet.data.streamername)
-                    {
-                        // we have turned off twitch chat and are changing channel. need to update the users screen.
-                        serverConfig.enabletwitchchat = "on";
-                        let name = serverConfig.streamername
-                        serverConfig.streamername = extension_packet.data.streamername
-                        process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, " channel: " + extension_packet.data.streamername);
-                        serverConfig.enabletwitchchat = "off";
-                        serverConfig.streamername = name;
-                    }
-                }
-
                 if (extension_packet.data.twitchchat_restore_defaults == "on")
                 {
                     console.log("restoring defaults", extension_packet.data.twitchchat_restore_defaults)
+                    process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "restoring defaults");
                     serverConfig = structuredClone(default_serverConfig);
                     // restart the scheduler in case we changed it
                     SaveChatMessagesToServerScheduler();
@@ -806,6 +792,20 @@ function onDataCenterMessage (server_packet)
                 }
                 else
                 {
+                    if (serverConfig.streamername != extension_packet.data.streamername)
+                    {
+                        // need to indicate we have changed user in header even if we are turned off.
+                        if (serverConfig.enabletwitchchat == "off")
+                        {
+                            // we have turned off twitch chat and are changing channel. need to update the users screen.
+                            serverConfig.enabletwitchchat = "on";
+                            let name = serverConfig.streamername
+                            serverConfig.streamername = extension_packet.data.streamername
+                            process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, " channel: " + extension_packet.data.streamername);
+                            serverConfig.enabletwitchchat = "off";
+                            serverConfig.streamername = name;
+                        }
+                    }
                     // need to update these manually as the web page does not send unchecked box values
                     serverConfig.enabletwitchchat = "off";
                     serverConfig.updateUserLists = "off";
@@ -814,10 +814,11 @@ function onDataCenterMessage (server_packet)
                     serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
 
                     for (const [key, value] of Object.entries(serverConfig))
+                    {
                         if (key in extension_packet.data)
-                        {
                             serverConfig[key] = extension_packet.data[key];
-                        }
+
+                    }
                     for (const [key, value] of Object.entries(localConfig.usernames))
                     {
                         if (localConfig.twitchClient[key].state.connected)
@@ -832,6 +833,7 @@ function onDataCenterMessage (server_packet)
                     SendSettingsWidgetSmall("");
                     SendSettingsWidgetLarge("");
                 }
+
             }
         }
         else if (extension_packet.type === "action_SendChatMessage")

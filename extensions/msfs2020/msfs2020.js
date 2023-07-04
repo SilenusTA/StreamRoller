@@ -1,0 +1,1046 @@
+/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+// ############################# msfs2020.js ##############################
+// Allows data to be sent/received from Microsoft Flight Sim 2020
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/streamer
+// Date: 01-Jul-2023
+// ============================================================================
+
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import * as fs from "fs";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+// test code. run with msfs_api.tryConnect()
+//import * as msfs_api from "./msfs_api.js";
+import { SystemEvents, MSFS_API } from 'msfs-simconnect-api-wrapper'
+import { SimVars } from "msfs-simconnect-api-wrapper/simvars/index.js";
+
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const localConfig = {
+    OUR_CHANNEL: "MSFS2020_CHANNEL",
+    EXTENSION_NAME: "msfs2020",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    MAX_CONNECTION_ATTEMPTS: 5,
+    state: {
+        color: "red",
+        msfsconnected: false,
+        paused: false,
+    },
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
+    pollMSFSHandle: null,
+    msfs_api: new MSFS_API(),
+    //maintain the list of trigger names for easier checking
+
+};
+
+let connectionAttempts =
+    [{ "STREAMLABS_ALERT_ConnectionAttempts": 0 }]
+
+const default_serverConfig = {
+    __version__: "0.1",
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
+    msfs2020ennabled: "on",
+    msfs2020SimPollInterval: "5",
+    msfs2020extension_restore_defaults: "off"
+};
+
+let serverConfig = structuredClone(default_serverConfig)
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
+    triggers:
+        [
+        ],
+    actions:
+        [
+        ],
+}
+
+let serverData =
+{
+    SimVars: {},
+    triggers: [],
+    triggersNamesArray: []
+}
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+function initialise (app, host, port, heartbeat)
+{
+    try
+    {
+        if (typeof (heartbeat) != "undefined")
+            localConfig.heartBeatTimeout = heartbeat;
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+            onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
+    }
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterDisconnect
+// ============================================================================
+function onDataCenterDisconnect (reason)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+function onDataCenterConnect (socket)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestData", serverConfig.extensionname));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+    );
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT")
+    );
+    clearTimeout(localConfig.heartBeatHandle);
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+function onDataCenterMessage (server_packet)
+{
+    if (server_packet.type === "ConfigFile")
+    {
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+            SaveConfigToServer();
+            pollMSFS();
+        }
+    }
+    else if (server_packet.type === "DataFile")
+    {
+        if (server_packet.data != "")
+        {
+            if (server_packet.to === serverConfig.extensionname && server_packet.data != undefined
+                && Object.keys(server_packet.data.SimVars).length > 0)
+            {
+                serverData = structuredClone(server_packet.data);
+                SaveDataToServer();
+                // connect to msfs
+                MSFS2020Connect();
+                pollMSFS();
+            }
+        }
+    }
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === 'RequestSettingsWidgetLargeCode')
+            SendSettingsWidgetLarge(extension_packet.from);
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            {
+                let reconnect = false
+                let disconnect = false
+                // check if we are changing to on
+                if (serverConfig.msfs2020ennabled == "off" && extension_packet.data.msfs2020ennabled == "on")
+                    reconnect = true
+                // check if we are changing to off
+                else if (serverConfig.msfs2020ennabled == "on" && !extension_packet.data)
+                    disconnect = true
+                serverConfig.msfs2020ennabled = "off";
+                for (const [key, value] of Object.entries(extension_packet.data))
+                    serverConfig[key] = value;
+                SaveConfigToServer();
+                if (reconnect)
+                {
+                    MSFS2020Connect()
+                    pollMSFS()
+                }
+                else
+                {
+                    clearTimeout(localConfig.pollMSFSHandle)
+                    MSFS2020Disconnect()
+                }
+                SendSettingsWidgetSmall("");
+                SendSettingsWidgetLarge("");
+            }
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                if (extension_packet.data.demoextension_restore_defaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    let reconnect = false
+                    if (serverConfig.msfs2020ennabled == "off" && extension_packet.data.msfs2020ennabled == "on")
+                        reconnect = true
+
+                    handleSettingsWidgetLargeData(extension_packet.data)
+                    SaveConfigToServer();
+                    SaveDataToServer();
+                    if (reconnect)
+                    {
+                        MSFS2020Connect()
+                        pollMSFS()
+                    }
+                    // broadcast our modal out so anyone showing it can update it
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+                }
+            }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            serverConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+
+                )
+            }
+        }
+        else if (extension_packet.type.indexOf("action_" == 0))
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                performAction(extension_packet)
+            }
+        }
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+
+    }
+    else if (server_packet.type === "UnknownChannel")
+    {
+        if (server_packet.data == "STREAMLABS_ALERT" && connectionAttempts[0].STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
+        {
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
+                    ));
+            }, 5000);
+        }
+    }
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "HeartBeat")
+        {
+            //Just ignore messages we know we don't want to handle
+        }
+        else if (server_packet.dest_channel === "STREAMLABS_ALERT")
+            process_stream_alert(server_packet);
+        else
+        {
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
+    }
+    else if (server_packet.type === "InvalidMessage")
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    }
+    else if (server_packet.type === "LoggingLevel")
+    {
+        logger.setLoggingLevel(server_packet.data)
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft")
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+
+// ============================================================================
+//                           FUNCTION: process_stream_alert
+// ============================================================================
+function process_stream_alert (server_packet)
+{
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".process_stream_alert", "empty function");
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+function SendSettingsWidgetSmall (tochannel)
+{
+    fs.readFile(__dirname + '/msfs2020settingswidgetsmall.html', function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: handleSettingsWidgetSmallData
+// ===========================================================================
+function handleSettingsWidgetLargeData (modalcode)
+{
+    /////////////////////////////////////////////////
+    //              Restore Defaults
+    /////////////////////////////////////////////////
+    if (modalcode.msfs2020_restore_defaults == "on")
+    {
+        console.log("MSFS  defaults restored")
+        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+        serverConfig = structuredClone(default_serverConfig);
+        return;
+    }
+
+    /////////////////////////////////////////////////
+    //          get serverConfig values
+    /////////////////////////////////////////////////
+    for (const [key, value] of Object.entries(modalcode))
+    {
+        if (key in serverConfig)
+            serverConfig[key] = value;
+
+    }
+    /////////////////////////////////////////////////
+    //          remove active values set
+    /////////////////////////////////////////////////
+    const activeKeys = Object.keys(serverData.triggersNamesArray);
+    // loop through all our keys as we need to know what has been changed
+    console.log("serverData.triggersNamesArray:1", serverData.triggersNamesArray)
+    console.log("serverData.triggersNamesArray:1", modalcode)
+    for (let i = 0; i < activeKeys.length; i++)
+    {
+        let triggerKey = serverData.triggersNamesArray[activeKeys[i]]
+        console.log("checking", triggerKey)
+        console.log("result", "remove_" + triggerKey in modalcode)
+        // check if we have been sent one (must be checked/set to "on" to be sent)
+        if ("remove_" + triggerKey in modalcode)
+        {
+            console.log("Removing", triggerKey)
+            removeTriggersArray(triggerKey)
+        }
+    }
+    console.log("serverData.triggersNamesArray:2", serverData.triggersNamesArray)
+    /////////////////////////////////////////////////
+    //          get SimVar values
+    /////////////////////////////////////////////////
+    const varKeys = Object.keys(serverData.SimVars);
+    // loop through all our keys as we need to know what has been changed
+    for (let i = 0; i < varKeys.length; i++)
+    {
+        // check if we have been sent one (must be checked/set to "on" to be sent)
+        if (varKeys[i] in modalcode)
+        {
+            if (serverData.SimVars[varKeys[i]].enabled != modalcode[varKeys[i]])
+            {
+                // it is set to on and ours is off
+                serverData.SimVars[varKeys[i]].enabled = "on"
+            }
+            // else if it is the same do nothing
+        }
+        else
+        {
+            // not been sent it so it must be off
+            if (serverData.SimVars[varKeys[i]].enabled == "on")
+            {
+                // we are currently set to on and need to turn off
+                console.log("NEED TO DE-REGISTER FOR", varKeys[i])
+                serverData.SimVars[varKeys[i]].enabled = "off"
+            }
+
+        }
+        // have we been sent a value (box checked)
+        if (varKeys[i] in modalcode)
+        {
+            // check for an index number simvar
+            if (varKeys[i].indexOf(":index") > 0)
+            {
+                let txtfieldname = varKeys[i].replace(":index", "") + "_index"
+                // check we have a field for the index ()
+                addToTriggersArray(varKeys[i], modalcode[txtfieldname])
+                serverData.SimVars[varKeys[i]].index = modalcode[txtfieldname]
+            }
+            else
+            {
+                // check we have a field for the index ()
+                addToTriggersArray(varKeys[i])
+                serverData.SimVars[varKeys[i]].index = modalcode[varKeys[i]]
+            }
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ===========================================================================
+function SendSettingsWidgetLarge (tochannel)
+{
+    let generatedpage = "";
+    let first = true
+    let readwritestate = ""
+    fs.readFile(__dirname + "/msfs2020settingswidgetlarge.html", function (err, filedata)
+    {
+        if (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
+            //throw err;
+        }
+        else
+        {
+            //get the file as a string
+            let modalstring = filedata.toString();
+            //////////////////////////////////////////////////
+            // mormal replaces(ie enabled and reset checkboxes
+            //////////////////////////////////////////////////
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) === "string" || typeof (value) === "number")
+                    modalstring = modalstring.replaceAll(key + "text", value);
+            }
+
+            //////////////////////////////////////////////////
+            //             Enabled Simvars
+            // Done separately so we can delete them easier
+            //////////////////////////////////////////////////
+            const triggerKeys = Object.keys(serverData.triggersNamesArray);
+            first = false;
+            generatedpage = ""
+            generatedpage += "<h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. Polling "
+            generatedpage += "too many Sim Variables too fast can cause lag in the game. Check the tool tips for values</p>"
+            generatedpage += "<p>Note: A simvar needs to be monitored to be able to set a trigger on it.</p>"
+            for (let i = 0; i < triggerKeys.length; i++)
+            {
+                // every 5 items start a new row but only close out after the first itme
+                if (!first && i % 5 == 0)
+                    generatedpage += "</tr>"
+
+                if (i % 5 == 0)
+                    generatedpage += "<tr>"
+
+                // ''''''''''''''''''''' TD '''''''''''''''''''''''''''''''''
+                generatedpage += "<td scope='row'>" + serverData.triggersNamesArray[triggerKeys[i]] + " "
+
+                // Does this variable have an index part
+                if (serverData.triggersNamesArray[triggerKeys[i]].indexOf(":index") > 0)
+                {
+                    let fieldname = serverData.triggersNamesArray[triggerKeys[i]].replace(":index", "") + "_index"
+                    generatedpage += ":<input type='text'  style='width: 30px'  name='remove_" + fieldname + "'"
+                    generatedpage += " id='remove_" + fieldname + "' value='" + serverData.triggersNamesArray[triggerKeys[i]].index + "'>"
+                }
+
+                //check that we have this value
+                if (typeof (serverData.triggersNamesArray[triggerKeys[i]].enabled) == "undefined")
+                    serverData.triggersNamesArray[triggerKeys[i]].enabled == "off"
+
+                if (serverData.triggersNamesArray[triggerKeys[i]].enabled == "on")
+                    generatedpage += "<input class='form-check-input' name='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' type='checkbox' id='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' checked >"
+                else
+                    generatedpage += "<input class='form-check-input' name='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' type='checkbox' id='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "'>"
+                generatedpage += "</td>"
+                first = false;
+            }
+            if (!first)
+                generatedpage += "</tr>"
+            modalstring = modalstring.replace("MSFSActiveCode", generatedpage);
+
+            //////////////////////////////////////////////////
+            //                  SimVars
+            //////////////////////////////////////////////////
+            const varKeys = Object.keys(serverData.SimVars);
+            first = false;
+            generatedpage = ""
+            generatedpage += "<h5>Simvars Available</H5><p>Select checkbox to set as a Trigger. Some simvars have "
+            generatedpage += "an index (ie GENERAL ENG RPM:index) for these an index number is needed to identify "
+            generatedpage += "a specific item (ie which engine rpm). The letters in brackets indicate it the item "
+            generatedpage += "is readonly (R) or ReadWrite (RW)</p>"
+            for (let i = 0; i < varKeys.length; i++)
+            {
+                // every 5 items start a new row but only close out after the first itme
+                if (!first && i % 5 == 0)
+                    generatedpage += "</tr>"
+
+                if (i % 5 == 0)
+                    generatedpage += "<tr>"
+
+                // ''''''''''''''''''''' TD '''''''''''''''''''''''''''''''''
+                // are we able to set this vaiable
+                if (serverData.SimVars[varKeys[i]].settable == true)
+                    readwritestate = "(RW)"
+                else
+                    readwritestate = "(R)"
+                generatedpage += "<td scope='row'>" + serverData.SimVars[varKeys[i]].name + " " + readwritestate + " "
+
+                // Does this variable have an index part
+                if (serverData.SimVars[varKeys[i]].name.indexOf(":index") > 0)
+                {
+                    let fieldname = serverData.SimVars[varKeys[i]].name.replace(":index", "") + "_index"
+                    generatedpage += "<input type='text' style='width: 30px' name='" + fieldname + "'"
+                    generatedpage += " id='" + fieldname + "' value='" + serverData.SimVars[varKeys[i]].index + "'> "
+                }
+
+                //check that we have this value
+                if (typeof (serverData.SimVars[varKeys[i]].enabled) == "undefined")
+                    serverData.SimVars[varKeys[i]].enabled == "off"
+
+                if (serverData.SimVars[varKeys[i]].enabled == "on")
+                    generatedpage += " <input class='form-check-input' name='" + serverData.SimVars[varKeys[i]].name + "' type='checkbox' id='" + serverData.SimVars[varKeys[i]].name + "' checked >"
+                else
+                    generatedpage += " <input class='form-check-input' name='" + serverData.SimVars[varKeys[i]].name + "' type='checkbox' id='" + serverData.SimVars[varKeys[i]].name + "'>"
+                generatedpage += "</td>"
+                first = false;
+            }
+            if (!first)
+                generatedpage += "</tr>"
+            modalstring = modalstring.replace("MSFSSimVarsCode", generatedpage);
+
+            //////////////////////////////////////////////////
+            //  Send out the new code
+            //////////////////////////////////////////////////
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetLargeCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+
+        }
+    });
+    // done as we might have added some enabled entries
+    SaveDataToServer();
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+function SaveConfigToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
+        ("SaveConfig",
+            serverConfig.extensionname,
+            serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+function SaveDataToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            serverConfig.extensionname,
+            serverData));
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback ()
+{
+    let color = "red"
+    if (localConfig.state.msfsconnected == true)
+    {
+        if (localConfig.state.paused == true)
+            localConfig.state.color = "orange"
+        else
+            localConfig.state.color = "green"
+
+    }
+    else
+        localConfig.state.color = "red"
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                localConfig.state
+                ,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ############################################################################
+//                              MSFS specific code
+// ############################################################################
+
+
+// ============================================================================
+//                           FUNCTION: MSFS2020Connect
+// ============================================================================
+function MSFS2020Connect ()
+{
+    console.log("MSFS2020Connect()")
+    if (serverConfig.msfs2020ennabled == "on")
+    {
+        // make a clone of the objects
+        const varKeys = Object.keys(SimVars);
+        varKeys.sort();
+        for (let i = 0; i < varKeys.length; i++)
+        {
+            serverData.SimVars[varKeys[i]] = SimVars[varKeys[i]]
+            // this creates the enabled variable if it doesn't exist
+            if (serverData.SimVars[varKeys[i]].enabled != "on")
+                serverData.SimVars[varKeys[i]].enabled = "off"
+
+            if (varKeys[i].indexOf(":index") > 0 && typeof (serverData.SimVars[varKeys[i]].index) == "undefined")
+            {
+                serverData.SimVars[varKeys[i]].index = "0"
+                //console.log(serverData.SimVars[varKeys[i]])
+            }
+
+        }
+        SaveDataToServer()
+        // use the simvars to create out triggers (there are lots of them though :( ))
+        /*      'TOTAL WORLD VELOCITY': {
+    desc: 'Speed relative to the earths center.',
+    units: 'feet per second',
+    data_type: 4,
+    read: [Function: read],
+    write: [Function (anonymous)],
+    settable: true,
+    name: 'TOTAL WORLD VELOCITY'
+  },*/
+
+        //console.log("SimVars['PUSHBACK STATE:index']", SimVars['PUSHBACK STATE:index'])
+        for (let i = 0; i < varKeys.length; i++)
+        {
+            if (serverData.SimVars[varKeys[i]].settable == true)
+            {
+                //console.log(serverData.SimVars[varKeys[i]])
+                if (varKeys[i].indexOf(":index") > 0)
+                {
+                    triggersandactions.actions.push(
+                        {
+                            name: serverData.SimVars[varKeys[i]].name,
+                            displaytitle: serverData.SimVars[varKeys[i]].name,
+                            description: "(Enable in the settigns page to use)" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                            messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
+                            channel: serverConfig.channel,
+                            parameters: { index: "0", data: "" }
+                        }
+                    )
+                }
+                else
+                {
+                    triggersandactions.actions.push(
+                        {
+                            name: serverData.SimVars[varKeys[i]].name,
+                            displaytitle: serverData.SimVars[varKeys[i]].name,
+                            description: "(Enable in the settigns page to use)" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                            messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
+                            channel: serverConfig.channel,
+                            parameters: { data: "" }
+                        }
+                    )
+                }
+            }
+            if (varKeys[i].indexOf(":index") > 0)
+            {
+                triggersandactions.triggers.push
+                    (
+                        {
+                            name: serverData.SimVars[varKeys[i]].name,
+                            displaytitle: serverData.SimVars[varKeys[i]].name,
+                            description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
+                            messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
+                            channel: serverConfig.channel,
+                            parameters: { index: "0", data: "" }
+                        }
+                    )
+            }
+            else
+            {
+                triggersandactions.triggers.push
+                    (
+                        {
+                            name: serverData.SimVars[varKeys[i]].name,
+                            displaytitle: serverData.SimVars[varKeys[i]].name,
+                            description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
+                            messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
+                            channel: serverConfig.channel,
+                            parameters: { data: "" }
+                        }
+                    )
+            }
+        }
+        try
+        {
+            localConfig.msfs_api.connect({
+                retries: Infinity,
+                retryInterval: serverConfig.msfs2020SimPollInterval,
+                onConnect: (nodeSimconnectHandle) => MSFS2020Connected(nodeSimconnectHandle),
+                onRetry: (_retries, interval) =>
+                {
+                    console.log(`MS2020 Flight Sim: Connection failed: retrying in ${interval} seconds.`);
+                    localConfig.state.msfsconnected = false;
+                }
+            });
+        }
+        catch (err)
+        {
+            localConfig.state.msfsconnected = false;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", "Failed to connect", err.message);
+        }
+    }
+    //file_log("SimVars", serverData.SimVars)
+    //file_log("triggersandactions", triggersandactions)
+    //file_log("SystemEvents", SystemEvents)
+
+}
+// ============================================================================
+//                           FUNCTION: MSFS2020Disconnect
+// ============================================================================
+function MSFS2020Disconnect ()
+{
+    clearTimeout(localConfig.pollMSFSHandle)
+}
+// ============================================================================
+//                           FUNCTION: MSFS2020Connect
+// ============================================================================
+async function MSFS2020Connected (handle)
+{
+    try
+    {
+        localConfig.state.msfsconnected = true;
+
+        const pauseOff = localConfig.msfs_api.on(SystemEvents.PAUSED, () =>
+        {
+            localConfig.state.paused = true;
+            pauseOff();
+            console.log(`sim paused`);
+        });
+
+        const unpauseOff = localConfig.msfs_api.on(SystemEvents.UNPAUSED, () =>
+        {
+            localConfig.state.paused = false;
+            unpauseOff();
+            console.log(`sim unpaused`);
+        });
+
+        localConfig.NEARBY_AIRPORTS = await localConfig.msfs_api.get(`NEARBY_AIRPORTS`);
+        //console.log(`${localConfig.NEARBY_AIRPORTS.length} nearby airports`);
+
+        localConfig.ALL_AIRPORTS = await localConfig.msfs_api.get(`ALL_AIRPORTS`);
+        //console.log(`${localConfig.ALL_AIRPORTS.length} total airports on the planet`);
+
+        //const airportData = await localConfig.msfs_api.get(`AIRPORT:CYYJ`);
+        //console.log(JSON.stringify(airportData, null, 2));
+        //console.log(JSON.stringify(await localConfig.msfs_api.get(`AIRPORT:CYYJ`), null, 2));
+
+        console.log("in range airports", SystemEvents.AIRPORTS_IN_RANGE)
+        const inRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_IN_RANGE, (data) =>
+        {
+            console.log(data);
+            inRange();
+        });
+
+        const outOfRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_OUT_OF_RANGE, (data) =>
+        {
+            console.log(data);
+            outOfRange();
+        });
+    }
+    catch (err)
+    {
+        localConfig.state.msfsconnected = false;
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connected", "Error ", err.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: addToTriggersArray
+// ============================================================================
+function addToTriggersArray (name, index = 0)
+{
+    console.log("addToTriggersArray(name, index)", name, index)
+    if (name.indexOf(":index") > 0)
+        name = name.replace(":index", ":" + index)
+
+    //edge case when the user doesn't have this in their datafile
+    if (typeof serverData.triggersNamesArray == "undefined")
+        serverData.triggersNamesArray = [];
+
+    if (!serverData.triggersNamesArray.includes(name))
+        serverData.triggersNamesArray.push(name);
+
+    // make it alphabetical
+    serverData.triggersNamesArray.sort();
+}
+
+// ============================================================================
+//                           FUNCTION: removeTriggersArray
+// ============================================================================
+function removeTriggersArray (name)
+{
+    const index = serverData.triggersNamesArray.indexOf(name);
+    if (index > -1)
+        serverData.triggersNamesArray.splice(index, 1);
+}
+// ============================================================================
+//                           FUNCTION: postTriggers
+// ============================================================================
+async function postTriggers ()
+{
+    let index = ""
+    let simvarindex = 0
+    let name = ""
+    let simvar = "";
+    let indexToSplit = 0;
+    let data = ""
+
+    //serverData.triggersNamesArray = []
+    //SaveDataToServer()
+
+    //check if connected
+    if (!localConfig.state.msfsconnected)
+        return;
+    for (index in serverData.triggersNamesArray)
+    {
+        // check if we have an index (':n' part)
+        if (serverData.triggersNamesArray[index].indexOf(":") > 0)
+        {
+            // the name will have the index attached so we need to split it up
+            simvar = serverData.triggersNamesArray[index]
+            indexToSplit = simvar.indexOf(':');
+            name = simvar.slice(0, indexToSplit);
+            simvarindex = simvar.slice(indexToSplit + 1);
+            simvar = simvar.replaceAll(" ", "_")
+        }
+        else
+        {
+            name = serverData.triggersNamesArray[index]
+            simvar = serverData.triggersNamesArray[index]
+            simvar = simvar.replaceAll(" ", "_")
+        }
+        try
+        {
+            data = await localConfig.msfs_api.get(simvar);
+        }
+        catch (err)
+        {
+            console.log("Error during get", err.message)
+        }
+
+        if (simvar.indexOf(":") > 0)
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ChannelData",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "trigger_" + name + ":index",
+                        serverConfig.extensionname,
+                        { index: simvarindex, data: data[simvar] },
+                        serverConfig.channel
+                    ),
+                    serverConfig.channel
+                ));
+        }
+        else
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ChannelData",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "trigger_" + name,
+                        serverConfig.extensionname,
+                        { data: data[simvar] },
+                        serverConfig.channel
+                    ),
+                    serverConfig.channel
+                ));
+        }
+    }
+}
+// ============================================================================
+//                        FUNCTION: performAction
+// ============================================================================
+function performAction (data)
+{
+    let action = ""
+    try
+    {
+        action = data.type.replace("action_", "")
+        if (action.indexOf(":index") > 0)
+            action = action.replace("index", data.data.index)
+        console.log("calling set with", action, data.data.data)
+        localConfig.msfs_api.set(action, data.data.data)
+    }
+    catch (err)
+    {
+        console.log("ERROR:performAction ", err.message)
+    }
+}
+// ============================================================================
+//                           FUNCTION: pollMSFS
+// ============================================================================
+function pollMSFS ()
+{
+    clearTimeout(localConfig.pollMSFSHandle);
+    postTriggers();
+    localConfig.pollMSFSHandle = setTimeout(pollMSFS, serverConfig.msfs2020SimPollInterval * 1000)
+}
+
+// ============================================================================
+//                           FUNCTION: file_log
+//                       For debug purposes. logs raw message data
+// ============================================================================
+let filestreams = [];
+let basedir = "msfsdata/";
+function file_log (type, data)
+{
+    try
+    {
+        //console.log("file_log", type, tags, message)
+
+        var newfile = false;
+        var filename = "__noname__";
+        var buffer = "\n//#################################\n";
+        // sometimes tags are a string, lets create an object for it to log
+        if (typeof tags != "object")
+            data = { data: data }
+        if (!fs.existsSync(basedir))
+        {
+            newfile = true;
+            fs.mkdirSync(basedir, { recursive: true });
+        }
+
+        // check if we already have this handler
+        if (!filestreams.type)
+        {
+
+            filename = type;
+            filestreams[type] = fs.createWriteStream(basedir + filename + ".js", { flags: 'a' });
+
+        }
+        if (newfile)
+        {
+            buffer += "let " + type + ";\n";
+            buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+        }
+        else
+            buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+
+        filestreams[type].write(buffer);
+        //bad coding but can't end it here (due to async stuff) and it is just debug code (just left as a reminder we have a dangling pointer)
+        filestreams[type].end("")
+
+    }
+    catch (error)
+    {
+        console.log("debug file logging crashed", error.message)
+    }
+}
+// ============================================================================
+//                                  EXPORTS
+// Note that initialise is mandatory to allow the server to start this extension
+// ============================================================================
+export { initialise };

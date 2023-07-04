@@ -16,4 +16,5 @@ datastore/
 tempfiles/
 timerfiles/
 chatdata/
+msfsdata/
 debug_only_testing*
