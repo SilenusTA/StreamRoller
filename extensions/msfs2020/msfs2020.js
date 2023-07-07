@@ -35,11 +35,8 @@ import sr_api from "../../backend/data_center/public/streamroller-message-api.cj
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-// test code. run with msfs_api.tryConnect()
-//import * as msfs_api from "./msfs_api.js";
 import { SystemEvents, MSFS_API } from 'msfs-simconnect-api-wrapper'
 import { SimVars } from "msfs-simconnect-api-wrapper/simvars/index.js";
-
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
@@ -51,18 +48,14 @@ const localConfig = {
     state: {
         color: "red",
         msfsconnected: false,
-        paused: false,
     },
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     pollMSFSHandle: null,
     msfs_api: new MSFS_API(),
-    //maintain the list of trigger names for easier checking
-
+    //maintain a list of trigger handles for deregistering
+    EventCallabackHandles: []
 };
-
-let connectionAttempts =
-    [{ "STREAMLABS_ALERT_ConnectionAttempts": 0 }]
 
 const default_serverConfig = {
     __version__: "0.1",
@@ -75,7 +68,7 @@ const default_serverConfig = {
 
 let serverConfig = structuredClone(default_serverConfig)
 
-const triggersandactions =
+const default_triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
@@ -87,12 +80,21 @@ const triggersandactions =
         ],
 }
 
-let serverData =
+let triggersandactions = structuredClone(default_triggersandactions)
+
+const default_serverData =
 {
+    __version__: "0.1",
     SimVars: {},
-    triggers: [],
-    triggersNamesArray: []
+    EventVars:
+        ["AIRCRAFT_LOADED", "CRASHED", "CRASH_RESET", "CUSTOM_MISSION_ACTION_EXECUTED"
+            , "FLIGHT_LOADED", "FLIGHT_SAVED", "FLIGHT_PLAN_ACTIVATED", "FLIGHT_PLAN_DEACTIVATED"
+            , "OBJECT_ADDED", "OBJECT_REMOVED", "PAUSE", "PAUSE_EX1", "PAUSED", "POSITION_CHANGED"
+            , "SIM_START", "SIM_STOP", "UNPAUSED", "VIEW"
+        ],
+    triggersNamesArray: [] // names of triggers we are monitoring ie. FLAPS_POSITION:1
 }
+let serverData = structuredClone(default_serverData)
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -166,10 +168,14 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.data != "")
         {
+            if (server_packet.data.__version__ != default_serverData.__version__)
+            {
+                serverData = structuredClone(default_serverData)
+                console.log("\x1b[31m" + serverConfig.extensionname + " DataFile Updated", "The data file has been Restored. Your settings may have changed" + "\x1b[0m");
+            }
             if (server_packet.to === serverConfig.extensionname && server_packet.data != undefined
                 && Object.keys(server_packet.data.SimVars).length > 0)
             {
-                serverData = structuredClone(server_packet.data);
                 SaveDataToServer();
                 // connect to msfs
                 MSFS2020Connect();
@@ -222,7 +228,8 @@ function onDataCenterMessage (server_packet)
                 if (extension_packet.data.demoextension_restore_defaults == "on")
                 {
                     serverConfig = structuredClone(default_serverConfig);
-                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                    serverData = structuredClone(default_serverData)
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile and Data files Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
                 }
                 else
                 {
@@ -279,17 +286,14 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "UnknownChannel")
     {
-        if (server_packet.data == "STREAMLABS_ALERT" && connectionAttempts[0].STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+        setTimeout(() =>
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-            setTimeout(() =>
-            {
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "JoinChannel", serverConfig.extensionname, server_packet.data
-                    ));
-            }, 5000);
-        }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "JoinChannel", serverConfig.extensionname, server_packet.data
+                ));
+        }, 5000);
     }
     else if (server_packet.type === "ChannelData")
     {
@@ -385,6 +389,7 @@ function handleSettingsWidgetLargeData (modalcode)
         console.log("MSFS  defaults restored")
         console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
         serverConfig = structuredClone(default_serverConfig);
+        serverData = structuredClone(default_serverData)
         return;
     }
 
@@ -496,7 +501,7 @@ function SendSettingsWidgetLarge (tochannel)
             first = false;
             generatedpage = ""
             generatedpage += "<h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. Polling "
-            generatedpage += "too many Sim Variables too fast can cause lag in the game. Check the tool tips for values</p>"
+            generatedpage += "too many Sim Variables too fast can cause lag in the game. Check the tool tips by hovering mouse over the SimVar name for description</p>"
             generatedpage += "<p>Note: A simvar needs to be monitored to be able to set a trigger on it.</p>"
             for (let i = 0; i < triggerKeys.length; i++)
             {
@@ -635,9 +640,9 @@ function SaveDataToServer ()
 function heartBeatCallback ()
 {
     let color = "red"
-    if (localConfig.state.msfsconnected == true)
+    if (serverConfig.msfs2020ennabled == "on")
     {
-        if (localConfig.state.paused == true)
+        if (localConfig.state.msfsconnected != true)
             localConfig.state.color = "orange"
         else
             localConfig.state.color = "green"
@@ -671,7 +676,7 @@ function MSFS2020Connect ()
 {
     if (serverConfig.msfs2020ennabled == "on")
     {
-        // make a clone of the objects
+        // make a clone of the simVars (so we can add extra fields for enabled etc)
         const varKeys = Object.keys(SimVars);
         varKeys.sort();
         for (let i = 0; i < varKeys.length; i++)
@@ -689,18 +694,25 @@ function MSFS2020Connect ()
 
         }
         SaveDataToServer()
-        // use the simvars to create out triggers (there are lots of them though :( ))
-        /*      'TOTAL WORLD VELOCITY': {
-    desc: 'Speed relative to the earths center.',
-    units: 'feet per second',
-    data_type: 4,
-    read: [Function: read],
-    write: [Function (anonymous)],
-    settable: true,
-    name: 'TOTAL WORLD VELOCITY'
-  },*/
 
-        //console.log("SimVars['PUSHBACK STATE:index']", SimVars['PUSHBACK STATE:index'])
+        // Create triggers and actions
+        triggersandactions = {}
+        triggersandactions = structuredClone(default_triggersandactions)
+
+        for (let i = 0; i < serverData.EventVars.length; i++)
+        {
+            triggersandactions.triggers.push(
+                {
+                    name: SystemEvents[serverData.EventVars[i]].name,
+                    displaytitle: SystemEvents[serverData.EventVars[i]].name,
+                    description: SystemEvents[serverData.EventVars[i]].desc,
+                    messagetype: "triggers_" + SystemEvents[serverData.EventVars[i]].name,
+                    channel: serverConfig.channel,
+                    parameters: { data: "" }
+                });
+        }
+
+        // Add simvars
         for (let i = 0; i < varKeys.length; i++)
         {
             if (serverData.SimVars[varKeys[i]].settable == true)
@@ -770,7 +782,7 @@ function MSFS2020Connect ()
                 onConnect: (nodeSimconnectHandle) => MSFS2020Connected(nodeSimconnectHandle),
                 onRetry: (_retries, interval) =>
                 {
-                    console.log(`MS2020 Flight Sim: Connection failed: retrying in ${interval} seconds.`);
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", `Connection failed: retrying in ${interval} seconds.`);
                     localConfig.state.msfsconnected = false;
                 }
             });
@@ -781,6 +793,7 @@ function MSFS2020Connect ()
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", "Failed to connect", err.message);
         }
     }
+    /* uncomment to log the data structures if you are interested in the data we get from msfs */
     //file_log("SimVars", serverData.SimVars)
     //file_log("triggersandactions", triggersandactions)
     //file_log("SystemEvents", SystemEvents)
@@ -792,6 +805,18 @@ function MSFS2020Connect ()
 function MSFS2020Disconnect ()
 {
     clearTimeout(localConfig.pollMSFSHandle)
+    for (let i = 0; i < serverData.EventVars.length; i++)
+    {
+
+        if (localConfig.EventCallabackHandles[serverData.EventVars[i]])
+            localConfig.EventCallabackHandles[serverData.EventVars[i]]()
+    }
+    for (let i = 0; i < serverData.AirportVars.length; i++)
+    {
+
+        if (localConfig.EventCallabackHandles[serverData.AirportVars[i]])
+            localConfig.EventCallabackHandles[serverData.AirportVars[i]]()
+    }
 }
 // ============================================================================
 //                           FUNCTION: MSFS2020Connect
@@ -801,43 +826,58 @@ async function MSFS2020Connected (handle)
     try
     {
         localConfig.state.msfsconnected = true;
-
-        const pauseOff = localConfig.msfs_api.on(SystemEvents.PAUSED, () =>
+        localConfig.EventHandles = []
+        for (let i = 0; i < serverData.EventVars.length; i++)
         {
-            localConfig.state.paused = true;
-            pauseOff();
-            console.log(`sim paused`);
-        });
 
-        const unpauseOff = localConfig.msfs_api.on(SystemEvents.UNPAUSED, () =>
-        {
-            localConfig.state.paused = false;
-            unpauseOff();
-            console.log(`sim unpaused`);
-        });
+            localConfig.EventCallabackHandles[serverData.EventVars[i]]
+                = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
+                {
+                    //post a trigger
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "ChannelData",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "triggers_" + SystemEvents[serverData.EventVars[i]].name,
+                                serverConfig.extensionname,
+                                { data: data },
+                                serverConfig.channel
+                            ),
+                            serverConfig.channel
+                        ));
+                });
+        }
 
-        localConfig.NEARBY_AIRPORTS = await localConfig.msfs_api.get(`NEARBY_AIRPORTS`);
-        //console.log(`${localConfig.NEARBY_AIRPORTS.length} nearby airports`);
+        /*
+        this is left in as a hint if we decide to add this in future. Airports appear
+        to use a different api that quick testing seemed to fail on.
 
-        localConfig.ALL_AIRPORTS = await localConfig.msfs_api.get(`ALL_AIRPORTS`);
-        //console.log(`${localConfig.ALL_AIRPORTS.length} total airports on the planet`);
-
+         localConfig.NEARBY_AIRPORTS = await localConfig.msfs_api.get(`NEARBY_AIRPORTS`);
+         //console.log(`${localConfig.NEARBY_AIRPORTS.length} nearby airports`);
+     
+         localConfig.ALL_AIRPORTS = await localConfig.msfs_api.get(`ALL_AIRPORTS`);
+         //console.log(`${localConfig.ALL_AIRPORTS.length} total airports on the planet`);
+     */
         //const airportData = await localConfig.msfs_api.get(`AIRPORT:CYYJ`);
         //console.log(JSON.stringify(airportData, null, 2));
         //console.log(JSON.stringify(await localConfig.msfs_api.get(`AIRPORT:CYYJ`), null, 2));
 
-        /* const inRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_IN_RANGE, (data) =>
-        {
-            console.log("in range airports:",data);
-            inRange();
-        });
-
-        const outOfRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_OUT_OF_RANGE, (data) =>
-        {
-            console.log("outOfRange",data);
-            outOfRange();
-        });
-        */
+        /*
+                console.log("AIRPORTS_IN_RANGE", AIRPORTS_IN_RANGE)
+                const inRange = localConfig.msfs_api.on(AIRPORTS_IN_RANGE, (data) =>
+                {
+                    console.log("in range airports:", data);
+                    inRange();
+                });
+        
+                /*
+                const outOfRange = localConfig.msfs_api.on(SystemEvents.AIRPORTS_OUT_OF_RANGE, (data) =>
+                {
+                    console.log("outOfRange",data);
+                    outOfRange();
+                });
+                */
     }
     catch (err)
     {
@@ -853,7 +893,7 @@ function addToTriggersArray (name, index = 0)
     if (name.indexOf(":index") > 0)
         name = name.replace(":index", ":" + index)
 
-    //edge case when the user doesn't have this in their datafile
+    // edge case when the user doesn't have this in their datafile
     if (typeof serverData.triggersNamesArray == "undefined")
         serverData.triggersNamesArray = [];
 
@@ -884,10 +924,6 @@ async function postTriggers ()
     let simvar = "";
     let indexToSplit = 0;
     let data = ""
-
-    //serverData.triggersNamesArray = []
-    //SaveDataToServer()
-
     //check if connected
     if (!localConfig.state.msfsconnected)
         return;
@@ -909,6 +945,8 @@ async function postTriggers ()
             simvar = serverData.triggersNamesArray[index]
             simvar = simvar.replaceAll(" ", "_")
         }
+
+        // get the simvar data
         try
         {
             data = await localConfig.msfs_api.get(simvar);
@@ -917,7 +955,7 @@ async function postTriggers ()
         {
             console.log("Error during get", err.message)
         }
-
+        // if we have an index add it to the data we send out
         if (simvar.indexOf(":") > 0)
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -952,6 +990,7 @@ async function postTriggers ()
 }
 // ============================================================================
 //                        FUNCTION: performAction
+//          someone has reqested we do something in flight sim
 // ============================================================================
 function performAction (data)
 {
@@ -981,7 +1020,7 @@ function pollMSFS ()
 
 // ============================================================================
 //                           FUNCTION: file_log
-//                       For debug purposes. logs raw message data
+//              For debug purposes. logs message data to file
 // ============================================================================
 let filestreams = [];
 let basedir = "msfsdata/";
