@@ -66,7 +66,7 @@ const localConfig = {
     firstload: true
 };
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
     enablestreamersonglist: "off",
@@ -322,6 +322,8 @@ function onDataCenterMessage (server_packet)
             // if we have enabled/disabled connection
             if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
             {
+                if (extension_packet.data.streamersonglistname != "")
+                    localConfig.username = extension_packet.data.streamersonglistname;
                 //we are currently enabled so lets stop polling
                 if (serverConfig.enablestreamersonglist == "on")
                 {

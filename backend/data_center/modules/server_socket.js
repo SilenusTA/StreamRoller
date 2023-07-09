@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- /** ######################### SERVER_SOCKET.js #################################
+/** ######################### SERVER_SOCKET.js #################################
 // @file This file handles the server socket. This will consume client
 // sockets and handle messages received and sent out
 // -------------------------- Creation ----------------------------------------
@@ -99,6 +99,7 @@ let extensions = {};
 let backend_server = null;
 let server_socket = null;
 let config = {}
+let extensionlist_requesters = []
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -201,13 +202,19 @@ function onMessage (socket, server_packet)
     {
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + server_packet.from);
         extensions[server_packet.from].socket = socket;
+        // if we add a new extension send the list out to anyone who has requested it so far to update them
+        for (let i = 0; i < extensionlist_requesters.length; i++)
+            mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
     }
-    else  
+    else
     {
         if (extensions[server_packet.from].socket.id != socket.id)
         {
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket changed for " + server_packet.from);
             extensions[server_packet.from].socket = socket;
+            // if we add a new extension send the list out to anyone who has requested it so far to update them
+            for (let i = 0; i < extensionlist_requesters.length; i++)
+                mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
         }
     }
     // process the clients request
@@ -249,7 +256,11 @@ function onMessage (socket, server_packet)
     else if (server_packet.type === "RequestCredentials")
         mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "RequestExtensionsList")
+    {
+        if (!extensionlist_requesters.includes(server_packet.from))
+            extensionlist_requesters.push(server_packet.from)
         mh.sendExtensionList(socket, server_packet.from, extensions);
+    }
     else if (server_packet.type === "RequestChannelsList")
         mh.sendChannelList(socket, server_packet.from, channels);
     else if (server_packet.type === "CreateChannel")

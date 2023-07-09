@@ -476,8 +476,7 @@
                 // check that it is not from us as we process our own code internally
                 if (extension_packet.from != serverConfig.extensionname)
                 {
-                    consle.log("SettingsWidgetSmallData")
-                    // lets reset our config checkbox settings (modal will omit ones not
+                   // lets reset our config checkbox settings (modal will omit ones not
                     // checked in checkboxes so set them to "off" here first if you have them)
                     // set our config values to the ones in message
                     //for (const [key, value] of Object.entries(extension_packet.data))
