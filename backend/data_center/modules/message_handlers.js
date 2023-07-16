@@ -19,16 +19,16 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- /**
- * Summary. Server Code used to routing functions and all server messages
- * Messages are routed by type. Either driect to socket, room or broadcast
- * all(excluding sender), or broadcast to all(including sender)
- * 
- * @link   https://github.com/SilenusTA/StreamRoller
- * @file   common StreamRoller functions
- * @author Silenus aka twitch.tv/OldDepressedGamer
- * @since  29-Jan-2021
- */
+/**
+* Summary. Server Code used to routing functions and all server messages
+* Messages are routed by type. Either driect to socket, room or broadcast
+* all(excluding sender), or broadcast to all(including sender)
+* 
+* @link   https://github.com/SilenusTA/StreamRoller
+* @file   common StreamRoller functions
+* @author Silenus aka twitch.tv/OldDepressedGamer
+* @since  29-Jan-2021
+*/
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
@@ -292,7 +292,7 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", server_packet.to, " connection doesn't exist (maybe still loading?) from " + server_packet.from);
         client_socket.emit("message",
-            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
+            sr_api.ServerPacket("UnknownExtension", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
     }
     // send direct to client
     else if (extensions[server_packet.to] && extensions[server_packet.to].socket)

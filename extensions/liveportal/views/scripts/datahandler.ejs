@@ -135,12 +135,6 @@
     // truncates long log messages for easier reading. 
     const LOGGING_MAX_MESSAGE_LENGTH = 200
 
-    // This is used to refresh the page on a new extension list
-    // Currently if a second list comes in the submit handlers for the forms get broken
-    // and any form submitted will cause an error.
-    // possibly fixed. remove later if no issues are found
-    let bugfix_extensionlist_count = -100;
-
     //global data store for the app
     const livePortalData = {};
     livePortalData.extensions = {};
@@ -397,12 +391,8 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ExtensionList")
         {
-            // we need to reload the page if we receive more than one list due to callback handler isses
-            // on the form
-            if (bugfix_extensionlist_count > 0)
-                location.reload();
-            else
-                bugfix_extensionlist_count++;
+            console.log("extensionlistreceived", server_packet.data)
+
             //load extension cards
             loadExtensionCards(server_packet.data);
             if (server_packet.data.includes("obs"))
@@ -453,7 +443,10 @@
                 // we process our own submits so don't do anything with the updates we send out if they come 
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname)
-                    addSettingsWidgetSmall(extension_packet.from, extension_packet.data);
+                {
+                    livePortalData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
+                    addSettingsWidgetSmall(extension_packet.from);
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED EXTENSION MODAL CODE
@@ -476,7 +469,7 @@
                 // check that it is not from us as we process our own code internally
                 if (extension_packet.from != serverConfig.extensionname)
                 {
-                   // lets reset our config checkbox settings (modal will omit ones not
+                    // lets reset our config checkbox settings (modal will omit ones not
                     // checked in checkboxes so set them to "off" here first if you have them)
                     // set our config values to the ones in message
                     //for (const [key, value] of Object.entries(extension_packet.data))
@@ -840,9 +833,8 @@
         {
             //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             // need to add some sort of flood control here so we are only attempting to join one at a time
-            if (server_packet.data.message.dest_channel != "")
+            if (server_packet.data != "" && server_packet.channel != undefined)
             {
-                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
                 setTimeout(() =>
                 {
 
@@ -850,19 +842,15 @@
                         sr_api.ServerPacket(
                             "JoinChannel",
                             serverConfig.extensionname,
-                            server_packet.data.message.dest_channel
+                            server_packet.data
                         ));
                 }, 10000);
             }
-            //else
-            //console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
-
-            // -------------------------------------------------------------------------------------------------
-            //                           IGNORING THESE MESSAGE (to save loging them)
-            // -------------------------------------------------------------------------------------------------
-        } else if (server_packet.type === "ChannelJoined"
+        }
+        else if (server_packet.type === "ChannelJoined"
             || server_packet.type === "ChannelCreated"
             || server_packet.type === "ChannelLeft"
+            || server_packet.type === "UnknownExtension" // extension may not have loaded yet
         )
         {
             // just a blank handler for items we are not using to avoid message from the catchall
@@ -940,8 +928,7 @@
                 RequestSettingsWidgetLargeCode(extensions[i]);
 
             }
-
-            html += "<div  id='" + extensions[i] + "_visibility_settingswidgetsmall' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
+            html += "<div id='" + extensions[i] + "_visibility_settingswidgetsmall' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
             html += " <span id='" + extensions[i] + "_settingslinkname'>" + extensions[i] + "</span></div>";
 
         };
@@ -954,7 +941,7 @@
         for (var i = 0; i < extensions.length; i++)
         {
             if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
-                addSettingsWidgetSmall(extensions[i], livePortalData.extensions[extensions[i]].settingswidgetsmall)
+                addSettingsWidgetSmall(extensions[i])
         }
         //        if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
         addALLSettingsWidgetLarge()
@@ -1046,25 +1033,28 @@
     // ----------------------------- notes ----------------------------------------
     // None
     // ===========================================================================
-    function addSettingsWidgetSmall (xname, data)
+    function addSettingsWidgetSmall (xname)
     {
         // only update modals if we have received the extension name from the server
         if (livePortalData.extensions[xname])
         {
+            let data = livePortalData.extensions[xname].settingswidgetsmall
             // grab the placeholder code we user to save us from writing all the code from scratch :P
             let modalbox = document.getElementById("LivePortalSettingsWidgetsSmallPlaceholder").children[0];
-            // grab the <li> element for this extension added in when we got the extension list
-            let extLiTag = document.getElementById(xname + "_settingslinkname");
+            // check we have a visibity link, if not we don't have a container for this model to go in
             if (document.getElementById(xname + "_visibility_settingswidgetsmall") == null)
                 return
             document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "";
+
+            // grab the <li> element for this extension added in when we got the extension list
+            let extLiTag = document.getElementById(xname + "_settingslinkname");
+
+
             // remove the previous event listener (if there was one)
             $('#' + xname + "_settingswidgetsmallmodal").off('submit');
-            //set the element contents to a blank extension placeholder
-            // if we have already set this element to the placeholder page we don't want to do it again
-            // otherwise it will replace the submit callback and throw an error when updated a second time.
-            if (extLiTag.innerHTML === xname)
-                extLiTag.innerHTML = modalbox.innerHTML;
+
+            //load the modal data we have been sent into the tag
+            extLiTag.innerHTML = modalbox.innerHTML;
             // setup the link to show the dialog
             extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_settingswidgetsmallmodal";
             extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
@@ -1098,7 +1088,6 @@
                 return false;
             });
             document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "block"
-            livePortalData.extensions[xname].settingswidgetsmall = document.getElementById(xname + "_settingslinkname").innerHTML
 
         }
         // need to update the mode in case we have received a light mode 
@@ -1725,8 +1714,8 @@
             if (key === "modmessage_channel")
             {
                 // udpate the server (or just refresh the value even if the same)
-                changeDiscordListeningChannel(serverConfig[key]);
                 serverConfig[key] = fieldsAsObject[key];
+                changeDiscordListeningChannel(serverConfig[key]);
             }
             else if (key === "randomfactstimeout")
                 serverConfig[key] = fieldsAsObject[key] * 60000
@@ -1777,8 +1766,8 @@
                 if (key === "modmessage_channel")
                 {
                     // udpate the server (or just refresh the value even if the same)
-                    changeDiscordListeningChannel(serverConfig[key]);
                     serverConfig[key] = fieldsAsObject[key];
+                    changeDiscordListeningChannel(serverConfig[key]);
                 }
                 else if (key === "randomfactstimeout")
                     serverConfig[key] = fieldsAsObject[key] * 60000

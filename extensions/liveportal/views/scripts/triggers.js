@@ -74,7 +74,6 @@ function addTriggersWidgetLarge ()
 {
     // clear the existing page data
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")
-    // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
     let triggerextensionnames = ""
     let triggers = localConfig.triggersAndActions.triggers;
 
@@ -89,7 +88,7 @@ function addTriggersWidgetLarge ()
             triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
     }
     TriggersExtensionChoser.innerHTML = triggerextensionnames;
-    triggersLoadTriggers(key)
+    triggersLoadTriggers(0)
     TriggersExtensionChoser.dispatchEvent(new Event('change'))
 }
 // ============================================================================
@@ -101,6 +100,8 @@ function addTriggersWidgetLarge ()
 // ============================================================================
 function triggersLoadTriggers (name)
 {
+    if (name === "")
+        return;
     let TriggerExtensionTriggers = document.getElementById("triggerExtensionTriggers")
     let selectedTrigger = localConfig.triggersAndActions.triggers[name]
     let triggerextensiontriggers = ""

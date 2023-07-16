@@ -212,9 +212,6 @@ function onMessage (socket, server_packet)
         {
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket changed for " + server_packet.from);
             extensions[server_packet.from].socket = socket;
-            // if we add a new extension send the list out to anyone who has requested it so far to update them
-            for (let i = 0; i < extensionlist_requesters.length; i++)
-                mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
         }
     }
     // process the clients request
