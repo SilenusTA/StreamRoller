@@ -1,0 +1,58 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<!-- This is our own karge settings widget code for Live Portal
+<div id="OverlaySourcesSettingsWidgetLarge_Placeholder" hidden> -->
+<!-- 
+        we grab the code from here down to insert it Above link is just to allow us to use DOM to grab it
+        While the extensions canload the file from disk we can't on teh webpage so we just embed this and
+        use the dom to copy it. Bit of a hack but simpler than loading it from the server.
+    -->
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">Overlay Settings</h4>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="overlaysourcesenabled" type="checkbox" id="overlaysourcesenabled"
+                overlaysourcesenabledchecked>
+            <label class="form-check-label" for="overlaysourcesenabled">Enable/Disable main overlay<BR>Warning:
+                disabling
+                this will also disable all overlays running below</label>
+        </div>
+    </div>
+    <HR>
+    <h5 id="overlaysources_snippets" class="text-center">Overlay snippets</h5>
+    <p>Individual overlay settings
+    </p>
+    <div id="overlaysources_overlaysnippets">
+        overlaysources_overlaysnippets_go_here
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

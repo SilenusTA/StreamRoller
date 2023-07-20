@@ -391,8 +391,6 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ExtensionList")
         {
-            console.log("extensionlistreceived", server_packet.data)
-
             //load extension cards
             loadExtensionCards(server_packet.data);
             if (server_packet.data.includes("obs"))
