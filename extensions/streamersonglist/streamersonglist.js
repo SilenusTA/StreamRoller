@@ -337,6 +337,7 @@ function onDataCenterMessage (server_packet)
                 if (extension_packet.data.streamersonglistname != localConfig.username)
                 {
                     localConfig.username = extension_packet.data.streamersonglistname;
+                    serverConfig.streamersonglistname = extension_packet.data.streamersonglistname
                     serverConfig.enablestreamersonglist = "off"
                 }
                 // if we have enabled/disabled connection
@@ -653,22 +654,46 @@ function sendSonglist (extension)
 // ============================================================================
 function sendCurrentSongChange (extension)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "trigger_CurrentSongChange",
+    if (extension != "")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
                 serverConfig.extensionname,
-                {
-                    type: "trigger_CurrentSongChange",
-                    songName: localConfig.currentsong,
-                    textMessage: "Current song now: " + localConfig.currentsong
-                },
+                sr_api.ExtensionPacket(
+                    "trigger_CurrentSongChange",
+                    serverConfig.extensionname,
+                    {
+                        type: "trigger_CurrentSongChange",
+                        songName: localConfig.currentsong,
+                        textMessage: "Current song now: " + localConfig.currentsong
+                    },
+                    serverConfig.channel,
+                    extension
+                ),
+                serverConfig.channel,
+                extension
+            ));
+    }
+    else
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "trigger_CurrentSongChange",
+                    serverConfig.extensionname,
+                    {
+                        type: "trigger_CurrentSongChange",
+                        songName: localConfig.currentsong,
+                        textMessage: "Current song now: " + localConfig.currentsong
+                    },
+                    serverConfig.channel
+                ),
                 serverConfig.channel
-            ),
-            serverConfig.channel
-        ));
+            ));
+    }
 
 }
 // ============================================================================
