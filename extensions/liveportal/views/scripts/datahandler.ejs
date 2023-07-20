@@ -399,8 +399,8 @@
             {
                 RequestOBSScenes("obs");
             }
-            // call the extension cards to recieve the triggers/actions they can provide
-            initiTriggersAndActions(server_packet.data);
+            // call the triggers code to request the triggers/actions from each extension in the list
+            initTriggersAndActions(server_packet.data);
         }
         else if (server_packet.type === "ExtensionMessage")
         {
@@ -614,7 +614,6 @@
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED trigger and action data
             // -------------------------------------------------------------------------------------------------
-
             else if (extension_packet.type === "TriggerAndActions")
             {
                 if (extension_packet.to == serverConfig.extensionname)
@@ -637,7 +636,7 @@
             // -------------------------------------------------------------------------------------------------
             //                           CheckForTrigger
             // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type != "HeartBeat")
+            if (extension_packet.type.startsWith("trigger_"))
                 CheckTriggers(extension_packet)
             // -------------------------------------------------------------------------------------------------
             //                           HEARTBEAT
@@ -666,6 +665,10 @@
                     RequestExtList();
                     RequestChList();
                 }
+            }
+            else if (extension_packet.type === "TriggerAndActions")
+            {
+                receivedTrigger(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
             //                           STREAMLABS_ALERT
