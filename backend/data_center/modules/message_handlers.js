@@ -283,14 +283,12 @@ function sendLoggingLevel (client_socket)
 function forwardMessage (client_socket, server_packet, channels, extensions)
 {
     // check if we tried to send to an invalid channel or extension name
-    // check for a 'to' field but no valid socket registered for it
-    //console.log("to ", server_packet.to);
 
     // if message provides a destination but we don't a client socket for it
     if (server_packet.to && extensions[server_packet.to] && !extensions[server_packet.to].socket)
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:extension:", server_packet.to, " connection doesn't exist (maybe still loading?) from " + server_packet.from);
+            "UnknownExtension:", server_packet.to, " connection doesn't exist (maybe still loading?) from " + server_packet.from);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownExtension", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
     }
@@ -305,7 +303,7 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     else if (server_packet.dest_channel && !channels.includes(server_packet.dest_channel))
     {
         logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
-            "Destination:channel:", server_packet.dest_channel, "doesn't exist (is the extension running?) from " + server_packet.from);
+            "UnknownChannel:", server_packet.dest_channel, "doesn't exist (is the extension running?) from " + server_packet.from);
         client_socket.emit("message",
             sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, server_packet.dest_channel));
     }
