@@ -200,7 +200,7 @@ function onMessage (socket, server_packet)
     }
     if (typeof (extensions[server_packet.from].socket) === "undefined" || !extensions[server_packet.from].socket)
     {
-        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for " + server_packet.from);
+        logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for ", server_packet.from);
         extensions[server_packet.from].socket = socket;
         // if we add a new extension send the list out to anyone who has requested it so far to update them
         for (let i = 0; i < extensionlist_requesters.length; i++)
@@ -208,9 +208,15 @@ function onMessage (socket, server_packet)
     }
     else
     {
+        // note that we currently only have one slot per connection. this works for extensions that are only loaded once
+        // but for webpage stuff we will need to allow more than one sockect for that extension name
+        // we need to append the socket id to the extension name to fix this!!!
         if (extensions[server_packet.from].socket.id != socket.id)
         {
-            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket changed for " + server_packet.from);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket id changed for ", server_packet);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Previous id ", extensions[server_packet.from].socket.id);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "New id ", socket.id);
+            //update the extensions socket as it has changed
             extensions[server_packet.from].socket = socket;
         }
     }
