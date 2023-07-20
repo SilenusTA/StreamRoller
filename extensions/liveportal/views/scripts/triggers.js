@@ -22,9 +22,9 @@ sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePor
 */
 
 // ============================================================================
-//                           FUNCTION: initiTriggersAndActions
+//                           FUNCTION: initTriggersAndActions
 // ============================================================================
-function initiTriggersAndActions (extension_list)
+function initTriggersAndActions (extension_list)
 {
     // request triggers and actions from all the current extenssions we have
     extension_list.forEach(ext =>
@@ -54,9 +54,9 @@ function initiTriggersAndActions (extension_list)
 function receivedTrigger (triggers)
 {
     localConfig.triggersAndActions.descriptions[triggers.extensionname] = triggers.description;
-    if (triggers.triggers)
+    if (triggers.triggers && triggers.triggers.length > 0)
         localConfig.triggersAndActions.triggers[triggers.extensionname] = triggers.triggers;
-    if (triggers.actions)
+    if (triggers.actions && triggers.actions.length > 0)
         localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
     // update the page with the new triggeroptions
 
@@ -76,20 +76,22 @@ function addTriggersWidgetLarge ()
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")
     let triggerextensionnames = ""
     let triggers = localConfig.triggersAndActions.triggers;
-
-    for (var key in triggers)
+    if (Object.keys(triggers).length > 0)
     {
-        if (triggerextensionnames == "")
+        for (var key in triggers)
         {
-            triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
-            TriggersExtensionChoser.title = key
+            if (triggerextensionnames == "")
+            {
+                triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
+                TriggersExtensionChoser.title = key
+            }
+            else
+                triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
         }
-        else
-            triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
+        TriggersExtensionChoser.innerHTML = triggerextensionnames;
+        triggersLoadTriggers(0)
+        TriggersExtensionChoser.dispatchEvent(new Event('change'))
     }
-    TriggersExtensionChoser.innerHTML = triggerextensionnames;
-    triggersLoadTriggers(0)
-    TriggersExtensionChoser.dispatchEvent(new Event('change'))
 }
 // ============================================================================
 // Webpage callback to load correct extension triggers
@@ -161,20 +163,22 @@ function addActionsWidgetLarge ()
     // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
     let actionextensionnames = ""
     let action = localConfig.triggersAndActions.actions;
-
-    for (var key in action)
+    if (Object.keys(action).length > 0)
     {
-        if (actionextensionnames == "")
+        for (var key in action)
         {
-            actionextensionnames += "<option name='" + key + "' class=' btn btn-secondary ' value=" + key + " selected>" + key + "</option>";
-            ActionExtensionChoser.title = key
+            if (actionextensionnames == "")
+            {
+                actionextensionnames += "<option name='" + key + "' class=' btn btn-secondary ' value=" + key + " selected>" + key + "</option>";
+                ActionExtensionChoser.title = key
+            }
+            else
+                actionextensionnames += "<option name='" + key + "' class=' btn btn-secondary ' value=" + key + ">" + key + "</option>";
         }
-        else
-            actionextensionnames += "<option name='" + key + "' class=' btn btn-secondary ' value=" + key + ">" + key + "</option>";
+        ActionExtensionChoser.innerHTML = actionextensionnames;
+        actionLoadAction(key)
+        ActionExtensionChoser.dispatchEvent(new Event('change'))
     }
-    ActionExtensionChoser.innerHTML = actionextensionnames;
-    actionLoadAction(key)
-    ActionExtensionChoser.dispatchEvent(new Event('change'))
 }
 // ============================================================================
 // Webpage callback to load correct extension action
