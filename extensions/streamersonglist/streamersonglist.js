@@ -120,7 +120,11 @@ const triggersandactions =
                 description: "Song was added to queue",
                 messagetype: "trigger_SongAddedToQueue",
                 channel: serverConfig.channel,
-                parameters: { songName: "" }
+                parameters: {
+                    type: "trigger_SongAddedToQueue",
+                    songName: "",
+                    textMessage: ""
+                }
             }
             ,
             {
@@ -129,7 +133,11 @@ const triggersandactions =
                 description: "Current song changed",
                 messagetype: "trigger_CurrentSongChange",
                 channel: serverConfig.channel,
-                parameters: { songName: "" }
+                parameters: {
+                    type: "trigger_CurrentSongChange",
+                    songName: "",
+                    textMessage: ""
+                }
             }
 
         ],
@@ -137,7 +145,7 @@ const triggersandactions =
     actions:
         [
             {
-                name: "SSLCurrentSongChanged",
+                name: "SSLAddSongToQueue",
                 displaytitle: "Add Song To Queue",
                 description: "Add a song to the queue",
                 messagetype: "action_AddSongToQueue",
@@ -275,7 +283,11 @@ function onDataCenterMessage (server_packet)
                                         sr_api.ExtensionPacket(
                                             "trigger_SongAddedToQueue",
                                             serverConfig.extensionname,
-                                            { songName: msg.title },
+                                            {
+                                                type: "trigger_SongAddedToQueue",
+                                                songName: msg.title,
+                                                textMessage: "Song Added to queue: " + msg.title
+                                            },
                                             serverConfig.channel),
                                         serverConfig.channel
                                     ),
@@ -319,29 +331,34 @@ function onDataCenterMessage (server_packet)
             SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
-            // if we have enabled/disabled connection
-            if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
-            {
-                if (extension_packet.data.streamersonglistname != "")
-                    localConfig.username = extension_packet.data.streamersonglistname;
-                //we are currently enabled so lets stop polling
-                if (serverConfig.enablestreamersonglist == "on")
-                {
-                    serverConfig.enablestreamersonglist = "off";
-                    localConfig.status.connected = false;
-                    clearTimeout(localConfig.pollSongQueueTimeout)
-                }
-                //currently disabled so lets start
-                else
-                {
-                    localConfig.status.connected = true;
-                    serverConfig.enablestreamersonglist = "on";
-                    pollSongQueueCallback();
-                    pollSongListCallback();
-                }
-            }
+
             if (extension_packet.to === serverConfig.extensionname)
             {
+                if (extension_packet.data.streamersonglistname != localConfig.username)
+                {
+                    localConfig.username = extension_packet.data.streamersonglistname;
+                    serverConfig.enablestreamersonglist = "off"
+                }
+                // if we have enabled/disabled connection
+                if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
+                {
+                    //we are currently enabled so lets stop polling
+                    if (serverConfig.enablestreamersonglist == "on")
+                    {
+                        serverConfig.enablestreamersonglist = "off";
+                        localConfig.status.connected = false;
+                        clearTimeout(localConfig.pollSongQueueTimeout)
+                    }
+                    //currently disabled so lets start
+                    else
+                    {
+                        localConfig.status.connected = true;
+                        serverConfig.enablestreamersonglist = "on";
+                        pollSongQueueCallback();
+                        pollSongListCallback();
+                    }
+                }
+
                 serverConfig.enablestreamersonglist = "off";
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
@@ -643,7 +660,11 @@ function sendCurrentSongChange (extension)
             sr_api.ExtensionPacket(
                 "trigger_CurrentSongChange",
                 serverConfig.extensionname,
-                { songName: localConfig.currentsong },
+                {
+                    type: "trigger_CurrentSongChange",
+                    songName: localConfig.currentsong,
+                    textMessage: "Current song now: " + localConfig.currentsong
+                },
                 serverConfig.channel
             ),
             serverConfig.channel
