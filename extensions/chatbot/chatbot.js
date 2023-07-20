@@ -352,14 +352,10 @@ function onDataCenterMessage (server_packet)
                 // was this a song request (this code can be removed once we have param passing sorted in the trigger code)
                 if (extension_packet.data.triggerparams.songName)
                 {
-                    if (extension_packet.data.triggerparams.messagetype == "trigger_SongAddedToQueue")
-                    {
-                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " song was added to the song request queue, what do you thinkof it (quote " + extension_packet.data.triggerparams.songName + " in your response and thank them for adding it)"
-                    }
+                    if (extension_packet.data.triggerparams.type == "trigger_SongAddedToQueue")
+                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " song was added to the song request queue, what do you think of that (quote " + extension_packet.data.triggerparams.songName + " in your response and thank them for adding it)"
                     else
-                    {
-                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " has reached the front of the queue and Fern will play it next, what do you think about that(quote " + extension_packet.data.triggerparams.songName + " in your response and mention it is coming up next)"
-                    }
+                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " has reached the front of the queue and will be played next, what do you think about that (quote " + extension_packet.data.triggerparams.songName + " in your response and mention it is coming up next)"
                 }
 
                 processTextMessage(extension_packet.data, true);
@@ -434,14 +430,14 @@ function onDataCenterMessage (server_packet)
         // first we check which channel the message came in on
         else if (server_packet.dest_channel === "TWITCH_CHAT")
         {
-            if (extension_packet.data.data && extension_packet.type.indexOf("_trigger") < 0)
+            if (extension_packet.data.data && extension_packet.type.indexOf("trigger_") < 0)
                 // process the chat message from twitch
                 processChatMessage(extension_packet.data);
             else
             {
                 if (serverConfig.DEBUG_MODE === "on")
                 {
-                    if (extension_packet.type.indexOf("_trigger") > -1)
+                    if (extension_packet.type.indexOf("trigger_") > -1)
                         console.log("chatbot ignoring trigger message", extension_packet.type)
                     else if (!extension_packet.data.data)
                         console.log("chatbot ignoring as no data packet in message", extension_packet.type)
@@ -914,7 +910,7 @@ function processTextMessage (data, triggerresponse = false)
     callOpenAI(messages, model_to_use)
         .then(chatMessageToPost =>
         {
-            data.response = chatMessageToPost
+            data.response = serverConfig.boticon + " " + chatMessageToPost
             if (triggerresponse)
             {
                 // send the modal data to the server
@@ -932,7 +928,7 @@ function processTextMessage (data, triggerresponse = false)
             }
             else
             {
-                // send the modal data to the server
+                // send the modal data to the extension
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
@@ -985,10 +981,11 @@ function processChatMessage (data)
     }
 
     // check what these messages are
+    if (serverConfig.DEBUG_MODE === "on")
+        console.log("checking submessages for", data.data["message-type"], sub_messages.includes(data.data["message-type"]), data.data)
     let submessage = sub_messages.includes(data.data["message-type"]);
     let handledmessage = messages_handled.includes(data.data["message-type"]);
-
-    if (!data.message)
+    if (!data.message && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -997,7 +994,9 @@ function processChatMessage (data)
         return;
     }
     // check ignore list
-    if (serverConfig.chatbotignorelist && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.data["display-name"].toLowerCase()) > -1)
+    if (serverConfig.chatbotignorelist
+        && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.data["display-name"].toLowerCase()) > -1
+        && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1074,7 +1073,9 @@ function processChatMessage (data)
     }
 
     // Is the message long enough to be considered
-    if (data.message.length < serverConfig.chatbotminmessagelength && !directChatQuestion)
+    if (data.message.length < serverConfig.chatbotminmessagelength
+        && !directChatQuestion
+        && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("message not long enough (char minimum limit in settings) " + data.message + "'", data.message.length + "<" + serverConfig.chatbotminmessagelength)
@@ -1111,7 +1112,9 @@ function processChatMessage (data)
     // check the length again after parsing the message to make sure it is still long enough (if not a direct message)
     if (
         (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
-        && (!translateToEnglish || !directChatQuestion || !submessage))
+        && !translateToEnglish
+        && !directChatQuestion
+        && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1148,10 +1151,8 @@ function processChatMessage (data)
             //         Processing a sub/dono message message
             // ##############################################
             console.log("!!!!!!!!!!!!!!!!!!!!!!!!!! chatbot: sub/dono message", chatdata.message)
-            messages = [{ "role": "user", "content": "Wow someone just :\n" + chatdata.message }];
+            messages = [{ "role": "user", "content": data.data['system-msg'] }];
         }
-
-
 
         if (serverConfig.translatetoeng === "on" || serverConfig.submessageenabled === "on")
         {
@@ -1159,7 +1160,10 @@ function processChatMessage (data)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
-                        postMessageToTwitch(" (" + data.data['display-name'] + ") " + chatMessageToPost)
+                        if (!submessage)
+                            postMessageToTwitch(" (" + data.data['display-name'] + ") " + chatMessageToPost)
+                        else
+                            postMessageToTwitch(chatMessageToPost)
                     return;
                 })
                 .catch(e =>
