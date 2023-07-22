@@ -22,7 +22,7 @@ class ScrollTextBanner
     constructor ()
     {
         this.bannersettings = {
-            enabled: "on",
+            enabled: "off",
             fontsize: "30px",
             posX: "80%",
             posY: "50%",
@@ -39,7 +39,7 @@ class ScrollTextBanner
         // counters expire
         document.getElementById("scrolltextbannercontent").addEventListener(
             'animationiteration',
-            () => { this.animationiteration() }
+            () => { this.animationiteration(); }
         )
         return this;
     }
@@ -57,6 +57,8 @@ class ScrollTextBanner
         let animationduration = "10"
         element.innerHTML = ""
 
+        while (this.bannertextarray.length > this.bannersettings.maxitems)
+            this.bannertextarray.shift()
         //loop our text string array to see if any have expired and build up the on-screen string
         for (let i = 0; i < this.bannertextarray.length; i++)
         {
@@ -67,7 +69,10 @@ class ScrollTextBanner
 
             // 0 means we need to remove it
             if (this.bannertextarray[i].count == 0)
+            {
                 this.bannertextarray.splice(i, 1)
+                --i; // decrement i as we just removed an item from the array
+            }
             else
             {
                 scrolltext += this.bannertextarray[i].text
@@ -169,7 +174,7 @@ class ScrollTextBanner
 
         overlaysnippit += '<div class="form-group row-2 text-center">'
         overlaysnippit += '<label for="scrolltextbanner_backgroundalpha" class="form-label">Background Alpha</label>'
-        //overlaysnippit += '<label id="chattemperaturerangeval">chattemperaturetext</label>'
+
         overlaysnippit += '<input type="range" class="form-range" name="scrolltextbanner_backgroundalpha" id="scrolltextbanner_backgroundalpha" min="0" max="255" step="1"'
         overlaysnippit += 'onInput="$(\'#scrolltextbanner_backgroundalpharangeval\').html($(this).val())" value="' + this.bannersettings.backgroundalpha + '">'
         overlaysnippit += '</div>'
@@ -193,12 +198,8 @@ class ScrollTextBanner
         // if we have turned off themain overlay then we need to trunours off as well
         if (data.overlaysourcesenabled.indexOf("off") > -1)
             this.bannersettings.enabled = "off"
-        //set our overlay appropriatly
-        let parent = document.getElementById("scrolltextbanner")
-        if (this.bannersettings.enabled.indexOf("on") > -1)
-            parent.style.visibility = "visible";
-        else
-            parent.style.visibility = "hidden";
+        //update the overlay
+        this.animationiteration()
     }
     // ============================================================================
     //                           FUNCTION: getTriggers

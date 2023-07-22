@@ -143,6 +143,7 @@
                     }
                 }
                 // if we have new stuff in our config (software update) but the user doesn't we need to save it                
+                updateAllOverlaySettings();
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
                 SaveConfigToServer();

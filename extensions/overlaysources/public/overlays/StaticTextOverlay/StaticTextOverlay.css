@@ -17,12 +17,12 @@
 
 .statictextoverlay {
       /* start hidden, will be shown via javascript when the user sends us data */
-      visibility: "hidden";
+      visibility: hidden;
       top: 10%;
       left: 10%;
       width: 500px;
       height: 50px;
-
+      position: absolute;
       font-family: "Audiowide-Regular";
       font-size: 30px;
       text-align: center;

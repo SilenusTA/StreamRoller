@@ -23,7 +23,7 @@ class StaticTextOverlay
     constructor ()
     {
         this.statictextsettings = {
-            enabled: "on",
+            enabled: "off",
             fontsize: "30px",
             posX: "10%",
             posY: "10%",
@@ -35,18 +35,36 @@ class StaticTextOverlay
         return true;
     }
     // ============================================================================
+    //                           FUNCTION: updatescreen
+    // ============================================================================
+    updatescreen ()
+    {
+        let element = document.getElementById("statictextoverlay")
+        element.style.top = this.statictextsettings.posX
+        element.style.left = this.statictextsettings.posY
+        element.style.width = this.statictextsettings.width
+        element.style.height = this.statictextsettings.height;
+        element.style.lineHeight = this.statictextsettings.height;
+        element.style.fontSize = this.statictextsettings.fontsize;
+        element.style.backgroundColor = "rgba(0,0,0," + (this.statictextsettings.backgroundalpha / 255) + ")";
+        if (this.statictextsettings.enabled.indexOf("on") > -1)
+            element.style.visibility = "visible";
+        else
+            element.style.visibility = "hidden";
+    }
+    // ============================================================================
     //                           FUNCTION: update
     // ============================================================================
     update (data)
     {
         let element = document.getElementById("statictextoverlay")
-
         if (data.triggerparams.textMessage)
             // use the standard data returned from the trigger if available
             element.innerHTML = data.triggerparams.textMessage
         else
             // use the action message
             element.innerHTML = data.message
+        this.updatescreen()
     }
     // ============================================================================
     //                           FUNCTION: getSettingscode
@@ -109,7 +127,7 @@ class StaticTextOverlay
     {
         for (const [key, value] of Object.entries(this.statictextsettings))
         {
-            if (data["statictextoverlay_" + key] && data["statictextoverlay_" + key].indexOf("on") > -1 && data["statictextoverlay_" + key])
+            if (data["statictextoverlay_" + key] && data["statictextoverlay_" + key].indexOf("on") > -1)
                 this.statictextsettings[key] = "on";
             else if ("statictextoverlay_" + key in data)
                 this.statictextsettings[key] = data["statictextoverlay_" + key];
@@ -123,6 +141,7 @@ class StaticTextOverlay
             parent.style.visibility = "visible";
         else
             parent.style.visibility = "hidden";
+        this.updatescreen()
     }
     // ============================================================================
     //                           FUNCTION: getTriggers
