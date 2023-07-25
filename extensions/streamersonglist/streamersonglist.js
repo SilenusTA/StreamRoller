@@ -298,7 +298,7 @@ function onDataCenterMessage (server_packet)
                         }
                         else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
                         {
-                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:CredentialsFile", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
+                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.on message", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
                             fetchSongList();
                             fetchSongQueue();
                         }
@@ -310,7 +310,7 @@ function onDataCenterMessage (server_packet)
                     localConfig.ssl_client.emit("join-room", localConfig.streamerId);
                 } catch (error)
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:CredentialsFile", "Failed to join room");
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.join room", "Failed to join room");
                 }
             });
 
@@ -612,10 +612,17 @@ function fetchSongQueue ()
 
             localConfig.songQueue = data;
             if (localConfig.songQueue.list.length > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+            {
                 localConfig.currentsong = localConfig.songQueue.list[0].song.title
-            else
+                sendCurrentSongChange("")
+            }
+            else if (localConfig.songQueue.list.length == 0)
+            {
+
                 localConfig.currentsong = ""
-            sendCurrentSongChange("")
+                sendCurrentSongChange("")
+            }
+
             outputSongQueue();
             localConfig.status.connected = true;
         })
