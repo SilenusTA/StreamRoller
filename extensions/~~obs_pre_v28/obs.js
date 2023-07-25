@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# OBS.js ##############################
+// ############################# OBS.js ##############################
 // OBS extension for controlling OBS and information on OBS
 // output channel OBS_CHANNEL
 // ---------------------------- creation --------------------------------------
@@ -277,7 +277,7 @@ function SendSettingsWidgetSmall (tochannel)
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === 'on')
-                    modalstring = modalstring.replace(key + 'checked', 'checked');
+                    modalstring = modalstring.replace(' ' + key + 'checked', 'checked');
                 // replace text strings
                 else if (typeof (value) == 'string')
                     modalstring = modalstring.replace(key + 'text', value);

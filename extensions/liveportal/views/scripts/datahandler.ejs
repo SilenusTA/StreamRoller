@@ -1647,7 +1647,7 @@
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
+                modalstring = modalstring.replaceAll(' ' + key + 'checked', 'checked');
             else if (key === "randomfactstimeout")
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
@@ -1678,8 +1678,8 @@
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replaceAll(key + 'checked', 'checked');
-            else if (key === "randomfactstimeout")
+                modalstring = modalstring.replaceAll(' ' + key + 'checked', 'checked');
+            else if (key === "randomfactstimeout") // change random facts to seconds from milliseconds
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
             else if (typeof (value) == "string" || typeof (value) == "number")
@@ -1711,14 +1711,7 @@
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
-            //lets check our settings and send out updates as required
-            if (key === "modmessage_channel")
-            {
-                // udpate the server (or just refresh the value even if the same)
-                serverConfig[key] = fieldsAsObject[key];
-                changeDiscordListeningChannel(serverConfig[key]);
-            }
-            else if (key === "randomfactstimeout")
+            if (key === "randomfactstimeout")
                 serverConfig[key] = fieldsAsObject[key] * 60000
             else if (value === "on" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
