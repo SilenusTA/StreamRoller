@@ -1199,7 +1199,19 @@ function processChatMessage (data)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
+                    {
+                        /*let wordcount = chatMessageToPost.split(" ").length
+                        let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
+                        if (serverConfig.DEBUG_MODE === "on")
+                        {
+                            console.log("Checking the time to delay based on typing speed setting")
+                            console.log("processing time: ", Date.now() - starttime)
+                            console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
+                            console.log("delay response: ", delaytime / 1000, "s")
+                        }
+                        setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);*/
                         postMessageToTwitch(chatMessageToPost)
+                    }
                     return;
                 })
                 .catch(e =>

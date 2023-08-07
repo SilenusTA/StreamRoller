@@ -62,6 +62,7 @@ const localConfig = {
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
+    connecting: false,
     state: {
         readonly: true,
         connected: false,
@@ -74,6 +75,7 @@ localConfig.twitchClient["bot"] = {
 }
 localConfig.twitchClient["user"] = {
     connection: null,
+    connecting: false,
     state: {
         readonly: true,
         connected: false,
@@ -1378,8 +1380,15 @@ function action_SendChatMessage (channel, data)
 function reconnectChat (account)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Reconnecting chat " + serverConfig.streamername + ":" + serverConfig.enabletwitchchat);
+    //if we are already connecting then return (might have been multiple requests sent though at the same time)
+    if (localConfig.twitchClient[account].connecting)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "trying to reconnect while a connection is already in progress")
+        return;
+    }
     try
     {
+        localConfig.twitchClient[account].connecting = true;
         var connectedChannels = localConfig.twitchClient[account].connection.getChannels();
         if (connectedChannels.length == 0)
         {
@@ -1405,11 +1414,13 @@ function reconnectChat (account)
                     });
             })
         }
+        localConfig.twitchClient[account].connecting = false;
     }
     catch (err)
     {
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
         localConfig.twitchClient[account].state.connected = false;
+        localConfig.twitchClient[account].connecting = false;
     }
 }
 // ============================================================================
