@@ -128,7 +128,7 @@ const serverData =
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly",
+    description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
     triggers:
         [{
             name: "TwitchChatChatMessageReceived",

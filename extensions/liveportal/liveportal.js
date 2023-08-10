@@ -66,21 +66,18 @@ function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]liveportal.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     config.heartBeatTimeout = heartbeat;
-    //app.use("/images/", express.static(__dirname + '/public/images'));
-    app.use("/liveportal/", express.static(__dirname + "/public"));
-    app.use("/liveportal/scripts", express.static(__dirname + "/views/scripts"));
-
     config.dataCenterApp = app
+    //app.use("/images/", express.static(__dirname + '/public/images'));
+    config.dataCenterApp.use("/liveportal/", express.static(__dirname + "/public"));
+    config.dataCenterApp.use("/liveportal/scripts", express.static(__dirname + "/views/scripts"));
 
     try
     {
         config.dataCenterApp.get("/liveportal", function (req, res)
         {
-
             // we will store our global data in app.data so we need to pass this to any new page
             res.render(__dirname + "/views/pages/index",
                 {
-
                     host: host,
                     port: port,
                     heartbeat: heartbeat

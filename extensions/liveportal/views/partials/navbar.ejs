@@ -23,7 +23,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand bg-light" style="font-size:2rem" href="/">
         <img src="/liveportal/images/ODG_logo_black_trans.png" width="30" height="30" class="d-inline-block "
-            alt="Streamroller Home">
+            alt="Streamroller Home" onerror="scriptLoadFailed('ODG_logo_black_trans.png')">
         Streamroller<span id="softwareversion"
             style="font-size:0.8rem; color:rgba(255,255,255,.55);border: 0px;"></span>
     </a>
@@ -69,3 +69,17 @@
         </div>
     </div>
 </nav>
+<script>
+    // ============================================================================
+    //                           FUNCTION: scriptLoadFailed
+    // ============================================================================
+    // Desription: Runs when a script failes to load (404 error)
+    function scriptLoadFailed (scriptname)
+    {
+        console.log("failed to load", scriptname, "reloading page")
+        setTimeout(() =>
+        {
+            location.reload();
+        }, 500);
+    }
+</script>
