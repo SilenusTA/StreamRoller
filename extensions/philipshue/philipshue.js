@@ -95,11 +95,11 @@ const triggersandactions =
                 name: "PhilipsHueActivateScene",
                 displaytitle: "Activate Scene",
                 description: "Activates a given scene in the Philips Hue hub",
-                messagetype: "ActivateScene",
+                messagetype: "action_ActivateScene",
                 channel: serverConfig.channel,
                 parameters:
                 {
-                    sceneName: ""
+                    sceneName: ""//or sceneID if the sender has it
                 }
             }
         ],
@@ -256,7 +256,7 @@ function onDataCenterMessage (server_packet)
                 outputScenes()
             }
         }
-        else if (extension_packet.type === "ActivateScene")
+        else if (extension_packet.type === "action_ActivateScene")
         {
             if (extension_packet.to === serverConfig.extensionname && serverConfig.PhilipsHueenabled == "on")
             {

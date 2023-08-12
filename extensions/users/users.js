@@ -69,7 +69,7 @@ const triggersandactions =
                 name: "UsersNewChatter",
                 displaytitle: "First Time Poster",
                 description: "Someone has posted in the chat for the first time",
-                messagetype: "NewChatter",
+                messagetype: "trigger_NewChatter",
                 channel: serverConfig.channel,
                 parameters: {
                     name: "",
@@ -328,7 +328,7 @@ function sendNewUserTrigger (data)
             "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "NewChatter",
+                "trigger_NewChatter",
                 serverConfig.extensionname,
                 data,
                 serverConfig.channel

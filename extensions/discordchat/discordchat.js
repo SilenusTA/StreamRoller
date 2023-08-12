@@ -93,7 +93,7 @@ const triggersandactions =
                 name: "DiscordMessageRecieved",
                 displaytitle: "Discord Message Posted",
                 description: "A message was posted to a discord chat room",
-                messagetype: "MessageReceived",
+                messagetype: "trigger_DiscordMessageReceived",
                 channel: serverConfig.channel,
                 parameters:
                 {
@@ -110,7 +110,7 @@ const triggersandactions =
                 name: "DiscordPostMessage",
                 displaytitle: "Post Message",
                 description: "Post a message to a discord channel",
-                messagetype: "PostMessage",
+                messagetype: "action_DiscordPostMessage",
                 channel: serverConfig.channel,
                 parameters:
                 {
@@ -695,7 +695,7 @@ function sendAlertMessageReceived (message)
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "MessageReceived",
+                "trigger_DiscordMessageReceived",
                 serverConfig.extensionname,
                 {
                     channel: message.channel.name,

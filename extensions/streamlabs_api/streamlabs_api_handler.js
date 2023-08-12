@@ -91,7 +91,7 @@ const triggersandactions =
                 name: "StreamlabsDonationAlert",
                 displaytitle: "Streamlabs Donation Received",
                 description: "A Streamlabs donation was received",
-                messagetype: "StreamlabsDonationReceived",
+                messagetype: "trigger_StreamlabsDonationReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -104,7 +104,7 @@ const triggersandactions =
                 name: "StreamlabsMerchAlert",
                 displaytitle: "Merch Purchase",
                 description: "Someone purchased your Merch",
-                messagetype: "MerchPurchaseReceived",
+                messagetype: "trigger_MerchPurchaseReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -117,7 +117,7 @@ const triggersandactions =
                 name: "StreamlabsLoyaltyStoreRedemptionAlert",
                 displaytitle: "LoyaltyStore Redemption",
                 description: "Someone Reddemed something from your LoyaltyStore",
-                messagetype: "StreamlabsLoyaltyStoreRedemptionReceived",
+                messagetype: "trigger_StreamlabsLoyaltyStoreRedemptionReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -129,7 +129,7 @@ const triggersandactions =
                 name: "StreamlabTwitchFollowAlert",
                 displaytitle: "Follow on Twitch",
                 description: "A Viewer Followed your twitch stream",
-                messagetype: "TwitchFollowReceived",
+                messagetype: "trigger_TwitchFollowReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: ""
@@ -139,7 +139,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchSubscriptionAlert",
                 displaytitle: "Subscription on Twitch",
                 description: "Someone Subscribed to your twitch stream",
-                messagetype: "TwitchSubscriptionReceived",
+                messagetype: "trigger_TwitchSubscriptionReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -152,7 +152,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchResubAlert",
                 displaytitle: "Resub on Twitch",
                 description: "Someone Resubed to your twitch stream",
-                messagetype: "TwitchResubReceived",
+                messagetype: "trigger_TwitchResubReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -164,7 +164,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchHostAlert",
                 displaytitle: "Host on Twitch",
                 description: "Someone Hosted your stream on twitch",
-                messagetype: "TwitchHostReceived",
+                messagetype: "trigger_TwitchHostReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -175,7 +175,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchBitsAlert",
                 displaytitle: "Bits on Twitch",
                 description: "Someone Donated bits on Twitch",
-                messagetype: "TwitchBitsReceived",
+                messagetype: "trigger_TwitchBitsReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -187,7 +187,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchRaidAlert",
                 displaytitle: "Raid on Twitch",
                 description: "Someone Raided your stream on Twitch",
-                messagetype: "TwitchRaidReceived",
+                messagetype: "trigger_TwitchRaidReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -198,7 +198,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchCharityDonationAlert",
                 displaytitle: "CharityDonation on Twitch",
                 description: "Someone donated to charity on your Twitch stream",
-                messagetype: "TwitchCharityDonationReceived",
+                messagetype: "trigger_TwitchCharityDonationReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -211,7 +211,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchSubMysteryAlert",
                 displaytitle: "SubMystery gift on Twitch",
                 description: "Someone figted some subs on your Twitch stream",
-                messagetype: "TwitchTwitchSubMysteryGiftReceived",
+                messagetype: "trigger_TwitchTwitchSubMysteryGiftReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     gifter: "",
@@ -223,7 +223,7 @@ const triggersandactions =
                 name: "StreamlabsYouTubeSubscriptionAlert",
                 displaytitle: "Subscription on YouTube",
                 description: "Someone Subscribed on YouTube",
-                messagetype: "YouTubeSubscriptionReceived",
+                messagetype: "trigger_YouTubeSubscriptionReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: ""
@@ -233,7 +233,7 @@ const triggersandactions =
                 name: "StreamlabsYouTubeMemberAlert",
                 displaytitle: "Member on YouTube",
                 description: "A Member joined on YouTube",
-                messagetype: "YouTubeMemberReceived",
+                messagetype: "trigger_YouTubeMemberReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -246,7 +246,7 @@ const triggersandactions =
                 name: "StreamlabsYouTubeSuperchatAlert",
                 displaytitle: "Superchat on YouTube",
                 description: "Someone Superchated on YouTube",
-                messagetype: "YouTubeSuperchatReceived",
+                messagetype: "trigger_YouTubeSuperchatReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     username: "",
@@ -682,7 +682,7 @@ function parseTriggers (data)
     }
     else if (data.type === "loyalty_store_redemption" && data.for === "streamlabs")
     {
-        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsLoyaltyStoreRedemptionReceived")
+        trigger = triggersandactions.triggers.find(obj => obj.name === "trigger_StreamlabsLoyaltyStoreRedemptionReceived")
         if (trigger)
         {
             trigger.parameters.username = data.message[0].from;

@@ -121,7 +121,6 @@ const triggersandactions =
                 messagetype: "trigger_SongAddedToQueue",
                 channel: serverConfig.channel,
                 parameters: {
-                    type: "trigger_SongAddedToQueue",
                     songName: "",
                     textMessage: ""
                 }
@@ -134,7 +133,6 @@ const triggersandactions =
                 messagetype: "trigger_CurrentSongChange",
                 channel: serverConfig.channel,
                 parameters: {
-                    type: "trigger_CurrentSongChange",
                     songName: "",
                     textMessage: ""
                 }

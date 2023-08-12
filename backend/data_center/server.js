@@ -38,9 +38,16 @@
 import * as cm from "./modules/common.js";
 import * as logger from "./modules/logger.js";
 import sr_api from "./public/streamroller-message-api.cjs";
-// load our config settings
+import * as ServerSocket from "./modules/server_socket.js";
+
+// load our config settings from the config store
 let config = cm.loadConfig("datacenter");
-let version = cm.loadSoftwareVersion();
+let localConfig =
+{
+    version: cm.loadSoftwareVersion(),
+    extensions: []
+}
+
 
 let defaultconfig = {
     name: "StreamRoller",
@@ -51,7 +58,7 @@ let defaultconfig = {
     logginglevel: 0,
     heartbeat: 5000, // heartbeat timers
     apiVersion: sr_api.__api_version__,
-    softwareversion: version,
+    softwareversion: localConfig.version,
     overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
     testing: 0// used to import extra extensions during testing
 };
@@ -63,7 +70,7 @@ if (config === "" | !config.HOST || config.HOST.startsWith("http") > 0)
     cm.saveConfig(config.extensionname, config);
 }
 // check if we have updated the software, if so we will reload the default config
-if (config.softwareversion != version)
+if (config.softwareversion != localConfig.version)
 {
     console.log("New software version detected. resetting server config.")
     config = defaultconfig;
@@ -82,15 +89,12 @@ import { dirname } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import express from "express";
 import http from "http";
-import * as fs from "fs";
+import * as fs from "fs/promises";
 // set our localion
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // app server start
 const app = express();
 const server = http.createServer(app);
-// some global vars, yes I know I need to fix using globals.
-const extensions = [];
-
 
 server.listen(config.PORT);
 server.on('error', (e) =>
@@ -107,7 +111,7 @@ server.on('error', (e) =>
 });
 server.on('listening', (e) =>
 {
-    console.log("Server Started");
+    console.log("Server Listening");
 })
 // ============================================================================
 //                          EXPRESS
@@ -157,74 +161,74 @@ app.use("*.php", function (request, response, next)
 });
 app.use(express.static(webfiles));
 
-// #############################################################
-// ################### Install Extensions #####################
-// #############################################################
-// Just some debugging code
+// ############################################################
+// ################## Load/Start Extensions ###################
+// ############################################################
+// Just some debugging code to test new extensions
 if (config.testing > 0)
 {
     console.log("#### running extra DEBUG extensions ####")
     logger.usecoloredlogs("default");
-    loadExtensions(__dirname + "/../../test-ext")
-    loadExtensions(__dirname + "/../../extensions")
+    await loadExtensions(__dirname + "/../../test-ext")
+    await loadExtensions(__dirname + "/../../extensions")
+    // ################### start StreamRoller  ####################################
+    ServerSocket.start(app, server, Object.keys(localConfig.extensions))
 }
 else
 {
     logger.usecoloredlogs("default");
-    loadExtensions(__dirname + "/../../extensions")
+    await loadExtensions(__dirname + "/../../extensions")
+    // ################### start StreamRoller  ####################################
+    ServerSocket.start(app, server, Object.keys(localConfig.extensions))
 }
 
-function loadExtensions (extensionFolder)
+// ########################################################
+// ################### loadExtensions #####################
+// ########################################################
+async function loadExtensions (extensionFolder)
 {
-    fs.readdir(extensionFolder, (err, files) =>
-    {
-        if (!err)
-        {
-            // loop through each directory
-            files.forEach((file) =>
-            {
-                // ignore files starting wiht "~~" or the datahandler folder
-                if (!file.startsWith("~~") && !file.startsWith("datahandlers"))
-                {
-                    fs.access(extensionFolder + "/" + file + "/" + file + ".js", fs.F_OK, (err) =>
-                    {
-                        if (err)
-                        {
-                            logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", err);
-                        } else
-                        {
-                            // we hava a script so lets load it.
-                            var extfile = pathToFileURL(extensionFolder + "/" + file + "/" + file + ".js")
-                            logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "loading extension " + extfile);
-                            import(extfile)
-                                .then(module =>
-                                {
-                                    extensions[file] = { initialise: module.initialise };
-                                    if (typeof extensions[file].initialise === "function")
-                                        extensions[file].initialise(
-                                            app, "http://" + config.HOST,
-                                            config.PORT,
-                                            // add a slight offset to the heartbeat so they don't all end up synced
-                                            config.heartbeat + (Math.floor(Math.random() * 100)));
-                                    else
-                                        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Extension module " + file + " did not export an intialise function");
-                                })
+    let files = null;
+    let modules = []
 
-                                // put this catch back in for release. removed it to get a better idea of what was breaking during extension startup
-                                /*.catch(err =>
-                                {
-                                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "catching error on import from " + file + ". Comment out this catch statement to trace the error better", err.message);
-                                })*/                                ;
-                        }
-                    });
-                }
-            });
-        } else
+    // get a list of extension filenames
+    try { files = await fs.readdir(extensionFolder) }
+    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: loading extension filenames", err); }
+
+    // load each of the extensions modules
+    try
+    {
+        modules = await Promise.all(
+            Array.from(files).map((value) =>
+            {
+                if (!value.startsWith("~~") && !value.startsWith("datahandlers"))
+                    return import(pathToFileURL(extensionFolder + "/" + value + "/" + value + ".js").href)
+                else
+                    return null
+            }
+            ),
+        )
+    }
+    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: importing extension modules", err); }
+
+    // for each extension call it's initialise function
+    try
+    {
+        modules.forEach((module, index) => 
         {
-            logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", err);
-        }
-    });
+            if (module)
+            {
+                localConfig.extensions[files[index]] = { initialise: module.initialise };
+                if (typeof localConfig.extensions[files[index]].initialise === "function")
+                    module.initialise(
+                        app, "http://" + config.HOST,
+                        config.PORT,
+                        // add a slight offset to the heartbeat so they don't all end up synced
+                        config.heartbeat + (Math.floor(Math.random() * 100)));
+                else
+                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an intialise function");
+            }
+        })
+    }
+    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err); }
 }
-// ################### start StreamRoller  ####################################
-import * as ServerSocket from "./modules/server_socket.js";
-ServerSocket.start(app, server, extensions);
+

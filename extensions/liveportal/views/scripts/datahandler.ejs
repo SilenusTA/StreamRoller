@@ -20,8 +20,8 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
 -->
-<script src="/streamroller-message-api.cjs"></script>
-<script src="/liveportal/scripts/triggers.js"></script>
+<script src="/streamroller-message-api.cjs" onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
+<script src="/liveportal/scripts/triggers.js" onerror="scriptLoadFailed('triggers.js')"></script>
 <!-- placehold we will use for inserting widgets-->
 
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
@@ -195,6 +195,18 @@
         }
 
     });
+    // ============================================================================
+    //                           FUNCTION: scriptLoadFailed
+    // ============================================================================
+    // Desription: Runs when a script failes to load (404 error)
+    function scriptLoadFailed (scriptname)
+    {
+        console.log("failed to load", scriptname, "reloading page")
+        setTimeout(() =>
+        {
+            location.reload();
+        }, 5000);
+    }
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
     // ============================================================================
@@ -398,7 +410,18 @@
                 RequestOBSScenes("obs");
             }
             // call the triggers code to request the triggers/actions from each extension in the list
-            initTriggersAndActions(server_packet.data);
+            try
+            {
+                initTriggersAndActions(server_packet.data);
+            }
+            catch {
+                console.log("initTriggersAndActions not loaded yet, recheduling")
+                //probably not loaded yet
+                setTimeout(() =>
+                {
+                    initTriggersAndActions(server_packet.data);
+                }, 500);
+            }
         }
         else if (server_packet.type === "ExtensionMessage")
         {
@@ -680,7 +703,7 @@
             //                           CHATMOOD_CHANNEL
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel === "CHATMOOD_CHANNEL")
-                console.log(extension_packet.data)
+                console.log("CHATMOOD_CHANNEL received", extension_packet.data)
             // -------------------------------------------------------------------------------------------------
             //                           TWITCH_CHAT
             // -------------------------------------------------------------------------------------------------
@@ -697,16 +720,19 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "DISCORD_CHAT")
             {
-                parseDiscordChatMessage(server_packet.data.data);
-                //displayDiscordMessages(server_packet);
-                displayChatMessages();
+                if (extension_packet.type === "trigger_DiscordMessageReceived")
+                {
+                    parseDiscordChatMessage(server_packet.data.data);
+                    //displayDiscordMessages(server_packet);
+                    displayChatMessages();
+                }
             }
             // -------------------------------------------------------------------------------------------------
-            //                           DISCORD_CHAT
+            //                           TIMERS_CHANNEL
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "TIMERS")
             {
-                if (extension_packet.type === "TimerRunning")
+                if (extension_packet.type === "trigger_TimerRunning")
                 {
                     processTimers(extension_packet.data.parameters);
                     UpdateOBSDefaultButtons();
@@ -743,7 +769,7 @@
                     if (serverConfig.twitterstartenabled)
                         postMessageToTwitter(serverConfig.twitterstartmessage, serverConfig.twitterstartmessage_x);
                 }
-                else if (extension_packet.type === "StreamStopped")
+                else if (extension_packet.type === "trigger_StreamStopped")
                 {
                     localConfig.obslive = false;
                     OBSLiveCheck();
@@ -775,7 +801,7 @@
                 if (extension_packet.type === "PhilipsHueScenes")
                 {
                     localConfig.philipsHueSceneList = extension_packet.data
-                    processPhilipsHueScenes(); processRandomFact
+                    processPhilipsHueScenes();
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -787,8 +813,11 @@
                 // -------------------------------------------------------------------------------------------------
                 //                   RECEIVED Received random fact
                 // -------------------------------------------------------------------------------------------------
-                if (extension_packet.type === "RandomFact")
+                if (extension_packet.type === "trigger_RandomFact")
+                {
+                    console.log("RandomFact message received", extension_packet.data)
                     processRandomFact(extension_packet.data.randomFact);
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                           IGNORED CHANNELS
@@ -921,7 +950,7 @@
         {
             // if we dont currently have that extension add it to the list and request the code for its settings
             // displays if it has them (done via callbacks over the websocket)
-            if (!livePortalData.extensions[extensions[i]])
+            if (typeof livePortalData.extensions[extensions[i]] == "undefined")
             {
                 livePortalData.extensions[extensions[i]] = {};
                 livePortalData.extensions[extensions[i]].display = false;
@@ -1167,7 +1196,6 @@
                     });
                     $('#' + xname + "_settingsform").find('#closeSettings').on('click', function (event)
                     {
-                        console.log("closeSettings handler")
                         event.preventDefault();
                         $("#live-tab").tab('show');
                         return false;
@@ -1325,7 +1353,7 @@
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "ChangeScene",
+                        "action_ChangeScene",
                         serverConfig.extensionname,
                         scenename,
                         "",
@@ -1360,9 +1388,9 @@
                     "ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "ToggleMute",
+                        "action_ToggleMute",
                         serverConfig.extensionname,
-                        serverConfig.mutescene,
+                        { sourceName: serverConfig.mutescene },
                         "",
                         "obs"
                     ),
@@ -2053,7 +2081,6 @@
             // #####################
             else if (sub_messages.includes(chatdata.data["message-type"]))
             {
-                console.log("SUB MESSAGE", chatdata)
                 line_field = "<BR><span style='color: " + chatcolors.default_sub_color + "'>"
                 name_field = "<b>" + chatdata.data['display-name'] + "> ";
                 message_field = chatdata.data['system-msg'] + ((message) ? ": " + message : "") + "</b>";
@@ -2421,14 +2448,14 @@
         let alerttext = "";
         switch (alertdata.messagetype)
         {
-            case "TwitchFollowReceived":
+            case "trigger_TwitchFollowReceived":
                 messagetxt += alertdata.parameters.username + " for the follow."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-secondary'>TwitchFollow: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
-            case "TwitchRaidReceived":
+            case "trigger_TwitchRaidReceived":
                 messagetxt += alertdata.parameters.username + " for the raid " + alertdata.parameters.raiders + " raiders."
                 if (serverConfig.raids === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
@@ -2436,14 +2463,14 @@
                 DisplayAlertMessages(alerttext);
                 postMessageToTwitch("!so " + alertdata.parameters.username)
                 break;
-            case "TwitchHostReceived":
+            case "trigger_TwitchHostReceived":
                 messagetxt += alertdata.parameters.username + " for the host with " + alertdata.parameters.viewers + " viewers."
                 if (serverConfig.hosts === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-success'>TwitchHost: " + alertdata.parameters.username + " " + alertdata.parameters.viewers + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
-            case "StreamlabsDonationReceived":
+            case "trigger_StreamlabsDonationReceived":
                 if (alertdata.parameters.message === null)
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation and helping keep the stream alive.'
                 else
@@ -2454,7 +2481,7 @@
                 alerttext = "<div class='text-danger'>SLDonation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
-            case "TwitchCharityDonationReceived":
+            case "trigger_TwitchCharityDonationReceived":
                 if (alertdata.parameters.message === null)
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being.'
                 else
@@ -2465,7 +2492,7 @@
                 alerttext = "<div class='text-danger'>Twitch Charity Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
-            case "TwitchBitsReceived":
+            case "trigger_TwitchBitsReceived":
                 if (alertdata.parameters.message === null)
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits.'
                 else
@@ -2475,7 +2502,7 @@
                 alerttext = "<div class='text-danger'>TwitchBits: " + alertdata.parameters.username + " " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
-            case "TwitchSubscriptionReceived":
+            case "trigger_TwitchSubscriptionReceived":
                 if (alertdata.parameters.type === "subgift" && alertdata.parameters.gifter != null)
                 {
                     messagetxt += alertdata.parameters.username + " was gifted a sub from " + alertdata.parameters.gifter
@@ -2499,7 +2526,7 @@
                     DisplayAlertMessages(alerttext);
                 }
                 break;
-            case "TwitchResubReceived":
+            case "trigger_TwitchResubReceived":
                 if (alertdata.parameters.message === null)
                     messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subcriptions (with a streak of ' + alertdata.parameters.streak_months + ').'
                 else
@@ -2510,7 +2537,7 @@
                 DisplayAlertMessages(alerttext);
                 break;
 
-            case "TwitchTwitchSubMysteryGiftReceived":
+            case "trigger_TwitchTwitchSubMysteryGiftReceived":
                 messagetxt += alertdata.parameters.gifter + " for the " + alertdata.parameters.amount + " gifted subs"
                 //postMessageToTwitch(messagetxt)
                 if (serverConfig.giftsubs === "on")
@@ -2518,7 +2545,7 @@
                 alerttext = "<div class='text-danger'>TwitchGiftSub: " + alertdata.parameters.gifter + " gifted " + alertdata.parameters.amount + " subs</div>"
                 DisplayAlertMessages(alerttext);
                 break;
-            case "MerchPurchaseReceived"://trigger
+            case "trigger_MerchPurchaseReceived"://trigger
                 messagetxt += alertdata.parameters.username + " purchacing my merch. Hope you enjoy the " + alertdata.parameters.product + ". " + alertdata.parameters.imageHref
                 if (serverConfig.merch === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
@@ -2534,21 +2561,21 @@
                 alerttext = "<div class='text-secondary'>SLLoyalty: " + alertdata.parameters.username + " " + alertdata.parameters.product + "</div>"
                 DisplayAlertMessages(alerttext);
                 break;
-            case "YouTubeSubscriptionReceived":
+            case "trigger_YouTubeSubscriptionReceived":
                 messagetxt += alertdata.parameters.username + " for the Subscription."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-secondary'>YouTubeSubscription: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
-            case "YouTubeMemberReceived":
+            case "trigger_YouTubeMemberReceived":
                 messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.months + " Membership."
                 if (serverConfig.follows === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-secondary'>YouTubeMembership: " + alertdata.parameters.username + " " + alertdata.parameters.months + "months</div>";
                 DisplayAlertMessages(alerttext);
                 break;
-            case "YouTubeSuperchatReceived":
+            case "trigger_YouTubeSuperchatReceived":
                 if (alertdata.parameters.message === null)
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' superchat, you are an awesome human being.'
                 else
@@ -2592,7 +2619,9 @@
         msg2 += " ";
         let msg_end = "Sent from StreamRoller";
         let msg_fact = "";
-
+        console.log("postMessageToTwitter", msg1, msg2)
+        console.log("serverConfig.randomfactstwitterstartenabled", serverConfig.randomfactstwitterstartenabled)
+        console.log("localConfig.randomFact", localConfig.randomFact)
         if (serverConfig.randomfactstwitterstartenabled == "on" && localConfig.randomFact !== "")
             msg_fact = "FOTD:" + localConfig.randomFact + " ";
 
@@ -2609,7 +2638,7 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "PostTweet",
+                    "action_PostTweet",
                     serverConfig.extensionname,
                     { message: msg1 },
                     "",
@@ -2737,10 +2766,10 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "RequestRandomFact",
+                    "action_RequestRandomFact",
                     serverConfig.extensionname,
                     "",
-                    "",
+                    {},
                     "randomfact"),
                 "",
                 "randomfact"
@@ -3049,7 +3078,7 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "ActivateScene",
+                    "action_ActivateScene",
                     serverConfig.extensionname,
                     {
                         sceneID: sceneId

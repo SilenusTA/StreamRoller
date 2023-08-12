@@ -136,14 +136,21 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "OBSStartStreaming",
-                displaytitle: "Start Streaming",
-                description: "Start OBS Streaming",
+                name: "OBSStreamingStarted",
+                displaytitle: "Stream Started",
+                description: "Stream Started",
                 messagetype: "trigger_StreamStarted",
                 channel: serverConfig.channel,
                 parameters: {}
-            }
-            ,
+            },
+            {
+                name: "OBSStreamingStopped",
+                displaytitle: "Stream Stopped",
+                description: "Stream Stopped",
+                messagetype: "trigger_StreamStopped",
+                channel: serverConfig.channel,
+                parameters: {}
+            },
             {
                 name: "OBSSceneChanged",
                 displaytitle: "Scene Changed",
@@ -936,18 +943,12 @@ function onStreamStatus (data)
 {
     // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
     localConfig.status.connected = true;
-    //if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED")
-    if (data.outputActive)
-    {
-        localConfig.streamStats.obslive = true;
+    localConfig.streamStats.obslive = data.outputActive;
+
+    if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STARTED")
         StreamStarted()
-    }
-    else
-    //if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STOPPED")
-    {
-        localConfig.streamStats.obslive = false;
+    else if (data.outputState === "OBS_WEBSOCKET_OUTPUT_STOPPED")
         StreamStopped()
-    }
 }
 // ============================================================================
 //                           FUNCTION: sendStreamStats
@@ -1020,9 +1021,9 @@ function StreamStopped ()
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "StreamStopped",
+                "trigger_StreamStopped",
                 serverConfig.extensionname,
-                "StreamStopped",
+                {},
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1044,7 +1045,7 @@ function StreamStarted ()
             sr_api.ExtensionPacket(
                 "trigger_StreamStarted",
                 serverConfig.extensionname,
-                "trigger_StreamStarted",
+                {},
                 serverConfig.channel),
             serverConfig.channel
         ));

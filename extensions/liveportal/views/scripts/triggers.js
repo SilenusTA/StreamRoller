@@ -99,6 +99,7 @@ function addTriggersWidgetLarge ()
 
 // ============================================================================
 //                           FUNCTION: triggersLoadTriggers
+//                      loads trigger names into the dropdown.
 // ============================================================================
 function triggersLoadTriggers (name)
 {
@@ -346,11 +347,14 @@ function checkTriggerIsValid (trigger)
 // ============================================================================
 function CheckTriggers (event)
 {
+    //loop through our trigger groups
     for (var group in serverData.AllTriggersAndActions)
     {
+        // loop through our saved triggers and actions
         serverData.AllTriggersAndActions[group].list.forEach((entry) =>
         {
 
+            //check if the event fields match the trigger fields we have set for this entry
             if (event.dest_channel === entry.trigger.channel
                 && event.from === entry.trigger.extension
                 && event.type === entry.trigger.type
@@ -365,17 +369,25 @@ function CheckTriggers (event)
                 {
                     for (var i in param)
                     {
-                        // we have matched the trigger
-                        // check the params if we have them
-                        // if we have a string entered and it doesn't match the don't trigger
-                        if (typeof event.data[i] == "string")// && typeof param[i] === "string")
+                        try
                         {
-                            if (param[i] != "" && event.data[i].toLowerCase() != param[i].toLowerCase())
+                            // we have matched the trigger
+                            // check the params if we have them
+                            // if we have a string entered and it doesn't match the don't trigger
+                            if (typeof event.data.parameters[i] == "string")// && typeof param[i] === "string")
+                            {
+                                if (param[i] != "" && event.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                    match = false;
+                            }
+                            //check non string types for non matching
+                            else if (param[i] != "" && event.data.parameters[i] != param[i])
                                 match = false;
                         }
-                        //check non string types for non matching
-                        else if (param[i] != "" && event.data[i] != param[i])
-                            match = false;
+                        catch (err)
+                        {
+                            console.log("CheckTriggers error", err)
+
+                        }
                     }
                 })
                 if (match)
@@ -390,13 +402,20 @@ function CheckTriggers (event)
 // ============================================================================
 function TriggerAction (action, triggerparams)
 {
-    let params;
+    /*let params;
     // copy params in to the action
+
+    /// FIX THIS LATER. PARAMS RESET ON EACH LOOP
     for (var i in action.data)
     {
         params = { ...params, ...action.data[i] }
+    }*/
+    let params = {}
+    for (var i in action.data)
+    {
+        for (const property in action.data[i])
+            params[property] = action.data[i][property]
     }
-
     params.triggerparams = triggerparams.data
     // all actions are handled through the SR socket interface
     sr_api.sendMessage(DataCenterSocket,
@@ -475,6 +494,7 @@ function PopulateTriggersTable ()
                     tablerows += item + " = " + list[i].action.data[j][item];
             }
             tablerows += "</td>"
+            tablerows += "<td><a class='btn btn-primary' href = 'javascript:triggerActionButton(\"" + g + "\"," + i + ");' role = 'button'> Run</a></td>"
             tablerows += "</tr >"
         }
         // tablerows += "</div>";
@@ -541,4 +561,32 @@ function delteTriggerAction (group, id)
     serverData.AllTriggersAndActions[group].list.splice(id, 1)
     SaveDataToServer();
     PopulateTriggersTable();
+}
+// ============================================================================
+//                     FUNCTION: triggerActionButton
+//              button on the page for users to test the actions
+// ============================================================================
+function triggerActionButton (group, id)
+{
+    let action = serverData.AllTriggersAndActions[group].list[id].action
+    //let params = { ...action.data }
+    let params = {}
+    for (var i in action.data)
+    {
+        for (const property in action.data[i])
+            params[property] = action.data[i][property]
+    }
+    sr_api.sendMessage(DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                action.type,
+                serverConfig.extensionname,
+                params,
+                "",
+                action.extension),
+            "",
+            action.extension
+        ),
+    );
 }

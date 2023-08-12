@@ -111,7 +111,11 @@ let extensionlist_requesters = []
  */
 function start (app, server, exts)
 {
-    extensions = exts;
+    // create our extension array
+    exts.forEach((elem, i) =>
+    {
+        extensions[elem] = {};
+    });
     backend_server = server;
     cm.initcrypto();
     config = cm.loadConfig('datacenter');
@@ -196,15 +200,21 @@ function onMessage (socket, server_packet)
     // add this socket to the extension if it doesn't already exist
     if (typeof (extensions[server_packet.from]) === "undefined" || !extensions[server_packet.from])
     {
+        //        console.log("###### Adding new extension for ", server_packet.from)
         extensions[server_packet.from] = {};
     }
+    // check we have a valid socket for this extension, don't need to check if the extension exists as it will have been added above
     if (typeof (extensions[server_packet.from].socket) === "undefined" || !extensions[server_packet.from].socket)
     {
+        //      console.log("###### Adding new socket for Extension ", server_packet.from)
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for ", server_packet.from);
         extensions[server_packet.from].socket = socket;
         // if we add a new extension send the list out to anyone who has requested it so far to update them
         for (let i = 0; i < extensionlist_requesters.length; i++)
+        {
+            //        console.log("resending extension list out to ", extensionlist_requesters[i])
             mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
+        }
     }
     else
     {
@@ -213,9 +223,11 @@ function onMessage (socket, server_packet)
         // we need to append the socket id to the extension name to fix this!!!
         if (extensions[server_packet.from].socket.id != socket.id)
         {
-            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket id changed for ", server_packet);
-            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Previous id ", extensions[server_packet.from].socket.id);
-            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "New id ", socket.id);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket id changed for " + server_packet.from);
+            //console.log(extensions[server_packet.from])
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Data ", server_packet);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Previous id " + extensions[server_packet.from].socket.id);
+            logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "New id " + socket.id);
             //update the extensions socket as it has changed
             extensions[server_packet.from].socket = socket;
         }
@@ -260,6 +272,7 @@ function onMessage (socket, server_packet)
         mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "RequestExtensionsList")
     {
+        //        console.log("extension list requested")
         if (!extensionlist_requesters.includes(server_packet.from))
             extensionlist_requesters.push(server_packet.from)
         mh.sendExtensionList(socket, server_packet.from, extensions);

@@ -66,7 +66,7 @@ const triggersandactions =
                 name: "RandfactPoster",
                 displaytitle: "Random fact receieved",
                 description: "An interesting or amusing random fact was received",
-                messagetype: "RandomFact",
+                messagetype: "trigger_RandomFact",
                 channel: serverConfig.channel,
                 parameters: { randomFact: "" }
             }
@@ -78,7 +78,7 @@ const triggersandactions =
                 name: "RandfactRequest",
                 displaytitle: "Request Random Fact",
                 description: "Requests a random fact",
-                messagetype: "RequestRandomFact",
+                messagetype: "action_RequestRandomFact",
                 channel: serverConfig.channel,
                 parameters: {}
             }
@@ -158,9 +158,9 @@ function onDataCenterMessage (server_packet)
     if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "RequestRandomFact")
+        if (extension_packet.type === "action_RequestRandomFact")
         {
-            requestRandomFact();
+            sendRandomFact();
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {
@@ -292,13 +292,13 @@ function send_chat_command (data)
     });
 }
 // ============================================================================
-//                           FUNCTION: requestRandomFact
+//                           FUNCTION: sendRandomFact
 // ============================================================================
 /**
  * sends a random fact to the extension
  * @param {String} from 
  */
-function requestRandomFact (delay = 1000, counter = 5)
+function sendRandomFact (delay = 1000, counter = 5)
 {
     var body = "";
     let Buffer = "";
@@ -322,7 +322,7 @@ function requestRandomFact (delay = 1000, counter = 5)
                     {
                         setTimeout(() =>
                         {
-                            requestRandomFact(delay + 500, counter - 1)
+                            sendRandomFact(delay + 500, counter - 1)
 
                         }, delay)
                     }
@@ -333,7 +333,7 @@ function requestRandomFact (delay = 1000, counter = 5)
                         "ChannelData",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "RandomFact",
+                            "trigger_RandomFact",
                             serverConfig.extensionname,
                             { randomFact: fact },
                             serverConfig.channel,
@@ -345,15 +345,15 @@ function requestRandomFact (delay = 1000, counter = 5)
         req.on("error", function (e)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".requestRandomFact", "Error getting quote", e.message);
+                ".sendRandomFact", "Error getting quote", e.message);
         });
     }
     catch (e)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".requestRandomFact", "Error getting quote", e.message);
+            ".sendRandomFact", "Error getting quote", e.message);
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".requestRandomFact", body);
+            ".sendRandomFact", body);
     }
 
 }

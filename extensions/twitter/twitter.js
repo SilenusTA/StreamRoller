@@ -80,7 +80,7 @@ const triggersandactions =
                 name: "TwitterPostTweet",
                 displaytitle: "Post a Tweet",
                 description: "Post a message to twtter",
-                messagetype: "PostTweet",
+                messagetype: "action_PostTweet",
                 channel: serverConfig.channel,
                 parameters: {
                     message: ""
@@ -204,7 +204,7 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
             }
         }
-        else if (extension_packet.type === "PostTweet")
+        else if (extension_packet.type === "action_PostTweet")
         {
             // check this was sent to us 
             if (extension_packet.to === serverConfig.extensionname)

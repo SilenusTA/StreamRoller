@@ -414,7 +414,7 @@ function Timer (timername)
 // ============================================================================
 function sendTimerData (timedata)
 {
-    let data = findactionByMessageType("TimerRunning")
+    let data = findactionByMessageType("trigger_TimerRunning")
     data.parameters = {}
     data.parameters.name = timedata.name
     data.parameters.timeout = timedata.timeout
