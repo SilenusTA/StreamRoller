@@ -109,7 +109,7 @@ const default_serverConfig = {
     cred4name: "twitchchatuseroauth",
     cred4value: "",
     /// this debug settings will post messages internally only and not to twich
-    DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH: "off",
+    DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH: "off",
     DEBUG_EXTRA_CHAT_MESSAGE: "off",
     DEBUG_LOG_DATA_TO_FILE: "off"
 };
@@ -896,7 +896,7 @@ function onDataCenterMessage (server_packet)
                     // need to update these manually as the web page does not send unchecked box values
                     serverConfig.enabletwitchchat = "off";
                     serverConfig.updateUserLists = "off";
-                    serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH = "off"
+                    serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH = "off"
                     serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
                     serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
 
@@ -925,7 +925,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_SendChatMessage")
         {
-            if (serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH === "off")
+            if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH === "off")
                 action_SendChatMessage(serverConfig.streamername, extension_packet.data)
             else
             {
@@ -1335,7 +1335,7 @@ function action_SendChatMessage (channel, data)
 {
     let sent = false
     let account = null;
-    if (serverConfig.DEBUG_ONLY_MIMICK_POSTING_TO_TWITCH === "on")
+    if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH === "on")
     {
         console.log("Sending twitch message suppressed by debug flag", data.message)
         return;
