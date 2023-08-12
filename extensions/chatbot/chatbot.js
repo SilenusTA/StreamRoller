@@ -209,7 +209,7 @@ const triggersandactions =
                 name: "OpenAIChatbotResposeReceived",
                 displaytitle: "Response from chatbot",
                 description: "The OpenAI chatbot returned a response",
-                messagetype: "chatbotResponse_trigger",
+                messagetype: "trigger_chatbotResponse",
                 channel: serverConfig.channel,
                 parameters: { message: "" }
             }
@@ -221,7 +221,7 @@ const triggersandactions =
                 name: "OpenAIChatbotProcessText",
                 displaytitle: "Process text",
                 description: "Send some text through the chatbot",
-                messagetype: "ProcessText_action",
+                messagetype: "action_ProcessText",
                 channel: serverConfig.channel,
                 parameters: { message: "" }
             }
@@ -345,7 +345,7 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
                 processTextMessage(extension_packet.data);
         }
-        else if (extension_packet.type === "ProcessText_action")
+        else if (extension_packet.type === "action_ProcessText")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {

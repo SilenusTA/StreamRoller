@@ -95,7 +95,39 @@ const default_serverConfig = {
 };
 let localCredentials = {};
 let serverConfig = structuredClone(default_serverConfig);
+/* other optionsto look to add, not the complete list available (from types.d.ts )
 
+SetVideoSettings
+SetStreamServiceSettings
+TriggerHotkeyByName
+TriggerHotkeyByKeySequence
+SetInputVolume
+SetInputAudioBalance
+SetInputAudioSyncOffset
+SetInputAudioMonitorType
+SetInputAudioTracks
+PressInputPropertiesButton
+TriggerMediaInputAction
+ToggleOutput
+StartOutput
+StopOutput
+SetOutputSettings
+CreateSceneItem
+SetSceneItemTransform
+SetSceneItemLocked
+SetSceneItemIndex
+SetSceneItemBlendMode
+SetCurrentProgramScene
+SetSceneSceneTransitionOverride
+SaveSourceScreenshot
+SetCurrentSceneTransition
+SetCurrentSceneTransitionDuration
+SetCurrentSceneTransitionSettings
+TriggerStudioModeTransition
+SetStudioModeEnabled
+CallVendorRequest
+GetVideoSettings
+*/
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
@@ -131,8 +163,7 @@ const triggersandactions =
                 messagetype: "action_ToggleFilter",
                 channel: serverConfig.channel,
                 parameters: { sourceName: "", filterName: "", filterEnabled: "" }
-            }
-            ,
+            },
             {
                 name: "OBSChangeScene",
                 displaytitle: "Change Scene",
@@ -140,6 +171,23 @@ const triggersandactions =
                 messagetype: "action_ChangeScene",
                 channel: serverConfig.channel,
                 parameters: { sceneName: "", enabled: "" }
+            },
+            {
+                name: "OBSEnableSource",
+                displaytitle: "Turn a source on or off",
+                description: "Turn a source on or off, ie to enable animations, cameraas etc",
+                messagetype: "action_EnableSource",
+                channel: serverConfig.channel,
+                parameters: { sceneName: "", sourceName: "", enabled: "" }
+            },
+
+            {
+                name: "OBSToggleMute",
+                displaytitle: "Toggle mute on the selected source",
+                description: "Toggles mute on the source selected, suggest that mic is put in to it's own scene and imported into all others to make this universal",
+                messagetype: "action_ToggleMute",
+                channel: serverConfig.channel,
+                parameters: { sourceName: "", enabled: "" }
             }
         ],
 }
@@ -364,9 +412,11 @@ function onDataCenterMessage (server_packet)
                     )
                 )
             }
-            else if (extension_packet.type === "ChangeScene")
+            else if (extension_packet.type === "action_EnableSource")
+                enableSource(extension_packet.data);
+            else if (extension_packet.type === "action_ChangeScene")
                 changeScene(extension_packet.data);
-            else if (extension_packet.type === "ToggleMute")
+            else if (extension_packet.type === "action_ToggleMute")
                 ToggleMute(extension_packet.data)
             else if (extension_packet.type === "action_ToggleFilter")
                 activateFilter(extension_packet.data)
@@ -796,16 +846,41 @@ function processOBSSceneList (scenes)
 // ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
-/**
- * Change to the scene named in the paramert
- * @param {String} scene 
- */
 function changeScene (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
     localConfig.obsConnection.call("SetCurrentProgramScene", { sceneName: scene })
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene ", "SetCurrentProgramScene failed", err.message); });
 }
+// ============================================================================
+//                           FUNCTION: changeScene
+// ============================================================================
+function enableSource (sourcedata)
+{
+    localConfig.obsConnection.call("GetSceneItemId", { sceneName: sourcedata.sceneName, sourceName: sourcedata.sourceName })
+        .then(data =>
+        {
+            localConfig.obsConnection.call("SetSceneItemEnabled",
+                {
+                    sceneName: sourcedata.sceneName,
+                    sceneItemId: data.sceneItemId,
+                    sceneItemEnabled: sourcedata.enabled.toLowerCase() == "true"
+                })
+                .catch(err => 
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".enableSource ", "SetSceneItemEnabled failed", err.message);
+                });
+        })
+        .catch(err =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".enableSource", err.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".enableSource", err);
+            if (err.message === "Not connected")
+                localConfig.status.connected = false;
+            return;
+        });
+}
+
 
 // ============================================================================
 //                           FUNCTION: Callback Handlers
@@ -817,6 +892,34 @@ localConfig.obsConnection.on("SceneListChanged", data => { onScenesListChanged(d
 localConfig.obsConnection.on("InputMuteStateChanged", data => { onSourceMuteStateChanged(data) });
 localConfig.obsConnection.on("Filters", data => { onSourceMuteStateChanged(data) });
 localConfig.obsConnection.on("SourceFilterEnableStateChanged", data => { onFilterChanged(data) })
+// debug, not sure if we want to add these yet
+/*
+localConfig.obsConnection.on("MediaInputPlaybackStarted", data => { debugtest("MediaInputPlaybackStarted", data) })
+localConfig.obsConnection.on("MediaInputPlaybackEnded", data => { debugtest("MediaInputPlaybackEnded", data) })
+//localConfig.obsConnection.on("MediaInputActionTriggered", data => { debugtest("MediaInputActionTriggered", data) })
+localConfig.obsConnection.on("RecordStateChanged", data => { debugtest("RecordStateChanged", data) })
+
+localConfig.obsConnection.on("ReplayBufferStateChanged", data => { debugtest("ReplayBufferStateChanged", data) })
+localConfig.obsConnection.on("SceneItemCreated", data => { debugtest("SceneItemCreated", data) })
+localConfig.obsConnection.on("SceneItemRemoved", data => { debugtest("SceneItemRemoved", data) })
+localConfig.obsConnection.on("SceneCreated", data => { debugtest("SceneCreated", data) })
+localConfig.obsConnection.on("CurrentProgramSceneChanged", data => { debugtest("CurrentProgramSceneChanged", data) })
+localConfig.obsConnection.on("CurrentPreviewSceneChanged", data => { debugtest("CurrentPreviewSceneChanged", data) })
+localConfig.obsConnection.on("CurrentSceneTransitionChanged", data => { debugtest("CurrentSceneTransitionChanged", data) })
+localConfig.obsConnection.on("SceneTransitionStarted", data => { debugtest("MediaInputActionTriggered", data) })
+localConfig.obsConnection.on("SceneTransitionEnded", data => { debugtest("SceneTransitionEnded", data) })
+localConfig.obsConnection.on("SceneTransitionVideoEnded", data => { debugtest("SceneTransitionVideoEnded", data) })
+localConfig.obsConnection.on("StudioModeStateChanged", data => { debugtest("StudioModeStateChanged", data) })
+localConfig.obsConnection.on("ScreenshotSaved", data => { debugtest("ScreenshotSaved", data) })
+localConfig.obsConnection.on("VendorEvent", data => { debugtest("VendorEvent", data) })
+localConfig.obsConnection.on("CustomEvent", data => { debugtest("CustomEvent", data) })
+
+
+function debugtest (callback, data)
+{
+    console.log("obs:debugtest ", callback, data)
+}
+*/
 // ============================================================================
 //                           FUNCTION: obs error
 // ============================================================================
@@ -973,12 +1076,21 @@ function sendScenes ()
 // ============================================================================
 //                           FUNCTION: ToggleMute
 // ============================================================================
-function ToggleMute (input)
+function ToggleMute (data)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "ToggleMute", input)
-    localConfig.obsConnection.call("ToggleInputMute", { inputName: input })
-        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "ToggleInputMute failed", err.message); });
-    localConfig.obsConnection.call("GetInputMute", { inputName: input })
+    if (data.enabled == "true" || data.enabled == "false")
+    {
+        // set mute to true of false
+        localConfig.obsConnection.call("SetInputMute", { inputName: data.sourceName, inputMuted: data.enabled.toLowerCase() == "true" })
+            .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".SetInputMute ", "SetInputMute failed", err.message); });
+    }
+    else
+    {
+        // toggle mute
+        localConfig.obsConnection.call("ToggleInputMute", { inputName: data.sourceName })
+            .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "ToggleInputMute failed", err.message); });
+    }
+    localConfig.obsConnection.call("GetInputMute", { inputName: data.sourceName })
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".ToggleMute ", "GetInputMute failed", err.message); });
 }
 // ============================================================================

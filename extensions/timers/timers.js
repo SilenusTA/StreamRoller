@@ -46,7 +46,7 @@ import { clearTimeout } from "timers";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     DataCenterSocket: null,
-    timers: []
+    timers: [] // holds the local timers
 };
 const default_serverConfig = {
     __version__: 0.1,
@@ -62,7 +62,7 @@ let serverConfig = structuredClone(default_serverConfig);
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Timers allow for actions to be triggered when a timer goes off",
+    description: "Timers allow for actions to be triggered when a timer goes off.<BR> For Triggers just put the name of the timer in you want to trigger on.<BR> For Actions put the name and duration of the timer in you want to start.",
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -70,29 +70,31 @@ const triggersandactions =
                 name: "TimerStart",
                 displaytitle: "Timer Started",
                 description: "A timer was started",
-                messagetype: "TimerStarted",
+                messagetype: "trigger_TimerStarted",
                 channel: serverConfig.channel,
                 parameters: {
                     name: "",
-                    duration: ""
+                    duration: "",
+                    message: ""
                 }
             },
             {
                 name: "TimerEnd",
                 displaytitle: "Timer Ended",
                 description: "A timer has finished",
-                messagetype: "TimerEnded",
+                messagetype: "trigger_TimerEnded",
                 channel: serverConfig.channel,
                 parameters: {
                     name: "",
-                    duration: ""
+                    duration: "",
+                    message: "",
                 }
             },
             {
                 name: "TimerRunning",
                 displaytitle: "Timer Running",
                 description: "A timer is running",
-                messagetype: "TimerRunning",
+                messagetype: "trigger_TimerRunning",
                 channel: serverConfig.channel,
                 parameters: {
                     name: "",
@@ -108,8 +110,8 @@ const triggersandactions =
             {
                 name: "TimerStart",
                 displaytitle: "Timer Start",
-                description: "Start a countdown timer",
-                messagetype: "TimerStart",
+                description: "Start a countdown timer, duration in seconds",
+                messagetype: "action_TimerStart",
                 channel: serverConfig.channel,
                 parameters: {
                     name: "",
@@ -121,7 +123,7 @@ const triggersandactions =
                 name: "TimerStop",
                 displaytitle: "Timer Stop",
                 description: "Stop a running timer",
-                messagetype: "TimerStop",
+                messagetype: "action_TimerStop",
                 channel: serverConfig.channel,
                 parameters: {
                     name: ""
@@ -227,7 +229,7 @@ function onDataCenterMessage (server_packet)
                 CheckTimers(extension_packet.data.TimerName);
             }
         }
-        else if (extension_packet.type === "TimerStart")
+        else if (extension_packet.type === "action_TimerStart")
         {
             if (localConfig.timers[extension_packet.data.name] === undefined)
                 localConfig.timers[extension_packet.data.name] = {};
@@ -239,7 +241,7 @@ function onDataCenterMessage (server_packet)
             // This is an extension message from the API. not currently used as timers are started from the settins modals
             CheckTimers(extension_packet.data.name);
         }
-        else if (extension_packet.type === "TimerStop")
+        else if (extension_packet.type === "action_TimerStop")
         {
             if (localConfig.timers[extension_packet.data.name])
                 localConfig.timers[extension_packet.data.name].timeout = 0;
@@ -373,18 +375,17 @@ function CheckTimers (timername)
 {
     if (!localConfig.timers[timername])
         return;
-
+    Timer(timername)
     if (localConfig.timers[timername].timeout == localConfig.timers[timername].duration)
         sendStartTimer(localConfig.timers[timername])
-    Timer(timername)
 }
 // ============================================================================
 //                           FUNCTION: Timer
 // ============================================================================
 function Timer (timername)
 {
-    sendTimerData(localConfig.timers[timername]);
     localConfig.timers[timername].timeout = localConfig.timers[timername].timeout - 1;
+    sendTimerData(localConfig.timers[timername]);
     // write the file
     clearTimeout(localConfig.timers[timername].Handle);
     if (localConfig.timers[timername].timeout >= 0)
@@ -414,15 +415,17 @@ function Timer (timername)
 function sendTimerData (timedata)
 {
     let data = findactionByMessageType("TimerRunning")
-    data.parameters = timedata
-    data.parameters.Handle = null
+    data.parameters = {}
+    data.parameters.name = timedata.name
+    data.parameters.timeout = timedata.timeout
+    data.parameters.duration = timedata.duration
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "TimerRunning",
+                "trigger_TimerRunning",
                 serverConfig.extensionname,
                 data,
                 serverConfig.channel
@@ -436,14 +439,17 @@ function sendTimerData (timedata)
 // ============================================================================
 function sendStartTimer (timedata)
 {
-    let data = findactionByMessageType("TimerStarted")
-    data.parameters = timedata
+    let data = findactionByMessageType("trigger_TimerStarted")
+    data.parameters = {}
+    data.parameters.name = timedata.name
+    data.parameters.timeout = timedata.timeout
+    data.parameters.duration = timedata.duration
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "TimerStarted",
+                "trigger_TimerStarted",
                 serverConfig.extensionname,
                 data,
                 serverConfig.channel
@@ -456,15 +462,18 @@ function sendStartTimer (timedata)
 // ============================================================================
 function sendEndTimer (timedata)
 {
-    let data = findactionByMessageType("TimerEnded")
-    data.parameters = timedata
+    let data = findactionByMessageType("trigger_TimerEnded")
+    data.parameters = {}
+    data.parameters.name = timedata.name
+    data.parameters.timeout = timedata.timeout
+    data.parameters.duration = timedata.duration
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "TimerEnded",
+                "trigger_TimerEnded",
                 serverConfig.extensionname,
                 data,
                 serverConfig.channel
