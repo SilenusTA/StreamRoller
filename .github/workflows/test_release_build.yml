@@ -9,7 +9,7 @@ jobs:
   minify_code:
     runs-on: ubuntu-latest
     steps:
-    - name: removing git folder (to keep space down in exe)
+    - name: getting node version
       run: node -v
     - uses: actions/checkout@v3
     - name: minifying

@@ -161,27 +161,33 @@ app.use("*.php", function (request, response, next)
 });
 app.use(express.static(webfiles));
 
+//load extensions and start the server
+loadExtensionsAndStartServer()
+
 // ############################################################
 // ################## Load/Start Extensions ###################
 // ############################################################
-// Just some debugging code to test new extensions
-if (config.testing > 0)
+// added due to minify not liking await at the top level
+async function loadExtensionsAndStartServer ()
 {
-    console.log("#### running extra DEBUG extensions ####")
-    logger.usecoloredlogs("default");
-    await loadExtensions(__dirname + "/../../test-ext")
-    await loadExtensions(__dirname + "/../../extensions")
-    // ################### start StreamRoller  ####################################
-    ServerSocket.start(app, server, Object.keys(localConfig.extensions))
+    // Just some debugging code to test new extensions
+    if (config.testing > 0)
+    {
+        console.log("#### running extra DEBUG extensions ####")
+        logger.usecoloredlogs("default");
+        await loadExtensions(__dirname + "/../../test-ext")
+        await loadExtensions(__dirname + "/../../extensions")
+        // ################### start StreamRoller  ####################################
+        ServerSocket.start(app, server, Object.keys(localConfig.extensions))
+    }
+    else
+    {
+        logger.usecoloredlogs("default");
+        await loadExtensions(__dirname + "/../../extensions")
+        // ################### start StreamRoller  ####################################
+        ServerSocket.start(app, server, Object.keys(localConfig.extensions))
+    }
 }
-else
-{
-    logger.usecoloredlogs("default");
-    await loadExtensions(__dirname + "/../../extensions")
-    // ################### start StreamRoller  ####################################
-    ServerSocket.start(app, server, Object.keys(localConfig.extensions))
-}
-
 // ########################################################
 // ################### loadExtensions #####################
 // ########################################################
