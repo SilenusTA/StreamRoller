@@ -9,6 +9,8 @@ jobs:
   minify_code:
     runs-on: ubuntu-latest
     steps:
+    - name: removing git folder (to keep space down in exe)
+      run: node -v
     - uses: actions/checkout@v3
     - name: minifying
       uses: nizarmah/auto-minify@v2.1
