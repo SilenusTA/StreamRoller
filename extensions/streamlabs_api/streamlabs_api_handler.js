@@ -682,7 +682,7 @@ function parseTriggers (data)
     }
     else if (data.type === "loyalty_store_redemption" && data.for === "streamlabs")
     {
-        trigger = triggersandactions.triggers.find(obj => obj.name === "trigger_StreamlabsLoyaltyStoreRedemptionReceived")
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsLoyaltyStoreRedemptionReceived")
         if (trigger)
         {
             trigger.parameters.username = data.message[0].from;

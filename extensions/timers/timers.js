@@ -237,7 +237,6 @@ function onDataCenterMessage (server_packet)
             localConfig.timers[extension_packet.data.name].message = extension_packet.data.message;
             localConfig.timers[extension_packet.data.name].timeout = extension_packet.data.duration;
             localConfig.timers[extension_packet.data.name].duration = extension_packet.data.duration;
-
             // This is an extension message from the API. not currently used as timers are started from the settins modals
             CheckTimers(extension_packet.data.name);
         }
@@ -482,7 +481,7 @@ function sendEndTimer (timedata)
         ));
 }
 // ============================================================================
-//                           FUNCTION: sendEndTimer
+//                           FUNCTION: findactionByMessageType
 // ============================================================================
 function findactionByMessageType (messagetype)
 {

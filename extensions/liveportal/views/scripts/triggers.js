@@ -222,14 +222,14 @@ function actionLoadParameters (id)
     let params = localConfig.triggersAndActions.actions[extensionname][id].parameters
     let actionname = localConfig.triggersAndActions.actions[extensionname][id].name;
     let actionextensionparameters = ""
-    ActionExtensionActionParameters.title = localConfig.triggersAndActions.actions[extensionname][id].description
+    //ActionExtensionActionParameters.title = localConfig.triggersAndActions.actions[extensionname][id].description
     // set the title of the calling dropdown
-    document.getElementById("actionExtensionAction").title = localConfig.triggersAndActions.actions[extensionname][id].displaytitle
+    document.getElementById("actionExtensionAction").title = localConfig.triggersAndActions.actions[extensionname][id].description
     document.getElementById("actionExtensionChoserChannel").value = localConfig.triggersAndActions.actions[extensionname][id].channel;
     document.getElementById("actionExtensionChoserActionName").value = localConfig.triggersAndActions.actions[extensionname][id].name;
     for (var key in params)
     {
-        actionextensionparameters += "<input type='text' name='" + actionname + "_" + key + "' class='form-control' id='" + key + "' placeholder='" + key + "' value=''>"
+        actionextensionparameters += "<input type='text' name='" + actionname + "_" + key + "' class='form-control' id='" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
 
@@ -386,7 +386,7 @@ function CheckTriggers (event)
                         catch (err)
                         {
                             console.log("CheckTriggers error", err)
-
+                            match = false;
                         }
                     }
                 })

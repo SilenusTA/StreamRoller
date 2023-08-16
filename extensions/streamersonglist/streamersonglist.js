@@ -275,17 +275,16 @@ function onDataCenterMessage (server_packet)
                         {
                             if (msg.added)
                             {
+                                let triggertosend = findactionByMessageType("trigger_SongAddedToQueue")
+                                triggertosend.parameters.songName = msg.title
+                                triggertosend.parameters.textMessage = "Song Added to queue: " + msg.title
                                 sr_api.sendMessage(localConfig.DataCenterSocket,
                                     sr_api.ServerPacket("ChannelData",
                                         serverConfig.extensionname,
                                         sr_api.ExtensionPacket(
                                             "trigger_SongAddedToQueue",
                                             serverConfig.extensionname,
-                                            {
-                                                type: "trigger_SongAddedToQueue",
-                                                songName: msg.title,
-                                                textMessage: "Song Added to queue: " + msg.title
-                                            },
+                                            triggertosend,
                                             serverConfig.channel),
                                         serverConfig.channel
                                     ),
@@ -660,6 +659,10 @@ function sendCurrentSongChange (extension)
     let songtext = ""
     if (localConfig.currentsong != "")
         songtext = "Current song now: " + localConfig.currentsong
+
+    let triggertosend = findactionByMessageType("trigger_CurrentSongChange")
+    triggertosend.parameters.songName = localConfig.currentsong
+    triggertosend.parameters.textMessage = songtext
     if (extension != "")
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -669,11 +672,7 @@ function sendCurrentSongChange (extension)
                 sr_api.ExtensionPacket(
                     "trigger_CurrentSongChange",
                     serverConfig.extensionname,
-                    {
-                        type: "trigger_CurrentSongChange",
-                        songName: localConfig.currentsong,
-                        textMessage: songtext
-                    },
+                    triggertosend,
                     serverConfig.channel,
                     extension
                 ),
@@ -690,11 +689,7 @@ function sendCurrentSongChange (extension)
                 sr_api.ExtensionPacket(
                     "trigger_CurrentSongChange",
                     serverConfig.extensionname,
-                    {
-                        type: "trigger_CurrentSongChange",
-                        songName: localConfig.currentsong,
-                        textMessage: songtext
-                    },
+                    triggertosend,
                     serverConfig.channel
                 ),
                 serverConfig.channel
@@ -942,6 +937,19 @@ function heartBeatCallback ()
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "callback failed:", err.message);
     }
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, serverConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: findactionByMessageType
+// ============================================================================
+function findactionByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findactionByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

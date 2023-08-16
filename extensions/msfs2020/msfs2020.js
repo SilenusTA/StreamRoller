@@ -958,6 +958,9 @@ async function postTriggers ()
         // if we have an index add it to the data we send out
         if (simvar.indexOf(":") > 0)
         {
+            let triggertopost = findactionByMessageType("trigger_" + name + ":index")
+            triggertopost.parameters.index = simvarindex;
+            triggertopost.parameters.data = data[simvar];
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ChannelData",
@@ -965,7 +968,7 @@ async function postTriggers ()
                     sr_api.ExtensionPacket(
                         "trigger_" + name + ":index",
                         serverConfig.extensionname,
-                        { index: simvarindex, data: data[simvar] },
+                        triggertopost,//{ index: simvarindex, data: data[simvar] },
                         serverConfig.channel
                     ),
                     serverConfig.channel
@@ -973,6 +976,8 @@ async function postTriggers ()
         }
         else
         {
+            let triggertopost = findactionByMessageType("trigger_" + name + ":index")
+            triggertopost.parameters.data = data[simvar];
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ChannelData",
@@ -980,7 +985,7 @@ async function postTriggers ()
                     sr_api.ExtensionPacket(
                         "trigger_" + name,
                         serverConfig.extensionname,
-                        { data: data[simvar] },
+                        triggertopost,//{ data: data[simvar] },
                         serverConfig.channel
                     ),
                     serverConfig.channel
@@ -1017,7 +1022,19 @@ function pollMSFS ()
         postTriggers();
     localConfig.pollMSFSHandle = setTimeout(pollMSFS, serverConfig.msfs2020SimPollInterval * 1000)
 }
-
+// ============================================================================
+//                           FUNCTION: findactionByMessageType
+// ============================================================================
+function findactionByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findactionByMessageType", "failed to find action", messagetype);
+}
 // ============================================================================
 //                           FUNCTION: file_log
 //              For debug purposes. logs message data to file

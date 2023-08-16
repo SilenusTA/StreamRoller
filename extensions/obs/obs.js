@@ -187,7 +187,6 @@ const triggersandactions =
                 channel: serverConfig.channel,
                 parameters: { sceneName: "", sourceName: "", enabled: "" }
             },
-
             {
                 name: "OBSToggleMute",
                 displaytitle: "Toggle mute on the selected source",
@@ -195,6 +194,35 @@ const triggersandactions =
                 messagetype: "action_ToggleMute",
                 channel: serverConfig.channel,
                 parameters: { sourceName: "", enabled: "" }
+            },
+            {
+                name: "OBSSetSceneItemTransform",
+                displaytitle: "Set Scene Item Transform",
+                description: "Sets the Scene Transform for a given item (note rotation respects the alignment in OBS. It's recommneded to set alightment in OBS to center)",
+                messagetype: "action_SetSceneItemTransform",
+                channel: serverConfig.channel,
+                parameters: {
+                    sceneName: "",
+                    sourceName: "",
+                    alignment: "",
+                    boundsAlignment: "",
+                    boundsHeight: "",
+                    boundsType: "",
+                    boundsWidth: "",
+                    cropBottom: "",
+                    cropLeft: "",
+                    cropRight: "",
+                    cropTop: "",
+                    height: "",
+                    positionX: "",
+                    positionY: "",
+                    rotation: "",
+                    scaleX: "",
+                    scaleY: "",
+                    sourceHeight: "",
+                    sourceWidth: "",
+                    width: ""
+                }
             }
         ],
 }
@@ -427,6 +455,8 @@ function onDataCenterMessage (server_packet)
                 ToggleMute(extension_packet.data)
             else if (extension_packet.type === "action_ToggleFilter")
                 activateFilter(extension_packet.data)
+            else if (extension_packet.type === "action_SetSceneItemTransform")
+                setSceneItemTransform(extension_packet.data)
             else
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
         }
@@ -992,6 +1022,10 @@ function onSwitchedScenes (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
     localConfig.sceneList.current = scene.sceneName;
+    // send back the triger with the scnen name added
+    let data = findactionByMessageType("trigger_SceneChanged")
+    data.parameters.sceneName = scene.sceneName;
+
     // send the information out on our channel
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
@@ -999,7 +1033,7 @@ function onSwitchedScenes (scene)
             sr_api.ExtensionPacket(
                 "trigger_SceneChanged",
                 serverConfig.extensionname,
-                { sceneName: scene.sceneName },
+                data,
                 serverConfig.channel
             ),
             serverConfig.channel)
@@ -1016,14 +1050,13 @@ function onSwitchedScenes (scene)
 function StreamStopped ()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStopped");
-    // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "trigger_StreamStopped",
                 serverConfig.extensionname,
-                {},
+                findactionByMessageType("trigger_StreamStopped"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1038,14 +1071,13 @@ function StreamStopped ()
 function StreamStarted ()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStarted");
-    // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "trigger_StreamStarted",
                 serverConfig.extensionname,
-                {},
+                findactionByMessageType("trigger_StreamStarted"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1199,9 +1231,84 @@ function activateFilter (data)
             filterEnabled: isTrueSet  // true or false
         }).catch((e) =>
         {
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".activateFilter", "Error:", e.message);
         })
 }
+// ============================================================================
+//                           FUNCTION: setSceneItemTransform
+// ============================================================================
+function setSceneItemTransform (requestData)
+{
+    /* example
+    sceneItemTransform: {
+    alignment: 5, // alignment of 0 is centered
+    boundsAlignment: 0,
+    boundsHeight: 0,
+    boundsType: 'OBS_BOUNDS_NONE',
+    boundsWidth: 0,
+    cropBottom: 0,
+    cropLeft: 0,
+    cropRight: 0,
+    cropTop: 0,
+    height: 264,
+    positionX: 0,
+    positionY: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+    sourceHeight: 264,
+    sourceWidth: 640,
+    width: 640
+  }
+ */
+    console.log("setSceneItemTransform", requestData)
+    // ******************************************************
+    // get the scene id for the source/scene combo sent
+    // ******************************************************
+    localConfig.obsConnection.call("GetSceneItemId", { sceneName: requestData.sceneName, sourceName: requestData.sourceName })
+        .then(scentItemIdData =>
+        {
+            // ******************************************************
+            // get the Transform for the source/scene combo sent
+            // ******************************************************
+            localConfig.obsConnection.call("GetSceneItemTransform", {
+                sceneName: requestData.sceneName,
+                sourceName: requestData.sourceName,
+                sceneItemId: scentItemIdData.sceneItemId
+            }).then(itemTansform =>
+            {
+                for (const entry in requestData) 
+                {
+                    if (requestData[entry] && requestData[entry] !== "")
+                        itemTansform[entry] = Number(requestData[entry]);
+                }
+                // ******************************************************
+                // Set the user data in the Transform
+                // ******************************************************
+                localConfig.obsConnection.call("SetSceneItemTransform", {
+                    sceneName: requestData.sceneName,
+                    sceneItemId: scentItemIdData.sceneItemId,
+                    sceneItemTransform: itemTansform
+                }).catch(err => 
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "SetSceneItemEnabled.GetSceneItemTransform failed", err.message);
+                });
+            })
+                .catch(err => 
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "SetSceneItemEnabled.SetSceneItemEnabled failed", err.message);
+                });
+        })
+        .catch(err =>
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".setSceneItemTransform.GetSceneItemId", err.message);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".setSceneItemTransform.GetSceneItemId", err);
+            if (err.message === "Not connected")
+                localConfig.status.connected = false;
+            return;
+        });
+}
+
 // ============================================================================
 //                           FUNCTION: onFilterChanged
 //                      update our filter list and send out our scenes list
@@ -1337,6 +1444,19 @@ function findSceneData (sceneName)
         if (localConfig.sceneList.rest[entry].sceneName === sceneName)
             return entry
 
+}
+// ============================================================================
+//                           FUNCTION: findactionByMessageType
+// ============================================================================
+function findactionByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findactionByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS
