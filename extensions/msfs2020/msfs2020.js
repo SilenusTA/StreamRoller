@@ -839,7 +839,6 @@ async function MSFS2020Connected (handle)
             localConfig.EventCallabackHandles[serverData.EventVars[i]]
                 = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
                 {
-                    console.log("MSFS2020 trigger", serverData.EventVars[i], data)
                     //post a trigger
                     sr_api.sendMessage(localConfig.DataCenterSocket,
                         sr_api.ServerPacket(
@@ -986,7 +985,6 @@ async function postTriggers ()
             let triggertopost = findtriggerByMessageType("trigger_" + name)
             triggertopost.parameters.data = data[simvar];
             triggertopost.parameters.textMessage = simvar + ": " + data[simvar]
-            console.log("triggertopost", triggertopost)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ChannelData",
@@ -1036,12 +1034,8 @@ function pollMSFS ()
 // ============================================================================
 function findtriggerByMessageType (messagetype)
 {
-    console.log("MSFS2020:findtriggerByMessageType", messagetype)
-
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf("trigger_indicated") === 0)
-            console.log(triggersandactions.triggers[i].messagetype)
         if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
             return triggersandactions.triggers[i];
     }
