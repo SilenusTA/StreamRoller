@@ -1260,9 +1260,9 @@ function postChatTrigger (data)
 
 }
 // ============================================================================
-//                           FUNCTION: findactionByMessageType
+//                           FUNCTION: findtriggerByMessageType
 // ============================================================================
-function findactionByMessageType (messagetype)
+function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -1270,7 +1270,7 @@ function findactionByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findactionByMessageType", "failed to find action", messagetype);
+        ".findtriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                     FUNCTION: process_chat_data
@@ -1571,7 +1571,7 @@ function chatLogin (account)
             {
                 file_log("action", userstate, message);
                 process_chat_data(channel, userstate, message);
-                triggertosend = findactionByMessageType("trigger_ChatActionReceived")
+                triggertosend = findtriggerByMessageType("trigger_ChatActionReceived")
                 triggertosend.parameters.type = "trigger_ChatActionReceived"
                 triggertosend.parameters.textMessage = message
                 triggertosend.parameters.sender = userstate['display-name']
@@ -1590,7 +1590,7 @@ function chatLogin (account)
                 userstate["message-type"] = "ban";
                 process_chat_data(channel, userstate, " Ban: (" + username + ") " + userstate['ban-duration'] + ". " + ((reason) ? reason : ""));
 
-                triggertosend = findactionByMessageType("trigger_ChatBanReceived")
+                triggertosend = findtriggerByMessageType("trigger_ChatBanReceived")
                 triggertosend.parameters.type = "trigger_ChatBanReceived"
                 triggertosend.parameters.textMessage = username + " was banned for " + userstate['ban-duration'] + "s:" + ((reason) ? reason : "")
                 triggertosend.parameters.username = username
@@ -1602,7 +1602,7 @@ function chatLogin (account)
             {
                 //file_log("chat", userstate, message);
                 process_chat_data(channel, userstate, message);
-                triggertosend = findactionByMessageType("trigger_ChatMessageReceived")
+                triggertosend = findtriggerByMessageType("trigger_ChatMessageReceived")
                 triggertosend.parameters.type = "trigger_ChatMessageReceived"
                 triggertosend.parameters.textMessage = userstate['display-name'] + ": " + message
                 triggertosend.parameters.sender = userstate['display-name']
@@ -1618,7 +1618,7 @@ function chatLogin (account)
             {
                 file_log("messagedeleted", userstate, deletedMessage); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, "Message deleted: (" + username + ") " + deletedMessage);
-                triggertosend = findactionByMessageType("trigger_ChatMessageDeleted")
+                triggertosend = findtriggerByMessageType("trigger_ChatMessageDeleted")
                 triggertosend.parameters.type = "trigger_ChatMessageDeleted"
                 triggertosend.parameters.textMessage = username + "'s message was deleted"
                 triggertosend.parameters.username = username
@@ -1629,7 +1629,7 @@ function chatLogin (account)
             {
                 file_log("primepaidupgrade", userstate, methods);
                 process_chat_data(channel, userstate, "");
-                triggertosend = findactionByMessageType("trigger_ChatPrimePaidUpgrade")
+                triggertosend = findtriggerByMessageType("trigger_ChatPrimePaidUpgrade")
                 triggertosend.parameters.type = "trigger_ChatPrimePaidUpgrade"
                 triggertosend.parameters.textMessage = username + " upgraded their prime"
                 triggertosend.parameters.username = username
@@ -1639,7 +1639,7 @@ function chatLogin (account)
             {
                 file_log("raided", username, viewers);
                 process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "raided", "viewers": viewers }, "raided: Raid from " + username + " with " + viewers);
-                triggertosend = findactionByMessageType("trigger_ChatRaid")
+                triggertosend = findtriggerByMessageType("trigger_ChatRaid")
                 triggertosend.parameters.type = "trigger_ChatRaid"
                 triggertosend.parameters.textMessage = username + " raided with " + viewers
                 triggertosend.parameters.username = username
@@ -1652,7 +1652,7 @@ function chatLogin (account)
                 file_log("redeem", tags, rewardType);
 
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "redeem", tags: tags }, message + "");
-                triggertosend = findactionByMessageType("trigger_ChatRedeem")
+                triggertosend = findtriggerByMessageType("trigger_ChatRedeem")
                 triggertosend.parameters.type = "trigger_ChatRedeem"
                 triggertosend.parameters.textMessage = username + " redeemed chat points"
                 triggertosend.parameters.username = username
@@ -1665,7 +1665,7 @@ function chatLogin (account)
             {
                 file_log("resub", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, ((message) ? message : ""));
-                triggertosend = findactionByMessageType("trigger_ChatResub")
+                triggertosend = findtriggerByMessageType("trigger_ChatResub")
                 triggertosend.parameters.type = "trigger_ChatResub"
                 triggertosend.parameters.textMessage = username + " resubbed: " + ((message) ? message : "")
                 triggertosend.parameters.username = username
@@ -1683,7 +1683,7 @@ function chatLogin (account)
                 localConfig.twitchClient["user"].state.slowmode = state.slow;
                 localConfig.twitchClient["user"].state.subsonly = state['subs-only'];
 
-                triggertosend = findactionByMessageType("trigger_ChatRoomstate")
+                triggertosend = findtriggerByMessageType("trigger_ChatRoomstate")
                 triggertosend.parameters.type = "trigger_ChatRoomstate"
                 triggertosend.parameters.textMessage = "Roomstate changed"
                 triggertosend.parameters.channel = channel
@@ -1699,7 +1699,7 @@ function chatLogin (account)
             {
                 file_log("subscription", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, message);
-                triggertosend = findactionByMessageType("trigger_ChatSubscription")
+                triggertosend = findtriggerByMessageType("trigger_ChatSubscription")
                 triggertosend.parameters.type = "trigger_ChatSubscription"
                 triggertosend.parameters.textMessage = username + " subscribed: " + message
                 triggertosend.parameters.username = username
@@ -1711,7 +1711,7 @@ function chatLogin (account)
             {
                 file_log("timeout", userstate, reason); userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
                 process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
-                triggertosend = findactionByMessageType("trigger_ChatTimeout")
+                triggertosend = findtriggerByMessageType("trigger_ChatTimeout")
                 triggertosend.parameters.type = "trigger_ChatTimeout"
                 triggertosend.parameters.textMessage = username + " was timedout for " + duration + "s:" + ((reason) ? reason : "")
                 triggertosend.parameters.username = username
@@ -1725,7 +1725,7 @@ function chatLogin (account)
             {
                 file_log("submysterygift", userstate, username); userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, userstate['system-msg']);
-                triggertosend = findactionByMessageType("trigger_ChatSubMysteryGift")
+                triggertosend = findtriggerByMessageType("trigger_ChatSubMysteryGift")
                 triggertosend.parameters.type = "trigger_ChatSubMysteryGift"
                 triggertosend.parameters.textMessage = userstate['system-msg']
                 triggertosend.parameters.username = username
@@ -1738,7 +1738,7 @@ function chatLogin (account)
                {
                    file_log("automod", msgID, message);
                    process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
-                   triggertosend = findactionByMessageType("trigger_ChatAutoMod")
+                   triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
                     triggertosend.parameters.type= "trigger_ChatAutoMod"
                     triggertosend.parameters.textMessage= "no default message"
                     triggertosend.parameters.msgID= msgID
@@ -1749,7 +1749,7 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("reconnect", () => 
             {
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "reconnect" }, "reconnect: Reconnect");
-                triggertosend = findactionByMessageType("trigger_ChatReconnect")
+                triggertosend = findtriggerByMessageType("trigger_ChatReconnect")
                 triggertosend.parameters.type = "trigger_ChatReconnect"
                 triggertosend.parameters.textMessage = "Reconnect"
                 postChatTrigger(triggertosend);
@@ -1758,7 +1758,7 @@ function chatLogin (account)
             {
                 file_log("anongiftpaidupgrade", userstate, username);
                 process_chat_data(channel, userstate, "anongiftpaidupgrade: " + username);
-                triggertosend = findactionByMessageType("trigger_ChatAnonGiftPaidUpgrade")
+                triggertosend = findtriggerByMessageType("trigger_ChatAnonGiftPaidUpgrade")
                 triggertosend.parameters.type = "trigger_ChatAnonGiftPaidUpgrade"
                 triggertosend.parameters.textMessage = username + " received an annonomous paid upgrade (I think)"
                 triggertosend.parameters.username = username
@@ -1769,7 +1769,7 @@ function chatLogin (account)
             {
                 file_log("anonsubmysterygift", userstate, methods);
                 process_chat_data(channel, userstate, "anonsubmysterygift: " + numbOfSubs);
-                triggertosend = findactionByMessageType("trigger_ChatAnonSubMysteryGift")
+                triggertosend = findtriggerByMessageType("trigger_ChatAnonSubMysteryGift")
                 triggertosend.parameters.type = "trigger_ChatAnonSubMysteryGift"
                 triggertosend.parameters.textMessage = "anon sub mystery gift x" + numbOfSubs
                 triggertosend.parameters.numbOfSubs = numbOfSubs
@@ -1781,7 +1781,7 @@ function chatLogin (account)
             {
                 file_log("anonsubgift", userstate, methods);
                 process_chat_data(channel, userstate, "anonsubgift: " + streakMonths + " : " + recipient);
-                triggertosend = findactionByMessageType("trigger_ChatAnonSubGift")
+                triggertosend = findtriggerByMessageType("trigger_ChatAnonSubGift")
                 triggertosend.parameters.type = "trigger_ChatAnonSubGift"
                 triggertosend.parameters.textMessage = recipient + " received an anon sub gift"
                 triggertosend.parameters.recipient = recipient
@@ -1791,7 +1791,7 @@ function chatLogin (account)
             {
                 file_log("cheer", userstate, message);
                 process_chat_data(channel, userstate, "cheer: " + message);
-                triggertosend = findactionByMessageType("trigger_ChatCheer")
+                triggertosend = findtriggerByMessageType("trigger_ChatCheer")
                 triggertosend.parameters.type = "trigger_ChatCheer"
                 triggertosend.parameters.textMessage = userstate["username"] + " received an anon sub gift: " + message
                 triggertosend.parameters.username = userstate["username"]
@@ -1802,7 +1802,7 @@ function chatLogin (account)
               {
                   file_log("mod", username, "");
                   process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
-                  triggertosend = findactionByMessageType("trigger_ChatMod")
+                  triggertosend = findtriggerByMessageType("trigger_ChatMod")
                   triggertosend.parameters.type: "trigger_ChatMod"
                   triggertosend.parameters.textMessage= "no default message"
                   triggertosend.parameters.username= username
@@ -1812,7 +1812,7 @@ function chatLogin (account)
               {
                   file_log("mods", tags, message);
                   process_chat_data(channel, tags, "mods: " + message);
-                  triggertosend = findactionByMessageType("trigger_ChatMods")
+                  triggertosend = findtriggerByMessageType("trigger_ChatMods")
                   triggertosend.parameters.type= "trigger_ChatMods"
                   triggertosend.parameters.textMessage= "mod list received"
                   triggertosend.parameters.message= message
@@ -1823,7 +1823,7 @@ function chatLogin (account)
             {
                 file_log("subgift", userstate, username + ":" + streakMonths + ":" + recipient);
                 process_chat_data(channel, userstate, "subgift: Subgift from " + username + " for " + recipient + " months " + streakMonths);
-                triggertosend = findactionByMessageType("trigger_ChatSubGift")
+                triggertosend = findtriggerByMessageType("trigger_ChatSubGift")
                 triggertosend.parameters.type = "trigger_ChatSubGift"
                 triggertosend.parameters.textMessage = username + " gifed a sub to " + recipient
                 triggertosend.parameters.gifter = username
@@ -1834,7 +1834,7 @@ function chatLogin (account)
             {
                 file_log("subscribers", channel, enabled);
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "subscribers" }, "subscribers: " + enabled);
-                triggertosend = findactionByMessageType("trigger_ChatSubscribers")
+                triggertosend = findtriggerByMessageType("trigger_ChatSubscribers")
                 triggertosend.parameters.type = "trigger_ChatSubscribers"
                 triggertosend.parameters.textMessage = "List of subscribers (I think)"
                 triggertosend.parameters.channel = channel
@@ -1845,7 +1845,7 @@ function chatLogin (account)
             {
                 file_log("vips", vips, "");
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "vips" }, "vips: VIPS are :" + vips.join(" : "));
-                triggertosend = findactionByMessageType("trigger_ChatVips")
+                triggertosend = findtriggerByMessageType("trigger_ChatVips")
                 triggertosend.parameters.type = "trigger_ChatVips"
                 triggertosend.parameters.textMessage = "List of Vips(I think)"
                 triggertosend.parameters.channel = channel
@@ -1856,7 +1856,7 @@ function chatLogin (account)
             {
                 file_log("clear", channel, "");
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "clearchat" }, "clearchat: Chat has been cleared");
-                triggertosend = findactionByMessageType("trigger_ChatClear")
+                triggertosend = findtriggerByMessageType("trigger_ChatClear")
                 triggertosend.parameters.type = "trigger_ChatClear"
                 triggertosend.parameters.textMessage = "Chat was cleared"
                 triggertosend.parameters.channel = channel
@@ -1868,7 +1868,7 @@ function chatLogin (account)
             {
                 file_log("unmod", username, "");
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "unmod" }, "unmod: " + username + " UnModded");
-                triggertosend = findactionByMessageType("trigger_ChatUnmod")
+                triggertosend = findtriggerByMessageType("trigger_ChatUnmod")
                 triggertosend.parameters.type= "trigger_ChatUnmod"
                 triggertosend.parameters.textMessage= "no default message"  
                 triggertosend.parameters.username= username
@@ -1878,7 +1878,7 @@ function chatLogin (account)
             {
                 file_log("emotesets", sets, obj);
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "emotesets" }, "emotesets: " + sets);
-                triggertosend = findactionByMessageType("trigger_ChatEmoteSet")
+                triggertosend = findtriggerByMessageType("trigger_ChatEmoteSet")
                 triggertosend.parameters.type= "trigger_ChatEmoteSet"
                 triggertosend.parameters.textMessage= "emote set received"
                 postChatTrigger(triggertosend);
@@ -1887,7 +1887,7 @@ function chatLogin (account)
             {
                 file_log("followersonly", enabled, length);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "followersonly" }, "followersonly: " + length + " Follower Only mode : " + enabled);
-                triggertosend = findactionByMessageType("trigger_ChatFollowersOnly")
+                triggertosend = findtriggerByMessageType("trigger_ChatFollowersOnly")
                 triggertosend.parameters.type = "trigger_ChatFollowersOnly"
                 triggertosend.parameters.textMessage = "Follower only mode " + enabled + " for " + length
                 triggertosend.parameters.enabled = enabled
@@ -1898,7 +1898,7 @@ function chatLogin (account)
             {
                 file_log("giftpaidupgrade", userstate, sender + ":" + username);
                 process_chat_data(channel, userstate, "giftpaidupgrade: " + sender + " updradeged " + username + " with a gift paid upgrade");
-                triggertosend = findactionByMessageType("trigger_ChatGiftPaidUpgrade")
+                triggertosend = findtriggerByMessageType("trigger_ChatGiftPaidUpgrade")
                 triggertosend.parameters.type = "trigger_ChatGiftPaidUpgrade"
                 triggertosend.parameters.textMessage = sender + " upgraded " + username + " to a paid sub"
                 triggertosend.parameters.sender = sender
@@ -1911,7 +1911,7 @@ function chatLogin (account)
             {
                 file_log("emoteonly", channel, enabled);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "emoteonly" }, "emoteonly: Chat emote only mode :" + enabled);
-                triggertosend = findactionByMessageType("trigger_ChatEmoteOnly")
+                triggertosend = findtriggerByMessageType("trigger_ChatEmoteOnly")
                 triggertosend.parameters.type = "trigger_ChatEmoteOnly"
                 triggertosend.parameters.textMessage = "Emote only mode " + enabled
                 triggertosend.parameters.enabled = enabled
@@ -1921,7 +1921,7 @@ function chatLogin (account)
             {
                 file_log("r9kbeta", tags, message);
                 process_chat_data(channel, tags, "r9kbeta: " + message);
-                triggertosend = findactionByMessageType("trigger_Chatr9kbeta")
+                triggertosend = findtriggerByMessageType("trigger_Chatr9kbeta")
                 triggertosend.parameters.type = "trigger_Chatr9kbeta"
                 triggertosend.parameters.textMessage = "r9kBeta mode " + message
                 triggertosend.parameters.message = message
@@ -1931,7 +1931,7 @@ function chatLogin (account)
             {
                 file_log("slowmode", enabled, length);
                 process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "slowmode" }, "slowmode: " + enabled + " enabled for " + length);
-                triggertosend = findactionByMessageType("trigger_ChatSlowmode")
+                triggertosend = findtriggerByMessageType("trigger_ChatSlowmode")
                 triggertosend.parameters.type = "trigger_ChatSlowmode"
                 triggertosend.parameters.textMessage = "Slowmode " + enabled + " for " + length
                 triggertosend.parameters.enabled = enabled
@@ -1948,7 +1948,7 @@ function chatLogin (account)
         {
             file_log("whisper", userstate, message);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": from, "emotes": "", "message-type": "whisper" }, "whisper: " + message);
-            triggertosend = findactionByMessageType("trigger_ChatWhisper")
+            triggertosend = findtriggerByMessageType("trigger_ChatWhisper")
             triggertosend.parameters.type = "trigger_ChatWhisper"
             triggertosend.parameters.textMessage = "Whisper from " + from + ": " + message
             triggertosend.parameters.from = from
@@ -1959,7 +1959,7 @@ function chatLogin (account)
         {
             file_log("notice", msgid, message);
             process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
-            triggertosend = findactionByMessageType("trigger_ChatNotice")
+            triggertosend = findtriggerByMessageType("trigger_ChatNotice")
             triggertosend.parameters.type = "trigger_ChatNotice"
             triggertosend.parameters.textMessage = "Notice: " + message
             triggertosend.parameters.msgid = msgid
@@ -1971,7 +1971,7 @@ function chatLogin (account)
         localConfig.twitchClient[account].connection.on("disconnected", (reason) =>
         {
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "disconnected" }, "disconnected: " + reason);
-            triggertosend = findactionByMessageType("trigger_ChatDisconnected")
+            triggertosend = findtriggerByMessageType("trigger_ChatDisconnected")
             triggertosend.parameters.type = "trigger_ChatDisconnected"
             triggertosend.parameters.textMessage = "Disconnected: " + reason
             triggertosend.parameters.reason = reason
@@ -1981,7 +1981,7 @@ function chatLogin (account)
         {
             file_log("serverchange", channel, channel);
             process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "serverchange" }, "serverchange: " + channel);
-            triggertosend = findactionByMessageType("trigger_ChatServerChange")
+            triggertosend = findtriggerByMessageType("trigger_ChatServerChange")
             triggertosend.parameters.type= "trigger_ChatServerChange"
             triggertosend.parameters.textMessage= "Server changed to " + channel  
             triggertosend.parameters.channel= channel
@@ -1991,7 +1991,7 @@ function chatLogin (account)
         {
             file_log("connected", address, port);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connected" }, "connected:" + address + ": " + port);
-            triggertosend = findactionByMessageType("trigger_ChatConnected")
+            triggertosend = findtriggerByMessageType("trigger_ChatConnected")
             triggertosend.parameters.type = "trigger_ChatConnected"
             triggertosend.parameters.textMessage = "Connected to " + address + ":" + port
             triggertosend.parameters.address = address
@@ -2002,7 +2002,7 @@ function chatLogin (account)
         {
             file_log("connecting", address, port);
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connecting" }, "connecting: " + address + ":" + port);
-            triggertosend = findactionByMessageType("trigger_ChatConnecting")
+            triggertosend = findtriggerByMessageType("trigger_ChatConnecting")
             triggertosend.parameters.type= "trigger_ChatConnecting"
             triggertosend.parameters.textMessage= "Connecting to " + address + ":" + port     
             triggertosend.parameters.address= address
@@ -2013,7 +2013,7 @@ function chatLogin (account)
         {
             file_log("logon", "", "");
             process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "logon" }, "logon:");
-            triggertosend = findactionByMessageType("trigger_ChatLogon")
+            triggertosend = findtriggerByMessageType("trigger_ChatLogon")
             triggertosend.parameters.type= "trigger_ChatLogon"
             triggertosend.parameters.textMessage= "Logon "
             postChatTrigger(triggertosend);
@@ -2023,7 +2023,7 @@ function chatLogin (account)
             file_log("join", channel, username);
             updateUserList({ username: username, platform: 'twitch' }) 
             //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel);
-            triggertosend = findactionByMessageType("trigger_ChatJoin")
+            triggertosend = findtriggerByMessageType("trigger_ChatJoin")
             triggertosend.parameters.type= "trigger_ChatJoin"
             triggertosend.parameters.textMessage= username + " Joined " + channel
             triggertosend.parameters.username= username
@@ -2034,7 +2034,7 @@ function chatLogin (account)
         {
             file_log("part", channel, username); 
             //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "part" }, "part: " + username);
-            triggertosend = findactionByMessageType("trigger_ChatPart")
+            triggertosend = findtriggerByMessageType("trigger_ChatPart")
             triggertosend.parameters.type= "trigger_ChatPart"
             triggertosend.parameters.textMessage= username+ " Left"
             triggertosend.parameters.username= username

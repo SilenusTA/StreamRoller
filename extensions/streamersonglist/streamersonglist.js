@@ -275,7 +275,7 @@ function onDataCenterMessage (server_packet)
                         {
                             if (msg.added)
                             {
-                                let triggertosend = findactionByMessageType("trigger_SongAddedToQueue")
+                                let triggertosend = findtriggerByMessageType("trigger_SongAddedToQueue")
                                 triggertosend.parameters.songName = msg.title
                                 triggertosend.parameters.textMessage = "Song Added to queue: " + msg.title
                                 sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -660,7 +660,7 @@ function sendCurrentSongChange (extension)
     if (localConfig.currentsong != "")
         songtext = "Current song now: " + localConfig.currentsong
 
-    let triggertosend = findactionByMessageType("trigger_CurrentSongChange")
+    let triggertosend = findtriggerByMessageType("trigger_CurrentSongChange")
     triggertosend.parameters.songName = localConfig.currentsong
     triggertosend.parameters.textMessage = songtext
     if (extension != "")
@@ -939,9 +939,9 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, serverConfig.heartBeatTimeout)
 }
 // ============================================================================
-//                           FUNCTION: findactionByMessageType
+//                           FUNCTION: findtriggerByMessageType
 // ============================================================================
-function findactionByMessageType (messagetype)
+function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -949,7 +949,7 @@ function findactionByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findactionByMessageType", "failed to find action", messagetype);
+        ".findtriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

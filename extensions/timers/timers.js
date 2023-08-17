@@ -413,7 +413,7 @@ function Timer (timername)
 // ============================================================================
 function sendTimerData (timedata)
 {
-    let data = findactionByMessageType("trigger_TimerRunning")
+    let data = findtriggerByMessageType("trigger_TimerRunning")
     data.parameters = {}
     data.parameters.name = timedata.name
     data.parameters.timeout = timedata.timeout
@@ -438,7 +438,7 @@ function sendTimerData (timedata)
 // ============================================================================
 function sendStartTimer (timedata)
 {
-    let data = findactionByMessageType("trigger_TimerStarted")
+    let data = findtriggerByMessageType("trigger_TimerStarted")
     data.parameters = {}
     data.parameters.name = timedata.name
     data.parameters.timeout = timedata.timeout
@@ -461,7 +461,7 @@ function sendStartTimer (timedata)
 // ============================================================================
 function sendEndTimer (timedata)
 {
-    let data = findactionByMessageType("trigger_TimerEnded")
+    let data = findtriggerByMessageType("trigger_TimerEnded")
     data.parameters = {}
     data.parameters.name = timedata.name
     data.parameters.timeout = timedata.timeout
@@ -481,9 +481,9 @@ function sendEndTimer (timedata)
         ));
 }
 // ============================================================================
-//                           FUNCTION: findactionByMessageType
+//                           FUNCTION: findtriggerByMessageType
 // ============================================================================
-function findactionByMessageType (messagetype)
+function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -491,7 +491,7 @@ function findactionByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findactionByMessageType", "failed to find action", messagetype);
+        ".findtriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

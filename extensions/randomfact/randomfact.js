@@ -306,7 +306,7 @@ function sendRandomFact (delay = 1000, counter = 5)
     var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
     try
     {
-        var req = https.get(options, function (res, delay)
+        var req = https.get(options, (res) =>
         {
             var bodyChunks = [];
             res.on("data", function (chunk)
@@ -315,7 +315,7 @@ function sendRandomFact (delay = 1000, counter = 5)
             }).on("end", function ()
             {
                 body = Buffer.concat(bodyChunks);
-                //fact = JSON.parse(body).text
+                fact = JSON.parse(body).text
                 if (fact == "")
                 {
                     if (counter > 0)
@@ -328,6 +328,8 @@ function sendRandomFact (delay = 1000, counter = 5)
                     }
                     return;
                 }
+                let message = findtriggerByMessageType("trigger_RandomFact")
+                message.parameters.randomFact = fact
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
                         "ChannelData",
@@ -335,7 +337,7 @@ function sendRandomFact (delay = 1000, counter = 5)
                         sr_api.ExtensionPacket(
                             "trigger_RandomFact",
                             serverConfig.extensionname,
-                            { randomFact: fact },
+                            message,
                             serverConfig.channel,
                         ),
                         serverConfig.channel,
@@ -357,7 +359,19 @@ function sendRandomFact (delay = 1000, counter = 5)
     }
 
 }
-
+// ============================================================================
+//                           FUNCTION: findtriggerByMessageType
+// ============================================================================
+function findtriggerByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findtriggerByMessageType", "failed to find action", messagetype);
+}
 // ============================================================================
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension

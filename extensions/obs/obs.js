@@ -1023,7 +1023,7 @@ function onSwitchedScenes (scene)
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
     localConfig.sceneList.current = scene.sceneName;
     // send back the triger with the scnen name added
-    let data = findactionByMessageType("trigger_SceneChanged")
+    let data = findtriggerByMessageType("trigger_SceneChanged")
     data.parameters.sceneName = scene.sceneName;
 
     // send the information out on our channel
@@ -1056,7 +1056,7 @@ function StreamStopped ()
             sr_api.ExtensionPacket(
                 "trigger_StreamStopped",
                 serverConfig.extensionname,
-                findactionByMessageType("trigger_StreamStopped"),
+                findtriggerByMessageType("trigger_StreamStopped"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1077,7 +1077,7 @@ function StreamStarted ()
             sr_api.ExtensionPacket(
                 "trigger_StreamStarted",
                 serverConfig.extensionname,
-                findactionByMessageType("trigger_StreamStarted"),
+                findtriggerByMessageType("trigger_StreamStarted"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1217,10 +1217,11 @@ async function getFilters ()
 // ============================================================================
 function activateFilter (data)
 {
-    if (data.filterEnabled === "")
+    /*if (data.filterEnabled === "")
     {
         console.log("activateFilter", findSceneData(data.sceneName))
     }
+    */
     // value could be a string and even capitalized. This is typed in by a streamer after all :P
     let isTrueSet = /^true$/i.test(data.filterEnabled)
 
@@ -1261,7 +1262,6 @@ function setSceneItemTransform (requestData)
     width: 640
   }
  */
-    console.log("setSceneItemTransform", requestData)
     // ******************************************************
     // get the scene id for the source/scene combo sent
     // ******************************************************
@@ -1446,9 +1446,9 @@ function findSceneData (sceneName)
 
 }
 // ============================================================================
-//                           FUNCTION: findactionByMessageType
+//                           FUNCTION: findtriggerByMessageType
 // ============================================================================
-function findactionByMessageType (messagetype)
+function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -1456,7 +1456,7 @@ function findactionByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findactionByMessageType", "failed to find action", messagetype);
+        ".findtriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

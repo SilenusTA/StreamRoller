@@ -814,10 +814,7 @@
                 //                   RECEIVED Received random fact
                 // -------------------------------------------------------------------------------------------------
                 if (extension_packet.type === "trigger_RandomFact")
-                {
-                    console.log("RandomFact message received", extension_packet.data)
-                    processRandomFact(extension_packet.data.randomFact);
-                }
+                    processRandomFact(extension_packet.data.parameters.randomFact);
             }
             // -------------------------------------------------------------------------------------------------
             //                           IGNORED CHANNELS
@@ -2619,9 +2616,6 @@
         msg2 += " ";
         let msg_end = "Sent from StreamRoller";
         let msg_fact = "";
-        console.log("postMessageToTwitter", msg1, msg2)
-        console.log("serverConfig.randomfactstwitterstartenabled", serverConfig.randomfactstwitterstartenabled)
-        console.log("localConfig.randomFact", localConfig.randomFact)
         if (serverConfig.randomfactstwitterstartenabled == "on" && localConfig.randomFact !== "")
             msg_fact = "FOTD:" + localConfig.randomFact + " ";
 

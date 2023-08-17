@@ -958,7 +958,7 @@ async function postTriggers ()
         // if we have an index add it to the data we send out
         if (simvar.indexOf(":") > 0)
         {
-            let triggertopost = findactionByMessageType("trigger_" + name + ":index")
+            let triggertopost = findtriggerByMessageType("trigger_" + name + ":index")
             triggertopost.parameters.index = simvarindex;
             triggertopost.parameters.data = data[simvar];
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -976,7 +976,7 @@ async function postTriggers ()
         }
         else
         {
-            let triggertopost = findactionByMessageType("trigger_" + name + ":index")
+            let triggertopost = findtriggerByMessageType("trigger_" + name + ":index")
             triggertopost.parameters.data = data[simvar];
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1023,9 +1023,9 @@ function pollMSFS ()
     localConfig.pollMSFSHandle = setTimeout(pollMSFS, serverConfig.msfs2020SimPollInterval * 1000)
 }
 // ============================================================================
-//                           FUNCTION: findactionByMessageType
+//                           FUNCTION: findtriggerByMessageType
 // ============================================================================
-function findactionByMessageType (messagetype)
+function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -1033,7 +1033,7 @@ function findactionByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findactionByMessageType", "failed to find action", messagetype);
+        ".findtriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                           FUNCTION: file_log

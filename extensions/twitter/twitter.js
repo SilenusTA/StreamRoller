@@ -425,14 +425,14 @@ function tweetmessage (message)
             }).catch(err =>
             {
                 localConfig.status.connected = false;
-                console.error(err)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".tweetmessage", "Failed ... ", err.name, err.message);
             })
 
     }
     catch (e)
     {
-
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".tweetmessage", "Failed ... ", e.name, e.message);
     }
 }
