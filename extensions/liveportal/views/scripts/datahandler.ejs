@@ -848,6 +848,10 @@
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA
             // -------------------------------------------------------------------------------------------------
+            else if (server_packet.dest_channel == "MSFS2020_CHANNEL")
+            {
+                //just igore these messages
+            }
             else
             {
                 console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
@@ -1968,7 +1972,7 @@
                 "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "redeem"]
             var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
             var modactions = ["messagedeleted", "timeout", "ban", "notice"]
-            if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System")
+            if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System" && chatdata.data["display-name"].indexOf("(localpost)") == -1)
                 console.log("not handling these messages yet, still work in progress", chatdata.data)
 
             // setup the date field

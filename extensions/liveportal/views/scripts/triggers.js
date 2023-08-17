@@ -402,21 +402,42 @@ function CheckTriggers (event)
 // ============================================================================
 function TriggerAction (action, triggerparams)
 {
-    /*let params;
-    // copy params in to the action
-
-    /// FIX THIS LATER. PARAMS RESET ON EACH LOOP
-    for (var i in action.data)
-    {
-        params = { ...params, ...action.data[i] }
-    }*/
+    // regular expression to test if input is a mathmatical equasion
+    const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
     let params = {}
+    // store the trigger params in the actrion in case the extension has use for them
+    params.triggerparams = triggerparams.data
+    // loop through each action field
     for (var i in action.data)
     {
+        //loop through each action field name
         for (const property in action.data[i])
-            params[property] = action.data[i][property]
+        {
+            // store the undmodifed field data
+            let tempAction = action.data[i][property]
+            // check if we have %%var%% in the field
+            let nextVarIndex = action.data[i][property].indexOf("%%")
+            // loop through all %%vars%%
+            while (nextVarIndex > -1)
+            {
+                let endVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                if (endVarIndex > -1)
+                {
+                    let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
+                    let sourceData = triggerparams.data.parameters[sourceVar]
+                    tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceData)
+                }
+                if (typeof tempAction == "string")
+                    nextVarIndex = tempAction.indexOf("%%")
+            }
+            // is this a mathmatical expression
+            if (re.test(tempAction))
+            {
+                tempAction = eval(tempAction)
+            }
+            params[property] = tempAction
+        }
     }
-    params.triggerparams = triggerparams.data
     // all actions are handled through the SR socket interface
     sr_api.sendMessage(DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",

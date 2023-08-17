@@ -503,6 +503,12 @@ function SendSettingsWidgetLarge (tochannel)
             generatedpage += "<h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. Polling "
             generatedpage += "too many Sim Variables too fast can cause lag in the game. Check the tool tips by hovering mouse over the SimVar name for description</p>"
             generatedpage += "<p>Note: A simvar needs to be monitored to be able to set a trigger on it.</p>"
+            generatedpage += "<p> An example trigger might be to position your camera in obs to show your height. To do this you would set the trigger to ... <BR>"
+            generatedpage += "<BR>TRIGGER: 'msfs2020', 'trigger_INDICATED ALTITUDE'"
+            generatedpage += "<BR>ACTION: 'obs','action_SetSceneItemTransform','SceneName'= 'Camera_feed', 'sourceName' = '#4x3_Cam', 'positionY' = '((%%data%% - 10000) / (0 - 10000)) * (1040-50) + 50'"
+            generatedpage += "<BR>In this example my group name that the camera is in is called 'Camera_feed' and the camera source is called '#4x3_Cam'"
+            generatedpage += "<BR>I set the positionY of the camera based on the value in the 'data' field of the trigger (altitude from MSFS) but as this is a big range it needs converting to the pixel position in obs"
+            generatedpage += "<BR>The equasion set converts an alt range of 0 to 10,000 feet into a pixel position of 50 to 1040 pixels (what I need for my screen res in obs)"
             for (let i = 0; i < triggerKeys.length; i++)
             {
                 // every 5 items start a new row but only close out after the first itme
@@ -833,6 +839,7 @@ async function MSFS2020Connected (handle)
             localConfig.EventCallabackHandles[serverData.EventVars[i]]
                 = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
                 {
+                    console.log("MSFS2020 trigger", serverData.EventVars[i], data)
                     //post a trigger
                     sr_api.sendMessage(localConfig.DataCenterSocket,
                         sr_api.ServerPacket(
@@ -976,8 +983,10 @@ async function postTriggers ()
         }
         else
         {
-            let triggertopost = findtriggerByMessageType("trigger_" + name + ":index")
+            let triggertopost = findtriggerByMessageType("trigger_" + name)
             triggertopost.parameters.data = data[simvar];
+            triggertopost.parameters.textMessage = simvar + ": " + data[simvar]
+            console.log("triggertopost", triggertopost)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ChannelData",
@@ -1027,8 +1036,12 @@ function pollMSFS ()
 // ============================================================================
 function findtriggerByMessageType (messagetype)
 {
+    console.log("MSFS2020:findtriggerByMessageType", messagetype)
+
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf("trigger_indicated") === 0)
+            console.log(triggersandactions.triggers[i].messagetype)
         if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
             return triggersandactions.triggers[i];
     }
