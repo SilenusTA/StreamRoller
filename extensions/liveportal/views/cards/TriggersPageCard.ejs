@@ -34,6 +34,10 @@
       <BR>If you want to backup your triggers and settings file manually (recommended before installing updates in case
       it gets overwritten) simple copy/replace the file at %AppData%\StreamRoller\Data\datastore\liveportal.json as this
       contains all your triggers and actions</a>
+      <BR>You can now add a variable to the actions field that will be replaced with the value of the corresponding
+      trigger field.
+      <BR>i.e when triggering on a chat message you could add something like '%%sender%% said %%message%%' and the %%
+      vars will get replaced with the sender and message fields from the trigger used.
     </p>
     <h4>Group to add to (groups just help keep the lists tidy)</h4>
     <form class="form-inline">
