@@ -925,7 +925,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_SendChatMessage")
         {
-            if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH === "off")
+            if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH.indexOf("on") < 0)
                 action_SendChatMessage(serverConfig.streamername, extension_packet.data)
             else
             {
@@ -1129,10 +1129,10 @@ function SendSettingsWidgetLarge (toExtension)
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // checkboxes
-                if (value === "on")
+                if (typeof (value) == "string" && value.indexOf("on") > -1)
                     modalstring = modalstring.replaceAll(key + "checked", "checked");
                 // replace text strings
-                else if (typeof (value) == "string")
+                else if (typeof (value) == "string" || typeof (value) == "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modified modal data to the server
@@ -1348,11 +1348,6 @@ function action_SendChatMessage (channel, data)
 {
     let sent = false
     let account = null;
-    if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH === "on")
-    {
-        console.log("Sending twitch message suppressed by debug flag", data.message)
-        return;
-    }
     if (serverConfig.enabletwitchchat == "off")
     {
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with twitchchat turned off", data.account, data.message)
