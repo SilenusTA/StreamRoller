@@ -747,7 +747,7 @@
                     ParseOBSScenesList(extension_packet.data)
                 else if (extension_packet.type === "trigger_SceneChanged")
                 {
-                    localConfig.OBSSceneslist.current = extension_packet.data.sceneName;
+                    localConfig.OBSSceneslist.current = extension_packet.data.parameters.sceneName;
                     ParseOBSScenesList(localConfig.OBSSceneslist);
                 }
                 else if (extension_packet.type === "OBSStats")
