@@ -1200,7 +1200,7 @@ function processChatMessage (data)
                 {
                     if (chatMessageToPost)
                     {
-                        /*let wordcount = chatMessageToPost.split(" ").length
+                        let wordcount = chatMessageToPost.split(" ").length
                         let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
                         if (serverConfig.DEBUG_MODE === "on")
                         {
@@ -1209,8 +1209,8 @@ function processChatMessage (data)
                             console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
                             console.log("delay response: ", delaytime / 1000, "s")
                         }
-                        setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);*/
-                        postMessageToTwitch(chatMessageToPost)
+                        setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);
+                        //postMessageToTwitch(chatMessageToPost)
                     }
                     return;
                 })
