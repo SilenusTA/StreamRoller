@@ -145,7 +145,10 @@ function triggersLoadParameters (id)
 
     for (var key in params)
     {
-        triggerextensionparameters += "<input type='text' name='" + triggername + "_" + key + "' class='form-control' id='" + key + "' placeholder='" + key + "' value=''>"
+        triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
+        triggerextensionparameters += "<label class='form-label px-2 align-middle  col-md-6' for=" + triggername + "_" + key + ">" + key + "</label>"
+        triggerextensionparameters += "<input type='text' class='form-control  col-md-6' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+        triggerextensionparameters += "</div>"
     }
     TriggerExtensionTriggerParameters.innerHTML = triggerextensionparameters;
 
@@ -229,7 +232,12 @@ function actionLoadParameters (id)
     document.getElementById("actionExtensionChoserActionName").value = localConfig.triggersAndActions.actions[extensionname][id].name;
     for (var key in params)
     {
-        actionextensionparameters += "<input type='text' name='" + actionname + "_" + key + "' class='form-control' id='" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
+        actionextensionparameters += "<div class='d-flex form-row align-items-center'>"
+        actionextensionparameters += "<label class='form-label px-2 align-middle col-md-6' for=" + actionname + "_" + key + ">" + key + "</label>"
+        actionextensionparameters += "<input type='text' class='form-control col-md-6' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
+        actionextensionparameters += "</div>"
+
+
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
 
@@ -428,7 +436,8 @@ function TriggerAction (action, triggerparams)
                     tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceData)
                 }
                 if (typeof tempAction == "string")
-                    nextVarIndex = tempAction.indexOf("%%")
+                    nextVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+
             }
             // is this a mathmatical expression
             if (re.test(tempAction))
