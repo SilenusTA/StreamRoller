@@ -1591,7 +1591,7 @@ function chatLogin (account)
                 triggertosend.parameters.username = username
                 triggertosend.parameters.message = reason
 
-                postChatTrigger("trigger_ChatBanReceived", triggertosend)
+                postChatTrigger(triggertosend)
             });
             localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
             {

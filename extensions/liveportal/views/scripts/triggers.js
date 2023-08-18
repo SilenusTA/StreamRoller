@@ -57,7 +57,10 @@ function receivedTrigger (triggers)
     if (triggers.triggers && triggers.triggers.length > 0)
         localConfig.triggersAndActions.triggers[triggers.extensionname] = triggers.triggers;
     if (triggers.actions && triggers.actions.length > 0)
+    {
         localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
+        localConfig.triggersAndActions.actions[triggers.extensionname]["paused"] = false;
+    }
     // update the page with the new triggeroptions
 
     PopulateGroupNamesDropdown();
@@ -410,6 +413,8 @@ function CheckTriggers (event)
 // ============================================================================
 function TriggerAction (action, triggerparams)
 {
+    if (action.paused)
+        return
     // regular expression to test if input is a mathmatical equasion
     const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
     let params = {}
@@ -463,7 +468,7 @@ function TriggerAction (action, triggerparams)
     );
 }
 // ============================================================================
-//                          FUNCTION: TriggerAction
+//                          FUNCTION: PopulateTriggersTable
 //                          Triggers an action 
 // ============================================================================
 function PopulateTriggersTable ()
@@ -524,6 +529,10 @@ function PopulateTriggersTable ()
                     tablerows += item + " = " + list[i].action.data[j][item];
             }
             tablerows += "</td>"
+            if (!serverData.AllTriggersAndActions[g].list[i].action.paused)
+                tablerows += "<td><a class='btn btn-success' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Pause</a></td>"
+            else
+                tablerows += "<td><a class='btn btn-secondary' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Resume</a></td>"
             tablerows += "<td><a class='btn btn-primary' href = 'javascript:triggerActionButton(\"" + g + "\"," + i + ");' role = 'button'> Run</a></td>"
             tablerows += "</tr >"
         }
@@ -590,6 +599,15 @@ function delteTriggerAction (group, id)
 {
     serverData.AllTriggersAndActions[group].list.splice(id, 1)
     SaveDataToServer();
+    PopulateTriggersTable();
+}
+// ============================================================================
+//                     FUNCTION: pauseActionButton
+//              button on the page for users to test the actions
+// ============================================================================
+function pauseActionButton (group, id)
+{
+    serverData.AllTriggersAndActions[group].list[id].action.paused = !(serverData.AllTriggersAndActions[group].list[id].action.paused)
     PopulateTriggersTable();
 }
 // ============================================================================
