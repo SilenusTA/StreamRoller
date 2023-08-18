@@ -54,7 +54,8 @@ const localConfig = {
     pollMSFSHandle: null,
     msfs_api: new MSFS_API(),
     //maintain a list of trigger handles for deregistering
-    EventCallabackHandles: []
+    EventCallabackHandles: [],
+    previousValue: [] // holds the last value read so we can provide 'onchange' only triggers
 };
 
 const default_serverConfig = {
@@ -682,6 +683,8 @@ function MSFS2020Connect ()
 {
     if (serverConfig.msfs2020ennabled == "on")
     {
+        /// *************** Create our Simvars array *****************************
+
         // make a clone of the simVars (so we can add extra fields for enabled etc)
         const varKeys = Object.keys(SimVars);
         varKeys.sort();
@@ -695,32 +698,45 @@ function MSFS2020Connect ()
             if (varKeys[i].indexOf(":index") > 0 && typeof (serverData.SimVars[varKeys[i]].index) == "undefined")
             {
                 serverData.SimVars[varKeys[i]].index = "0"
-                //console.log(serverData.SimVars[varKeys[i]])
+                //(serverData.SimVars[varKeys[i]])
             }
 
         }
         SaveDataToServer()
 
+        /// *************** Create our triggers and actions *****************************
         // Create triggers and actions
         triggersandactions = {}
         triggersandactions = structuredClone(default_triggersandactions)
 
+        /// *************** Add Event variables *************************
         for (let i = 0; i < serverData.EventVars.length; i++)
         {
+            //console.log("Adding Event to triggers ", SystemEvents[serverData.EventVars[i]].name)
             triggersandactions.triggers.push(
                 {
                     name: SystemEvents[serverData.EventVars[i]].name,
                     displaytitle: SystemEvents[serverData.EventVars[i]].name,
                     description: SystemEvents[serverData.EventVars[i]].desc,
-                    messagetype: "triggers_" + SystemEvents[serverData.EventVars[i]].name,
+                    messagetype: "trigger_" + SystemEvents[serverData.EventVars[i]].name,
+                    channel: serverConfig.channel,
+                    parameters: { data: "" }
+                });
+            triggersandactions.triggers.push(
+                {
+                    name: "onChange_" + SystemEvents[serverData.EventVars[i]].name,
+                    displaytitle: SystemEvents[serverData.EventVars[i]].name + " (OnChange)",
+                    description: SystemEvents[serverData.EventVars[i]].desc,
+                    messagetype: "trigger_onChange_" + SystemEvents[serverData.EventVars[i]].name,
                     channel: serverConfig.channel,
                     parameters: { data: "" }
                 });
         }
 
-        // Add simvars
+        //// *************** Add SimVars *************************
         for (let i = 0; i < varKeys.length; i++)
         {
+            //console.log("Adding Simvar to triggers and actions ", serverData.SimVars[varKeys[i]].name)
             if (serverData.SimVars[varKeys[i]].settable == true)
             {
                 //console.log(serverData.SimVars[varKeys[i]])
@@ -751,34 +767,39 @@ function MSFS2020Connect ()
                     )
                 }
             }
+            // triggers with indexes
+            let paramdata = {}
             if (varKeys[i].indexOf(":index") > 0)
             {
-                triggersandactions.triggers.push
-                    (
-                        {
-                            name: serverData.SimVars[varKeys[i]].name,
-                            displaytitle: serverData.SimVars[varKeys[i]].name,
-                            description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
-                            messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
-                            channel: serverConfig.channel,
-                            parameters: { index: "0", data: "" }
-                        }
-                    )
+                paramdata = { index: "0", data: "" }
             }
             else
             {
-                triggersandactions.triggers.push
-                    (
-                        {
-                            name: serverData.SimVars[varKeys[i]].name,
-                            displaytitle: serverData.SimVars[varKeys[i]].name,
-                            description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
-                            messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
-                            channel: serverConfig.channel,
-                            parameters: { data: "" }
-                        }
-                    )
+                paramdata = { data: "" }
             }
+            triggersandactions.triggers.push
+                (
+                    {
+                        name: serverData.SimVars[varKeys[i]].name,
+                        displaytitle: serverData.SimVars[varKeys[i]].name,
+                        description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
+                        messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
+                        channel: serverConfig.channel,
+                        parameters: paramdata
+                    }
+                )
+            // add an onchange trigger (we only send this when data changes)
+            triggersandactions.triggers.push
+                (
+                    {
+                        name: "onChange_" + serverData.SimVars[varKeys[i]].name,
+                        displaytitle: serverData.SimVars[varKeys[i]].name + " (OnChange)",
+                        description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
+                        messagetype: "trigger_onChange_" + serverData.SimVars[varKeys[i]].name,
+                        channel: serverConfig.channel,
+                        parameters: paramdata
+                    }
+                )
         }
         try
         {
@@ -839,13 +860,30 @@ async function MSFS2020Connected (handle)
             localConfig.EventCallabackHandles[serverData.EventVars[i]]
                 = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
                 {
+                    if (data != localConfig.previousValue[serverData.EventVars[i]])
+                    {
+                        //post a trigger
+                        sr_api.sendMessage(localConfig.DataCenterSocket,
+                            sr_api.ServerPacket(
+                                "ChannelData",
+                                serverConfig.extensionname,
+                                sr_api.ExtensionPacket(
+                                    "trigger_onChange_" + SystemEvents[serverData.EventVars[i]].name,
+                                    serverConfig.extensionname,
+                                    { data: data },
+                                    serverConfig.channel
+                                ),
+                                serverConfig.channel
+                            ));
+                        localConfig.previousValue[serverData.EventVars[i]] = data;
+                    }
                     //post a trigger
                     sr_api.sendMessage(localConfig.DataCenterSocket,
                         sr_api.ServerPacket(
                             "ChannelData",
                             serverConfig.extensionname,
                             sr_api.ExtensionPacket(
-                                "triggers_" + SystemEvents[serverData.EventVars[i]].name,
+                                "trigger_" + SystemEvents[serverData.EventVars[i]].name,
                                 serverConfig.extensionname,
                                 { data: data },
                                 serverConfig.channel
@@ -930,6 +968,8 @@ async function postTriggers ()
     let simvar = "";
     let indexToSplit = 0;
     let data = ""
+    let messageType = ""
+    let onChangeMessageType = ""
     //check if connected
     if (!localConfig.state.msfsconnected)
         return;
@@ -961,10 +1001,37 @@ async function postTriggers ()
         {
             console.log("Error during get", err.message)
         }
-        // if we have an index add it to the data we send out
+        // set the message type
         if (simvar.indexOf(":") > 0)
         {
-            let triggertopost = findtriggerByMessageType("trigger_" + name + ":index")
+            messageType = "trigger_" + name + ":index"
+            onChangeMessageType = "trigger_onChange_" + name + ":index"
+        }
+        else
+        {
+            messageType = "trigger_" + name
+            onChangeMessageType = "trigger_onChange_" + name
+        }
+
+        let triggertopost = findtriggerByMessageType(messageType)
+        triggertopost.parameters.index = simvarindex;
+        triggertopost.parameters.data = data[simvar];
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    messageType,
+                    serverConfig.extensionname,
+                    triggertopost,//{ index: simvarindex, data: data[simvar] },
+                    serverConfig.channel
+                ),
+                serverConfig.channel
+            ));
+        if (localConfig.previousValue[simvar] != triggertopost.parameters.data)
+        {
+            let triggertopost = findtriggerByMessageType(onChangeMessageType)
             triggertopost.parameters.index = simvarindex;
             triggertopost.parameters.data = data[simvar];
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -972,32 +1039,16 @@ async function postTriggers ()
                     "ChannelData",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "trigger_" + name + ":index",
+                        onChangeMessageType,
                         serverConfig.extensionname,
                         triggertopost,//{ index: simvarindex, data: data[simvar] },
                         serverConfig.channel
                     ),
                     serverConfig.channel
                 ));
+            localConfig.previousValue[simvar] = triggertopost.parameters.data
         }
-        else
-        {
-            let triggertopost = findtriggerByMessageType("trigger_" + name)
-            triggertopost.parameters.data = data[simvar];
-            triggertopost.parameters.textMessage = simvar + ": " + data[simvar]
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ChannelData",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "trigger_" + name,
-                        serverConfig.extensionname,
-                        triggertopost,//{ data: data[simvar] },
-                        serverConfig.channel
-                    ),
-                    serverConfig.channel
-                ));
-        }
+
     }
 }
 // ============================================================================

@@ -448,15 +448,30 @@ function onDataCenterMessage (server_packet)
                 )
             }
             else if (extension_packet.type === "action_EnableSource")
-                enableSource(extension_packet.data);
+            {
+                if (serverConfig.enableobs == "on")
+                    enableSource(extension_packet.data);
+            }
             else if (extension_packet.type === "action_ChangeScene")
-                changeScene(extension_packet.data);
+            {
+                if (serverConfig.enableobs == "on")
+                    changeScene(extension_packet.data);
+            }
             else if (extension_packet.type === "action_ToggleMute")
-                ToggleMute(extension_packet.data)
+            {
+                if (serverConfig.enableobs == "on")
+                    ToggleMute(extension_packet.data)
+            }
             else if (extension_packet.type === "action_ToggleFilter")
-                activateFilter(extension_packet.data)
+            {
+                if (serverConfig.enableobs == "on")
+                    activateFilter(extension_packet.data)
+            }
             else if (extension_packet.type === "action_SetSceneItemTransform")
-                setSceneItemTransform(extension_packet.data)
+            {
+                if (serverConfig.enableobs == "on")
+                    setSceneItemTransform(extension_packet.data)
+            }
             else
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "unhandled ExtensionMessage ", server_packet);
         }
