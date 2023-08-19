@@ -447,7 +447,7 @@ function TriggerAction (action, triggerparams)
             // is this a mathmatical expression
             if (re.test(tempAction))
             {
-                tempAction = eval(tempAction)
+                tempAction = eval(tempAction).toString()
             }
             params[property] = tempAction
         }
