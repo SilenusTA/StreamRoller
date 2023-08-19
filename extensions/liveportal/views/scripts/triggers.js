@@ -298,7 +298,6 @@ function createTriggerAction (e)
             type: $("#actionExtensionAction option:selected").attr('data'),
             data: []
         }
-
     }
     let fieldsAsArray = $(e).serializeArray();
     var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
@@ -364,7 +363,6 @@ function CheckTriggers (event)
         // loop through our saved triggers and actions
         serverData.AllTriggersAndActions[group].list.forEach((entry) =>
         {
-
             //check if the event fields match the trigger fields we have set for this entry
             if (event.dest_channel === entry.trigger.channel
                 && event.from === entry.trigger.extension
@@ -387,7 +385,7 @@ function CheckTriggers (event)
                             // if we have a string entered and it doesn't match the don't trigger
                             if (typeof event.data.parameters[i] == "string")// && typeof param[i] === "string")
                             {
-                                if (param[i] != "" && event.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) < 0)
                                     match = false;
                             }
                             //check non string types for non matching
@@ -428,20 +426,44 @@ function TriggerAction (action, triggerparams)
         {
             // store the undmodifed field data
             let tempAction = action.data[i][property]
+            // *************************
+            // check for user variables
+            // *************************
             // check if we have %%var%% in the field
             let nextVarIndex = action.data[i][property].indexOf("%%")
             // loop through all %%vars%%
             while (nextVarIndex > -1)
             {
                 let endVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                // we have a user variable
                 if (endVarIndex > -1)
                 {
+                    // get the full variable
                     let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
-                    let sourceData = triggerparams.data.parameters[sourceVar]
-                    tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceData)
+
+                    // check if we have a word option
+                    if (sourceVar.indexOf(":") > -1)
+                    {
+                        // get the position of the :
+                        let stringIndex = sourceVar.indexOf(":")
+                        // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
+                        let wordNumber = (sourceVar.substr(stringIndex + 1)) - 1
+                        // get the trigger field
+                        let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                        // split the data into an array so we can index the work the user wants
+                        const sourceArray = sourceData.split(" ");
+                        // replace the user vars with the data requested
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray[wordNumber])
+                    }
+                    else
+                    {
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", triggerparams.data.parameters[sourceVar])
+                    }
                 }
                 if (typeof tempAction == "string")
                     nextVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                else
+                    nextVarIndex = -1;
 
             }
             // is this a mathmatical expression
