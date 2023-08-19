@@ -177,7 +177,8 @@ function onDataCenterMessage (server_packet)
             if (server_packet.to === serverConfig.extensionname && server_packet.data != undefined
                 && Object.keys(server_packet.data.SimVars).length > 0)
             {
-                SaveDataToServer();
+                // SaveDataToServer();
+                serverData = structuredClone(server_packet.data)
                 // connect to msfs
                 MSFS2020Connect();
                 pollMSFS();
@@ -690,7 +691,8 @@ function MSFS2020Connect ()
         varKeys.sort();
         for (let i = 0; i < varKeys.length; i++)
         {
-            serverData.SimVars[varKeys[i]] = SimVars[varKeys[i]]
+            if (typeof serverData.SimVars[varKeys[i]] == "undefined")
+                serverData.SimVars[varKeys[i]] = SimVars[varKeys[i]]
             // this creates the enabled variable if it doesn't exist
             if (serverData.SimVars[varKeys[i]].enabled != "on")
                 serverData.SimVars[varKeys[i]].enabled = "off"
