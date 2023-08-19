@@ -52,8 +52,29 @@
         <div class="form-group">
           <!-- group option list-->
           <select id="triggerExtensionGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger"
-            title="box one" value="1" name="triggerExtensionGroupName">
+            title="Select Group to add to" value="1" name="triggerExtensionGroupName">
           </select>
+        </div>
+      </div>
+    </form>
+    <HR>
+    <h4>New Macro</h4>
+    <p>A Macro is a user defined trigger for use on buttons etc (ie on the live portal page) used to invoke an action.
+    </p>
+    <form class="form-inline" onsubmit="return createMacro(this)">
+      <div class=" form-group d-flex">
+        <div class="form-group">
+          <div class="d-flex form-row align-items-center">
+            <label class="form-label px-2 align-middle col-md-6" for="macroName">Name</label>
+            <input type="text" class="form-control col-md-6" name="macroName" id="macroName" placeholder="Name" value=""
+              title="Name">
+          </div>
+          <div class="d-flex form-row align-items-center">
+            <label class="form-label px-2 align-middle col-md-6" for="macroDescription">Description</label>
+            <input type="text" class="form-control col-md-6" name="macroDescription" id="macroDescription"
+              placeholder="Description" value="" title="Description">
+          </div>
+          <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Add</button>
         </div>
       </div>
     </form>
@@ -67,17 +88,17 @@
             class="form-control" value="somevalue" tabindex="-1" />
           <input id="triggerExtensionChoserChannel" type="hidden" name="triggerExtensionChoserChannel"
             class="form-control" value="somevalue" tabindex="-1" />
-          <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
-            title="box one" value="1" name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
+          <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+            value="1" name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
           </select>
         </div>
         <div class="form-group">
-          <select id="triggerExtensionTriggers" class="selectpicker btn btn-secondary" data-style="btn-danger"
-            title="box two" value="1" name="triggerExtensionTriggers" onchange="triggersLoadParameters(this.value)">
+          <select id="triggerExtensionTriggers" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+            value="1" name="triggerExtensionTriggers" onchange="triggersLoadParameters(this.value)">
           </select>
         </div>
         <div class="form-group">
-          <div id="triggerExtensionTriggerParameters" class="form-group" title="box three" value="1"
+          <div id="triggerExtensionTriggerParameters" class="form-group" title="" value="1"
             name="triggerExtensionTriggerParameters">
           </div>
         </div>
@@ -91,17 +112,17 @@
             class="form-control" value="somevalue" tabindex="-1" />
           <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
             class="form-control" value="somevalue" tabindex="-1" />
-          <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
-            title="box one" value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
+          <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+            value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
           </select>
         </div>
         <div class="form-group">
-          <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger"
-            title="box two" value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
+          <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+            value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
           </select>
         </div>
         <div class="form-group">
-          <div id="actionExtensionActionParameters" class="form-group" title="box three" value="1"
+          <div id="actionExtensionActionParameters" class="form-group" title="" value="1"
             name="actionExtensionActionParameters">
           </div>
         </div>

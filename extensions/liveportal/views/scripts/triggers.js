@@ -46,6 +46,7 @@ function initTriggersAndActions (extension_list)
             ));
     }
     )
+    updateMacroList();
 }
 // ============================================================================
 //                           FUNCTION: receivedTrigger
@@ -62,18 +63,17 @@ function receivedTrigger (triggers)
         localConfig.triggersAndActions.actions[triggers.extensionname]["paused"] = false;
     }
     // update the page with the new triggeroptions
-
     PopulateGroupNamesDropdown();
-    addTriggersWidgetLarge();
-    addActionsWidgetLarge();
+    addTriggerEntries();
+    addActionEntries();
     PopulateTriggersTable();
 }
 
 // ============================================================================
-//                  FUNCTION: addTriggersWidgetLarge
+//                  FUNCTION: addTriggerEntries
 //            Loads first dropdown to chose extension for trigger         
 // ============================================================================
-function addTriggersWidgetLarge ()
+function addTriggerEntries ()
 {
     // clear the existing page data
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")
@@ -158,10 +158,10 @@ function triggersLoadParameters (id)
 }
 
 // ============================================================================
-//                  FUNCTION: addActionWidgetLarge
+//                  FUNCTION: addActionEntries
 //            Loads first dropdown to chose extension for action         
 // ============================================================================
-function addActionsWidgetLarge ()
+function addActionEntries ()
 {
     // clear the existing page data
     //let Mainpage = document.getElementById("ActionPageContent");
@@ -267,10 +267,7 @@ function PopulateGroupNamesDropdown ()
     }
     GroupChoser.innerHTML = groupnames;
 }
-
-
 // end create trigger form
-
 
 // ============================================================================
 //                           FUNCTION: createTriggerAction
@@ -279,6 +276,8 @@ function PopulateGroupNamesDropdown ()
 function createTriggerAction (e)
 {
     let groupname = document.getElementById("triggerExtensionGroupName").value
+    if (document.getElementById("triggerExtensionChoser").value == "MACROS")
+        groupname = "MACROS"
     let SingleEvent = {
         trigger:
         {
@@ -289,7 +288,6 @@ function createTriggerAction (e)
             data: []
 
         },
-        quailfier: {},
         action:
         {
             name: document.getElementById("actionExtensionChoserActionName").value,
@@ -332,7 +330,61 @@ function createTriggerAction (e)
     SaveDataToServer();
     PopulateTriggersTable();
     return false;
+}
 
+// ============================================================================
+//                           FUNCTION: createMacro
+//                           called when form submitted
+// ============================================================================
+function createMacro (e)
+{
+    let macroname = document.getElementById("macroName").value
+    if (macroname == "")
+    {
+        alert("Macro name empty")
+        return false;
+    }
+    if (typeof (serverData.macros) == "undefined")
+        serverData.macros = []
+    for (let i = 0; i < serverData.macros.length; i++)
+    {
+        if (serverData.macros[i].name == macroname)
+        {
+            alert("Macro already exists")
+            return false
+        }
+    }
+
+    let SingleTrigger =
+    {
+        name: macroname,
+        channel: serverConfig.channel,
+        description: document.getElementById("macroDescription").value,
+        displaytitle: macroname,
+        messagetype: "trigger_" + macroname,
+        parameters: {}
+    }
+
+    serverData.macros.push(SingleTrigger)
+    updateMacroList();
+    SaveDataToServer();
+    PopulateGroupNamesDropdown();
+    addTriggerEntries();
+    return false;
+}
+// ============================================================================
+//                           FUNCTION: updateMacroList
+//                           called when form submitted
+// ============================================================================
+function updateMacroList ()
+{
+    // check if the triggers we have been sent has the MACROS 'extension'
+    if (typeof (localConfig.triggersAndActions.triggers["MACROS"]) == "undefined")
+        localConfig.triggersAndActions.triggers["MACROS"] = []
+    // check if the groups list is available in the user defined triggers
+    if (typeof (serverData.AllTriggersAndActions["MACROS"]) == "undefined")
+        addNewTriggerGroup("MACROS")
+    localConfig.triggersAndActions.triggers["MACROS"] = serverData.macros
 }
 // ============================================================================
 //                       FUNCTION: checkTriggerIsValid
@@ -341,12 +393,15 @@ function createTriggerAction (e)
 function checkTriggerIsValid (trigger)
 {
     //check we have the extensions and the channels to listen to
-    if (!Object.hasOwn(livePortalData.extensions, trigger.trigger.extension))
-        alert("Couldn't find extension", trigger.trigger.extension)
+    if (trigger.trigger.extension != "MACROS")
+    {
+        if (!Object.hasOwn(livePortalData.extensions, trigger.trigger.extension))
+            alert("Couldn't find extension", trigger.trigger.extension)
+        if (!livePortalData.channellist.includes(trigger.trigger.channel))
+            alert("Couldn't find channel", trigger.trigger.channel)
+    }
     if (!Object.hasOwn(livePortalData.extensions, trigger.action.extension))
         alert("Couldn't find extension", trigger.action.extension)
-    if (!livePortalData.channellist.includes(trigger.trigger.channel))
-        alert("Couldn't find channel", trigger.trigger.channel)
     if (!livePortalData.channellist.includes(trigger.action.channel))
         alert("Couldn't find channel", trigger.action.channel)
     return true;
@@ -519,7 +574,7 @@ function PopulateTriggersTable ()
             tablerows += "<td scope='row' role='button' onclick='delteTriggerAction(\"" + g + "\"," + i + ")'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z'/><path d='M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z'/></svg ></td > "
             // TRIGGERS
             tablerows += "<td>" + list[i].trigger.extension + "</td>"
-            tablerows += "<td>" + list[i].trigger.type + "</td>"
+            tablerows += "<td>" + list[i].trigger.type.replace("trigger_", "") + "</td>"
             tablerows += "<td>"
             let morethanoneentry = false
             for (let j = 0; j < list[i].trigger.data.length; j++) 
@@ -537,7 +592,7 @@ function PopulateTriggersTable ()
 
             // ACTIONS
             tablerows += "<td>" + list[i].action.extension + "</td>"
-            tablerows += "<td>" + list[i].action.type + "</td>"
+            tablerows += "<td>" + list[i].action.type.replace("action_", "") + "</td>"
             tablerows += "<td>"
             morethanoneentry = false
             for (let j = 0; j < list[i].action.data.length; j++) 
@@ -608,11 +663,20 @@ function DeleteTriggerGroup (name)
 // ============================================================================
 function createNewTriggerGroup ()
 {
-    let groupname = document.getElementById("triggergroupcreatename").value
+    addNewTriggerGroup(document.getElementById("triggergroupcreatename").value)
+}
+// ============================================================================
+//                          FUNCTION: addNewTriggerGroup
+//                          Create new trigger group
+// ============================================================================
+function addNewTriggerGroup (groupname)
+{
     serverData.AllTriggersAndActions[groupname] = { show: true, list: [] }
     SaveDataToServer()
     PopulateTriggersTable()
+    PopulateGroupNamesDropdown()
 }
+
 // ============================================================================
 //                          FUNCTION: delteTriggerAction
 //                          delete a trigger entry
