@@ -413,7 +413,7 @@ function handleSettingsWidgetLargeData (modalcode)
     {
         let triggerKey = serverData.triggersNamesArray[activeKeys[i]]
         // check if we have been sent one (must be checked/set to "on" to be sent)
-        if ("remove_" + triggerKey in modalcode)
+        if ("remove_" + triggerKey in modalcode || typeof modalcode[triggerKey] == "undefined")
             removeTriggersArray(triggerKey)
     }
     /////////////////////////////////////////////////
@@ -502,8 +502,7 @@ function SendSettingsWidgetLarge (tochannel)
             const triggerKeys = Object.keys(serverData.triggersNamesArray);
             first = false;
             generatedpage = ""
-            generatedpage += "<h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. Polling "
-            generatedpage += "too many Sim Variables too fast can cause lag in the game. Check the tool tips by hovering mouse over the SimVar name for description</p>"
+            generatedpage += "Polling too many Sim Variables too fast can cause lag in the game. Check the tool tips by hovering mouse over the SimVar name for description</p>"
             generatedpage += "<p>Note: A simvar needs to be monitored to be able to set a trigger on it.</p>"
             generatedpage += "<p> An example trigger might be to position your camera in obs to show your height. To do this you would set the trigger to ... <BR>"
             generatedpage += "<BR>TRIGGER: 'msfs2020', 'trigger_INDICATED ALTITUDE'"
@@ -511,6 +510,7 @@ function SendSettingsWidgetLarge (tochannel)
             generatedpage += "<BR>In this example my group name that the camera is in is called 'Camera_feed' and the camera source is called '#4x3_Cam'"
             generatedpage += "<BR>I set the positionY of the camera based on the value in the 'data' field of the trigger (altitude from MSFS) but as this is a big range it needs converting to the pixel position in obs"
             generatedpage += "<BR>The equasion set converts an alt range of 0 to 10,000 feet into a pixel position of 50 to 1040 pixels (what I need for my screen res in obs)"
+            generatedpage += "<HR><h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. "
             for (let i = 0; i < triggerKeys.length; i++)
             {
                 // every 5 items start a new row but only close out after the first itme
