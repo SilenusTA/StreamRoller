@@ -362,6 +362,8 @@ function onDataCenterMessage (server_packet)
                 } else
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "chatbot profle", extension_packet.data.profile, "doesn't exist");
             }
+            SendSettingsWidgetSmall("");
+            SendSettingsWidgetLarge("");
         }
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
