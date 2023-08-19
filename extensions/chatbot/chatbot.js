@@ -224,9 +224,16 @@ const triggersandactions =
                 messagetype: "action_ProcessText",
                 channel: serverConfig.channel,
                 parameters: { message: "" }
+            },
+            {
+                name: "OpenAIChatbotSwitchProfile",
+                displaytitle: "Change Profile",
+                description: "Switches the chatbot to the given profile",
+                messagetype: "action_ChangeProfile",
+                channel: serverConfig.channel,
+                parameters: { profile: "0" }
             }
-
-        ],
+        ]
 }
 // ============================================================================
 //                           FUNCTION: initialise
@@ -317,8 +324,6 @@ function onDataCenterMessage (server_packet)
             SaveConfigToServer();
             startChatbotTimer();
         }
-
-
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -340,29 +345,22 @@ function onDataCenterMessage (server_packet)
                 changeBotName();
             }
         }
-        else if (extension_packet.type === "ParseTextMessage")
-        {
-            if (extension_packet.to === serverConfig.extensionname)
-                processTextMessage(extension_packet.data);
-        }
         else if (extension_packet.type === "action_ProcessText")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // was this a song request (this code can be removed once we have param passing sorted in the trigger code)
-                if (extension_packet.data.triggerparams.songName)
-                {
-
-                    if (extension_packet.data.triggerparams.type == "trigger_SongAddedToQueue")
-                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " song was added to the song request queue, what do you think of that (quote " + extension_packet.data.triggerparams.songName + " in your response and thank them for adding it)"
-                    else
-                        extension_packet.data.message = "The song " + extension_packet.data.triggerparams.songName + " has reached the front of the queue and will be played next, what do you think about that (quote " + extension_packet.data.triggerparams.songName + " in your response and mention it is coming up next)"
-                } else if (extension_packet.data.triggerparams.songName == "")
-                    return;
-
-
                 processTextMessage(extension_packet.data, true);
-
+            }
+        }
+        else if (extension_packet.type === "action_ChangeProfile")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                if (typeof serverConfig.chatbotprofiles[extension_packet.data.profile] != "undefined")
+                {
+                    serverConfig.currentprofile = extension_packet.data.profile
+                } else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "chatbot profle", extension_packet.data.profile, "doesn't exist");
             }
         }
         else if (extension_packet.type === "SettingsWidgetSmallData")
@@ -514,7 +512,6 @@ function handleSettingsWidgetSmallData (modalcode)
 
     for (const [key, value] of Object.entries(modalcode))
         serverConfig[key] = value;
-
 
     // set our current profile value
     serverConfig.currentprofile = modalcode.chatbotprofilepicker;
@@ -864,7 +861,7 @@ function heartBeatCallback ()
 }
 // ============================================================================
 //                           FUNCTION: processTextMessage
-//            A message sent direct to extension is processed through here
+//            A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
 // ============================================================================
 /*
 data
@@ -913,17 +910,19 @@ function processTextMessage (data, triggerresponse = false)
     callOpenAI(messages, model_to_use)
         .then(chatMessageToPost =>
         {
-            data.response = serverConfig.boticon + " " + chatMessageToPost
+            let msg = findtriggerByMessageType("trigger_chatbotResponse")
+            msg.parameters.message = serverConfig.boticon + " " + chatMessageToPost
+            //if this is a trigger message then send out normally on the channel
             if (triggerresponse)
             {
-                // send the modal data to the server
+                // send the modal data to our channel
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("ChannelData",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "AIChatbotResponse",
+                            "trigger_chatbotResponse",
                             serverConfig.extensionname,
-                            data,
+                            msg,
                             serverConfig.channel,
                         ),
                         serverConfig.channel)
@@ -936,9 +935,9 @@ function processTextMessage (data, triggerresponse = false)
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
                         sr_api.ExtensionPacket(
-                            "AIChatbotResponse",
+                            "trigger_chatbotResponse",
                             serverConfig.extensionname,
-                            data,
+                            msg,
                             serverConfig.channel,
                             data.from,
                         ),
@@ -1541,7 +1540,19 @@ function changeBotName ()
     serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
     serverConfig.translatetoeng = serverConfig.translatetoeng.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
-
+// ============================================================================
+//                           FUNCTION: findtriggerByMessageType
+// ============================================================================
+function findtriggerByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findtriggerByMessageType", "failed to find action", messagetype);
+}
 // ============================================================================
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension

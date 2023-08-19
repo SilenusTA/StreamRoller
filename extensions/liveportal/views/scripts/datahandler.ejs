@@ -611,7 +611,7 @@
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED chatbot message directly to us
             // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "AIChatbotResponse")
+            else if (extension_packet.type === "trigger_chatbotResponse")
             {
                 // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
                 sr_api.sendMessage(DataCenterSocket,
@@ -823,7 +823,7 @@
             else if (server_packet.dest_channel == "CHATBOT_CHANNEL")
             {
 
-                if (extension_packet.type === "AIChatbotResponse")
+                if (extension_packet.type === "trigger_chatbotResponse")
                 {
                     // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
                     sr_api.sendMessage(DataCenterSocket,
@@ -3032,34 +3032,6 @@
 
     }
 
-    // ============================================================================
-    //                           FUNCTION: sendMessageToChatbot
-    //  personality_id is either 
-    // num:     the id of the personality profile (starting from 0)
-    // "" :     for no profile
-    // default: for the currently set profiles
-    // ============================================================================
-    function sendMessageToChatbot (message, ident = "", personality_id = "default", model = "")
-    {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "ParseTextMessage",
-                    serverConfig.extensionname,
-                    {
-                        from: serverConfig.extensionname,
-                        ident: ident,
-                        message: message,
-                        personality_id: personality_id,
-                        model: model
-                    },
-                    "",
-                    "chatbot"),
-                "",
-                "chatbot"
-            ));
-    }
     // ============================================================================
     //                           FUNCTION: processPhilipsHueScenes
     // ============================================================================
