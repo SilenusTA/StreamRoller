@@ -31,7 +31,7 @@
 
     //"use strict"
     const default_serverConfig = {
-        __version__: "0.1",
+        __version__: "0.2",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -42,6 +42,7 @@
         discordmodchatdisplay: "on",
         obsdisplay: "on",
         philipshuedisplay: "on",
+        macrobuttonsdisplay: "on",
         slalertsdisplay: "on",
         // obs settings
         obsdefaultstartscenename: "##Starting Soon",
@@ -86,7 +87,10 @@
     };
     let serverConfig = structuredClone(default_serverConfig);
     let serverData = {}
-    serverData.AllTriggersAndActions = { "default": { show: true, list: [] } };
+    serverData.AllTriggersAndActions = {
+        "default": { show: true, list: [] },
+        "MACROS": { show: true, list: [] }
+    };
 
     const localConfig =
     {
@@ -271,6 +275,9 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("RequestData", serverConfig.extensionname));
 
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+        );
         // Request the stuff we need first here
         // We give the system some time to get things in and delay some of the longer stuff till the end (like the chat buffers) 
         // This is just to allow the extensions to get up and running
@@ -354,7 +361,10 @@
                 if (server_packet.to === serverConfig.extensionname)
                 {
                     serverData = structuredClone(server_packet.data);
+                    updateMacroList();
+                    updateMacroButtonsDisplay()
                     SaveDataToServer();
+
                 }
             }
         }
@@ -364,6 +374,8 @@
         else if (server_packet.type === "ChannelList")
         {
             livePortalData.channellist = server_packet.data;
+            //need to add our own channel as the server doesn't bounce messages back to us when we join
+            livePortalData.channellist.push(serverConfig.channel)
             livePortalData.channellist.forEach(element =>
             {
                 if (element != serverConfig.channel)
@@ -3027,6 +3039,9 @@
         card = document.getElementById("PhilipsHueCard");
         (serverConfig.philipshuedisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
 
+        card = document.getElementById("MacroButtonsCard");
+        (serverConfig.macrobuttonsdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
+
         card = document.getElementById("AlertsCard");
         (serverConfig.slalertsdisplay == "on") ? (card.style.display = "block") : (card.style.display = "none");
 
@@ -3088,5 +3103,54 @@
         else
             rowdata += '<div id="PhilipsHueScene_no_scense_available" class="col-1 btn ' + btnstate + ' mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Scenes availabe</div>';
         document.getElementById("PhilipsHueScenesRow").innerHTML = rowdata;
+    }
+    // ============================================================================
+    //                           FUNCTION: activateMacro
+    // ============================================================================
+    function activateMacro (Id)
+    {
+        if (typeof (serverData.macros[Id]) != "undefined")
+        {
+            // we mock up an incoming message data packet and send it to 
+            // the normal check system so it appears like any other trigger
+            CheckTriggers(
+                sr_api.ExtensionPacket(
+                    serverData.macros[Id].messagetype,
+                    serverConfig.extensionname,
+                    {},
+                    serverConfig.channel,
+                    ""),
+                serverConfig.channel,
+                ""
+            )
+
+
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: updateMacroButtonsDisplay
+    // ============================================================================
+    function updateMacroButtonsDisplay ()
+    {
+        // let card = document.getElementById("MacroButtonsCard");
+        let scenesrow = document.getElementById("MacroButtonsRow");
+        let rowdata = ""
+        let macrolist = serverData.macros
+        // need to update this to show the current active scene when we know what kind of data we are getting
+        let first = true
+        let color = ""
+
+        if (macrolist && macrolist.length > 0)
+        {
+            for (let i = 0; i < macrolist.length; i++)
+            {
+                if (macrolist[i].color != "")
+                    color = "style='background-color:" + macrolist[i].color + "'"
+                rowdata += '<div id="MacroButtons_' + i + '" ' + color + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="Scene Name">' + macrolist[i].name + '</div>';
+            }
+        }
+        else
+            rowdata += '<div id="MacroButtons_no_scense_available" class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Macros availabe</div>';
+        document.getElementById("MacroButtonsRow").innerHTML = rowdata;
     }
 </script>

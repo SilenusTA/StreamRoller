@@ -22,245 +22,275 @@
 -->
 <!-- extra tag to other extensions here as we are going to load this from the page and not from a file -->
 <!--div id="LivePortalSettingsWidgetLarge_Placeholder" tabindex='-1' hidden-->
-    <form id="extensionnametext_settingsform">
-        <div class="form-group invisible">
-            <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
-            <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
-            <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
-            <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">LivePortal Settings</h4>
+
+    <p>These settings are for the LivePortal page. This page also controls the logic behind your StreamRoller
+        setup. i.e. do you want your alerts processed through chatgpt, do you want to send a tweet when starting
+        the stream
+    </p>
+
+    <h5 class="text-center">Display/Hide Controls</h5>
+    <p>De-select the items you don't want to show on the main Live page page</p>
+    <!-- show hide on screen extension controls-->
+    <div class="form-check form-check-inline ">
+        <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay"
+            streamersonglistdisplaychecked>
+        <label class="form-check-label" for="streamersonglistdisplay">StreamerSonglist</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay"
+            discordmodchatdisplaychecked>
+        <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" name="obsdisplay" type="checkbox" id="obsdisplay" obsdisplaychecked>
+        <label class="form-check-label" for="obsdisplay">OBS</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay"
+            philipshuedisplaychecked>
+        <label class="form-check-label" for="philipshuedisplay">Philips Hue</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" name="macrobuttonsdisplay" type="checkbox" id="macrobuttonsdisplay"
+            macrobuttonsdisplaychecked>
+        <label class="form-check-label" for="macrobuttonsdisplay">Macro Buttons</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay"
+            slalertsdisplaychecked>
+        <label class="form-check-label" for="slalertsdisplay">StreamLabs Alerts</label>
+    </div>
+    <HR>
+    <h5 class="text-center">Chat Settings</h5>
+    <p>Performance releated settings, the bigger the buffer the more chat history you will see (note the saved
+        buffer over restarts is in the twitchchat settings)</p>
+    <div class="form-group py-2">
+        <div class="col-xs-1">
+            <label for="chatmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
+            <input type="text" style="width: 40px;" class="col-lg-4" name="chatmessagebuffermaxsize"
+                id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
         </div>
-        <h4 class="text-center">LivePortal Settings</h4>
-
-        <p>These settings are for the LivePortal page. This page also controls the logic behind your StreamRoller
-            setup. i.e. do you want your alerts processed through chatgpt, do you want to send a tweet when starting
-            the stream
-        </p>
-
-        <h5 class="text-center">Display/Hide Controls</h5>
-        <p>De-select the items you don't want to show on the main Live page page</p>
-        <!-- show hide on screen extension controls-->
-        <div class="form-check form-check-inline ">
-            <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay" streamersonglistdisplaychecked>
-            <label class="form-check-label" for="streamersonglistdisplay">StreamerSonglist</label>
+    </div>
+    <HR>
+    <h5 class="text-center">OBS Settings</h5>
+    <h4>Default Scenes Name</h4>
+    <p>These are the OBS scene names that will be attached to the obs controls on the main page.
+        We use items in fron of OBS names to be able to group them into Main, Secondary and 'everything' (no
+        identifies needed)
+        else scenes so we can quickly switch between these groups (settings are in the obs settings link)
+        Default setings are '##' to indicate a main scense (change the scene name in OBS to start with ##) and **
+        for secondary scenes.
+    </p>
+    <div class="form-group py-2">
+        <div class="form-group">
+            <label for="obsdefaultstartscenename" class="col-lg-2">Start scene button (OBS name)</label>
+            <input type="text" class="col-lg-4" name="obsdefaultstartscenename" id="obsdefaultstartscenename"
+                value="obsdefaultstartscenenametext">
+        </div>
+        <div class="form-group">
+            <label for="obsdefaultlivescenename" class="col-lg-2">Live scene button (OBS name)</label>
+            <input type="text" class="col-lg-4" name="obsdefaultlivescenename" id="obsdefaultlivescenename"
+                value="obsdefaultlivescenenametext">
+        </div>
+        <div class="form-group">
+            <label for="obsdefaultintermissionscenename" class="col-lg-2">Intermission scene button (OBS
+                name)</label>
+            <input type="text" class="col-lg-4" name="obsdefaultintermissionscenename"
+                id="obsdefaultintermissionscenename" value="obsdefaultintermissionscenenametext">
+        </div>
+        <div class="form-group">
+            <label for="obsdefaultendscenename" class="col-lg-2">End scene button (OBS name)</label>
+            <input type="text" class="col-lg-4" name="obsdefaultendscenename" id="obsdefaultendscenename"
+                value="obsdefaultendscenenametext">
+        </div>
+    </div>
+    <h4>OBS Scene buttons</h4>
+    <p>Extra scene buttons to display on top of defaults start, live,
+        intermission and end buttons (set identifier tags in the obs extension settings
+        first)</p>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes"
+                showprimarysceneschecked>
+            <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay" discordmodchatdisplaychecked>
-            <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
+            <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes"
+                showsecondarysceneschecked>
+            <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="obsdisplay" type="checkbox" id="obsdisplay" obsdisplaychecked>
-            <label class="form-check-label" for="obsdisplay">OBS</label>
+            <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes"
+                showallsceneschecked>
+            <label class="form-check-label" for="showallscenes">Show All Scenes</label>
+        </div>
+    </div>
+    <h4>OBS Mute button</h4>
+    <div class="form-group">
+        <label for="mutescene" class="col-lg-2">'Source' to mute when button pressed</label>
+        <input type="text" name="mutescene" class="col-lg-3" id="mutescene" value="mutescenetext">
+    </div>
+
+    <HR>
+    <h5 class="text-center">Discord</h5>
+    <h5>Mod Chat Window</h5>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="modchattomodwindow" type="checkbox" id="modchattomodwindow"
+                modchattomodwindowchecked>
+            <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
+                window as well as discord</label>
+        </div>
+        <div class="form-group">
+            <label for="discordmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
+            <input type="text" name="discordmessagebuffermaxsize" class="col-lg-4" id="discordmessagebuffermaxsize"
+                value="discordmessagebuffermaxsizetext">
+        </div>
+    </div>
+    <h5>Alerts to post on discord</h5>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="follows" type="checkbox" id="follows" followschecked>
+            <label class="form-check-label" for="follows">Follows</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay" philipshuedisplaychecked>
-            <label class="form-check-label" for="philipshuedisplay">Philips Hue</label>
+            <input class="form-check-input" name="raids" type="checkbox" id="raids" raidschecked>
+            <label class="form-check-label" for="raids">Raids</label>
         </div>
         <div class="form-check form-check-inline">
-            <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay" slalertsdisplaychecked>
-            <label class="form-check-label" for="slalertsdisplay">StreamLabs Alerts</label>
+            <input class="form-check-input" name="hosts" type="checkbox" id="hosts" hostschecked>
+            <label class="form-check-label" for="hosts">Hosts</label>
         </div>
-        <HR>
-        <h5 class="text-center">Chat Settings</h5>
-        <p>Performance releated settings, the bigger the buffer the more chat history you will see (note the saved
-            buffer over restarts is in the twitchchat settings)</p>
-        <div class="form-group py-2">
-            <div class="col-xs-1">
-                <label for="chatmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
-                <input type="text" style="width: 40px;" class="col-lg-4" name="chatmessagebuffermaxsize" id="chatmessagebuffermaxsize" value="chatmessagebuffermaxsizetext">
-            </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="subs" type="checkbox" id="subs" subschecked>
+            <label class="form-check-label" for="subs">Subs</label>
         </div>
-        <HR>
-        <h5 class="text-center">OBS Settings</h5>
-        <h4>Default Scenes Name</h4>
-        <p>These are the OBS scene names that will be attached to the obs controls on the main page.
-            We use items in fron of OBS names to be able to group them into Main, Secondary and 'everything' (no
-            identifies needed)
-            else scenes so we can quickly switch between these groups (settings are in the obs settings link)
-            Default setings are '##' to indicate a main scense (change the scene name in OBS to start with ##) and **
-            for secondary scenes.
-        </p>
-        <div class="form-group py-2">
-            <div class="form-group">
-                <label for="obsdefaultstartscenename" class="col-lg-2">Start scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultstartscenename" id="obsdefaultstartscenename" value="obsdefaultstartscenenametext">
-            </div>
-            <div class="form-group">
-                <label for="obsdefaultlivescenename" class="col-lg-2">Live scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultlivescenename" id="obsdefaultlivescenename" value="obsdefaultlivescenenametext">
-            </div>
-            <div class="form-group">
-                <label for="obsdefaultintermissionscenename" class="col-lg-2">Intermission scene button (OBS
-                    name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultintermissionscenename" id="obsdefaultintermissionscenename" value="obsdefaultintermissionscenenametext">
-            </div>
-            <div class="form-group">
-                <label for="obsdefaultendscenename" class="col-lg-2">End scene button (OBS name)</label>
-                <input type="text" class="col-lg-4" name="obsdefaultendscenename" id="obsdefaultendscenename" value="obsdefaultendscenenametext">
-            </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="resubs" type="checkbox" id="resubs" resubschecked>
+            <label class="form-check-label" for="resubs">Resub</label>
         </div>
-        <h4>OBS Scene buttons</h4>
-        <p>Extra scene buttons to display on top of defaults start, live,
-            intermission and end buttons (set identifier tags in the obs extension settings
-            first)</p>
-        <div class="form-group py-2">
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes" showprimarysceneschecked>
-                <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes" showsecondarysceneschecked>
-                <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes" showallsceneschecked>
-                <label class="form-check-label" for="showallscenes">Show All Scenes</label>
-            </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="giftsubs" type="checkbox" id="giftsubs" giftsubschecked>
+            <label class="form-check-label" for="giftsubs">GiftSub</label>
         </div>
-        <h4>OBS Mute button</h4>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="bits" type="checkbox" id="bits" bitschecked>
+            <label class="form-check-label" for="bits">Bits</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="donations" type="checkbox" id="donations" donationschecked>
+            <label class="form-check-label" for="donations">Donation</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="merch" type="checkbox" id="merch" merchchecked>
+            <label class="form-check-label" for="merch">Merch</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="cloudbotredemption" type="checkbox" id="cloudbotredemption"
+                cloudbotredemptionchecked>
+            <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
+        </div>
+    </div>
+    <h5>Discord Channels</h5>
+    <div class="form-group py-2">
         <div class="form-group">
-            <label for="mutescene" class="col-lg-2">'Source' to mute when button pressed</label>
-            <input type="text" name="mutescene" class="col-lg-3" id="mutescene" value="mutescenetext">
+            <label for="donations_channel" class="col-lg-2">Discord Donations Channel:</label>
+            <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel"
+                value="donations_channeltext">
         </div>
-
-        <HR>
-        <h5 class="text-center">Discord</h5>
-        <h5>Mod Chat Window</h5>
         <div class="form-group">
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="modchattomodwindow" type="checkbox" id="modchattomodwindow" modchattomodwindowchecked>
-                <label class="form-check-label" for="modchattomodwindow">Show Twitch mod messages in mod chat
-                    window as well as discord</label>
-            </div>
-            <div class="form-group">
-                <label for="discordmessagebuffermaxsize" class="col-lg-2">Screen buffer size</label>
-                <input type="text" name="discordmessagebuffermaxsize" class="col-lg-4" id="discordmessagebuffermaxsize" value="discordmessagebuffermaxsizetext">
-            </div>
+            <label for="modmessage_channel" class="col-lg-2">Discord Channel to monitor:</label>
+            <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel"
+                value="modmessage_channeltext">
         </div>
-        <h5>Alerts to post on discord</h5>
+    </div>
+    <HR>
+    <h5 class="text-center">Random Facts</h5>
+    <div class="form-group py-2">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled"
+                randomfactsenabledchecked>
+            <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
+        </div>
         <div class="form-group">
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="follows" type="checkbox" id="follows" followschecked>
-                <label class="form-check-label" for="follows">Follows</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="raids" type="checkbox" id="raids" raidschecked>
-                <label class="form-check-label" for="raids">Raids</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="hosts" type="checkbox" id="hosts" hostschecked>
-                <label class="form-check-label" for="hosts">Hosts</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="subs" type="checkbox" id="subs" subschecked>
-                <label class="form-check-label" for="subs">Subs</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="resubs" type="checkbox" id="resubs" resubschecked>
-                <label class="form-check-label" for="resubs">Resub</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="giftsubs" type="checkbox" id="giftsubs" giftsubschecked>
-                <label class="form-check-label" for="giftsubs">GiftSub</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="bits" type="checkbox" id="bits" bitschecked>
-                <label class="form-check-label" for="bits">Bits</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="donations" type="checkbox" id="donations" donationschecked>
-                <label class="form-check-label" for="donations">Donation</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="merch" type="checkbox" id="merch" merchchecked>
-                <label class="form-check-label" for="merch">Merch</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="cloudbotredemption" type="checkbox" id="cloudbotredemption" cloudbotredemptionchecked>
-                <label class="form-check-label" for="cloudbotredemption">Loyalty redemption</label>
-            </div>
+            <label for="randomfactstimeout" class="col-lg-2">How often to post random facts to twitch
+                chat(minutes)</label>
+            <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout"
+                value="randomfactstimeouttext">
         </div>
-        <h5>Discord Channels</h5>
-        <div class="form-group py-2">
-            <div class="form-group">
-                <label for="donations_channel" class="col-lg-2">Discord Donations Channel:</label>
-                <input type="text" name="donations_channel" class="col-lg-4" id="donations_channel" value="donations_channeltext">
-            </div>
-            <div class="form-group">
-                <label for="modmessage_channel" class="col-lg-2">Discord Channel to monitor:</label>
-                <input type="text" name="modmessage_channel" class="col-lg-4" id="modmessage_channel" value="modmessage_channeltext">
-            </div>
-        </div>
-        <HR>
-        <h5 class="text-center">Random Facts</h5>
-        <div class="form-group py-2">
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled" randomfactsenabledchecked>
-                <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
-            </div>
-            <div class="form-group">
-                <label for="randomfactstimeout" class="col-lg-2">How often to post random facts to twitch
-                    chat(minutes)</label>
-                <input type="text" name="randomfactstimeout" class="col-lg-4" id="randomfactstimeout" value="randomfactstimeouttext">
-            </div>
-        </div>
-        <HR>
-        <h5 class="text-center">Twitter</h5>
-        <div class="form-group py-2">
-            On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
-            <ol>
-                <li>Main message</li>
-                <li>Extra message</li>
-                <li>Random fact (If enabled)</li>
-            </ol>
-            Streamroller will calculate the length of the tweet and do the following options in order depending
-            on size
-            <ol>
-                <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
-                <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
-                <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
-            </ol>
+    </div>
+    <HR>
+    <h5 class="text-center">Twitter</h5>
+    <div class="form-group py-2">
+        On startup you can post a Tweet to let people know you are live. There three parts to the tweet.
+        <ol>
+            <li>Main message</li>
+            <li>Extra message</li>
+            <li>Random fact (If enabled)</li>
+        </ol>
+        Streamroller will calculate the length of the tweet and do the following options in order depending
+        on size
+        <ol>
+            <li>If there is enough space, post "main message" + "Extra Message" + "Random fact"</li>
+            <li>If 1. doesn't fit then try "Main message" + "Random Fact"</li>
+            <li>If 2. doesn't fit then try "Main Message" + "Extra Message"</li>
+        </ol>
 
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled" twitterstartenabledchecked>
-                <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
-                    start streaming in OBS).</label>
-            </div>
-            <BR>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox" id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
-                <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
-                    tweet</label>
-            </div>
-            <div class="form-group">
-                <label for="twitterstartmessage" class="col-lg-2">Main Message</label>
-                <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage" value="twitterstartmessagetext">
-            </div>
-            <div class="form-group">
-                <label for="twitterstartmessage_x" class="col-lg-2">Extra message if there is
-                    space</label>
-                <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x" value="twitterstartmessage_xtext">
-            </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="twitterstartenabled" type="checkbox" id="twitterstartenabled"
+                twitterstartenabledchecked>
+            <label class="form-check-label" for="twitterstartenabled">Post a Tweet on going live (hit
+                start streaming in OBS).</label>
         </div>
-        <HR>
+        <BR>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="randomfactstwitterstartenabled" type="checkbox"
+                id="randomfactstwitterstartenabled" randomfactstwitterstartenabledchecked>
+            <label class="form-check-label" for="randomfactstwitterstartenabled">Enable random facts in
+                tweet</label>
+        </div>
         <div class="form-group">
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox" id="extensionnametext_restore_defaults" extensionnametext_restore_defaultschecked>
-                <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
-            </div>
+            <label for="twitterstartmessage" class="col-lg-2">Main Message</label>
+            <input type="text" class="col-lg-4" name="twitterstartmessage" id="twitterstartmessage"
+                value="twitterstartmessagetext">
         </div>
-        <HR>
-        <h5 class="text-center">Debug</h5>
-        <div class="form-group py-2">
-            <div class="form-group">
-                <label for="logginglevel" class="col-lg-2 col-form-label">System Log Level</label>
+        <div class="form-group">
+            <label for="twitterstartmessage_x" class="col-lg-2">Extra message if there is
+                space</label>
+            <input type="text" class="col-lg-4" name="twitterstartmessage_x" id="twitterstartmessage_x"
+                value="twitterstartmessage_xtext">
+        </div>
+    </div>
+    <HR>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox"
+                id="extensionnametext_restore_defaults" extensionnametext_restore_defaultschecked>
+            <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <h5 class="text-center">Debug</h5>
+    <div class="form-group py-2">
+        <div class="form-group">
+            <label for="logginglevel" class="col-lg-2 col-form-label">System Log Level</label>
 
-                <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel" value="loggingleveltext">
+            <input type="text" class="col-lg-1" style="width: 40px;" name="logginglevel" id="logginglevel"
+                value="loggingleveltext">
 
-            </div>
         </div>
-        <div class="modal-footer">
-            <button id="closeSettings" type="button" class="btn btn-secondary">Close</button>
-            <button type="submit" class="btn btn-primary">Update</button>
-        </div>
-    </form>
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>
 <!-- /div -->

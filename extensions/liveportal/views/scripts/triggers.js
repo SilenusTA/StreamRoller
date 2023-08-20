@@ -18,7 +18,7 @@
 /*
 global 
 SaveConfigToServer
-sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalData, serverData, SaveDataToServer
+sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalData, serverData, SaveDataToServer,updateMacroButtonsDisplay
 */
 
 // ============================================================================
@@ -83,13 +83,16 @@ function addTriggerEntries ()
     {
         for (var key in triggers)
         {
-            if (triggerextensionnames == "")
+            if (triggers[key].length > 0)
             {
-                triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
-                TriggersExtensionChoser.title = key
+                if (triggerextensionnames == "")
+                {
+                    triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
+                    TriggersExtensionChoser.title = key
+                }
+                else
+                    triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
             }
-            else
-                triggerextensionnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
         }
         TriggersExtensionChoser.innerHTML = triggerextensionnames;
         triggersLoadTriggers(0)
@@ -149,7 +152,7 @@ function triggersLoadParameters (id)
     for (var key in params)
     {
         triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
-        triggerextensionparameters += "<label class='form-label px-2 align-middle  col-md-6' for=" + triggername + "_" + key + ">" + key + "</label>"
+        triggerextensionparameters += "<label class='form-label px-2 align-middle text-right col-md-6' for=" + triggername + "_" + key + ">" + key + "</label>"
         triggerextensionparameters += "<input type='text' class='form-control  col-md-6' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
         triggerextensionparameters += "</div>"
     }
@@ -254,7 +257,7 @@ function PopulateGroupNamesDropdown ()
     // clear the existing page data
     let GroupChoser = document.getElementById("triggerExtensionGroupName")
     // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
-    let groupnames
+    let groupnames = ""
     for (var key in serverData.AllTriggersAndActions)
     {
         if (groupnames == "")
@@ -276,14 +279,21 @@ function PopulateGroupNamesDropdown ()
 function createTriggerAction (e)
 {
     let groupname = document.getElementById("triggerExtensionGroupName").value
+    let extname = document.getElementById("triggerExtensionChoser").value
+    let channel = document.getElementById("triggerExtensionChoserChannel").value
+    //for macros we need to fudge a few items
     if (document.getElementById("triggerExtensionChoser").value == "MACROS")
+    {
         groupname = "MACROS"
+        extname = serverConfig.extensionname
+        channel = serverConfig.channel
+    }
     let SingleEvent = {
         trigger:
         {
             name: document.getElementById("triggerExtensionChoserTriggerName").value,
-            extension: document.getElementById("triggerExtensionChoser").value,
-            channel: document.getElementById("triggerExtensionChoserChannel").value,
+            extension: extname,
+            channel: channel,
             type: $("#triggerExtensionTriggers option:selected").attr('data'),
             data: []
 
@@ -334,11 +344,13 @@ function createTriggerAction (e)
 
 // ============================================================================
 //                           FUNCTION: createMacro
-//                           called when form submitted
+//                         called from create macro button
 // ============================================================================
 function createMacro (e)
 {
     let macroname = document.getElementById("macroName").value
+    let macrodescription = document.getElementById("macroDescription").value
+    let macrocolor = document.getElementById("macroColor").value
     if (macroname == "")
     {
         alert("Macro name empty")
@@ -350,6 +362,10 @@ function createMacro (e)
     {
         if (serverData.macros[i].name == macroname)
         {
+            // was going to overwrite here but we really need an 'edit' function so you don't have to retype everything
+            //const response = confirm("MacroName Exists, Overwrite?");
+            //if (!response)
+            //return false
             alert("Macro already exists")
             return false
         }
@@ -359,32 +375,64 @@ function createMacro (e)
     {
         name: macroname,
         channel: serverConfig.channel,
-        description: document.getElementById("macroDescription").value,
+        description: macrodescription,
         displaytitle: macroname,
         messagetype: "trigger_" + macroname,
-        parameters: {}
+        color: macrocolor
     }
 
     serverData.macros.push(SingleTrigger)
+    sortByKey(serverData.macros, "name")
     updateMacroList();
     SaveDataToServer();
-    PopulateGroupNamesDropdown();
+    //PopulateGroupNamesDropdown();
     addTriggerEntries();
+    return false;
+}
+
+// ============================================================================
+//                           FUNCTION: deleteMacro
+//                       called from delete macro button
+// ============================================================================
+function deleteMacro (e)
+{
+    let macroname = document.getElementById("macroName").value
+    let deleted = false
+    for (let i = 0; i < serverData.macros.length; i++)
+    {
+        if (serverData.macros[i].name == macroname)
+        {
+            serverData.macros.splice(i)
+            deleted = true
+            sortByKey(serverData.macros, "name")
+            SaveDataToServer()
+            updateMacroList()
+            addTriggerEntries()
+
+        }
+    }
+    if (!deleted)
+        alert("Macro doesn't exist")
     return false;
 }
 // ============================================================================
 //                           FUNCTION: updateMacroList
-//                           called when form submitted
+//                        used to update macros dropdown
 // ============================================================================
 function updateMacroList ()
 {
     // check if the triggers we have been sent has the MACROS 'extension'
+    //localConfig.triggersAndActions.descriptions
     if (typeof (localConfig.triggersAndActions.triggers["MACROS"]) == "undefined")
+    {
         localConfig.triggersAndActions.triggers["MACROS"] = []
+        localConfig.triggersAndActions.descriptions["MACROS"] = "Macro functions to be applied to buttons etc"
+    }
     // check if the groups list is available in the user defined triggers
     if (typeof (serverData.AllTriggersAndActions["MACROS"]) == "undefined")
         addNewTriggerGroup("MACROS")
     localConfig.triggersAndActions.triggers["MACROS"] = serverData.macros
+    updateMacroButtonsDisplay()
 }
 // ============================================================================
 //                       FUNCTION: checkTriggerIsValid
@@ -393,13 +441,10 @@ function updateMacroList ()
 function checkTriggerIsValid (trigger)
 {
     //check we have the extensions and the channels to listen to
-    if (trigger.trigger.extension != "MACROS")
-    {
-        if (!Object.hasOwn(livePortalData.extensions, trigger.trigger.extension))
-            alert("Couldn't find extension", trigger.trigger.extension)
-        if (!livePortalData.channellist.includes(trigger.trigger.channel))
-            alert("Couldn't find channel", trigger.trigger.channel)
-    }
+    if (!Object.hasOwn(livePortalData.extensions, trigger.trigger.extension))
+        alert("Couldn't find extension", trigger.trigger.extension)
+    if (!livePortalData.channellist.includes(trigger.trigger.channel))
+        alert("Couldn't find channel", trigger.trigger.channel)
     if (!Object.hasOwn(livePortalData.extensions, trigger.action.extension))
         alert("Couldn't find extension", trigger.action.extension)
     if (!livePortalData.channellist.includes(trigger.action.channel))
@@ -560,7 +605,11 @@ function PopulateTriggersTable ()
         let list = group.list
 
         // show hide link for the table
-        tablerows += "<div><H5>Group: " + g + " </h5><a href='javascript:ShowHideTriggerGroup(\"" + g + "\");'>Show/Hide</a><a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> ";
+        tablerows += "<div><span class='fs-4'>Group(" + list.length + "): " + g + " </span><a href='javascript:ShowHideTriggerGroup(\"" + g + "\");'>"
+        if (group.show)
+            tablerows += "Hide"
+        else
+            tablerows += "Show</a> <a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> ";
         if (group.show)
             tablerows += "</div><tbody id='" + g + "_TriggerGroupDisplay'style='display: block;'>";
         else
@@ -607,10 +656,10 @@ function PopulateTriggersTable ()
             }
             tablerows += "</td>"
             if (!serverData.AllTriggersAndActions[g].list[i].action.paused)
-                tablerows += "<td><a class='btn btn-success' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Pause</a></td>"
+                tablerows += "<td><a class='btn btn-primary' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Pause</a></td>"
             else
                 tablerows += "<td><a class='btn btn-secondary' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Resume</a></td>"
-            tablerows += "<td><a class='btn btn-primary' href = 'javascript:triggerActionButton(\"" + g + "\"," + i + ");' role = 'button'> Run</a></td>"
+            tablerows += "<td><a class='btn btn-success' href = 'javascript:triggerActionButton(\"" + g + "\"," + i + ");' role = 'button'> Run</a></td>"
             tablerows += "</tr >"
         }
         // tablerows += "</div>";
@@ -619,7 +668,7 @@ function PopulateTriggersTable ()
     // new group option
     tablerows += "<form><div class='form-group d-flex py-2'><div class='col-xs-1'>"
     tablerows += "New Group name :<input type='text' id='triggergroupcreatename' style='width: 200px;' onkeypress='return /[0-9a-zA-Z]/i.test(event.key)'></div>"
-    tablerows += "<a class='btn btn-primary' href = 'javascript:createNewTriggerGroup();' role = 'button'> Create</a></form>"
+    tablerows += "<a class='btn btn-success' href = 'javascript:createNewTriggerGroup();' role = 'button'> Create</a></form>"
     table.innerHTML = tablerows
     PopulateGroupNamesDropdown();
 }
@@ -637,6 +686,7 @@ function ShowHideTriggerGroup (name)
     else
         group.style.display = "none"
     SaveDataToServer()
+    PopulateTriggersTable()
 }
 // ============================================================================
 //                          FUNCTION: DeleteTriggerGroup
@@ -723,4 +773,16 @@ function triggerActionButton (group, id)
             action.extension
         ),
     );
+}
+// ============================================================================
+//                     FUNCTION: sortByKey
+//              sorts an array of objects based on a key
+// ============================================================================
+function sortByKey (array, key)
+{
+    return array.sort(function (a, b)
+    {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
 }
