@@ -667,11 +667,12 @@ function discordMessageHandler (message)
         return;
     if (serverConfig.discordenabled != "on")
         return
-    sendAlertMessageReceived(message)
 
     //restrict to only channel the channel we want to
     if (message.channel.name === serverConfig.monitoring_channel)
     {
+        // send this out so we can put it in our chat window
+        sendAlertMessageReceived(message)
         //restrict to only Twitch Subscribers who have synced with discord
         //if (message.member.roles.cache.some((role) => role.name === "Twitch Subscriber")) {
         //if (message.content === "Test") {
