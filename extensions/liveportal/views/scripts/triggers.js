@@ -26,6 +26,7 @@ sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePor
 // ============================================================================
 function initTriggersAndActions (extension_list)
 {
+    updateMacroList();
     // request triggers and actions from all the current extenssions we have
     extension_list.forEach(ext =>
     {
@@ -46,7 +47,7 @@ function initTriggersAndActions (extension_list)
             ));
     }
     )
-    updateMacroList();
+
 }
 // ============================================================================
 //                           FUNCTION: receivedTrigger
@@ -634,7 +635,7 @@ function PopulateTriggersTable ()
         // show hide link for the table
         tablerows += "<div><span class='fs-4'>Group(" + list.length + "): " + g + " </span><a href='javascript:ShowHideTriggerGroup(\"" + g + "\");'>"
         if (group.show)
-            tablerows += "Hide"
+            tablerows += "Hide <a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> "
         else
             tablerows += "Show</a> <a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> ";
         if (group.show)

@@ -83,10 +83,11 @@
         // max display size to maintain
         chatmessagebuffermaxsize: 300,
         discordmessagebuffermaxsize: 300,
-        liveportal_restore_defaults: "off",
+        liveportal_restore_defaults: "off"
+
     };
     let serverConfig = structuredClone(default_serverConfig);
-    let serverData = {}
+    let serverData = { macros: [] }
     serverData.AllTriggersAndActions = {
         "default": { show: true, list: [] },
         "MACROS": { show: true, list: [] }
