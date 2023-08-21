@@ -39,7 +39,16 @@
       <BR>i.e when triggering on a chat message you could add something like '%%sender%% said %%message%%' and the %%
       vars will get replaced with the sender and message fields from the trigger used. Note that these can also be used
       for math calculations as long as the whole field is a maths function.
-    <h4>Variables</h4>
+    <h4>Trigger matches</h4>
+    A trigger can be set to match in various ways (if any field fails the below rules the trigger will fail):
+    <ol>
+      <li>If left empty then it will always match</li>
+      <li>"Exact Match" expects the entered text to be identical to the triggered value</li>
+      <li>"Anywhere" will match if the entered text appears anywhere in the triggered text</li>
+      <li>"Start of line" will match if the entered text appears on the start of the triggered text (regardless what
+        follows, usefull for matching commands in chat that have a value you want to read)</li>
+    </ol>
+    <h4>Action Variables</h4>
     You can select a field to put into the action using %%name%%. ie if you want to add a chat message sender name into
     a field use %%sender%%
     <BR>to select a specific word from a field (ie for a command in chat eg '!setscore 5') you can trigger on

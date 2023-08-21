@@ -3146,7 +3146,7 @@
             {
                 if (macrolist[i].color != "")
                     color = "style='background-color:" + macrolist[i].color + "'"
-                rowdata += '<div id="MacroButtons_' + i + '" ' + color + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="Scene Name">' + macrolist[i].name + '</div>';
+                rowdata += '<div id="MacroButtons_' + i + '" ' + color + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
             }
         }
         else

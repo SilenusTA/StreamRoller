@@ -154,6 +154,13 @@ function triggersLoadParameters (id)
         triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
         triggerextensionparameters += "<label class='form-label px-2 align-middle text-right col-md-6' for=" + triggername + "_" + key + ">" + key + "</label>"
         triggerextensionparameters += "<input type='text' class='form-control  col-md-6' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+        // add the matcher dropdown to each variable name
+        triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "'>"
+        triggerextensionparameters += "<div class='form-group'><option data='1' class='form-control' value='1'>Exact Match</option>";
+        triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+        triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+        triggerextensionparameters += "</select>"
+
         triggerextensionparameters += "</div>"
     }
     TriggerExtensionTriggerParameters.innerHTML = triggerextensionparameters;
@@ -208,14 +215,16 @@ function actionLoadAction (name)
 
     for (var key in selectedAction)
     {
-        if (actionextensionaction == "")
+        if (key != "paused")
         {
-            actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedAction[key].displaytitle + "</option></div>";
-            ActionExtensionAction.title = selectedAction[key].description
+            if (actionextensionaction == "")
+            {
+                actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedAction[key].displaytitle + "</option></div>";
+                ActionExtensionAction.title = selectedAction[key].description
+            }
+            else
+                actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedAction[key].displaytitle + "</option></div>";
         }
-        else
-            actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedAction[key].displaytitle + "</option></div>";
-
     }
     ActionExtensionAction.innerHTML = actionextensionaction;
     actionLoadParameters(0)
@@ -231,7 +240,6 @@ function actionLoadParameters (id)
     let params = localConfig.triggersAndActions.actions[extensionname][id].parameters
     let actionname = localConfig.triggersAndActions.actions[extensionname][id].name;
     let actionextensionparameters = ""
-    //ActionExtensionActionParameters.title = localConfig.triggersAndActions.actions[extensionname][id].description
     // set the title of the calling dropdown
     document.getElementById("actionExtensionAction").title = localConfig.triggersAndActions.actions[extensionname][id].description
     document.getElementById("actionExtensionChoserChannel").value = localConfig.triggersAndActions.actions[extensionname][id].channel;
@@ -239,11 +247,9 @@ function actionLoadParameters (id)
     for (var key in params)
     {
         actionextensionparameters += "<div class='d-flex form-row align-items-center'>"
-        actionextensionparameters += "<label class='form-label px-2 align-middle col-md-6' for=" + actionname + "_" + key + ">" + key + "</label>"
-        actionextensionparameters += "<input type='text' class='form-control col-md-6' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
+        actionextensionparameters += "<label class='form-label px-2 align-middle' for=" + actionname + "_" + key + ">" + key + "</label>"
+        actionextensionparameters += "<input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
         actionextensionparameters += "</div>"
-
-
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
 
@@ -318,6 +324,7 @@ function createTriggerAction (e)
             let varname = entry.replace(SingleEvent.trigger.name + "_", "");
             let tmpobj = {};
             tmpobj[varname] = fieldsAsObject[entry];
+            tmpobj["MATCHER_" + varname] = document.getElementById("triggerExtensionTriggerParametersMatcher_" + varname).value;
             SingleEvent.trigger.data.push(tmpobj);
         }
         if (entry.indexOf(SingleEvent.action.name + "_") == 0)
@@ -470,7 +477,8 @@ function CheckTriggers (event)
             )
             {
                 // if parameters are entered we need to check that they all match
-                // before we trigger the action
+                // before we trigger the action (ie if one fails to match then we must ignore this trigger)
+                // IE ALL CHECKS BELOW SHOULD BE FOR FAILURES TO MATCH
                 let match = true
                 // we have the correct extension, channel and message type
                 // lets check the variables to see if those are a match
@@ -480,24 +488,43 @@ function CheckTriggers (event)
                     {
                         try
                         {
-                            // we have matched the trigger
-                            // check the params if we have them
-                            // if we have a string entered and it doesn't match the don't trigger
-                            if (typeof event.data.parameters[i] == "string")// && typeof param[i] === "string")
+                            // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
+                            if (i.indexOf("MATCHER_") != 0)
                             {
-                                if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) < 0)
+                                // see if we have a MATCHER object (have to check in case someone has old software before we add this field)
+                                let searchtype = param["MATCHER_" + i]
+                                if (typeof event.data.parameters[i] == "string")// && typeof param[i] === "string")
+                                {
+                                    switch (searchtype)
+                                    {
+                                        case "2"://doesn't match anywhere
+                                            if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                                match = false;
+                                            break;
+                                        case "3"://match start of line only
+                                            if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
+                                                match = false;
+                                            break;
+                                        default:
+                                            // check for exact match
+                                            if (param[i] != "" && event.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                                match = false;
+                                    }
+                                }
+                                //check non string types for not matching
+                                else if (param[i] != "" && event.data.parameters[i] != param[i])
                                     match = false;
                             }
-                            //check non string types for non matching
-                            else if (param[i] != "" && event.data.parameters[i] != param[i])
-                                match = false;
                         }
                         catch (err)
                         {
                             console.log("CheckTriggers error", err)
                             match = false;
                         }
+                        if (!match)
+                            break;
                     }
+
                 })
                 if (match)
                     TriggerAction(entry.action, event)
@@ -632,10 +659,36 @@ function PopulateTriggersTable ()
                     tablerows += ", ";
                 morethanoneentry = true;
 
-                // we have amtched the trigger
                 for (let item in list[i].trigger.data[j])
-                    //tablerows += list[i].trigger.data[j] + " "
-                    tablerows += item + " = " + list[i].trigger.data[j][item];
+                {
+                    let symbol = ""
+
+                    if (item.indexOf("MATCHER_") != 0)
+                    {
+                        //don't show the matcher fields on screen
+                        let searchtype = 1;
+                        //get the matcher object if there is one
+                        let temp = list[i].trigger.data.find((o) => typeof (o["MATCHER_" + item]) != "undefined")
+                        // if we have a matcher object get the value so we can change the symbol on screen (=/^/* for exact, startswith, anywhere)
+                        if (temp)
+                            searchtype = temp["MATCHER_" + item]
+                        switch (searchtype)
+                        {
+                            case "1":
+                                symbol = "="
+                                break;
+                            case "2":
+                                symbol = "*"
+                                break;
+                            case "3":
+                                symbol = "^"
+                                break;
+                            default:
+                                symbol = "="
+                        }
+                        tablerows += item + " " + symbol + " " + list[i].trigger.data[j][item];
+                    }
+                }
             }
             tablerows += "</td>"
 
@@ -651,7 +704,6 @@ function PopulateTriggersTable ()
                 morethanoneentry = true;
                 // we have amtched the action
                 for (let item in list[i].action.data[j])
-                    //tablerows += list[i].action.data[j] + " "
                     tablerows += item + " = " + list[i].action.data[j][item];
             }
             tablerows += "</td>"
