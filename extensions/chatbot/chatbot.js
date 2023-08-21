@@ -158,6 +158,78 @@ const default_serverConfig = {
             a3: "SabaPing Thats a tough one. It must be love and interaction don'tcha know, all 69 flavors and 420 shades of it. Kappa",
             q4: "When did the first airplane fly",
             a4: "Wasn't that those smelly bikers, Orville and someone. Back in December 17, 1903 my dad used to tell me but what does he know, he's just old PogChamp "
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
+        },
+        {
+            name: "Empty",
+            p: "",
+            q1: "",
+            a1: "",
+            q2: "",
+            a2: "",
+            q3: "",
+            a3: "",
+            q4: "",
+            a4: ""
         }
     ],
     chattemperature: "0.4",
@@ -531,6 +603,8 @@ function handleSettingsWidgetLargeData (modalcode)
         console.log("Chatbot defaults restored")
         console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
         serverConfig = structuredClone(default_serverConfig);
+        console.log(serverConfig.chatbotprofiles.length)
+        SaveConfigToServer();
         return;
     }
     serverConfig.chatbotenabled = "off";
@@ -634,36 +708,26 @@ function SendSettingsWidgetSmall (tochannel)
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
+            // set the current profile name 
             // set the curert profile name 
-            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
             modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
-            modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofileselectedname", stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + "profilevisibility", "visibility:visible; display:block");
+            // add the profiles list
+            let optioncode = ""
+
             for (const [profile_id, value] of Object.entries(serverConfig.chatbotprofiles))
             {
-                // looping profiles
-                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'nametext', value.name);
-                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'personalitytext', value.p);
-                //show the current profile on the modal box
                 if (profile_id === serverConfig.currentprofile)
-                {
-                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "selected");
-                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:visible; display:block");
-                }
+                    optioncode += "<option value='" + profile_id + "' selected>" + stringParser(value.name) + "</option>"
                 //hide the current profile on the modal box
                 else
-                {
-                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "");
-                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:hidden; display:none");
-                }
-                for (const [i, x] of Object.entries(value))
-                {
-                    //(we skip the first name and text here as we did it above)
-                    if (i != "name" && i != "p")
-                        modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
-                }
-            }
+                    optioncode += "<option value='" + profile_id + "'>" + stringParser(value.name) + "</option>"
 
+
+            }
+            modalstring = modalstring.replace("chatbotprofileoptionssplaceholder", optioncode);
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -723,39 +787,57 @@ function SendSettingsWidgetLarge (tochannel)
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
             // set the curert profile name 
-            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
             modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
-            modalstring = modalstring.replaceAll("chatbotprofileselectedname", serverConfig.chatbotprofiles[serverConfig.currentprofile].name);
+            modalstring = modalstring.replaceAll("chatbotprofileselectedname", stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + "profilevisibility", "visibility:visible; display:block");
+            // add the profiles list
+            let optioncode = ""
+            let profilecode = ""
+
             for (const [profile_id, value] of Object.entries(serverConfig.chatbotprofiles))
             {
-
-                // looping profiles
-
-                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'nametext', value.name);
-                modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + 'personalitytext', value.p);
-                //show the current profile on the modal box
                 if (profile_id === serverConfig.currentprofile)
                 {
-                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "selected");
-                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:visible; display:block");
+                    optioncode += "<option value='" + profile_id + "' selected>" + stringParser(value.name) + "</option>"
+                    profilecode += "<div class='form-group row-2' id='chatbotprofile" + profile_id + "profile' style='visibility: visible; display:block'>"
                 }
                 //hide the current profile on the modal box
                 else
                 {
-                    modalstring = modalstring.replaceAll("chatbotprofilepickerselected" + profile_id, "");
-                    modalstring = modalstring.replaceAll("chatbotprofile" + profile_id + "profilevisibility", "visibility:hidden; display:none");
+                    optioncode += "<option value='" + profile_id + "'>" + stringParser(value.name) + "</option>"
+                    profilecode += "<div class='form-group row-2' id='chatbotprofile" + profile_id + "profile' style='visibility:hidden; display:none'>"
                 }
+
+                profilecode += "<label for='chatbotprofile" + profile_id + "name' class='col-form-label'>Name</label>"
+                profilecode += "<input type='text' name='chatbotprofile" + profile_id + "name' class='form-control' value='" + stringParser(value.name) + "'/>"
+
+                profilecode += "<label for='chatbotprofile" + profile_id + "personality' class='col-form-label'>Personality</label>"
+                profilecode += "<input type='text' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
+
                 for (const [i, x] of Object.entries(value))
                 {
-
-
                     //(we skip the first name and text here as we did it above)
                     if (i != "name" && i != "p")
+                    {
                         modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
-                }
+                        if (i.indexOf("q") == 0)
+                        {
+                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Question 1</label>"
+                            profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "' />"
+                        }
+                        else
+                        {
+                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Answer 1 </label>"
+                            profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>"
+                        }
 
+                    }
+                }
+                profilecode += "</div>"
             }
+            modalstring = modalstring.replace("chatbotprofileoptionssplaceholder", optioncode);
+            modalstring = modalstring.replace("chatbotprofileandbehavioursplaceholder", profilecode);
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -776,12 +858,24 @@ function SendSettingsWidgetLarge (tochannel)
     });
 }
 // ===========================================================================
+//                           FUNCTION: stringParser
+//                          stringParser
+// ===========================================================================
+function stringParser (str)
+{
+    // blatantly stolen from stack overflow
+    return ('' + str) /* Forces the conversion to string. */
+        .replace(/&/g, '&amp;') /* This MUST be the 1st replacement. */
+        .replace(/'/g, '&apos;') /* The 4 other predefined entities, required. */
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+    //if (typeof (str) == "string")
+    //    return str.replace(/'/g, '&apos;').replace(/'/g, '&apos;')
+}
+// ===========================================================================
 //                           FUNCTION: SendCredentialsModal
 // ===========================================================================
-/**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
- */
 function SendCredentialsModal (extensionname)
 {
     fs.readFile(__dirname + "/chatbotcredentialsmodal.html", function (err, filedata)
