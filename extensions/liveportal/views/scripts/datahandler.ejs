@@ -87,7 +87,17 @@
 
     };
     let serverConfig = structuredClone(default_serverConfig);
-    let serverData = { macros: [] }
+    const default_serverData = {
+        __version__: "0.1",
+        macros: [],
+        AllTriggersAndActions:
+        {
+            "default": { show: true, list: [] },
+            "MACROS": { show: true, list: [] }
+        }
+    }
+
+    let serverData = structuredClone(default_serverData);
     serverData.AllTriggersAndActions = {
         "default": { show: true, list: [] },
         "MACROS": { show: true, list: [] }
@@ -356,16 +366,22 @@
         }
         else if (server_packet.type === "DataFile")
         {
-            if (server_packet.data != "")
+            if (server_packet.to === serverConfig.extensionname)
             {
-                // check it is our data
-                if (server_packet.to === serverConfig.extensionname)
+                if (server_packet.data.__version__ != default_serverData.__version__)
                 {
-                    serverData = structuredClone(server_packet.data);
-                    updateMacroList();
-                    updateMacroButtonsDisplay()
-                    SaveDataToServer();
-
+                    serverData = structuredClone(default_serverData);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    if (server_packet.data != "")
+                    {
+                        serverData = structuredClone(server_packet.data);
+                        updateMacroList();
+                        updateMacroButtonsDisplay()
+                        SaveDataToServer();
+                    }
                 }
             }
         }
@@ -547,6 +563,7 @@
                     if (extension_packet.data.liveportal_restore_defaults == "on")
                     {
                         serverConfig = structuredClone(default_serverConfig);
+                        serverData = structuredClone(default_serverData);
                         return;
                     }
                     else
@@ -1783,6 +1800,7 @@
         if (fieldsAsObject.liveportal_restore_defaults == "on")
         {
             serverConfig = structuredClone(default_serverConfig);
+            serverData = structuredClone(default_serverData);
             changeServerLogging(serverConfig.logginglevel);
             changeDiscordListeningChannel(serverConfig.modmessage_channel)
             return;

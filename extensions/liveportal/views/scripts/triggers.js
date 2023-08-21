@@ -26,6 +26,7 @@ sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePor
 // ============================================================================
 function initTriggersAndActions (extension_list)
 {
+    initMacroList()
     updateMacroList();
     // request triggers and actions from all the current extenssions we have
     extension_list.forEach(ext =>
@@ -424,22 +425,32 @@ function deleteMacro (e)
     return false;
 }
 // ============================================================================
-//                           FUNCTION: updateMacroList
-//                        used to update macros dropdown
+//                           FUNCTION: initMacroList
+//         called on first load to create our vitual "Macro" extension
+//         also adds any user defined macros created in the past
 // ============================================================================
-function updateMacroList ()
+function initMacroList ()
 {
-    // check if the triggers we have been sent has the MACROS 'extension'
-    //localConfig.triggersAndActions.descriptions
+    // check if the groups list is available (saves the user having to create it)
+    if (typeof (serverData.AllTriggersAndActions["MACROS"]) == "undefined")
+        addNewTriggerGroup("MACROS")
+
+    // check if we have the triggers MACROS virtual'extension' as we need to fake this if not
+    // as we don't get triggers sent from an extension
     if (typeof (localConfig.triggersAndActions.triggers["MACROS"]) == "undefined")
     {
         localConfig.triggersAndActions.triggers["MACROS"] = []
         localConfig.triggersAndActions.descriptions["MACROS"] = "Macro functions to be applied to buttons etc"
     }
-    // check if the groups list is available in the user defined triggers
-    if (typeof (serverData.AllTriggersAndActions["MACROS"]) == "undefined")
-        addNewTriggerGroup("MACROS")
+    // load our saved macros into the list (as macros are virtual triggers based on a virtual extension called "MACROS" we need to add them somewhere)
     localConfig.triggersAndActions.triggers["MACROS"] = serverData.macros
+}
+// ============================================================================
+//                           FUNCTION: updateMacroList
+//                        used to update macros dropdown
+// ============================================================================
+function updateMacroList ()
+{
     updateMacroButtonsDisplay()
 }
 // ============================================================================
