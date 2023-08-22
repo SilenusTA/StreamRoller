@@ -41,7 +41,7 @@ jobs:
         node-version: '18.6.0'
     - name: Create Version.txt
       run: |
-          echo TESTBUILD ${{github.run_number}} > SoftwareVersion.txt
+          echo TESTBUILD #${{github.run_number}} > SoftwareVersion.txt
     - name: Creating exe
       run: |
           cat extensions/chatbot/chatbot.js
