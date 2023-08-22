@@ -61,7 +61,7 @@ const localConfig = {
     overloadprotection: 500,
 };
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.2",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
