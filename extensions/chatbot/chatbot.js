@@ -622,14 +622,14 @@ function handleSettingsWidgetLargeData (modalcode)
         var tmp = 0
         if (key === "chattemperature")
         {
-            tmp = (value / 100)
+            tmp = (value / 50)
             serverConfig[key] = tmp.toFixed(2);
             // set the openAI value as well
             serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
         }
         else if (key === "questiontemperature")
         {
-            tmp = (value / 100)
+            tmp = (value / 50)
             serverConfig[key] = tmp.toFixed(2);
             // set the openAI value as well
             serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
@@ -702,9 +702,9 @@ function SendSettingsWidgetSmall (tochannel)
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
                 else if (key === "chattemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
                 else if (key === "questiontemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
@@ -780,9 +780,9 @@ function SendSettingsWidgetLarge (tochannel)
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
                 else if (key === "chattemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
                 else if (key === "questiontemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 100));
+                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
