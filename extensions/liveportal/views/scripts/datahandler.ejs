@@ -150,12 +150,12 @@
     // truncates long log messages for easier reading. 
     const LOGGING_MAX_MESSAGE_LENGTH = 200
 
-    //global data store for the app
-    const livePortalData = {};
-    livePortalData.extensions = {};
+    //global volatile data store for the app
+    const livePortalVolatileData = {};
+    livePortalVolatileData.extensions = {};
     // add our own card
 
-    livePortalData.channellist = {};
+    livePortalVolatileData.channellist = {};
     var host = '<%= host %>';
     var port = '<%= port %>';
     localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
@@ -188,17 +188,17 @@
         try
         {
             // lets load our placeholder modal code. This is so we can update our own code the same way as the extensions
-            livePortalData.extensions[serverConfig.extensionname] = { settingswidgetsmall_placeholder: "", settingswidgetlarge_placeholder: "" }
+            livePortalVolatileData.extensions[serverConfig.extensionname] = { settingswidgetsmall_placeholder: "", settingswidgetlarge_placeholder: "" }
             fetch("liveportal/modals/liveportalsettingswidgetsmall_placeholder.html")
                 .then(response => response.text())
                 .then(data => 
                 {
-                    livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
+                    livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data;
                     fetch("liveportal/modals/liveportalsettingswidgetlarge_placeholder.html")
                         .then(response => response.text())
                         .then(data => 
                         {
-                            livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data
+                            livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data
                             resolve("Success");
                         })
                 })
@@ -252,12 +252,12 @@
     function onDataCenterDisconnect (reason)
     {
         // remove all the other extensions but ours (lost datacenter means we only have ourselves to play with now)
-        for (const key in livePortalData.extensions)
+        for (const key in livePortalVolatileData.extensions)
         {
             if (key != serverConfig.extensionname)
-                delete livePortalData.extensions[key];
+                delete livePortalVolatileData.extensions[key];
         }
-        livePortalData.channellist = {};
+        livePortalVolatileData.channellist = {};
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterConnect
@@ -390,10 +390,10 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "ChannelList")
         {
-            livePortalData.channellist = server_packet.data;
+            livePortalVolatileData.channellist = server_packet.data;
             //need to add our own channel as the server doesn't bounce messages back to us when we join
-            livePortalData.channellist.push(serverConfig.channel)
-            livePortalData.channellist.forEach(element =>
+            livePortalVolatileData.channellist.push(serverConfig.channel)
+            livePortalVolatileData.channellist.forEach(element =>
             {
                 if (element != serverConfig.channel)
                     sr_api.sendMessage(DataCenterSocket,
@@ -494,7 +494,7 @@
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname)
                 {
-                    livePortalData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
+                    livePortalVolatileData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
                     addSettingsWidgetSmall(extension_packet.from);
                 }
             }
@@ -507,7 +507,7 @@
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname)
                 {
-                    livePortalData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
+                    livePortalVolatileData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
                     addALLSettingsWidgetLarge();
                 }
             }
@@ -695,12 +695,12 @@
             if (extension_packet.type === "HeartBeat")
             {
                 //check if we have this extension
-                if (typeof (livePortalData.extensions[extension_packet.from]) !== "undefined")
+                if (typeof (livePortalVolatileData.extensions[extension_packet.from]) !== "undefined")
                 {
                     //clear the previous timeout handle
-                    clearTimeout(livePortalData.extensions[extension_packet.from].heartBeatHandle);
+                    clearTimeout(livePortalVolatileData.extensions[extension_packet.from].heartBeatHandle);
                     // setup a new timeout for this extension
-                    livePortalData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
+                    livePortalVolatileData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
                     {
                         heartBeatCallback(extension_packet.from)
                     },
@@ -712,7 +712,7 @@
                 }
                 else
                 {
-                    console.log("missing extensions, requesting again")
+                    console.log("Heartbeat Received: missing extensions, requesting again")
                     RequestExtList();
                     RequestChList();
                 }
@@ -865,7 +865,7 @@
                                 // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                                 {
                                     account: "bot",
-                                    message: extension_packet.data.response,
+                                    message: extension_packet.data.parameters.message,
                                     'message-type': "AIchatbotmessage"
                                 },
                                 "",
@@ -981,10 +981,10 @@
         {
             // if we dont currently have that extension add it to the list and request the code for its settings
             // displays if it has them (done via callbacks over the websocket)
-            if (typeof livePortalData.extensions[extensions[i]] == "undefined")
+            if (typeof livePortalVolatileData.extensions[extensions[i]] == "undefined")
             {
-                livePortalData.extensions[extensions[i]] = {};
-                livePortalData.extensions[extensions[i]].display = false;
+                livePortalVolatileData.extensions[extensions[i]] = {};
+                livePortalVolatileData.extensions[extensions[i]].display = false;
                 RequestSettingsWidgetSmallsCode(extensions[i]);
                 RequestSettingsWidgetLargeCode(extensions[i]);
 
@@ -1001,10 +1001,9 @@
         // lets check if we have a previous settingswidgets cards for this extension and if so add it to the link above
         for (var i = 0; i < extensions.length; i++)
         {
-            if (livePortalData.extensions[extensions[i]].settingswidgetsmall)
+            if (livePortalVolatileData.extensions[extensions[i]].settingswidgetsmall)
                 addSettingsWidgetSmall(extensions[i])
         }
-        //        if (livePortalData.extensions[extensions[i]].settingswidgetlarge)
         addALLSettingsWidgetLarge()
 
     }
@@ -1019,7 +1018,7 @@
     // ===========================================================================
     function SendSettingsWidgetSmall (toextension)
     {
-        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall;
+        let modalstring = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall;
         // first lets update our modal to the current settings
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -1057,7 +1056,7 @@
     // ===========================================================================
     function SendSettingsWidgetLarge (toextension)
     {
-        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge;
+        let modalstring = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge;
         // first lets update our modal to the current settings
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -1097,9 +1096,9 @@
     function addSettingsWidgetSmall (xname)
     {
         // only update modals if we have received the extension name from the server
-        if (livePortalData.extensions[xname])
+        if (livePortalVolatileData.extensions[xname])
         {
-            let data = livePortalData.extensions[xname].settingswidgetsmall
+            let data = livePortalVolatileData.extensions[xname].settingswidgetsmall
             // grab the placeholder code we user to save us from writing all the code from scratch :P
             let modalbox = document.getElementById("LivePortalSettingsWidgetsSmallPlaceholder").children[0];
             // check we have a visibity link, if not we don't have a container for this model to go in
@@ -1172,10 +1171,9 @@
         document.getElementById("SettingsPageTabs").innerHTML = "";
         document.getElementById("SettingsPageContent").innerHTML = "";
         // add/replace the existing data for this extensions
-        //livePortalData.extensions[newwidgetname].settingswidgetlarge = data
         // loop through all our extensions and add them to the tabs and insert the widget in to the page
 
-        Object.entries(livePortalData.extensions).forEach(([xname, stuff]) =>
+        Object.entries(livePortalVolatileData.extensions).forEach(([xname, stuff]) =>
         {
             if (stuff.settingswidgetlarge)
             {
@@ -1187,7 +1185,6 @@
                 else
                     document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
 
-                //livePortalData.extensions[xname].settingswidgetlarge = document.getElementById(xname).innerHTML
                 if (first)
                 {
                     first = false;
@@ -1701,7 +1698,7 @@
     function UpdateOwnSettingsWidgetSmallData ()
     {
         //get our widget and use string replace to update the values
-        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
+        let modalstring = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1713,8 +1710,7 @@
             else if (typeof (value) == "string" || typeof (value) == "number")
                 modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
         }
-        livePortalData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
-        //document.getElementById(serverConfig.extensionname + "_settingswidgetsmallmodal").innerHTML = modalstring;
+        livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
 
         addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
@@ -1732,7 +1728,7 @@
     {
 
         //get our widget and use string replace to update the values
-        let modalstring = livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder
+        let modalstring = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1744,7 +1740,7 @@
             else if (typeof (value) == "string" || typeof (value) == "number")
                 modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
         }
-        livePortalData.extensions[serverConfig.extensionname].settingswidgetlarge = modalstring;
+        livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge = modalstring;
         //document.getElementById(serverConfig.extensionname + "_settingswidgetlargemodal").innerHTML = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
 

@@ -862,9 +862,11 @@ async function MSFS2020Connected (handle)
             localConfig.EventCallabackHandles[serverData.EventVars[i]]
                 = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
                 {
+                    let triggertopost = findtriggerByMessageType("trigger_" + SystemEvents[serverData.EventVars[i]].name)
+                    triggertopost.parameters.data = data;
+
                     if (data != localConfig.previousValue[serverData.EventVars[i]])
                     {
-                        //post a trigger
                         sr_api.sendMessage(localConfig.DataCenterSocket,
                             sr_api.ServerPacket(
                                 "ChannelData",
@@ -872,14 +874,13 @@ async function MSFS2020Connected (handle)
                                 sr_api.ExtensionPacket(
                                     "trigger_onChange_" + SystemEvents[serverData.EventVars[i]].name,
                                     serverConfig.extensionname,
-                                    { data: data },
+                                    triggertopost,//{ index: simvarindex, data: data[simvar] },
                                     serverConfig.channel
                                 ),
                                 serverConfig.channel
                             ));
                         localConfig.previousValue[serverData.EventVars[i]] = data;
                     }
-                    //post a trigger
                     sr_api.sendMessage(localConfig.DataCenterSocket,
                         sr_api.ServerPacket(
                             "ChannelData",
@@ -887,7 +888,7 @@ async function MSFS2020Connected (handle)
                             sr_api.ExtensionPacket(
                                 "trigger_" + SystemEvents[serverData.EventVars[i]].name,
                                 serverConfig.extensionname,
-                                { data: data },
+                                triggertopost,//{ index: simvarindex, data: data[simvar] },
                                 serverConfig.channel
                             ),
                             serverConfig.channel

@@ -18,7 +18,7 @@
 /*
 global 
 SaveConfigToServer
-sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalData, serverData, SaveDataToServer,updateMacroButtonsDisplay
+sr_api, serverConfig, DataCenterSocket, localConfig, refreshDarkMode ,$, livePortalVolatileData, serverData, SaveDataToServer,updateMacroButtonsDisplay
 */
 
 // ============================================================================
@@ -460,13 +460,13 @@ function updateMacroList ()
 function checkTriggerIsValid (trigger)
 {
     //check we have the extensions and the channels to listen to
-    if (!Object.hasOwn(livePortalData.extensions, trigger.trigger.extension))
+    if (!Object.hasOwn(livePortalVolatileData.extensions, trigger.trigger.extension))
         alert("Couldn't find extension", trigger.trigger.extension)
-    if (!livePortalData.channellist.includes(trigger.trigger.channel))
+    if (!livePortalVolatileData.channellist.includes(trigger.trigger.channel))
         alert("Couldn't find channel", trigger.trigger.channel)
-    if (!Object.hasOwn(livePortalData.extensions, trigger.action.extension))
+    if (!Object.hasOwn(livePortalVolatileData.extensions, trigger.action.extension))
         alert("Couldn't find extension", trigger.action.extension)
-    if (!livePortalData.channellist.includes(trigger.action.channel))
+    if (!livePortalVolatileData.channellist.includes(trigger.action.channel))
         alert("Couldn't find channel", trigger.action.channel)
     return true;
 }
@@ -530,6 +530,7 @@ function CheckTriggers (event)
                         }
                         catch (err)
                         {
+                            console.log(event)
                             console.log("CheckTriggers error", err)
                             match = false;
                         }
@@ -808,6 +809,7 @@ function delteTriggerAction (group, id)
 function pauseActionButton (group, id)
 {
     serverData.AllTriggersAndActions[group].list[id].action.paused = !(serverData.AllTriggersAndActions[group].list[id].action.paused)
+    SaveDataToServer()
     PopulateTriggersTable();
 }
 // ============================================================================
