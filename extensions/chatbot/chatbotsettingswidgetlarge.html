@@ -47,7 +47,7 @@
         <div class="form-check form-check-inline">
             <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled"
                 questionbotenabledchecked>
-            <label class="form-check-label" for="questionbotenabled">Enable Questionbot (chat can ask questions
+            <label class="form-check-label" for="questionbotenabled">Enable Questionbot trigger (chat can ask questions
                 directly)</label>
         </div>
     </div>
@@ -58,15 +58,46 @@
             <label class="form-check-label" for="submessageenabled">Enable sub/dono responses through chatbot</label>
         </div>
     </div>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="translatetoeng" type="checkbox" id="translatetoeng"
+                translatetoengchecked>
+            <label class="form-check-label" for="translatetoeng">English Translation trigger</label>
+        </div>
+    </div>
+    <HR>
+    <h5 class="text-center">Chatbot Trigger</h5>
+    <div class="form-group py-2">
+        <div class="col-xs-1">
+            <label for="chatbotnametriggertag">Trigger that will cause the bot to parse the message, ie when someone
+                mentions the bots name. Using CHATBOTNAME will get replaced with your bots name or you can put this in
+                directly</label>
+            <BR>
+            <input type="text" name="chatbotnametriggertag" id="chatbotnametriggertag"
+                value="chatbotnametriggertagtext">
+            <BR>
+            <label class="form-check-label" for="chatbotnametriggertagstartofline">Start of line only</label>
+            <input class="form-check-input" name="chatbotnametriggertagstartofline" type="checkbox"
+                id="chatbotnametriggertagstartofline" chatbotnametriggertagstartoflinechecked>
+
+            <!--
+                <label class="form-check-label" for="chatbotnametriggertagaddhistory">Add chat history to query</label>
+            <input class="form-check-input" name="chatbotnametriggertagaddhistory" type="checkbox"
+                id="chatbotnametriggertagaddhistory" chatbotnametriggertagaddhistorychecked>
+            -->
+
+        </div>
+
+    </div>
     <HR>
     <h5 class="text-center">Question Trigger</h5>
     <div class="form-group py-2">
         <div class="col-xs-1">
-            <label for="chatbotquerytag">Message to directly ask a question in chat, using CHATBOTNAME will get replaced
-                with your bots name or you can put this in directly. The bot will look for this word in any chatmessage
-                sent and will trigger a response when it see's the words/phrase</label>
+            <label for="chatbotquerytag">Message to directly ask a question in chat. The bot will look for this word in
+                any chatmessage sent and will trigger a response when it see's the words/phrase.</label>
+            <BR>
             <input type="text" name="chatbotquerytag" id="chatbotquerytag" value="chatbotquerytagtext">
-
+            <BR>
             <label class="form-check-label" for="chatbotquerytagstartofline">Start of line only</label>
             <input class="form-check-input" name="chatbotquerytagstartofline" type="checkbox"
                 id="chatbotquerytagstartofline" chatbotquerytagstartoflinechecked>
@@ -75,22 +106,17 @@
     </div>
     <HR>
     <h5 class="text-center">Translate to English Trigger</h5>
-    <p>Have the the bot translate a chat message to english (start the message with the following)
     <div class="form-group py-2">
         <div class="col-xs-1">
-            <label class="form-check-label" for="translatetoeng">Translation on</label>
-            <input class="form-check-input" name="translatetoeng" type="checkbox" id="translatetoeng"
-                translatetoengchecked>
+            <label for="translatetoengtag">Have the the bot translate a chat message to english (start the message with
+                the following)</label>
             <BR>
-            <label for="translatetoengtag">Text/emote trigger</label>
             <input type="text" name="translatetoengtag" id="translatetoengtag" value="translatetoengtagtext">
-
         </div>
-
     </div>
 
     <hr>
-    <h5 class="text-center">Activity level (how much the bot responds)</h5>
+    <h5 class="text-center">Activity level (how much the chatbot responds)</h5>
     <p>Timeout for bot. A random time will be selected between min and max, after chatting the bot will sleep for this
         random amount of time.</p>
     <div class="form-group py-2">
@@ -164,8 +190,6 @@
     </div>
     <HR>
 
-
-
     <!-- ####################################################### -->
     <!--              behaviour and personalities                -->
     <!-- ####################################################### -->
@@ -198,13 +222,15 @@
     <BR>Higher = more random/less precise
     <BR>Lower = less random/more precise
     <div class="form-group row-2 text-center">
-        <label for="chattemperature" class="form-label">Chatbot Randomness</label>
+        <label for="chattemperature" class="form-label">Chatbot Randomness. (applied to chatbot messages and chatbot
+            triggers above)</label>
         <label id="chattemperaturerangeval">chattemperaturetext</label>
         <input type="range" class="form-range" name="chattemperature" id="chattemperature" min="0" max="100" step="1"
             onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
     </div>
     <div class="form-group row-2 text-center ">
-        <label for="questiontemperature" class="form-label">Direct Question Randomness</label>
+        <label for="questiontemperature" class="form-label">Direct Question Randomness (applied to direct question and
+            to translation triggers above)</label>
         <label id="questiontemperaturerangeval">questiontemperaturetext</label>
         <input type="range" class="form-range" name="questiontemperature" id="questiontemperature" min="0" max="100"
             step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">

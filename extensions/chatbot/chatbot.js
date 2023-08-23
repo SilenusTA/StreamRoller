@@ -72,14 +72,17 @@ const default_serverConfig = {
     // =============================
     chatbotenabled: "off",
     questionbotenabled: "off",
-    chatbotquerytagstartofline: "on",
     translatetoeng: "off",
     submessageenabled: "off",
 
     chatbotignorelist: "",
     // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
+    chatbotnametriggertag: "CHATBOTNAME",
+    chatbotnametriggertagstartofline: "on",
+    // chatbotnametriggertagaddhistory: "on",
     // query tag is the chat text to look for to send a direct question/message to openAI GPT
-    chatbotquerytag: "Hey CHATBOTNAME",
+    chatbotquerytag: "?",
+    chatbotquerytagstartofline: "on",
     // Translate the following text to english 
     translatetoengtag: "ToEng",
 
@@ -609,6 +612,8 @@ function handleSettingsWidgetLargeData (modalcode)
     }
     serverConfig.chatbotenabled = "off";
     serverConfig.questionbotenabled = "off";
+    serverConfig.chatbotnametriggertagstartofline = "off";
+    //serverConfig.chatbotnametriggertagaddhistory = "off";
     serverConfig.chatbotquerytagstartofline = "off";
     serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
@@ -708,7 +713,6 @@ function SendSettingsWidgetSmall (tochannel)
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
-            // set the current profile name 
             // set the curert profile name 
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
             modalstring = modalstring.replaceAll("chatbotprofilepickervalue", serverConfig.currentprofile);
@@ -1112,14 +1116,22 @@ function processChatMessage (data)
         (serverConfig.chatbotquerytagstartofline == "on" &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
-
+    //variable check if we have a direct question to the bot from chat
+    let directChatbotTriggerTag = (
+        // search the whole line
+        (serverConfig.chatbotnametriggertagstartofline == "off" &&
+            data.message.toLowerCase().includes(serverConfig.chatbotnametriggertag.toLowerCase()))
+        ||
+        // search for start of line
+        (serverConfig.chatbotnametriggertagstartofline == "on" &&
+            data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())));
 
     // user asked for a translation
     let translateToEnglish = (serverConfig.translatetoeng == "on"
         && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
 
     // skip messages we don't want to use for chatbot.
-    if (!handledmessage && !submessage && !directChatQuestion && !translateToEnglish)
+    if (!handledmessage && !submessage && !directChatQuestion && !translateToEnglish && !directChatbotTriggerTag)
     //if (data.data["message-type"] != "chat" && data.data["message-type"] != "LOCAL_DEBUG" && !directChatQuestion)
     {
         if (serverConfig.DEBUG_MODE === "on")
@@ -1140,9 +1152,9 @@ function processChatMessage (data)
 
     if (serverConfig.DEBUG_MODE === "on")
     {
-        console.log(submessage);
-        console.log(serverConfig.chatbotname);
-        console.log(data.data["display-name"]);
+        console.log("submessage=", submessage);
+        console.log("chatbotname=", serverConfig.chatbotname);
+        console.log("message displayname=", data.data["display-name"]);
     }
     // ignore messages from the bot and system
     if (!submessage &&
@@ -1161,7 +1173,7 @@ function processChatMessage (data)
     }
 
     // is this a chatmessage and inside of the time window (if not a direct question, translation or a sub message)
-    if (localConfig.inTimerWindow === false && !directChatQuestion && !translateToEnglish && !submessage)
+    if (localConfig.inTimerWindow === false && !directChatQuestion && !translateToEnglish && !submessage && !directChatbotTriggerTag)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1173,7 +1185,8 @@ function processChatMessage (data)
     // Is the message long enough to be considered
     if (data.message.length < serverConfig.chatbotminmessagelength
         && !directChatQuestion
-        && !submessage)
+        && !submessage
+        && !directChatbotTriggerTag)
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("message not long enough (char minimum limit in settings) " + data.message + "'", data.message.length + "<" + serverConfig.chatbotminmessagelength)
@@ -1212,7 +1225,8 @@ function processChatMessage (data)
         (!chatdata || !chatdata.message || chatdata.message === "" || chatdata.message.length < serverConfig.chatbotminmessagelength)
         && !translateToEnglish
         && !directChatQuestion
-        && !submessage)
+        && !submessage
+        && !directChatbotTriggerTag)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1228,6 +1242,7 @@ function processChatMessage (data)
     else if (translateToEnglish || submessage)
     {
         let messages = ""
+        let modelToUse = serverConfig.settings.chatmodel
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -1236,12 +1251,15 @@ function processChatMessage (data)
 
         if (translateToEnglish)
         {
+            if (serverConfig.DEBUG_MODE === "on")
+                console.log("Translating to english")
             // ##############################################
             //         Processing a translation message
             // ##############################################
             messages = [{
                 "role": "user", "content": "Translate this into English :\n" + chatdata.message.replace(serverConfig.translatetoengtag, "")
             }]
+            modelToUse = serverConfig.settings.questionmodel
         }
         else if (submessage)
         {
@@ -1254,7 +1272,7 @@ function processChatMessage (data)
 
         if (serverConfig.translatetoeng === "on" || serverConfig.submessageenabled === "on")
         {
-            callOpenAI(messages, serverConfig.settings.chatmodel)
+            callOpenAI(messages, modelToUse)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
@@ -1290,7 +1308,7 @@ function processChatMessage (data)
             // ##############################################
             let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
 
-            callOpenAI(messages, serverConfig.settings.chatmodel)
+            callOpenAI(messages, serverConfig.settings.questionmodel)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
@@ -1348,7 +1366,7 @@ function processChatMessage (data)
         localConfig.chatMessageCount++;
     }
 
-    if ((localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines) || (localConfig.chatMessageCount < 1))
+    if (!directChatbotTriggerTag && ((localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines) || (localConfig.chatMessageCount < 1)))
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("not got enough messages in buffer to process yet", localConfig.chatMessageCount)
@@ -1361,7 +1379,19 @@ function processChatMessage (data)
         // ##############################################
         // only get to here if we have enough messages and everything is set to enabled
         localConfig.requestPending = true;
-        let messages = addPersonality("", serverConfig.currentprofile)
+        let messages = ""
+
+        if (serverConfig.DEBUG_MODE === "on" && directChatbotTriggerTag)
+        {
+            if (serverConfig.DEBUG_MODE === "on" && directChatbotTriggerTag)
+                console.log("Chat Triggerd message")
+            else
+                console.log("Standard Chat response")
+        }
+        // TODO Need a hitory bufffer to add ig we want to
+        // do we want previous history
+        //if (!directChatbotTriggerTag || (directChatbotTriggerTag && serverConfig.chatbotnametriggertagaddhistory))
+        messages = addPersonality("", serverConfig.currentprofile)
 
 
         if (serverConfig.DEBUG_MODE === "on")
@@ -1633,6 +1663,7 @@ function startProcessing ()
 // ============================================================================
 function changeBotName ()
 {
+    serverConfig.chatbotnametriggertag = serverConfig.chatbotnametriggertag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
     serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
     serverConfig.translatetoeng = serverConfig.translatetoeng.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
