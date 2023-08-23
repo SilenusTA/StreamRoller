@@ -937,7 +937,7 @@ function onDataCenterMessage (server_packet)
                 else
                     name = extension_packet.data.account
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage diverted due to debug message flag", extension_packet.data.message);
-                console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet)
+                console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet.data.message)
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "(localpost) " + name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
             }
         }
