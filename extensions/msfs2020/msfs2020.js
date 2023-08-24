@@ -280,7 +280,8 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                performAction(extension_packet)
+                if (serverConfig.msfs2020ennabled == "on")
+                    performAction(extension_packet)
             }
         }
         else
@@ -1086,7 +1087,6 @@ async function postTriggers ()
 function performAction (data)
 {
     let action = ""
-
     // Request for data, not a set
     if (data.type.indexOf("_get") > -1)
     {
@@ -1114,6 +1114,7 @@ function performAction (data)
                             serverConfig.channel
                         ));
                 }).catch(error => console.log("Failed to get simvar", error))
+
         }
         catch (err)
         {
