@@ -53,13 +53,15 @@ const localConfig = {
     heartBeatHandle: null,
     pollMSFSHandle: null,
     msfs_api: new MSFS_API(),
+    msfs_api_connected_handle: null,
+    //msfs_api_recveventhandler: null,
     //maintain a list of trigger handles for deregistering
     EventCallabackHandles: [],
     previousValue: [] // holds the last value read so we can provide 'onchange' only triggers
 };
 
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.2",//0.3
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     msfs2020ennabled: "off",
@@ -242,7 +244,7 @@ function onDataCenterMessage (server_packet)
                     handleSettingsWidgetLargeData(extension_packet.data)
                     SaveConfigToServer();
                     SaveDataToServer();
-                    if (reconnect)
+                    if (reconnect || (extension_packet.data.msfs2020ennabled == "on" && !localConfig.state.msfsconnected))
                     {
                         MSFS2020Connect()
                         pollMSFS()
@@ -257,7 +259,6 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
@@ -395,6 +396,8 @@ function handleSettingsWidgetLargeData (modalcode)
         return;
     }
 
+    //Clear our previous triggers (we will re-add the ones we have been sent)
+    serverData.triggersNamesArray = [];
     /////////////////////////////////////////////////
     //          get serverConfig values
     /////////////////////////////////////////////////
@@ -403,18 +406,6 @@ function handleSettingsWidgetLargeData (modalcode)
         if (key in serverConfig)
             serverConfig[key] = value;
 
-    }
-    /////////////////////////////////////////////////
-    //          remove active values set
-    /////////////////////////////////////////////////
-    const activeKeys = Object.keys(serverData.triggersNamesArray);
-    // loop through all our keys as we need to know what has been changed
-    for (let i = 0; i < activeKeys.length; i++)
-    {
-        let triggerKey = serverData.triggersNamesArray[activeKeys[i]]
-        // check if we have been sent one (must be checked/set to "on" to be sent)
-        if ("remove_" + triggerKey in modalcode || typeof modalcode[triggerKey] == "undefined")
-            removeTriggersArray(triggerKey)
     }
     /////////////////////////////////////////////////
     //          get SimVar values
@@ -510,7 +501,7 @@ function SendSettingsWidgetLarge (tochannel)
             generatedpage += "<BR>In this example my group name that the camera is in is called 'Camera_feed' and the camera source is called '#4x3_Cam'"
             generatedpage += "<BR>I set the positionY of the camera based on the value in the 'data' field of the trigger (altitude from MSFS) but as this is a big range it needs converting to the pixel position in obs"
             generatedpage += "<BR>The equasion set converts an alt range of 0 to 10,000 feet into a pixel position of 50 to 1040 pixels (what I need for my screen res in obs)"
-            generatedpage += "<HR><h5>Currently Active Simvars</H5><p>Select checkbox to remove variable from monitoring. "
+            generatedpage += "<HR><h5>Currently Active Simvars</H5> "
             for (let i = 0; i < triggerKeys.length; i++)
             {
                 // every 5 items start a new row but only close out after the first itme
@@ -521,24 +512,14 @@ function SendSettingsWidgetLarge (tochannel)
                     generatedpage += "<tr>"
 
                 // ''''''''''''''''''''' TD '''''''''''''''''''''''''''''''''
-                generatedpage += "<td scope='row'>" + serverData.triggersNamesArray[triggerKeys[i]] + " "
+                generatedpage += "<td scope='row'>" + serverData.triggersNamesArray[triggerKeys[i]]
 
                 // Does this variable have an index part
                 if (serverData.triggersNamesArray[triggerKeys[i]].indexOf(":index") > 0)
-                {
-                    let fieldname = serverData.triggersNamesArray[triggerKeys[i]].replace(":index", "") + "_index"
-                    generatedpage += ":<input type='text'  style='width: 30px'  name='remove_" + fieldname + "'"
-                    generatedpage += " id='remove_" + fieldname + "' value='" + serverData.triggersNamesArray[triggerKeys[i]].index + "'>"
-                }
-
+                    generatedpage += ":" + serverData.triggersNamesArray[triggerKeys[i]].index
                 //check that we have this value
                 if (typeof (serverData.triggersNamesArray[triggerKeys[i]].enabled) == "undefined")
                     serverData.triggersNamesArray[triggerKeys[i]].enabled == "off"
-
-                if (serverData.triggersNamesArray[triggerKeys[i]].enabled == "on")
-                    generatedpage += "<input class='form-check-input' name='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' type='checkbox' id='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' checked >"
-                else
-                    generatedpage += "<input class='form-check-input' name='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "' type='checkbox' id='remove_" + serverData.triggersNamesArray[triggerKeys[i]] + "'>"
                 generatedpage += "</td>"
                 first = false;
             }
@@ -647,14 +628,16 @@ function SaveDataToServer ()
 // ============================================================================
 function heartBeatCallback ()
 {
-    let color = "red"
+    localConfig.state.msfsconnected = localConfig.msfs_api.connected
     if (serverConfig.msfs2020ennabled == "on")
     {
+        // if we are not connected and we should be then attempt to reconnect
+        if (!localConfig.state.msfsconnected)
+            msfsapiconnect()
         if (localConfig.state.msfsconnected != true)
             localConfig.state.color = "orange"
         else
             localConfig.state.color = "green"
-
     }
     else
         localConfig.state.color = "red"
@@ -680,6 +663,17 @@ function heartBeatCallback ()
 // ============================================================================
 //                           FUNCTION: MSFS2020Connect
 // ============================================================================
+/*
+    serverData.SimVars['ACCELERATION BODY X']
+    simvar example {
+        desc: 'Acceleration relative to aircraft X axis, in east/west direction',
+        units: 'feet',
+        data_type: 4,
+        settable: false,
+        name: 'ACCELERATION BODY X',
+        enabled: 'off'
+        }
+    */
 function MSFS2020Connect ()
 {
     if (serverConfig.msfs2020ennabled == "on")
@@ -714,7 +708,6 @@ function MSFS2020Connect ()
         /// *************** Add Event variables *************************
         for (let i = 0; i < serverData.EventVars.length; i++)
         {
-            //console.log("Adding Event to triggers ", SystemEvents[serverData.EventVars[i]].name)
             triggersandactions.triggers.push(
                 {
                     name: SystemEvents[serverData.EventVars[i]].name,
@@ -738,17 +731,16 @@ function MSFS2020Connect ()
         //// *************** Add SimVars *************************
         for (let i = 0; i < varKeys.length; i++)
         {
-            //console.log("Adding Simvar to triggers and actions ", serverData.SimVars[varKeys[i]].name)
+            //// *************** If it is writeable add an action to write the variable *************************
             if (serverData.SimVars[varKeys[i]].settable == true)
             {
-                //console.log(serverData.SimVars[varKeys[i]])
                 if (varKeys[i].indexOf(":index") > 0)
                 {
                     triggersandactions.actions.push(
                         {
                             name: serverData.SimVars[varKeys[i]].name,
-                            displaytitle: serverData.SimVars[varKeys[i]].name,
-                            description: "(Enable in the settigns page to use)" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                            displaytitle: serverData.SimVars[varKeys[i]].name + "(Set)",
+                            description: "Set the simvar " + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                             messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
                             channel: serverConfig.channel,
                             parameters: { index: "0", data: "" }
@@ -760,14 +752,41 @@ function MSFS2020Connect ()
                     triggersandactions.actions.push(
                         {
                             name: serverData.SimVars[varKeys[i]].name,
-                            displaytitle: serverData.SimVars[varKeys[i]].name,
-                            description: "(Enable in the settigns page to use)" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                            displaytitle: serverData.SimVars[varKeys[i]].name + "(Set)",
+                            description: "Set the simvar " + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                             messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
                             channel: serverConfig.channel,
                             parameters: { data: "" }
                         }
                     )
                 }
+            }
+            //// *************** If readable add an action to read it *************************
+            if (varKeys[i].indexOf(":index") > 0)
+            {
+                triggersandactions.actions.push(
+                    {
+                        name: serverData.SimVars[varKeys[i]].name + "_get",
+                        displaytitle: serverData.SimVars[varKeys[i]].name + "(Get)",
+                        description: "Request the value, will be returned in a 'name_(Single) 'trigger" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                        messagetype: "action_" + serverData.SimVars[varKeys[i]].name + "_get",
+                        channel: serverConfig.channel,
+                        parameters: { index: "0" }
+                    }
+                )
+            }
+            else
+            {
+                triggersandactions.actions.push(
+                    {
+                        name: serverData.SimVars[varKeys[i]].name + "_get",
+                        displaytitle: serverData.SimVars[varKeys[i]].name + "(Get)",
+                        description: "Request the value, will be returned in a 'name_(Single) 'trigger" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
+                        messagetype: "action_" + serverData.SimVars[varKeys[i]].name + "_get",
+                        channel: serverConfig.channel,
+                        parameters: {}
+                    }
+                )
             }
             // triggers with indexes
             let paramdata = {}
@@ -783,7 +802,7 @@ function MSFS2020Connect ()
                 (
                     {
                         name: serverData.SimVars[varKeys[i]].name,
-                        displaytitle: serverData.SimVars[varKeys[i]].name,
+                        displaytitle: serverData.SimVars[varKeys[i]].name + " (Poll)",
                         description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
                         messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
                         channel: serverConfig.channel,
@@ -802,31 +821,45 @@ function MSFS2020Connect ()
                         parameters: paramdata
                     }
                 )
-        }
-        try
-        {
-            localConfig.msfs_api.connect({
-                retries: Infinity,
-                retryInterval: serverConfig.msfs2020SimPollInterval,
-                onConnect: (nodeSimconnectHandle) => MSFS2020Connected(nodeSimconnectHandle),
-                onRetry: (_retries, interval) =>
-                {
-                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", `Connection failed: retrying in ${interval} seconds.`);
-                    localConfig.state.msfsconnected = false;
-                }
-            });
-        }
-        catch (err)
-        {
-            localConfig.state.msfsconnected = false;
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", "Failed to connect", err.message);
+            triggersandactions.triggers.push
+                (
+                    {
+                        name: "onRequest_" + serverData.SimVars[varKeys[i]].name,
+                        displaytitle: serverData.SimVars[varKeys[i]].name + " (OnRequest)",
+                        description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
+                        messagetype: "trigger_onRequest_" + serverData.SimVars[varKeys[i]].name,
+                        channel: serverConfig.channel,
+                        parameters: paramdata
+                    }
+                )
         }
     }
+
     /* uncomment to log the data structures if you are interested in the data we get from msfs */
     //file_log("SimVars", serverData.SimVars)
     //file_log("triggersandactions", triggersandactions)
     //file_log("SystemEvents", SystemEvents)
 
+}
+function msfsapiconnect ()
+{
+    if (serverConfig.msfs2020ennabled == "on")
+    {
+        localConfig.msfs_api.connect({ onConnect: (nodeSimconnectHandle) => MSFS2020Connected(nodeSimconnectHandle) })
+            .catch(err =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", "Connection failed. Reconnecting in", serverConfig.msfs2020SimPollInterval, "seconds");
+            })
+
+        /*    no idea how to put a handler in for recvevents :( I'll come back to this later
+        console.log(localConfig.msfs_api_recveventhandler)
+        if (localConfig.state.connected && localConfig.msfs_api_recveventhandler == null)
+            localConfig.msfs_api.on("exception", () =>
+            {
+                console.log("oops recv received")
+            })
+            */
+    }
 }
 // ============================================================================
 //                           FUNCTION: MSFS2020Disconnect
@@ -834,6 +867,7 @@ function MSFS2020Connect ()
 function MSFS2020Disconnect ()
 {
     clearTimeout(localConfig.pollMSFSHandle)
+    localConfig.state.msfsconnected = false
     for (let i = 0; i < serverData.EventVars.length; i++)
     {
 
@@ -855,10 +889,10 @@ async function MSFS2020Connected (handle)
     try
     {
         localConfig.state.msfsconnected = true;
+        localConfig.msfs_api_connected_handle = handle;
         localConfig.EventHandles = []
         for (let i = 0; i < serverData.EventVars.length; i++)
         {
-
             localConfig.EventCallabackHandles[serverData.EventVars[i]]
                 = localConfig.msfs_api.on(SystemEvents[serverData.EventVars[i]], (data) =>
                 {
@@ -951,15 +985,6 @@ function addToTriggersArray (name, index = 0)
     serverData.triggersNamesArray.sort();
 }
 
-// ============================================================================
-//                           FUNCTION: removeTriggersArray
-// ============================================================================
-function removeTriggersArray (name)
-{
-    const index = serverData.triggersNamesArray.indexOf(name);
-    if (index > -1)
-        serverData.triggersNamesArray.splice(index, 1);
-}
 // ============================================================================
 //                           FUNCTION: postTriggers
 // ============================================================================
@@ -1061,16 +1086,53 @@ async function postTriggers ()
 function performAction (data)
 {
     let action = ""
-    try
+
+    // Request for data, not a set
+    if (data.type.indexOf("_get") > -1)
     {
-        action = data.type.replace("action_", "")
-        if (action.indexOf(":index") > 0)
-            action = action.replace("index", data.data.index)
-        localConfig.msfs_api.set(action, data.data.data)
-    }
-    catch (err)
+        try
+        {
+            let simvar = data.type.replace("action_", "").replace("_get", "")
+            let onRequestMessageType = "trigger_onRequest_" + simvar
+            localConfig.msfs_api.get(simvar)
+                .then(data =>
+                {
+                    let triggertopost = findtriggerByMessageType(onRequestMessageType)
+                    // returned data doesn't have spaces it has underscores
+                    simvar = simvar.replaceAll(" ", "_")
+                    triggertopost.parameters.data = data[simvar];
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "ChannelData",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                triggertopost.messagetype,
+                                serverConfig.extensionname,
+                                triggertopost,//{ index: simvarindex, data: data[simvar] },
+                                serverConfig.channel
+                            ),
+                            serverConfig.channel
+                        ));
+                }).catch(error => console.log("Failed to get simvar", error))
+        }
+        catch (err)
+        {
+            console.log("Error during get", err.message)
+        }
+
+    } else
     {
-        console.log("ERROR:performAction ", err.message)
+        try
+        {
+            action = data.type.replace("action_", "")
+            if (action.indexOf(":index") > 0)
+                action = action.replace("index", data.data.index)
+            localConfig.msfs_api.set(action, data.data.data)
+        }
+        catch (err)
+        {
+            console.log("ERROR:performAction ", err.message)
+        }
     }
 }
 // ============================================================================
