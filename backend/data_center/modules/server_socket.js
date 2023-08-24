@@ -125,6 +125,7 @@ function start (app, server, exts)
         // note. can't use the api functions here as we are creating a server socket
         server_socket = new Server(server, {
             transports: ["websocket"],
+            maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
         });
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.start", "Server is running and waiting for clients");
         // wait for messages

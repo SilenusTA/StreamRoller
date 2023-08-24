@@ -146,14 +146,19 @@ function setupConnection (onMessage, onConnect, onDisconnect, host, port)
         {
             const SocketIo = require("socket.io-client");
             DCSocket = SocketIo(host + ":" + port,
-                { transports: ["websocket"] });
+                {
+                    transports: ["websocket"],
+                    maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
+                });
         }
         else
         {
-            console.log("connecting to", host + ":" + port);
             // user has imported the package via the <script tag>
             DCSocket = io(host + ":" + port,
-                { transports: ["websocket"] });
+                {
+                    transports: ["websocket"],
+                    maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
+                });
         }
         // handlers
         DCSocket.on("message", (data) => { onMessage(data) });
