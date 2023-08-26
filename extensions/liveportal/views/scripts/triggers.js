@@ -644,12 +644,27 @@ function PopulateTriggersTable ()
         let group = serverData.AllTriggersAndActions[g]
         let list = group.list
 
-        // show hide link for the table
-        tablerows += "<div><span class='fs-4'>Group(" + list.length + "): " + g + " </span><a href='javascript:ShowHideTriggerGroup(\"" + g + "\");'>"
+        // group name and trigger-action count
+        tablerows += "<div><span class='fs-4'>Group(" + list.length + "): " + g + " </span>"
+        // delete group button
+        tablerows += " <a class='btn btn-secondary' href='javascript:DeleteTriggerGroup(\"" + g + "\");'role = 'button' style='padding:0px' title='Delete Group'>"
+        tablerows += "<img src='/liveportal/images/trash.png' width='40px' /></a>"
+
+        // play button
+        tablerows += " <a class='btn btn-secondary' href='javascript:unPauseGroupButton(\"" + g + "\");'role = 'button' style='padding:0px' title='Unpause group'>"
+        tablerows += "<img src='/liveportal/images/play.png' width='40px' /></a>"
+        // pause button
+        tablerows += " <a class='btn btn-secondary' href='javascript:pauseGroupButton(\"" + g + "\");'role = 'button' style='padding:0px' title='Pause group'>"
+        tablerows += "<img src='/liveportal/images/pause.png' width='40px' /></a>"
+
+        // show hide button
+        tablerows += " <a class='btn btn-secondary' href='javascript:ShowHideTriggerGroup(\"" + g + "\");' role = 'button' style='padding:0px' title='Show/Hide Group'>"
         if (group.show)
-            tablerows += "Hide <a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> "
+            tablerows += "<img src='/liveportal/images/hide.png' width='40px' /></a>"
         else
-            tablerows += "Show</a> <a href='javascript:DeleteTriggerGroup(\"" + g + "\");'> Delete group</a> ";
+            tablerows += "<img src='/liveportal/images/show.png' width='40px' /></a>";
+
+        // group table
         if (group.show)
             tablerows += "</div><tbody id='" + g + "_TriggerGroupDisplay'style='display: block;'>";
         else
@@ -720,11 +735,22 @@ function PopulateTriggersTable ()
                     tablerows += item + " = " + list[i].action.data[j][item];
             }
             tablerows += "</td>"
-            if (!serverData.AllTriggersAndActions[g].list[i].action.paused)
-                tablerows += "<td><a class='btn btn-primary' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Pause</a></td>"
+            if (serverData.AllTriggersAndActions[g].list[i].action.paused)
+            {
+                // play button
+                tablerows += "<td><a class='btn btn-secondary' href='javascript:pauseActionButton(\"" + g + "\"," + i + ");'role = 'button' style='padding:0px' title='Unpause action'>"
+                tablerows += "<img src='/liveportal/images/play.png' width='30px' /></a></td>"
+            }
             else
-                tablerows += "<td><a class='btn btn-secondary' href = 'javascript:pauseActionButton(\"" + g + "\"," + i + ");' role = 'button'> Resume</a></td>"
-            tablerows += "<td><a class='btn btn-success' href = 'javascript:triggerActionButton(\"" + g + "\"," + i + ");' role = 'button'> Run</a></td>"
+            {
+                // pause button
+                tablerows += "<td><a class='btn btn-secondary' href='javascript:pauseActionButton(\"" + g + "\"," + i + ");'role = 'button' style='padding:0px' title='Pause action'>"
+                tablerows += "<img src='/liveportal/images/pause.png' width='30px' /></a></td>"
+            }
+
+            tablerows += "<td><a class='btn btn-secondary' href='javascript:triggerActionButton(\"" + g + "\"," + i + ");'role = 'button' style='padding:0px' title='Run action'>"
+            tablerows += "<img src='/liveportal/images/run.png' width='30px' /></a></td>"
+
             tablerows += "</tr >"
         }
         // tablerows += "</div>";
@@ -804,11 +830,39 @@ function delteTriggerAction (group, id)
 }
 // ============================================================================
 //                     FUNCTION: pauseActionButton
-//              button on the page for users to test the actions
+//              button to pause a trigger-action
 // ============================================================================
 function pauseActionButton (group, id)
 {
     serverData.AllTriggersAndActions[group].list[id].action.paused = !(serverData.AllTriggersAndActions[group].list[id].action.paused)
+    SaveDataToServer()
+    PopulateTriggersTable();
+}
+// ============================================================================
+//                     FUNCTION: pauseGroupButton
+//              button to pause all trigger-actions in a group
+// ============================================================================
+function pauseGroupButton (group)
+{
+    serverData.AllTriggersAndActions[group].list.forEach(element =>
+    {
+        element.action.paused = true;
+    });
+
+    SaveDataToServer()
+    PopulateTriggersTable();
+}
+// ============================================================================
+//                     FUNCTION: pauseGroupButton
+//              button to pause all trigger-actions in a group
+// ============================================================================
+function unPauseGroupButton (group)
+{
+    serverData.AllTriggersAndActions[group].list.forEach(element =>
+    {
+        element.action.paused = false;
+    });
+
     SaveDataToServer()
     PopulateTriggersTable();
 }

@@ -814,10 +814,10 @@ function SendSettingsWidgetLarge (tochannel)
                 }
 
                 profilecode += "<label for='chatbotprofile" + profile_id + "name' class='col-form-label'>Name</label>"
-                profilecode += "<input type='text' name='chatbotprofile" + profile_id + "name' class='form-control' value='" + stringParser(value.name) + "'/>"
+                profilecode += "<input type='text' id='chatbotprofile" + profile_id + "name' name='chatbotprofile" + profile_id + "name' class='form-control' value='" + stringParser(value.name) + "'/>"
 
                 profilecode += "<label for='chatbotprofile" + profile_id + "personality' class='col-form-label'>Personality</label>"
-                profilecode += "<input type='text' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
+                profilecode += "<input type='text' id='chatbotprofile" + profile_id + "personality' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
 
                 for (const [i, x] of Object.entries(value))
                 {

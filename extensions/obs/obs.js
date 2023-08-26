@@ -131,7 +131,7 @@ GetVideoSettings
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    description: "Chat is an OpenAI ChatGPT bot that uses OpenAI to provide AI responses to chat and questions. <a href='https://openai.com/'>openAI's Website</a>",
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [

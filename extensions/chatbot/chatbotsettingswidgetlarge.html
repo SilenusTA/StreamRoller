@@ -222,16 +222,17 @@
     <BR>Higher = more random/less precise
     <BR>Lower = less random/more precise
     <div class="form-group row-2 text-center">
-        <label for="chattemperature" class="form-label">Chatbot Randomness. (applied to chatbot messages and chatbot
-            triggers above)</label>
-        <label id="chattemperaturerangeval">chattemperaturetext</label>
+        <div>Chatbot Randomness. (applied to chatbot messages and chatbot
+            triggers above)</div>
+        <label for="chattemperature" class="form-label" id="chattemperaturerangeval">chattemperaturetext</label>
         <input type="range" class="form-range" name="chattemperature" id="chattemperature" min="0" max="100" step="1"
             onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
     </div>
     <div class="form-group row-2 text-center ">
-        <label for="questiontemperature" class="form-label">Direct Question Randomness (applied to direct question and
-            to translation triggers above)</label>
-        <label id="questiontemperaturerangeval">questiontemperaturetext</label>
+        <div>Direct Question Randomness (applied to direct question and
+            to translation triggers above)</div>
+        <label for="questiontemperature" class="form-label"
+            id="questiontemperaturerangeval">questiontemperaturetext</label>
         <input type="range" class="form-range" name="questiontemperature" id="questiontemperature" min="0" max="100"
             step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">
     </div>
