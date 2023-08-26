@@ -94,7 +94,7 @@ class ScrollTextBanner
 
         // Main Animated Div settings
         element.innerHTML = scrolltext;
-        if (this.bannersettings.enabled.indexOf("on") > -1)
+        if (this.bannersettings.enabled == "on")
             parent.style.visibility = "visible";
         else
             parent.style.visibility = "hidden";
@@ -130,7 +130,7 @@ class ScrollTextBanner
 
         overlaysnippit += '<div class="form-group">'
         overlaysnippit += '<div class="form-check form-check-inline">'
-        if (this.bannersettings.enabled.indexOf("on") > -1)
+        if (this.bannersettings.enabled == "on")
             overlaysnippit += '<input class="form-check-input" name="scrolltextbanner_enabled" type="checkbox" id="scrolltextbanner_enabled" checked>'
         else
             overlaysnippit += '<input class="form-check-input" name="scrolltextbanner_enabled" type="checkbox" id="scrolltextbanner_enabled">'
@@ -189,7 +189,7 @@ class ScrollTextBanner
         for (const [key, value] of Object.entries(this.bannersettings))
         {
             if (data["scrolltextbanner_" + key]
-                && data["scrolltextbanner_" + key].indexOf("on") > -1
+                && data["scrolltextbanner_" + key] == "on"
                 && data["scrolltextbanner_" + key])
                 this.bannersettings[key] = "on";
             else if ("scrolltextbanner_" + key in data)

@@ -47,7 +47,7 @@ class StaticTextOverlay
         element.style.lineHeight = this.statictextsettings.height;
         element.style.fontSize = this.statictextsettings.fontsize;
         element.style.backgroundColor = "rgba(0,0,0," + (this.statictextsettings.backgroundalpha / 255) + ")";
-        if (this.statictextsettings.enabled.indexOf("on") > -1)
+        if (this.statictextsettings.enabled == "on")
             element.style.visibility = "visible";
         else
             element.style.visibility = "hidden";
@@ -78,7 +78,7 @@ class StaticTextOverlay
 
         overlaysnippit += '<div class="form-group">'
         overlaysnippit += '<div class="form-check form-check-inline">'
-        if (this.statictextsettings.enabled.indexOf("on") > -1)
+        if (this.statictextsettings.enabled == "on")
             overlaysnippit += '<input class="form-check-input" name="statictextoverlay_enabled" type="checkbox" id="statictextoverlay_enabled" checked>'
         else
             overlaysnippit += '<input class="form-check-input" name="statictextoverlay_enabled" type="checkbox" id="statictextoverlay_enabled">'
@@ -127,7 +127,7 @@ class StaticTextOverlay
     {
         for (const [key, value] of Object.entries(this.statictextsettings))
         {
-            if (data["statictextoverlay_" + key] && data["statictextoverlay_" + key].indexOf("on") > -1)
+            if (data["statictextoverlay_" + key] && data["statictextoverlay_" + key] == "on")
                 this.statictextsettings[key] = "on";
             else if ("statictextoverlay_" + key in data)
                 this.statictextsettings[key] = data["statictextoverlay_" + key];
@@ -137,7 +137,7 @@ class StaticTextOverlay
             this.statictextsettings.enabled = "off"
         //set our overlay appropriatly
         let parent = document.getElementById("statictextoverlay")
-        if (this.statictextsettings.enabled.indexOf("on") > -1)
+        if (this.statictextsettings.enabled == "on")
             parent.style.visibility = "visible";
         else
             parent.style.visibility = "hidden";

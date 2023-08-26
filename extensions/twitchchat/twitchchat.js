@@ -1129,11 +1129,16 @@ function SendSettingsWidgetLarge (toExtension)
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // checkboxes
-                if (typeof (value) == "string" && value.indexOf("on") > -1)
+                if (typeof (value) == "string" && value == "on")
                     modalstring = modalstring.replaceAll(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string" || typeof (value) == "number")
+                {
+                    console.log("setting", key + "text to " + value)
                     modalstring = modalstring.replaceAll(key + "text", value);
+                }
+                else
+                    console.log("Ignoring", key)
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,

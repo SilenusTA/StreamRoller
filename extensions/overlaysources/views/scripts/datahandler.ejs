@@ -416,7 +416,7 @@
                 for (const [key, value] of Object.entries(serverConfig))
                 {
                     // true values represent a checkbox so replace the "[key]checked" values with checked
-                    if (value.indexOf("on") > -1)
+                    if (value == "on")
                         modalstring = modalstring.replaceAll(key + "checked", "checked");
                     else if (typeof (value) == "string" || typeof (value) == "number")
                         modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
