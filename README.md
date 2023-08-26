@@ -5,7 +5,7 @@
   - [Table of Contents](#table-of-contents)
 - [Contacts: (For questions, suggestions etc.)](#contacts-for-questions-suggestions-etc)
 - [Download/Installing](#downloadinstalling)
-- [What is StreamRoller](#what-is-streamroller)
+- [Videos](#videos)
   - [While streaming](#while-streaming)
   - [Streaming setup (Getting it to do fun and interesting stuff while streaming)](#streaming-setup-getting-it-to-do-fun-and-interesting-stuff-while-streaming)
 - [Security](#security)
@@ -44,9 +44,10 @@ On these links there will be instruction on where to find your tokens etc for ea
 
 I.e. if you only want the AI chatbot then you will need the twitchchat tokens (to enable posting into chat) and an openAI token (to perform requests for the chat messages)
 
-# What is StreamRoller
-Click for a (now old:D) Youtube video  
-[![Watch the video](https://img.youtube.com/vi/tGLe5n-Yyy8/hqdefault.jpg)](https://youtu.be/tGLe5n-Yyy8)
+# Videos
+Installing StreamRoller
+
+[![Watch the video](https://img.youtube.com/vi/nIf06vKJpBw/hqdefault.jpg)](https://youtu.be/nIf06vKJpBw)
 
 ## While streaming
 StreamRoller is designed to bring all the tools needed for streaming into one web page so when streaming you have all your controls on one screen and not have to worry about swapping programs (or even running them). Eventually the you will only need StreamRoller and OBS for all your streaming needs ... if I ever get round to coding up enough extensions:D
