@@ -40,10 +40,7 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
-// ----------------------------- notes ----------------------------------------
-// none
-// ============================================================================
+
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
 // messaging api provides some functions to make sending messages easier.
@@ -114,7 +111,7 @@ const triggersandactions =
                 name: "demoextensionSomethingHappened",
                 displaytitle: "Somthing happened",
                 description: "The Demo extension did something that you might like to know about",
-                messagetype: "DemoextensionSomethingHappened_trigger",
+                messagetype: "trigger_DemoextensionSomethingHappened",
                 channel: serverConfig.channel,
                 parameters: { message: "" }
             }
@@ -126,7 +123,7 @@ const triggersandactions =
                 name: "demoextensionDoSomething",
                 displaytitle: "Do your Stuff",
                 description: "A request for the demo extension to do something useful",
-                messagetype: "DemoextensionDoStuff_action",
+                messagetype: "action_DemoextensionDoStuff",
                 channel: serverConfig.channel,
                 parameters: { message: "" }
             }
