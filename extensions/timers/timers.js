@@ -244,9 +244,7 @@ function onDataCenterMessage (server_packet)
         {
             if (localConfig.timers[extension_packet.data.name])
                 localConfig.timers[extension_packet.data.name].timeout = 0;
-
-            // This is an extension message from the API. not currently used as timers are started from the settins modals
-            CheckTimers(extension_packet.data.name);
+            clearTimeout(localConfig.timers[extension_packet.data.name].Handle);
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode")
         {
