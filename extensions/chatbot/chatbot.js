@@ -996,8 +996,16 @@ function processTextMessage (data, triggerresponse = false)
         }, randomTimeout);
         return;
     }
+    let directChatQuestion = (
+        // search the whole line
+        (serverConfig.chatbotquerytagstartofline == "off" &&
+            data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase()))
+        ||
+        // search for start of line
+        (serverConfig.chatbotquerytagstartofline == "on" &&
+            data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
-    if (data.personality_id === "")
+    if (data.personality_id === "" || directChatQuestion)
         messages = [{ "role": "user", "content": messages }];
     else if (typeof serverConfig.chatbotprofiles[Number(data.personality_id)] !== 'undefined')
         messages = addPersonality(messages, data.personality_id)
@@ -1306,9 +1314,10 @@ function processChatMessage (data)
             // ##############################################
             //         Processing a question message
             // ##############################################
-            let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
+            //let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
+            let message = [{ "role": "user", "content": chatdata.message }]
 
-            callOpenAI(messages, serverConfig.settings.questionmodel)
+            callOpenAI(message, serverConfig.settings.questionmodel)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)

@@ -134,9 +134,9 @@ function loadConfig (configname, path = configFilesPath)
             }
             catch (err)
             {
-                console.log('common.js: loadConfig: There has been an error parsing your JSON while loading the config file')
+                console.log('common.js: loadConfig: There has been an error parsing your JSON while loading the config file', configname)
                 console.log(err);
-                return "";
+                return {};
             }
         }
     }

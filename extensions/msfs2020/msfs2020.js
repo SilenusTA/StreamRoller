@@ -77,9 +77,25 @@ const default_triggersandactions =
     description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
     triggers:
         [
+            {
+                name: "onRequest_PLANE LATITUDE LONGITUDE",
+                displaytitle: "Current lat/long (OnRequest)",
+                description: "The current lat long in one message with separate variables",
+                messagetype: "trigger_onRequest_PLANE LATITUDE LONGITUDE",
+                channel: serverConfig.channel,
+                parameters: { lat: "", long: "" }
+            }
         ],
     actions:
         [
+            {
+                name: "PLANE LATITUDE LONGITUDE_get",
+                displaytitle: "Get lat/long (Get)",
+                description: "Get the current lat long in one message",
+                messagetype: "action_PLANE LATITUDE LONGITUDE_get",
+                channel: serverConfig.channel,
+                parameters: {}
+            }
         ],
 }
 
@@ -281,7 +297,15 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 if (serverConfig.msfs2020ennabled == "on")
-                    performAction(extension_packet)
+                {
+                    // test for our home grown versions
+                    if (extension_packet.type == "action_PLANE LATITUDE LONGITUDE_get")
+                    {
+                        performActionGetLatLong(extension_packet)
+                    }
+                    else
+                        performAction(extension_packet)
+                }
             }
         }
         else
@@ -1081,6 +1105,54 @@ async function postTriggers ()
     }
 }
 // ============================================================================
+//                        FUNCTION: performActionGetLatLong
+//          this is a home grown request as it needs two simvars
+// ============================================================================
+function performActionGetLatLong (data)
+{
+    let action = ""
+    // Request for data, not a set
+    if (data.type == "action_PLANE LATITUDE LONGITUDE_get")
+    {
+        try
+        {
+            let onRequestMessageType = "trigger_onRequest_PLANE LATITUDE LONGITUDE"
+            localConfig.msfs_api.get("PLANE LATITUDE")
+                .then(data =>
+                {
+                    let triggertopost = findtriggerByMessageType(onRequestMessageType)
+                    // returned data doesn't have spaces it has underscores
+
+                    triggertopost.parameters.lat = data["PLANE_LATITUDE"] * 180 / Math.PI;
+                    localConfig.msfs_api.get("PLANE LONGITUDE")
+                        .then(data =>
+                        {
+                            triggertopost.parameters.long = data["PLANE_LONGITUDE"] * 180 / Math.PI;
+
+                            sr_api.sendMessage(localConfig.DataCenterSocket,
+                                sr_api.ServerPacket(
+                                    "ChannelData",
+                                    serverConfig.extensionname,
+                                    sr_api.ExtensionPacket(
+                                        triggertopost.messagetype,
+                                        serverConfig.extensionname,
+                                        triggertopost,//{ index: simvarindex, data: data[simvar] },
+                                        serverConfig.channel
+                                    ),
+                                    serverConfig.channel
+                                ));
+                        }).catch(error => console.log("ERROR:performActionGetLatLong(2): Failed to get simvar", error))
+                }).catch(error => console.log("ERROR:performActionGetLatLong(1):Failed to get simvar", error))
+
+        }
+        catch (err)
+        {
+            console.log("ERROR:performActionGetLatLong: Error during get", err.message)
+        }
+
+    }
+}
+// ============================================================================
 //                        FUNCTION: performAction
 //          someone has reqested we do something in flight sim
 // ============================================================================
@@ -1113,12 +1185,12 @@ function performAction (data)
                             ),
                             serverConfig.channel
                         ));
-                }).catch(error => console.log("Failed to get simvar", error))
+                }).catch(error => console.log("ERROR:performAction: Failed to get simvar", error))
 
         }
         catch (err)
         {
-            console.log("Error during get", err.message)
+            console.log("ERROR:performAction: Error during get", err.message)
         }
 
     } else
