@@ -390,20 +390,10 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "TriggerAndActions",
-                        serverConfig.extensionname,
-                        triggersandactions,
-                        "",
-                        server_packet.from
-                    ),
-                    "",
-                    server_packet.from
-                )
-            )
+            if (serverConfig.enablestreamersonglist == "on")
+            {
+                sendTriggersAndActions(server_packet.from)
+            }
         }
         else
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -440,6 +430,26 @@ function onDataCenterMessage (server_packet)
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+function sendTriggersAndActions (from)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TriggerAndActions",
+                serverConfig.extensionname,
+                triggersandactions,
+                "",
+                from
+            ),
+            "",
+            from
+        )
+    )
 }
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
@@ -557,20 +567,23 @@ function SaveConfigToServer ()
 // ============================================================================
 function sendSongQueue (extensionsname)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "ExtensionMessage",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "SongQueue",
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
                 serverConfig.extensionname,
-                localConfig.songQueue,
+                sr_api.ExtensionPacket(
+                    "SongQueue",
+                    serverConfig.extensionname,
+                    localConfig.songQueue,
+                    "",
+                    extensionsname
+                ),
                 "",
                 extensionsname
-            ),
-            "",
-            extensionsname
-        ));
+            ));
+    }
 }
 // ============================================================================
 //                     FUNCTION: outputSongQueue
@@ -578,56 +591,62 @@ function sendSongQueue (extensionsname)
 // ============================================================================
 function outputSongQueue ()
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "SongQueue",
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,
-                localConfig.songQueue,
-                serverConfig.channel),
-            serverConfig.channel
-        ),
-    );
+                sr_api.ExtensionPacket(
+                    "SongQueue",
+                    serverConfig.extensionname,
+                    localConfig.songQueue,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
 }
 // ============================================================================
 //                           FUNCTION: fetchSongQueue
 // ============================================================================
 function fetchSongQueue ()
 {
-    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/queue`, {
-        headers: { 'Client-ID': localConfig.clientId, },
-    })
-        .then(response =>
-        {
-            if (!response.ok)
-                throw new Error('Request failed with status ' + response.status);
-            return response.json();
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/queue`, {
+            headers: { 'Client-ID': localConfig.clientId, },
         })
-        .then(data =>
-        {
-
-            localConfig.songQueue = data;
-            if (localConfig.songQueue.list.length > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+            .then(response =>
             {
-                localConfig.currentsong = localConfig.songQueue.list[0].song.title
-                sendCurrentSongChange("")
-            }
-            else if (localConfig.songQueue.list.length == 0)
+                if (!response.ok)
+                    throw new Error('Request failed with status ' + response.status);
+                return response.json();
+            })
+            .then(data =>
             {
 
-                localConfig.currentsong = ""
-                sendCurrentSongChange("")
-            }
+                localConfig.songQueue = data;
+                if (localConfig.songQueue.list.length > 0 && localConfig.currentsong != localConfig.songQueue.list[0].song.title)
+                {
+                    localConfig.currentsong = localConfig.songQueue.list[0].song.title
+                    sendCurrentSongChange("")
+                }
+                else if (localConfig.songQueue.list.length == 0)
+                {
 
-            outputSongQueue();
-            localConfig.status.connected = true;
-        })
-        .catch(e =>
-        {
-            localConfig.status.connected = false;
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue", e.message);
-        });
+                    localConfig.currentsong = ""
+                    sendCurrentSongChange("")
+                }
+
+                outputSongQueue();
+                localConfig.status.connected = true;
+            })
+            .catch(e =>
+            {
+                localConfig.status.connected = false;
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue", e.message);
+            });
+    }
 }
 // ============================================================================
 //                       FUNCTION: sendSonglist
@@ -635,20 +654,23 @@ function fetchSongQueue ()
 // ============================================================================
 function sendSonglist (extension)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            "ExtensionMessage",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "SongList",
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
                 serverConfig.extensionname,
-                localConfig.songlist,
+                sr_api.ExtensionPacket(
+                    "SongList",
+                    serverConfig.extensionname,
+                    localConfig.songlist,
+                    "",
+                    extension
+                ),
                 "",
                 extension
-            ),
-            "",
-            extension
-        ));
+            ));
+    }
 }
 // ============================================================================
 //                       FUNCTION: sendCurrentSongChange
@@ -656,137 +678,151 @@ function sendSonglist (extension)
 // ============================================================================
 function sendCurrentSongChange (extension)
 {
-    let songtext = ""
-    if (localConfig.currentsong != "")
-        songtext = "Current song now: " + localConfig.currentsong
-
-    let triggertosend = findtriggerByMessageType("trigger_CurrentSongChange")
-    triggertosend.parameters.songName = localConfig.currentsong
-    triggertosend.parameters.textMessage = songtext
-    if (extension != "")
+    if (serverConfig.enablestreamersonglist == "on")
     {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "trigger_CurrentSongChange",
+        let songtext = ""
+        if (localConfig.currentsong != "")
+            songtext = "Current song now: " + localConfig.currentsong
+
+        let triggertosend = findtriggerByMessageType("trigger_CurrentSongChange")
+        triggertosend.parameters.songName = localConfig.currentsong
+        triggertosend.parameters.textMessage = songtext
+        if (extension != "")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
                     serverConfig.extensionname,
-                    triggertosend,
+                    sr_api.ExtensionPacket(
+                        "trigger_CurrentSongChange",
+                        serverConfig.extensionname,
+                        triggertosend,
+                        serverConfig.channel,
+                        extension
+                    ),
                     serverConfig.channel,
                     extension
-                ),
-                serverConfig.channel,
-                extension
-            ));
-    }
-    else
-    {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ChannelData",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "trigger_CurrentSongChange",
+                ));
+        }
+        else
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ChannelData",
                     serverConfig.extensionname,
-                    triggertosend,
+                    sr_api.ExtensionPacket(
+                        "trigger_CurrentSongChange",
+                        serverConfig.extensionname,
+                        triggertosend,
+                        serverConfig.channel
+                    ),
                     serverConfig.channel
-                ),
-                serverConfig.channel
-            ));
+                ));
+        }
     }
-
 }
 // ============================================================================
 //                           FUNCTION: outputSongList
 // ============================================================================
 function outputSongList ()
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "SongList",
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,
-                localConfig.songlist,
-                serverConfig.channel),
-            serverConfig.channel
-        ),
-    );
+                sr_api.ExtensionPacket(
+                    "SongList",
+                    serverConfig.extensionname,
+                    localConfig.songlist,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
 }
 // ============================================================================
 //                           FUNCTION: fetchSongList
 // ============================================================================
 function fetchSongList ()
 {
-    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/songs`, {
-        headers: { 'Client-ID': localConfig.clientId, },
-    })
-        .then(response =>
-        {
-            if (!response.ok)
-                throw new Error('Request failed with status ' + response.status);
-            return response.json();
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/songs`, {
+            headers: { 'Client-ID': localConfig.clientId, },
         })
-        .then(data =>
-        {
-            localConfig.songlist = data;
-            outputSongList();
-            localConfig.status.connected = true;
-        })
-        .catch(e =>
-        {
-            localConfig.status.connected = false;
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs queue", e.message);
-        });
+            .then(response =>
+            {
+                if (!response.ok)
+                    throw new Error('Request failed with status ' + response.status);
+                return response.json();
+            })
+            .then(data =>
+            {
+                localConfig.songlist = data;
+                outputSongList();
+                localConfig.status.connected = true;
+            })
+            .catch(e =>
+            {
+                localConfig.status.connected = false;
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs queue", e.message);
+            });
+    }
 }
 // ============================================================================
 //                           FUNCTION: addSongToQueuebyName
 // ============================================================================
 function addSongToQueuebyName (songName)
 {
-    let found = false
-    localConfig.songlist.items.forEach((song) =>
+    if (serverConfig.enablestreamersonglist == "on")
     {
-        if (songName.toLowerCase().indexOf(song.title.toLowerCase()) > -1)
+        let found = false
+        localConfig.songlist.items.forEach((song) =>
         {
-            addSongToQueueById(song.id)
-            found = true;
-        }
-    })
-    if (!found)
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueuebyName", "Unknown Song", songName);
+            if (songName.toLowerCase().indexOf(song.title.toLowerCase()) > -1)
+            {
+                addSongToQueueById(song.id)
+                found = true;
+            }
+        })
+        if (!found)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueuebyName", "Unknown Song", songName);
+    }
 }
 // ============================================================================
 //                           FUNCTION: addSongToQueue
 // ============================================================================
 function addSongToQueueById (songId)
 {
-    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
-        method: 'POST',
-        headers: {
-            "accept": "application/json",
-            "Authorization": "Bearer " + localConfig.clientId,
-            "origin": "StreamRoller",
-            "source": "StreamRoller",
-        }
-    })
-        .then(response =>
-        {
-            if (!response.ok)
-                throw new Error('Request failed with status ' + response.status);
-            return response.json();
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
+            method: 'POST',
+            headers: {
+                "accept": "application/json",
+                "Authorization": "Bearer " + localConfig.clientId,
+                "origin": "StreamRoller",
+                "source": "StreamRoller",
+            }
         })
-        .then(data =>
-        {
-            fetchSongQueue();
-            localConfig.status.connected = true;
-        })
-        .catch(e =>
-        {
-            localConfig.status.connected = false;
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song", e.message);
-        });
+            .then(response =>
+            {
+                if (!response.ok)
+                    throw new Error('Request failed with status ' + response.status);
+                return response.json();
+            })
+            .then(data =>
+            {
+                fetchSongQueue();
+                localConfig.status.connected = true;
+            })
+            .catch(e =>
+            {
+                localConfig.status.connected = false;
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song", e.message);
+            });
+    }
 }
 
 // ============================================================================
@@ -794,29 +830,32 @@ function addSongToQueueById (songId)
 // ============================================================================
 function removeSongFromQueue (queueId)
 {
-    const url = `https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
-    const headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localConfig.clientId,
-        "origin": "StreamRoller",
-        "queueId": queueId
-    };
-    fetch(url, { method: 'DELETE', headers: headers })
-        .then(response =>
-        {
-            if (!response.ok)
-                throw new Error('Request failed with status ' + response.status, response.statusText);
-            return response.json();
-        })
-        .then(data =>
-        {
-            fetchSongQueue()
-        })
-        .catch(e =>
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song", e.message);
-        });
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        const url = `https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
+        const headers = {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localConfig.clientId,
+            "origin": "StreamRoller",
+            "queueId": queueId
+        };
+        fetch(url, { method: 'DELETE', headers: headers })
+            .then(response =>
+            {
+                if (!response.ok)
+                    throw new Error('Request failed with status ' + response.status, response.statusText);
+                return response.json();
+            })
+            .then(data =>
+            {
+                fetchSongQueue()
+            })
+            .catch(e =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song", e.message);
+            });
+    }
 }
 
 // ============================================================================
@@ -824,30 +863,33 @@ function removeSongFromQueue (queueId)
 // ============================================================================
 function markSongAsPlayed (queueId)
 {
-    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
-        method: 'POST',
-        headers: {
-            "accept": "application/json",
-            "Authorization": "Bearer " + localConfig.clientId,
-            "origin": "StreamRoller"
-        }
-    })
-        .then(response =>
-        {
-            if (!response.ok)
-            {
-                throw new Error('Request failed with status ' + response.status);
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
+            method: 'POST',
+            headers: {
+                "accept": "application/json",
+                "Authorization": "Bearer " + localConfig.clientId,
+                "origin": "StreamRoller"
             }
-            return response.json();
         })
-        .then(data =>
-        {
-            fetchSongQueue()
-        })
-        .catch(e =>
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played", e.message);
-        });
+            .then(response =>
+            {
+                if (!response.ok)
+                {
+                    throw new Error('Request failed with status ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data =>
+            {
+                fetchSongQueue()
+            })
+            .catch(e =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played", e.message);
+            });
+    }
 }
 
 // ============================================================================
@@ -855,23 +897,26 @@ function markSongAsPlayed (queueId)
 // ============================================================================
 function saveQueue (queue)
 {
-    fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Client-ID': localConfig.clientId,
-        },
-        body: JSON.stringify(queue),
-    })
-        .then(response =>
-        {
-            if (!response.ok)
-                throw new Error('Request failed with status ' + response.status);
+    if (serverConfig.enablestreamersonglist == "on")
+    {
+        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Client-ID': localConfig.clientId,
+            },
+            body: JSON.stringify(queue),
         })
-        .catch(e =>
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue", e.message);
-        });
+            .then(response =>
+            {
+                if (!response.ok)
+                    throw new Error('Request failed with status ' + response.status);
+            })
+            .catch(e =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue", e.message);
+            });
+    }
 }
 // ============================================================================
 //                           FUNCTION: pollSongQueueCallback

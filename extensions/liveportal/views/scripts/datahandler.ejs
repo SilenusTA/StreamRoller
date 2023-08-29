@@ -121,7 +121,9 @@
         setreamersonglist: { songlist: [], queue: { status: { "songsPlayedToday": "0" }, list: [] } },
         //philips hugh variables
         philipsHueSceneList: [],
-        triggersAndActions: { descriptions: [], triggers: [], actions: [] }
+        triggersAndActions: { descriptions: [], triggers: [], actions: [] },
+        host: "localhost",
+        port: "3000"
     }
     const chatcolors =
     {
@@ -156,8 +158,8 @@
     // add our own card
 
     livePortalVolatileData.channellist = {};
-    var host = '<%= host %>';
-    var port = '<%= port %>';
+    localConfig.host = '<%= host %>';
+    localConfig.port = '<%= port %>';
     localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
     // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
     document.body.onmousedown = function () { localConfig.mouseDown = true }
@@ -169,12 +171,12 @@
             LoadPages
                 .then((result) =>
                 {
-                    ConnectToDataCenter(host, port);
+                    ConnectToDataCenter(localConfig.host, localConfig.port);
                     heartBeatCallback();
                 })
                 .catch((error) =>
                 {
-                    ConnectToDataCenter(host, port);
+                    ConnectToDataCenter(localConfig.host, localConfig.port);
                     heartBeatCallback();
                     console.log('LoadPages error:', error.message);
                 });
