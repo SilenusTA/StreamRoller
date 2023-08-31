@@ -74,20 +74,12 @@ const default_serverConfig = {
     // ChatBot Settings dialog items
     // =============================
     chatbotenabled: "off",
+    chatbottriggerenabled: "off",
     questionbotenabled: "off",
     translatetoeng: "off",
     submessageenabled: "off",
 
     chatbotignorelist: "",
-    // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
-    chatbotnametriggertag: "CHATBOTNAME",
-    chatbotnametriggertagstartofline: "on",
-    // chatbotnametriggertagaddhistory: "on",
-    // query tag is the chat text to look for to send a direct question/message to openAI GPT
-    chatbotquerytag: "?",
-    chatbotquerytagstartofline: "on",
-    // Translate the following text to english 
-    translatetoengtag: "ToEng",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
     chatbotTimerMin: "1", // min delay before starting
@@ -99,6 +91,37 @@ const default_serverConfig = {
     // slow the response down as if someone has actually type it
     chatbottypingdelay: "0.2",
     // setup the personality of the chatbot
+    listofmodels: ["gpt-3.5-turbo", "gpt-4"],
+    defaultsettings:
+    {
+        model: "gpt-3.5-turbo",
+        temperature: "0.8",
+        max_tokens: "110",
+        //profiletouse :"0" TBD later
+    },
+    // auto response settings
+    chatbotautoresponseengine: "gpt-3.5-turbo",
+    chatbotautoresponsetemperature: "1.2",
+    chatbotautoresponsemaxtokenstouse: "110",
+    // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
+    chatbotnametriggertag: "CHATBOTNAME",
+    chatbotnametriggerengine: "gpt-3.5-turbo",
+    chatbotnametriggertagstartofline: "on",
+    chatbotnametriggertemperature: "1.2",
+    chatbotnametriggermaxtokenstouse: "110",
+
+    // query tag is the chat text to look for to send a direct question/message to openAI GPT
+    chatbotqueryengine: "gpt-3.5-turbo",
+    chatbotquerytag: "?",
+    chatbotquerytagstartofline: "on",
+    chatbotquerytemperature: "0.4",
+    chatbotquerymaxtokenstouse: "110",
+
+    // Translate the following text to english 
+    translatetoengtag: "ToEng",
+    translatetoengengine: "gpt-3.5-turbo",
+    translatetoengtagtemperature: "0.4",
+    translatetoengtagmaxtokenstouse: "110",
 
     currentprofile: "0",
     chatbotprofiles: [
@@ -247,29 +270,29 @@ const default_serverConfig = {
             a4: ""
         }
     ],
-    chattemperature: "0.4",
-    questiontemperature: "0.1",
-    maxtokenstouse: "110",
-    // openAI settings. we use different settings for a question to the general bot responses
-    settings: {
-        chatmodel: {
-            //model: "text-davinci-003",
-            model: "gpt-3.5-turbo",
-            temperature: "0.8", // will be overwritten by chattemperature
-            max_tokens: "110", // note twich chat is somewhere around 125 tokens +- lenght of words in responce
-        },
-        // different settings available for direct questions
-        questionmodel: {
-            model: "gpt-3.5-turbo",
-            temperature: "0.1",// will be overwritten by questiontemperature
-            max_tokens: "110",
-        },
-    },
 
+    /*chattemperature: "0.4",
+ questiontemperature: "0.1",
+ maxtokenstouse: "110",
+ // openAI settings. we use different settings for a question to the general bot responses
+ settings: {
+     chatmodel: {
+         //model: "text-davinci-003",
+         model: "gpt-3.5-turbo",
+         temperature: "0.8", // will be overwritten by chattemperature
+         max_tokens: "110", // note twich chat is somewhere around 125 tokens +- lenght of words in responce
+     },
+     // different settings available for direct questions
+     questionmodel: {
+         model: "gpt-3.5-turbo",
+         temperature: "0.1",// will be overwritten by questiontemperature
+         max_tokens: "110",
+     },
+ },
+*/
     // =============================
     // credentials dialog variables
     // =============================
-    credentialscount: "1",
     cred1name: "openAIkey",
     cred1value: "",
 
@@ -310,7 +333,12 @@ const triggersandactions =
                 description: "Send some text through the chatbot",
                 messagetype: "action_ProcessText",
                 channel: serverConfig.channel,
-                parameters: { message: "" }
+                parameters: {
+                    message: "",
+                    engine: "",
+                    temperature: "",
+                    maxtokens: ""
+                }
             },
             {
                 name: "OpenAIChatbotSwitchProfile",
@@ -632,32 +660,10 @@ function handleSettingsWidgetLargeData (modalcode)
     serverConfig.DEBUG_MODE = "off";
     serverConfig.chatbot_restore_defaults = "off";
 
-
-
     for (const [key, value] of Object.entries(modalcode))
     {
-        var tmp = 0
-        if (key === "chattemperature")
-        {
-            tmp = (value / 50)
-            serverConfig[key] = tmp.toFixed(2);
-            // set the openAI value as well
-            serverConfig.settings.chatmodel.temperature = tmp.toFixed(2)
-        }
-        else if (key === "questiontemperature")
-        {
-            tmp = (value / 50)
-            serverConfig[key] = tmp.toFixed(2);
-            // set the openAI value as well
-            serverConfig.settings.questionmodel.temperature = tmp.toFixed(2)
-        }
-        else if (key === "maxtokenstouse")
-        {
-            serverConfig[key] = value;
-            // set the openAI value as well
-            serverConfig.settings.chatmodel.max_tokens = value;
-            serverConfig.settings.questionmodel.max_tokens = value;
-        }
+        if (key.indexOf("temperature") > -1)
+            serverConfig[key] = value / 50;
         else
             serverConfig[key] = value;
     }
@@ -720,10 +726,6 @@ function SendSettingsWidgetSmall (tochannel)
                 // checkboxes
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
-                else if (key === "chattemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
-                else if (key === "questiontemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
@@ -791,18 +793,20 @@ function SendSettingsWidgetLarge (tochannel)
             //get the file as a string
             let modalstring = filedata.toString();
 
-            // mormal replaces
+            // normal replaces
             for (const [key, value] of Object.entries(serverConfig))
             {
+                //if (modalstring.indexOf(key) > -1 && key != "chatbotprofiles")
+                // console.log(key, "=", value)
                 // checkboxes
                 if (value === "on")
                     modalstring = modalstring.replace(key + "checked", "checked");
-                else if (key === "chattemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
-                else if (key === "questiontemperature")
-                    modalstring = modalstring.replaceAll(key + "text", (value * 50));
+                else if (key.indexOf("temperature") > -1)
+                    modalstring = modalstring.replaceAll(key + "text", value * 50);
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
+                //else
+                //   console.log("SendSettingsWidgetLarge Ignoring", key, value)
             }
             // set the curert profile name 
             modalstring = modalstring.replaceAll("chatbotprofile" + serverConfig.currentprofile + 'nametext', stringParser(serverConfig.chatbotprofiles[serverConfig.currentprofile].name));
@@ -984,8 +988,12 @@ function processTextMessage (data, triggerresponse = false)
 {
     // postback to extension/channel/direct to chat
     let messages = data.message;
-    let model_to_use = serverConfig.settings.chatmodel;
     let starttime = Date.now();
+    let modelToUse = {
+        model: serverConfig.chatbotqueryengine,
+        temperature: serverConfig.chatbotquerytemperature,
+        max_tokens: serverConfig.chatbotquerymaxtokenstouse,
+    }
     // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
     // this should really be a rollback timeout but this whole code needs re-writing at this point :P
     if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection
@@ -1015,10 +1023,14 @@ function processTextMessage (data, triggerresponse = false)
     else
         messages = addPersonality(messages, serverConfig.currentprofile)
 
-    if (data.model && data.model != "")
-        model_to_use = data.model;
+    if (data.engine && data.engine != "")
+        modelToUse.temperature = data.engine;
+    if (data.temperature && data.temperature != "")
+        modelToUse.temperature = data.temperature;
+    if (data.maxtokens && data.maxtokens != "")
+        modelToUse.maxtokens = data.maxtokens;
 
-    callOpenAI(messages, model_to_use)
+    callOpenAI(messages, modelToUse)
         .then(chatMessageToPost =>
         {
             let msg = findtriggerByMessageType("trigger_chatbotResponse")
@@ -1137,6 +1149,12 @@ function processChatMessage (data)
         (serverConfig.chatbotnametriggertagstartofline == "on" &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())));
 
+    if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled != "on")
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log("ignoring chatbot trigger as it is turned off in settings")
+        return;
+    }
     // user asked for a translation
     let translateToEnglish = (serverConfig.translatetoeng == "on"
         && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
@@ -1253,7 +1271,11 @@ function processChatMessage (data)
     else if (translateToEnglish || submessage)
     {
         let messages = ""
-        let modelToUse = serverConfig.settings.chatmodel
+        let modelToUse = {
+            model: serverConfig.translatetoengengine,
+            temperature: serverConfig.translatetoengtagtemperature,
+            max_tokens: serverConfig.translatetoengtagmaxtokenstouse,
+        }
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -1270,7 +1292,7 @@ function processChatMessage (data)
             messages = [{
                 "role": "user", "content": "Translate this into English :\n" + chatdata.message.replace(serverConfig.translatetoengtag, "")
             }]
-            modelToUse = serverConfig.settings.questionmodel
+
         }
         else if (submessage)
         {
@@ -1307,6 +1329,11 @@ function processChatMessage (data)
     } // is this a diect question from chat
     else if (directChatQuestion)
     {
+        let modelToUse = {
+            model: serverConfig.chatbotqueryengine,
+            temperature: serverConfig.chatbotquerytemperature,
+            max_tokens: serverConfig.chatbotquerymaxtokenstouse,
+        }
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -1320,7 +1347,7 @@ function processChatMessage (data)
             //let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
             let message = [{ "role": "user", "content": chatdata.message }]
 
-            callOpenAI(message, serverConfig.settings.questionmodel)
+            callOpenAI(message, modelToUse)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
@@ -1376,6 +1403,22 @@ function processChatMessage (data)
     }
     else
     {
+        let modelToUse = {}
+        if (directChatbotTriggerTag)
+        {
+            modelToUse = {
+                model: serverConfig.chatbotnametriggerengine,
+                temperature: serverConfig.chatbotnametriggertemperature,
+                max_tokens: serverConfig.chatbotnametriggermaxtokenstouse,
+            }
+        } else
+        {
+            modelToUse = {
+                model: serverConfig.chatbotautoresponseengine,
+                temperature: serverConfig.chatbotautoresponsetemperature,
+                max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
+            }
+        }
         // ##############################################
         //         Processing a chat message
         // ##############################################
@@ -1407,7 +1450,7 @@ function processChatMessage (data)
 
         }
 
-        callOpenAI(messages, serverConfig.settings.chatmodel)
+        callOpenAI(messages, modelToUse)
             .then(chatMessageToPost =>
             {
                 if (chatMessageToPost)

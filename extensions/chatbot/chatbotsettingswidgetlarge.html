@@ -39,8 +39,17 @@
         <div class="form-check form-check-inline">
             <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled"
                 chatbotenabledchecked>
-            <label class="form-check-label" for="chatbotenabled">Enable Chatbot (joins in the conversation in
+            <label class="form-check-label" for="chatbotenabled">Enable Chatbot Autoresponse (joins in the conversation
+                in
                 chat)</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="chatbottriggerenabled" type="checkbox" id="chatbottriggerenabled"
+                chatbottriggerenabledchecked>
+            <label class="form-check-label" for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will answer
+                to questings that uses its name, or whatever is set in the trigger field below)</label>
         </div>
     </div>
     <div class="form-group">
@@ -65,8 +74,46 @@
             <label class="form-check-label" for="translatetoeng">English Translation trigger</label>
         </div>
     </div>
+
+    <!-- chatbot features settings -->
     <HR>
-    <h5 class="text-center">Chatbot Trigger</h5>
+    <h4 class="text-center">Chatbot Auto Response</h4>
+    <div class="form-group py-2">
+        <div class="col-xs-1">
+
+            <BR>
+            <label for="chatbotautoresponseengine">Engine to use (ie gpt-3.5-turbo, gpt-4 etc , not all are currently
+                supported so check for console errors if it doesn't work)</label>
+            <BR> <input type="text" name="chatbotautoresponseengine" id="chatbotautoresponseengine"
+                value="chatbotautoresponseenginetext">
+
+            <div class="form-group row-2 text-center">
+                <div>Randomness.
+                    Higher = more random/less precise
+                    Lower = less random/more precise
+                </div>
+                <label for="chatbotautoresponsetemperature" class="form-label"
+                    id="chatbotautoresponsetemperaturerangeval">chatbotautoresponsetemperaturetext</label>
+                <input type="range" class="form-range" name="chatbotautoresponsetemperature"
+                    id="chatbotautoresponsetemperature" min="0" max="100" step="1"
+                    onInput="$('#chatbotautoresponsetemperaturerangeval').html($(this).val())"
+                    value="chatbotautoresponsetemperaturetext">
+            </div>
+            <h5 class="text-center">Token Limit</h5>
+            Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
+            tokens is around the max twitch chat length. Over this you will get multiple messages in chat.
+            <div class="form-group">
+                <div class="col-xs-1">
+                    <label for="chatbotautoresponsemaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotautoresponsemaxtokenstouse"
+                        id="chatbotautoresponsemaxtokenstouse" value="chatbotautoresponsemaxtokenstousetext">
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <HR>
+    <h4 class="text-center">Chatbot Trigger</h4>
     <div class="form-group py-2">
         <div class="col-xs-1">
             <label for="chatbotnametriggertag">Trigger that will cause the bot to parse the message, ie when someone
@@ -75,17 +122,38 @@
             <BR>
             <input type="text" name="chatbotnametriggertag" id="chatbotnametriggertag"
                 value="chatbotnametriggertagtext">
-            <BR>
+
             <label class="form-check-label" for="chatbotnametriggertagstartofline">Start of line only</label>
             <input class="form-check-input" name="chatbotnametriggertagstartofline" type="checkbox"
                 id="chatbotnametriggertagstartofline" chatbotnametriggertagstartoflinechecked>
 
-            <!--
-                <label class="form-check-label" for="chatbotnametriggertagaddhistory">Add chat history to query</label>
-            <input class="form-check-input" name="chatbotnametriggertagaddhistory" type="checkbox"
-                id="chatbotnametriggertagaddhistory" chatbotnametriggertagaddhistorychecked>
-            -->
+            <BR>
+            <label for="chatbotnametriggerengine">Engine to use (ie gpt-3.5-turbo)</label>
+            <BR> <input type="text" name="chatbotnametriggerengine" id="chatbotnametriggerengine"
+                value="chatbotnametriggerenginetext">
 
+            <div class="form-group row-2 text-center">
+                <div>Randomness.
+                    Higher = more random/less precise
+                    Lower = less random/more precise
+                </div>
+                <label for="chatbotnametriggertemperature" class="form-label"
+                    id="chatbotnametriggertemperaturerangeval">chatbotnametriggertemperaturetext</label>
+                <input type="range" class="form-range" name="chatbotnametriggertemperature"
+                    id="chatbotnametriggertemperature" min="0" max="100" step="1"
+                    onInput="$('#chatbotnametriggertemperaturerangeval').html($(this).val())"
+                    value="chatbotnametriggertemperaturetext">
+            </div>
+            <h5 class="text-center">Token Limit</h5>
+            Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
+            tokens is around the max twitch chat length. Over this you will get multiple messages in chat.
+            <div class="form-group">
+                <div class="col-xs-1">
+                    <label for="chatbotnametriggermaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotnametriggermaxtokenstouse"
+                        id="chatbotnametriggermaxtokenstouse" value="chatbotnametriggermaxtokenstousetext">
+                </div>
+            </div>
         </div>
 
     </div>
@@ -97,12 +165,37 @@
                 any chatmessage sent and will trigger a response when it see's the words/phrase.</label>
             <BR>
             <input type="text" name="chatbotquerytag" id="chatbotquerytag" value="chatbotquerytagtext">
-            <BR>
+
             <label class="form-check-label" for="chatbotquerytagstartofline">Start of line only</label>
             <input class="form-check-input" name="chatbotquerytagstartofline" type="checkbox"
                 id="chatbotquerytagstartofline" chatbotquerytagstartoflinechecked>
-        </div>
 
+            <BR>
+            <label for="chatbotqueryengine">Engine to use (ie gpt-3.5-turbo)</label>
+            <BR> <input type="text" name="chatbotqueryengine" id="chatbotqueryengine" value="chatbotqueryenginetext">
+
+
+            <div class="form-group row-2 text-center">
+                <div>Randomness.
+                    Higher = more random/less precise
+                    Lower = less random/more precise
+                </div>
+                <label for="chatbotquerytemperature" class="form-label"
+                    id="chatbotquerytemperaturerangeval">chatbotquerytemperaturetext</label>
+                <input type="range" class="form-range" name="chatbotquerytemperature" id="chatbotquerytemperature"
+                    min="0" max="100" step="1" onInput="$('#chatbotquerytemperaturerangeval').html($(this).val())"
+                    value="chatbotquerytemperaturetext">
+            </div>
+
+            <h5 class="text-center">Token Limit</h5>
+            <div class="form-group">
+                <div class="col-xs-1">
+                    <label for="chatbotquerymaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotquerymaxtokenstouse"
+                        id="chatbotquerymaxtokenstouse" value="chatbotquerymaxtokenstousetext">
+                </div>
+            </div>
+        </div>
     </div>
     <HR>
     <h5 class="text-center">Translate to English Trigger</h5>
@@ -110,8 +203,34 @@
         <div class="col-xs-1">
             <label for="translatetoengtag">Have the the bot translate a chat message to english (start the message with
                 the following)</label>
+            <BR> <input type="text" name="translatetoengtag" id="translatetoengtag" value="translatetoengtagtext">
+
             <BR>
-            <input type="text" name="translatetoengtag" id="translatetoengtag" value="translatetoengtagtext">
+            <label for="translatetoengengine">Engine to use (ie gpt-3.5-turbo)</label>
+            <BR> <input type="text" name="translatetoengengine" id="translatetoengengine"
+                value="translatetoengenginetext">
+
+            <div class="form-group row-2 text-center">
+                <div>Randomness.
+                    Higher = more random/less precise
+                    Lower = less random/more precise
+                </div>
+                <label for="translatetoengtagtemperature" class="form-label"
+                    id="translatetoengtagtemperaturerangeval">translatetoengtagtemperaturetext</label>
+                <input type="range" class="form-range" name="translatetoengtagtemperature"
+                    id="translatetoengtagtemperature" min="0" max="100" step="1"
+                    onInput="$('#translatetoengtagtemperaturerangeval').html($(this).val())"
+                    value="translatetoengtagtemperaturetext">
+            </div>
+
+            <h5 class="text-center">Token Limit</h5>
+            <div class="form-group">
+                <div class="col-xs-1">
+                    <label for="translatetoengtagmaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="translatetoengtagmaxtokenstouse"
+                        id="translatetoengtagmaxtokenstouse" value="translatetoengtagmaxtokenstousetext">
+                </div>
+            </div>
         </div>
     </div>
 
@@ -207,37 +326,6 @@
     <!-- ####################################################### -->
     <!--          end behaviour and personalities                -->
     <!-- ####################################################### -->
-
-    <HR>
-    <h4 class="text-center">Advanced options</h4>
-    <h5 class="text-center">Randomness (or temperature in OpenAI speak)</h5>
-    <BR>Higher = more random/less precise
-    <BR>Lower = less random/more precise
-    <div class="form-group row-2 text-center">
-        <div>Chatbot Randomness. (applied to chatbot messages and chatbot
-            triggers above)</div>
-        <label for="chattemperature" class="form-label" id="chattemperaturerangeval">chattemperaturetext</label>
-        <input type="range" class="form-range" name="chattemperature" id="chattemperature" min="0" max="100" step="1"
-            onInput="$('#chattemperaturerangeval').html($(this).val())" value="chattemperaturetext">
-    </div>
-    <div class="form-group row-2 text-center ">
-        <div>Direct Question Randomness (applied to direct question and
-            to translation triggers above)</div>
-        <label for="questiontemperature" class="form-label"
-            id="questiontemperaturerangeval">questiontemperaturetext</label>
-        <input type="range" class="form-range" name="questiontemperature" id="questiontemperature" min="0" max="100"
-            step="1" onInput="$('#questiontemperaturerangeval').html($(this).val())" value="questiontemperaturetext">
-    </div>
-    <HR>
-    <h5 class="text-center">Token Limit</h5>
-    Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
-    tokens is around the max twitch chat lenght. Over this you will get multiple messages in chat.
-    <div class="form-group">
-        <div class="col-xs-1">
-            <label for="maxtokenstouse" class="col-form-label">Max Tokens to use:</label>
-            <input type="text" style="width: 40px" name="maxtokenstouse" id="maxtokenstouse" value="maxtokenstousetext">
-        </div>
-    </div>
 
     <HR>
     <h5 class="text-center">Debug</h5>
