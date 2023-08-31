@@ -290,7 +290,7 @@ const triggersandactions =
                 message: ""
             }
         },
-        /* {
+        {
             name: "TwitchChatAutoModReceived",
             displaytitle: "Automod action",
             description: "Automod action happened",
@@ -298,11 +298,11 @@ const triggersandactions =
             channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatAutoMod",
-                textMessage: "no default message",  
+                textMessage: "no default message",
                 msgID: "",
                 message: ""
             }
-        },*/
+        },
         {
             name: "TwitchChatReconnect",
             displaytitle: "Chat Reconnected",
@@ -1727,20 +1727,19 @@ function chatLogin (account)
                 triggertosend.parameters.message = userstate['system-msg']
                 postChatTrigger(triggertosend)
             });
-
             // still working on these single user ones
-            /*   localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
-               {
-                   file_log("automod", msgID, message);
-                   process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
-                   triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
-                    triggertosend.parameters.type= "trigger_ChatAutoMod"
-                    triggertosend.parameters.textMessage= "no default message"
-                    triggertosend.parameters.msgID= msgID
-                    triggertosend.parameters.message= message
+            localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
+            {
+                file_log("automod", msgID, message);
+                process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
+                triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
+                triggertosend.parameters.type = "trigger_ChatAutoMod"
+                triggertosend.parameters.textMessage = "no default message"
+                triggertosend.parameters.msgID = msgID
+                triggertosend.parameters.message = message
 
                 postChatTrigger(triggertosend);
-               });*/
+            });
             localConfig.twitchClient[account].connection.on("reconnect", () => 
             {
                 process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "reconnect" }, "reconnect: Reconnect");

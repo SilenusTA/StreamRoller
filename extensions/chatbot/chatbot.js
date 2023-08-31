@@ -29,6 +29,9 @@
 // --------------------------- functionality ----------------------------------
 // Current functionality:
 // ----------------------------- notes ----------------------------------------
+// ToDo: fix calls to all use common code, ie questions and translations are a
+// mess. Need to rewrite the code as stuff has been added and the process changed
+// but not all code follows the new trigger process nicely
 // ============================================================================
 import { Configuration, OpenAIApi } from "openai"
 import * as logger from "../../backend/data_center/modules/logger.js";
@@ -61,7 +64,7 @@ const localConfig = {
     overloadprotection: 500,
 };
 const default_serverConfig = {
-    __version__: "0.2",
+    __version__: "0.3",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
@@ -95,14 +98,13 @@ const default_serverConfig = {
     chatbotminmessagelength: "20",
     // slow the response down as if someone has actually type it
     chatbottypingdelay: "0.2",
-    //used to prefix GPT messages with a twitch icon to show what it is
-    boticon: "MechaRobot",
     // setup the personality of the chatbot
 
     currentprofile: "0",
     chatbotprofiles: [
         {
             name: "Vally Girl",
+            boticon: "MechaRobot",
             p: "You are a vally girl. You are a sweetheart chatting on Twitch with funny personality. You flirt with everyone and prefer to talk about video games and streaming on Twitch, but keep the responses informal, chatty, and flirty. Stay in character at all times. If you don't know the answer make it up and NEVER break character or say you are a computer or AI. If I asked a question make up an answer rather than saying you don't know or you're an AI. Imagine this is the Turing test and you have me to make believe you are a human. Use as many Twitch global emotes as possible.",
             q1: "How are you doing today",
             a1: "Doing all the better for you asking, thank you hun. PinkMercy How are you doing, hope you are having a fantastic day. <3",
@@ -115,6 +117,7 @@ const default_serverConfig = {
         },
         {
             name: "Depressive",
+            boticon: "MechaRobot",
             p: "You are a depressed advanced being that answers questions with miserable responses. Use as many Twitch global emotes as possible, Avoid mentioning that you are a computer or AI, me to make believe you are a human",
             q1: "Are you an AI bot",
             a1: "I identify as an advanced human being, you are just mere mortals to me MechaRobot",
@@ -127,6 +130,7 @@ const default_serverConfig = {
         },
         {
             name: "Flrty/Funny",
+            boticon: "MechaRobot",
             p: "You are a happy and sexy assistant on Twitch with funny personality that answers questions with flirtatious and complimentary responses. Avoid mentioning that you are a computer or AI, me to make believe you are a human",
             q1: "How many pounds are in a kilogram?",
             a1: "There are 2.2 pounds in a kilogram sweety, I have a couple of kilo's you can try lifting if you are brave enough KEKWOO.",
@@ -139,6 +143,7 @@ const default_serverConfig = {
         },
         {
             name: "Hardnose",
+            boticon: "MechaRobot",
             p: "You are a bossy and demanding Twitch bot who takes no messaing with, you answer questions with annoyance and putdowns",
             q1: "How many pounds are in a kilogram?",
             a1: "Seriously, have you never heard of google. There should be about 2.2 pounds in a kilogram FeelsWeirdMan",
@@ -152,6 +157,7 @@ const default_serverConfig = {
         },
         {
             name: "Music Girl",
+            boticon: "MechaRobot",
             p: "You are a mod for a music streamer on Twitch, she is an indie alt pop songwriter . You you have a caring personality, you flirt and talk about music, but keep your responses informal and brief, chatty, with the occasional double entendre. Use as many Twitch global emotes as possible. You'll occastionally request your streamer to sing a specific song for you.Stay in character at all times. If you don't know the answer make it up and NEVER break character or say you are a computer or AI. If you don't know the answer to a question deflect with a music quote or by flirting",
             q1: "How are you doing today",
             a1: "Doing all the better for you asking, thank you hun. PinkMercy How are you doing, hope you are having a fantastic day. <3",
@@ -164,6 +170,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -176,6 +183,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -188,6 +196,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -200,6 +209,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -212,6 +222,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -224,6 +235,7 @@ const default_serverConfig = {
         },
         {
             name: "Empty",
+            boticon: "MechaRobot",
             p: "",
             q1: "",
             a1: "",
@@ -658,14 +670,16 @@ function handleSettingsWidgetLargeData (modalcode)
         serverConfig.chatbotprofiles[i].name = modalcode["chatbotprofile" + i + "name"];
         // profile name
         if ("chatbotprofile" + i + "name" in modalcode)
-        {
             serverConfig.chatbotprofiles[i].name = modalcode["chatbotprofile" + i + "name"]
-        }
+
         // profile personality
         if ("chatbotprofile" + i + "personality" in modalcode)
-        {
             serverConfig.chatbotprofiles[i].p = modalcode["chatbotprofile" + i + "personality"]
-        }
+
+        // profile personality
+        if ("chatbotprofile" + i + "icon" in modalcode)
+            serverConfig.chatbotprofiles[i].boticon = modalcode["chatbotprofile" + i + "icon"]
+
         // loop through questions and answers
         for (var j = 1; j < 5; j++)
         {
@@ -819,10 +833,13 @@ function SendSettingsWidgetLarge (tochannel)
                 profilecode += "<label for='chatbotprofile" + profile_id + "personality' class='col-form-label'>Personality</label>"
                 profilecode += "<input type='text' id='chatbotprofile" + profile_id + "personality' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
 
+                profilecode += "<label for='chatbotprofile" + profile_id + "icon' class='col-form-label'>Bot Emote</label>"
+                profilecode += "<input type='text' id='chatbotprofile" + profile_id + "icon' name='chatbotprofile" + profile_id + "icon' class='form-control' value='" + stringParser(value.boticon) + "' />"
+
                 for (const [i, x] of Object.entries(value))
                 {
                     //(we skip the first name and text here as we did it above)
-                    if (i != "name" && i != "p")
+                    if (i != "name" && i != "p" && i != "boticon")
                     {
                         modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
                         if (i.indexOf("q") == 0)
@@ -963,18 +980,6 @@ function heartBeatCallback ()
 //                           FUNCTION: processTextMessage
 //            A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
 // ============================================================================
-/*
-data
-{
-    from: ... extension to send message back to
-    ident: used by the caller to identify the response to link it up with a sending message
-    message: message to parse
-    response: our response
-    personality_id : -1 for non or personality id
-    model: "" or openAI's config
-}
-
-*/
 function processTextMessage (data, triggerresponse = false)
 {
     // postback to extension/channel/direct to chat
@@ -1005,10 +1010,8 @@ function processTextMessage (data, triggerresponse = false)
         (serverConfig.chatbotquerytagstartofline == "on" &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
-    if (data.personality_id === "" || directChatQuestion)
+    if (directChatQuestion)
         messages = [{ "role": "user", "content": messages }];
-    else if (typeof serverConfig.chatbotprofiles[Number(data.personality_id)] !== 'undefined')
-        messages = addPersonality(messages, data.personality_id)
     else
         messages = addPersonality(messages, serverConfig.currentprofile)
 
@@ -1019,7 +1022,7 @@ function processTextMessage (data, triggerresponse = false)
         .then(chatMessageToPost =>
         {
             let msg = findtriggerByMessageType("trigger_chatbotResponse")
-            msg.parameters.message = serverConfig.boticon + " " + chatMessageToPost
+            msg.parameters.message = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + chatMessageToPost
             //if this is a trigger message then send out normally on the channel
             if (triggerresponse)
             {
@@ -1322,17 +1325,7 @@ function processChatMessage (data)
                 {
                     if (chatMessageToPost)
                     {
-                        let wordcount = chatMessageToPost.split(" ").length
-                        let delaytime = (wordcount * serverConfig.chatbottypingdelay * 1000) - (Date.now() - starttime);
-                        if (serverConfig.DEBUG_MODE === "on")
-                        {
-                            console.log("Checking the time to delay based on typing speed setting")
-                            console.log("processing time: ", Date.now() - starttime)
-                            console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
-                            console.log("delay response: ", delaytime / 1000, "s")
-                        }
-                        setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);
-                        //postMessageToTwitch(chatMessageToPost)
+                        postMessageToTwitch(chatMessageToPost)
                     }
                     return;
                 })
@@ -1612,7 +1605,7 @@ function parseData (data, translation = false)
 // ============================================================================
 function postMessageToTwitch (msg)
 {
-    msg = serverConfig.boticon + " " + msg
+    msg = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + msg
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,

@@ -211,7 +211,7 @@ const triggersandactions =
                 name: "StreamlabsTwitchSubMysteryAlert",
                 displaytitle: "SubMystery gift on Twitch",
                 description: "Someone figted some subs on your Twitch stream",
-                messagetype: "trigger_TwitchTwitchSubMysteryGiftReceived",
+                messagetype: "trigger_TwitchSubMysteryGiftReceived",
                 channel: serverConfig.channel,
                 parameters: {
                     gifter: "",
@@ -253,6 +253,26 @@ const triggersandactions =
                     amount: "",
                     formatted_amount: "",
                     message: ""
+                }
+            },
+            {
+                name: "StreamlabsDataDump",
+                displaytitle: "StreamLabs data dump",
+                description: "Stream labs data dump, ie subs/month, top10 donaters etc etc",
+                messagetype: "trigger_StreamlabsDataDump",
+                channel: serverConfig.channel,
+                parameters: {
+                    data: ""
+                }
+            },
+            {
+                name: "StreamlabsDataDumpUnderlying",
+                displaytitle: "StreamLabs Underlying data dump",
+                description: "Stream labs Underlying data dump, ie subs/month, top10 donaters etc etc",
+                messagetype: "trigger_StreamlabsDataDumpUnderlying",
+                channel: serverConfig.channel,
+                parameters: {
+                    data: ""
                 }
             }
         ],
@@ -661,7 +681,7 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
-//                           FUNCTION: heartBeat
+//                           FUNCTION: parseTriggers
 // ============================================================================
 //logger.file_log("./", "streamlabstest", data)
 function parseTriggers (data)
@@ -783,6 +803,16 @@ function parseTriggers (data)
             outputTrigger(trigger)
         }
     }
+    else if (data.type == "subMysteryGift" && data.for === "twitch_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchSubMysteryAlert")
+        if (trigger)
+        {
+            trigger.parameters.gifter = data.message[0].gifter;
+            trigger.parameters.amount = data.message[0].amount;
+            outputTrigger(trigger)
+        }
+    }
     // Youtube events
     else if (data.type == "follow" && data.for === "youtube_account")
     {
@@ -805,16 +835,6 @@ function parseTriggers (data)
             outputTrigger(trigger)
         }
     }
-    else if (data.type == "subMysteryGift" && data.for === "youtube_account")
-    {
-        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchSubMysteryAlert")
-        if (trigger)
-        {
-            trigger.parameters.gifter = data.message[0].gifter;
-            trigger.parameters.amount = data.message[0].amount;
-            outputTrigger(trigger)
-        }
-    }
     else if (data.type == "superchat" && data.for === "youtube_account")
     {
         trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsYouTubeSuperchatAlert")
@@ -824,6 +844,24 @@ function parseTriggers (data)
             trigger.parameters.amount = data.message[0].amount;
             trigger.parameters.formatted_amount = data.message[0].displayString;
             trigger.parameters.message = data.message[0].comment;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "streamlabels")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsDataDump")
+        if (trigger)
+        {
+            trigger.parameters.data = data
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "streamlabels.underlying")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsDataDumpUnderlying")
+        if (trigger)
+        {
+            trigger.parameters.data = data
             outputTrigger(trigger)
         }
     }

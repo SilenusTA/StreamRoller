@@ -156,9 +156,9 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
     );
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT")
-    );
+    //sr_api.sendMessage(localConfig.DataCenterSocket,
+    //    sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT")
+    //);
     clearTimeout(localConfig.heartBeatHandle);
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 
