@@ -266,15 +266,17 @@ function PopulateGroupNamesDropdown ()
     let GroupChoser = document.getElementById("triggerExtensionGroupName")
     // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
     let groupnames = ""
+    let selected = ""
     for (var key in serverData.AllTriggersAndActions)
     {
-        if (groupnames == "")
+        if (key == localConfig.displaySettings.triggerPage.selectedGroup || groupnames == "")
         {
-            groupnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + " selected>" + key + "</option>";
+            selected = " selected"
             GroupChoser.title = key
         }
         else
-            groupnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + ">" + key + "</option>";
+            selected = ""
+        groupnames += "<option name='" + key + "' class='btn btn-secondary' value=" + key + selected + ">" + key + "</option>";
     }
     GroupChoser.innerHTML = groupnames;
 }
@@ -289,6 +291,8 @@ function createTriggerAction (e)
     let groupname = document.getElementById("triggerExtensionGroupName").value
     let extname = document.getElementById("triggerExtensionChoser").value
     let channel = document.getElementById("triggerExtensionChoserChannel").value
+
+    localConfig.displaySettings.triggerPage.selectedGroup = groupname;
     //for macros we need to fudge a few items
     if (document.getElementById("triggerExtensionChoser").value == "MACROS")
     {
