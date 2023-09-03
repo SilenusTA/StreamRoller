@@ -56,9 +56,11 @@ function initTriggersAndActions (extension_list)
 // ============================================================================
 function receivedTrigger (triggers)
 {
-    localConfig.triggersAndActions.descriptions[triggers.extensionname] = triggers.description;
+    localConfig.triggersAndActions.extensiondescriptions[triggers.extensionname] = triggers.description;
     if (triggers.triggers && triggers.triggers.length > 0)
+    {
         localConfig.triggersAndActions.triggers[triggers.extensionname] = triggers.triggers;
+    }
     if (triggers.actions && triggers.actions.length > 0)
     {
         localConfig.triggersAndActions.actions[triggers.extensionname] = triggers.actions;
@@ -118,8 +120,7 @@ function triggersLoadTriggers (name)
     let triggerextensiontriggers = ""
     // set the title of the calling dropdown
 
-    document.getElementById("triggerExtensionChoserLabel").innerHTML = localConfig.triggersAndActions.descriptions[name];
-    console.log("name=", name)
+    document.getElementById("triggerExtensionChoserLabel").innerHTML = localConfig.triggersAndActions.extensiondescriptions[name];
     document.getElementById("triggerExtensionChoser").title = name
 
     for (var key in selectedTrigger)
@@ -153,11 +154,14 @@ function triggersLoadParameters (id)
     document.getElementById("triggerExtensionChoserTriggerName").value = localConfig.triggersAndActions.triggers[extensionname][id].name;
     for (var key in params)
     {
+        // Row
         triggerextensionparameters += "<div class='row'>"
+        // Variable name text
         triggerextensionparameters += "<div class='col-2'>"
         triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
         triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
         triggerextensionparameters += "</div>"
+        // variable data to match text box
         triggerextensionparameters += "</div>"
         triggerextensionparameters += "<div class='col-8'>"
         triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
@@ -173,6 +177,17 @@ function triggersLoadParameters (id)
         triggerextensionparameters += "<div class='w-100'></div>"
         triggerextensionparameters += "</div>"
     }
+    // cooldown timer
+    triggerextensionparameters += "<div class='row'>"
+    triggerextensionparameters += "<div class='col-2'>"
+    triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
+    triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_cooldown>cooldown</label>"
+    triggerextensionparameters += "</div>"
+    triggerextensionparameters += "</div>"
+    triggerextensionparameters += "<div class='col-10'>"
+    triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_cooldown' id='" + triggername + "__cooldown' placeholder='cooldown' value='0'>"
+    triggerextensionparameters += "</div>"
+
     TriggerExtensionTriggerParameters.innerHTML = triggerextensionparameters;
 
 }
@@ -220,7 +235,7 @@ function actionLoadAction (name)
     let selectedAction = localConfig.triggersAndActions.actions[name]
     let actionextensionaction = ""
 
-    document.getElementById("actionExtensionChoserLabel").innerHTML = localConfig.triggersAndActions.descriptions[name]
+    document.getElementById("actionExtensionChoserLabel").innerHTML = localConfig.triggersAndActions.extensiondescriptions[name]
     document.getElementById("actionExtensionChoser").title = name
 
     for (var key in selectedAction)
@@ -336,16 +351,24 @@ function createTriggerAction (e)
     let fieldsAsArray = $(e).serializeArray();
     var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
 
-    //fieldsAsObject.forEach((entry) =>
     for (const entry in fieldsAsObject) 
     {
         if (entry.indexOf(SingleEvent.trigger.name + "_") == 0)
         {
             let varname = entry.replace(SingleEvent.trigger.name + "_", "");
             let tmpobj = {};
-            tmpobj[varname] = fieldsAsObject[entry];
-            tmpobj["MATCHER_" + varname] = document.getElementById("triggerExtensionTriggerParametersMatcher_" + varname).value;
-            SingleEvent.trigger.data.push(tmpobj);
+            // store the matcher if we have one
+            if (document.getElementById("triggerExtensionTriggerParametersMatcher_" + varname) != null)
+                tmpobj["MATCHER_" + varname] = document.getElementById("triggerExtensionTriggerParametersMatcher_" + varname).value;
+
+            // we store the cd in the trigger area not the data area
+            if (varname == "cooldown")
+                SingleEvent.trigger.cooldown = fieldsAsObject[entry]
+            else
+            {
+                tmpobj[varname] = fieldsAsObject[entry];
+                SingleEvent.trigger.data.push(tmpobj);
+            }
         }
         if (entry.indexOf(SingleEvent.action.name + "_") == 0)
         {
@@ -458,7 +481,7 @@ function initMacroList ()
     if (typeof (localConfig.triggersAndActions.triggers["MACROS"]) == "undefined")
     {
         localConfig.triggersAndActions.triggers["MACROS"] = []
-        localConfig.triggersAndActions.descriptions["MACROS"] = "Macro functions to be applied to buttons etc"
+        localConfig.triggersAndActions.extensiondescriptions["MACROS"] = "Macro functions to be applied to buttons etc"
     }
     // load our saved macros into the list (as macros are virtual triggers based on a virtual extension called "MACROS" we need to add them somewhere)
     localConfig.triggersAndActions.triggers["MACROS"] = serverData.macros
@@ -519,7 +542,7 @@ function CheckTriggers (event)
                         try
                         {
                             // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
-                            if (i.indexOf("MATCHER_") != 0)
+                            if (i.indexOf("MATCHER_") != 0 && i != "cooldown" && i != "lastrun")
                             {
                                 // see if we have a MATCHER object (have to check in case someone has old software before we add this field)
                                 let searchtype = param["MATCHER_" + i]
@@ -558,7 +581,20 @@ function CheckTriggers (event)
 
                 })
                 if (match)
+                {
+                    // if we have a cooldown see if we have matched it
+                    if (entry.trigger.cooldown > 0)
+                    {
+                        const d = new Date();
+                        let now = d.getTime()
+                        // are we still in the the cooldown period
+                        if (entry.trigger.lastrun + (entry.trigger.cooldown * 1000) > now)
+                            return
+                        else
+                            entry.trigger.lastrun = now
+                    }
                     TriggerAction(entry.action, event)
+                }
             }
         })
     }

@@ -113,10 +113,11 @@
      -->
     <HR>
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-6">
-          <h4 style="width:100px; margin: auto;">Trigger</h4>
-          <form class="form-inline" onsubmit="return createTriggerAction(this)">
+      <form class="form-inline" onsubmit="return createTriggerAction(this)">
+        <div class="row">
+          <div class="col-6">
+            <h4 style="width:100px; margin: auto;">Trigger</h4>
+
             <div class="form-group">
               <!-- hidden varialbes set when user changes the options -->
               <div class="row">
@@ -146,47 +147,49 @@
                 </div>
               </div>
             </div>
-        </div>
-        <div class="col-6">
-          <h4 style="width:100px; margin: auto;">Action</h4>
-          <div class="form-group">
-            <div class="row">
-              <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName"
-                class="form-control" value="somevalue" tabindex="-1" />
-            </div>
-            <div class="row">
-              <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
-                class="form-control" value="somevalue" tabindex="-1" />
-            </div>
-            <div class="row">
-              <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-                value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
-              </select>
-            </div>
-            <div id="actionExtensionChoserLabel" class="my-1"></div>
-            <div class="row">
-              <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-                value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
-              </select>
-            </div>
-            <div class="row">
-              <div class="col">
-                <div id="actionExtensionActionParameters" class="form-group" title="" value="1"
-                  name="actionExtensionActionParameters">
+          </div>
+          <div class="col-6">
+            <h4 style="width:100px; margin: auto;">Action</h4>
+            <div class="form-group">
+              <div class="row">
+                <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName"
+                  class="form-control" value="somevalue" tabindex="-1" />
+              </div>
+              <div class="row">
+                <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
+                  class="form-control" value="somevalue" tabindex="-1" />
+              </div>
+              <div class="row">
+                <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
+                  title="" value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
+                </select>
+              </div>
+              <div id="actionExtensionChoserLabel" class="my-1"></div>
+              <div class="row">
+                <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger"
+                  title="" value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
+                </select>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <div id="actionExtensionActionParameters" class="form-group" title="" value="1"
+                    name="actionExtensionActionParameters">
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="form-group d-flex justify-content-center">
-          <div class="my-2">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Update</button>
+          <div class="form-group d-flex justify-content-center">
+            <div class="my-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Update</button>
+            </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
+
+
     <!--
              
                         LIST OF CURRENT TRIGGERS AND ACTIONS
