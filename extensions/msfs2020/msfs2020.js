@@ -230,6 +230,7 @@ function onDataCenterMessage (server_packet)
                 {
                     MSFS2020Connect()
                     pollMSFS()
+                    sendTriggersAndActions(server_packet.from)
                 }
                 else if (disconnect)
                 {
@@ -264,6 +265,7 @@ function onDataCenterMessage (server_packet)
                     {
                         MSFS2020Connect()
                         pollMSFS()
+                        sendTriggersAndActions(server_packet.from)
                     }
                     // broadcast our modal out so anyone showing it can update it
                     SendSettingsWidgetSmall("");
@@ -274,23 +276,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "SendTriggerAndActions")
         {
             if (extension_packet.to === serverConfig.extensionname)
-            {
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket("ExtensionMessage",
-                        serverConfig.extensionname,
-                        sr_api.ExtensionPacket(
-                            "TriggerAndActions",
-                            serverConfig.extensionname,
-                            triggersandactions,
-                            "",
-                            server_packet.from
-                        ),
-                        "",
-                        server_packet.from
-                    )
-
-                )
-            }
+                sendTriggersAndActions(server_packet.from)
         }
         else if (extension_packet.type.indexOf("action_" == 0))
         {
@@ -1217,6 +1203,27 @@ function pollMSFS ()
     if (serverConfig.msfs2020ennabled == "on")
         postTriggers();
     localConfig.pollMSFSHandle = setTimeout(pollMSFS, serverConfig.msfs2020SimPollInterval * 1000)
+}
+// ============================================================================
+//                           FUNCTION: findtriggerByMessageType
+// ============================================================================
+function sendTriggersAndActions (to)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TriggerAndActions",
+                serverConfig.extensionname,
+                triggersandactions,
+                "",
+                to
+            ),
+            "",
+            to
+        )
+
+    )
 }
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
