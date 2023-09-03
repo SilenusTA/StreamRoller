@@ -55,6 +55,11 @@
     '!setscore' in a twitch chat message and used
     '%%message:2%%' in the action field to select only the second item (in this case the '5')
     </p>
+    <!--
+
+                  GROUPS DROPDOWN
+
+    -->
     <h4>Group to add to (groups just help keep the lists tidy)</h4>
     <form class="form-inline">
       <div class=" form-group d-flex">
@@ -66,6 +71,11 @@
         </div>
       </div>
     </form>
+    <!--
+    
+                      CREATE MACRO FORM
+    
+     -->
     <HR>
     <h4>Macro's</h4>
     <p>A Macro is a user defined trigger for use on buttons etc (ie on the live portal page) used to invoke an action.
@@ -96,65 +106,96 @@
         </div>
       </div>
     </form>
+    <!--
+            
+                              ADD TRIGGER/ACTION FORM
+            
+     -->
     <HR>
-    <h4>Trigger</h4>
-    <form class="form-inline" onsubmit="return createTriggerAction(this)">
-      <div class=" form-group d-flex">
-        <div class="form-group">
-          <!-- hidden varialbes set when user changes the options -->
-          <input id="triggerExtensionChoserTriggerName" type="hidden" name="triggerExtensionChoserTriggerName"
-            class="form-control" value="somevalue" tabindex="-1" />
-          <input id="triggerExtensionChoserChannel" type="hidden" name="triggerExtensionChoserChannel"
-            class="form-control" value="somevalue" tabindex="-1" />
-          <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-            value="1" name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
-          </select>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-6">
+          <h4 style="width:100px; margin: auto;">Trigger</h4>
+          <form class="form-inline" onsubmit="return createTriggerAction(this)">
+            <div class="form-group">
+              <!-- hidden varialbes set when user changes the options -->
+              <div class="row">
+                <input id="triggerExtensionChoserTriggerName" type="hidden" name="triggerExtensionChoserTriggerName"
+                  class="form-control" value="somevalue" tabindex="-1" />
+              </div>
+              <div class="row">
+                <input id="triggerExtensionChoserChannel" type="hidden" name="triggerExtensionChoserChannel"
+                  class="form-control" value="somevalue" tabindex="-1" />
+              </div>
+              <div class="row">
+                <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger"
+                  title="" value="1" name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
+                </select>
+                <div id="triggerExtensionChoserLabel" class="my-1"></div>
+              </div>
+              <div class="row">
+                <select id="triggerExtensionTriggers" class="selectpicker btn btn-secondary" data-style="btn-danger"
+                  title="" value="1" name="triggerExtensionTriggers" onchange="triggersLoadParameters(this.value)">
+                </select>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <div id="triggerExtensionTriggerParameters" class="form-group" title="" value="1"
+                    name="triggerExtensionTriggerParameters">
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
-        <div class="form-group">
-          <select id="triggerExtensionTriggers" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-            value="1" name="triggerExtensionTriggers" onchange="triggersLoadParameters(this.value)">
-          </select>
+        <div class="col-6">
+          <h4 style="width:100px; margin: auto;">Action</h4>
+          <div class="form-group">
+            <div class="row">
+              <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName"
+                class="form-control" value="somevalue" tabindex="-1" />
+            </div>
+            <div class="row">
+              <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
+                class="form-control" value="somevalue" tabindex="-1" />
+            </div>
+            <div class="row">
+              <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+                value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
+              </select>
+            </div>
+            <div id="actionExtensionChoserLabel" class="my-1"></div>
+            <div class="row">
+              <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
+                value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
+              </select>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div id="actionExtensionActionParameters" class="form-group" title="" value="1"
+                  name="actionExtensionActionParameters">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <div id="triggerExtensionTriggerParameters" class="form-group" title="" value="1"
-            name="triggerExtensionTriggerParameters">
+
+        <div class="form-group d-flex justify-content-center">
+          <div class="my-2">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Update</button>
           </div>
         </div>
       </div>
-      <div id="triggerExtensionChoserLabel" class="my-1"></div>
-      <h4>Action</h4>
-      <div class="form-group d-flex">
-        <div class="form-group">
-          <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName"
-            class="form-control" value="somevalue" tabindex="-1" />
-          <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel"
-            class="form-control" value="somevalue" tabindex="-1" />
-          <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-            value="1" name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
-          </select>
-        </div>
-        <div class="form-group">
-          <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger" title=""
-            value="1" name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
-          </select>
-        </div>
-        <div class="form-group">
-          <div id="actionExtensionActionParameters" class="form-group" title="" value="1"
-            name="actionExtensionActionParameters">
-          </div>
-        </div>
-      </div>
-      <div id="actionExtensionChoserLabel" class="my-1"></div>
-      <div class="form-group d-flex justify-content-center">
-        <div class="my-2">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Update</button>
-        </div>
-      </div>
-      <HR>
-      <h4>Current Triggers and actions</h4>
-      <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
-      </table>
+    </div>
+    <!--
+             
+                        LIST OF CURRENT TRIGGERS AND ACTIONS
+              
+      -->
+    <HR>
+    <h4>Current Triggers and actions</h4>
+    <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
+    </table>
     </form>
   </div>
 </div>

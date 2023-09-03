@@ -97,7 +97,7 @@ function addTriggerEntries ()
             }
         }
         TriggersExtensionChoser.innerHTML = triggerextensionnames;
-        triggersLoadTriggers(0)
+        triggersLoadTriggers(key)
         TriggersExtensionChoser.dispatchEvent(new Event('change'))
     }
 }
@@ -119,6 +119,7 @@ function triggersLoadTriggers (name)
     // set the title of the calling dropdown
 
     document.getElementById("triggerExtensionChoserLabel").innerHTML = localConfig.triggersAndActions.descriptions[name];
+    console.log("name=", name)
     document.getElementById("triggerExtensionChoser").title = name
 
     for (var key in selectedTrigger)
@@ -150,19 +151,26 @@ function triggersLoadParameters (id)
     document.getElementById("triggerExtensionTriggers").title = localConfig.triggersAndActions.triggers[extensionname][id].description
     document.getElementById("triggerExtensionChoserChannel").value = localConfig.triggersAndActions.triggers[extensionname][id].channel;
     document.getElementById("triggerExtensionChoserTriggerName").value = localConfig.triggersAndActions.triggers[extensionname][id].name;
-
     for (var key in params)
     {
+        triggerextensionparameters += "<div class='row'>"
+        triggerextensionparameters += "<div class='col-2'>"
         triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
-        triggerextensionparameters += "<label class='form-label px-2 align-middle text-right col-md-6' for=" + triggername + "_" + key + ">" + key + "</label>"
-        triggerextensionparameters += "<input type='text' class='form-control  col-md-6' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+        triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
+        triggerextensionparameters += "</div>"
+        triggerextensionparameters += "</div>"
+        triggerextensionparameters += "<div class='col-8'>"
+        triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+        triggerextensionparameters += "</div>"
+        triggerextensionparameters += "<div class='col-2'>"
         // add the matcher dropdown to each variable name
         triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "'>"
         triggerextensionparameters += "<div class='form-group'><option data='1' class='form-control' value='1'>Exact Match</option>";
         triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
         triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
         triggerextensionparameters += "</select>"
-
+        triggerextensionparameters += "</div>"
+        triggerextensionparameters += "<div class='w-100'></div>"
         triggerextensionparameters += "</div>"
     }
     TriggerExtensionTriggerParameters.innerHTML = triggerextensionparameters;
@@ -248,9 +256,15 @@ function actionLoadParameters (id)
     document.getElementById("actionExtensionChoserActionName").value = localConfig.triggersAndActions.actions[extensionname][id].name;
     for (var key in params)
     {
+        actionextensionparameters += "<div class='row'>"
+        actionextensionparameters += "<div class='col-2'>"
         actionextensionparameters += "<div class='d-flex form-row align-items-center'>"
         actionextensionparameters += "<label class='form-label px-2 align-middle' for=" + actionname + "_" + key + ">" + key + "</label>"
+        actionextensionparameters += "</div>"
+        actionextensionparameters += "</div>"
+        actionextensionparameters += "<div class='col-10'>"
         actionextensionparameters += "<input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
+        actionextensionparameters += "</div>"
         actionextensionparameters += "</div>"
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
