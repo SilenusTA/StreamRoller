@@ -624,7 +624,9 @@ function onDataCenterMessage (server_packet)
 function handleSettingsWidgetSmallData (modalcode)
 {
     serverConfig.chatbotenabled = "off";
+    serverConfig.chatbottriggerenabled = "off";
     serverConfig.questionbotenabled = "off";
+    serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
 
     for (const [key, value] of Object.entries(modalcode))
@@ -651,12 +653,14 @@ function handleSettingsWidgetLargeData (modalcode)
         return;
     }
     serverConfig.chatbotenabled = "off";
+    serverConfig.chatbottriggerenabled = "off";
     serverConfig.questionbotenabled = "off";
-    serverConfig.chatbotnametriggertagstartofline = "off";
-    //serverConfig.chatbotnametriggertagaddhistory = "off";
-    serverConfig.chatbotquerytagstartofline = "off";
     serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
+
+    serverConfig.chatbotnametriggertagstartofline = "off";
+    serverConfig.chatbotquerytagstartofline = "off";
+
     serverConfig.DEBUG_MODE = "off";
     serverConfig.chatbot_restore_defaults = "off";
 

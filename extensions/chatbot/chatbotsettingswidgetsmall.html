@@ -48,16 +48,35 @@
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled"
                         chatbotenabledchecked>
-                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot (joins in the conversation in
+                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot Autoresponse (joins in the
+                        conversation
+                        in
                         chat)</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="chatbottriggerenabled" type="checkbox"
+                        id="chatbottriggerenabled" chatbottriggerenabledchecked>
+                    <label class="form-check-label" for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will
+                        answer
+                        to questings that uses its name, or whatever is set in the trigger field below)</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled"
                         questionbotenabledchecked>
-                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot (chat can ask questions
+                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot trigger (chat can ask
+                        questions
                         directly)</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="translatetoeng" type="checkbox" id="translatetoeng"
+                        translatetoengchecked>
+                    <label class="form-check-label" for="translatetoeng">English Translation trigger</label>
                 </div>
             </div>
             <div class="form-group">
@@ -68,15 +87,16 @@
                         chatbot</label>
                 </div>
             </div>
+            <!-- Profile selector -->
             <hr>
             <div class="form-group row-2" class="form-control">
                 <h4>Profile in use:<span style='color: yellow'> chatbotprofileselectedname</span></h4>
                 <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one"
                     id="chatbotprofilepicker" value="chatbotprofilepickervalue" name="chatbotprofilepicker" required>
-                    <!--  onChange='add_img()' -->
                     chatbotprofileoptionssplaceholder
                 </select>
             </div>
+            <!-- Activity level -->
             <hr>
             <h5 class="text-center">Activity level (how much the bot responds)</h5>
             <p>Timeout for bot. A random time will be selected between min and max, after chatting the bot will sleep
@@ -94,8 +114,9 @@
                         value="chatbotTimerMaxtext">
                 </div>
             </div>
+            <!-- message count level -->
             <HR>
-            <h5 class="text-center">Line count per request</h5>
+            <h5 class="text-center">Message count per request</h5>
             <p>This is how many messages to send to the AI bot. ie 5 means collect the next 5 messages (after the
                 timeout above)and send them to get a response</p>
             <div class="form-group py-2">
