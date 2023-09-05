@@ -48,6 +48,7 @@ const localConfig = {
     state: {
         color: "red",
         msfsconnected: false,
+        msfsconnecting: false
     },
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
@@ -156,11 +157,8 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
     );
-    //sr_api.sendMessage(localConfig.DataCenterSocket,
-    //    sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT")
-    //);
     clearTimeout(localConfig.heartBeatHandle);
-    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+    heartBeatCallback();
 
 }
 // ============================================================================
@@ -198,7 +196,7 @@ function onDataCenterMessage (server_packet)
                 // SaveDataToServer();
                 serverData = structuredClone(server_packet.data)
                 // connect to msfs
-                MSFS2020Connect();
+                initSimVarsandTriggers();
                 pollMSFS();
             }
         }
@@ -228,7 +226,7 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 if (reconnect)
                 {
-                    MSFS2020Connect()
+                    initSimVarsandTriggers()
                     pollMSFS()
                     sendTriggersAndActions(server_packet.from)
                 }
@@ -263,7 +261,7 @@ function onDataCenterMessage (server_packet)
                     SaveDataToServer();
                     if (reconnect || (extension_packet.data.msfs2020ennabled == "on" && !localConfig.state.msfsconnected))
                     {
-                        MSFS2020Connect()
+                        initSimVarsandTriggers()
                         pollMSFS()
                         sendTriggersAndActions(server_packet.from)
                     }
@@ -640,18 +638,18 @@ function SaveDataToServer ()
 function heartBeatCallback ()
 {
     localConfig.state.msfsconnected = localConfig.msfs_api.connected
+    localConfig.state.color = "red"
     if (serverConfig.msfs2020ennabled == "on")
     {
         // if we are not connected and we should be then attempt to reconnect
-        if (!localConfig.state.msfsconnected)
+        if (!localConfig.state.msfsconnected && !localConfig.state.msfsconnecting)
             msfsapiconnect()
         if (localConfig.state.msfsconnected != true)
             localConfig.state.color = "orange"
         else
             localConfig.state.color = "green"
     }
-    else
-        localConfig.state.color = "red"
+
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
@@ -672,7 +670,7 @@ function heartBeatCallback ()
 
 
 // ============================================================================
-//                           FUNCTION: MSFS2020Connect
+//                           FUNCTION: initSimVarsandTriggers
 // ============================================================================
 /*
     serverData.SimVars['ACCELERATION BODY X']
@@ -685,7 +683,7 @@ function heartBeatCallback ()
         enabled: 'off'
         }
     */
-function MSFS2020Connect ()
+function initSimVarsandTriggers ()
 {
     if (serverConfig.msfs2020ennabled == "on")
     {
@@ -852,14 +850,19 @@ function MSFS2020Connect ()
     //file_log("SystemEvents", SystemEvents)
 
 }
+
+// ============================================================================
+//                           FUNCTION: msfsapiconnect
+// ============================================================================
 function msfsapiconnect ()
 {
     if (serverConfig.msfs2020ennabled == "on")
     {
-        localConfig.msfs_api.connect({ onConnect: (nodeSimconnectHandle) => MSFS2020Connected(nodeSimconnectHandle) })
+        localConfig.state.msfsconnecting = true;
+        localConfig.msfs_api.connect({ onConnect: (nodeSimconnectHandle) => MSFS2020RegisterSimvars(nodeSimconnectHandle) })
             .catch(err =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connect", "Connection failed. Reconnecting in", serverConfig.msfs2020SimPollInterval, "seconds");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".msfsapiconnect", "Connection failed. Reconnecting in", serverConfig.msfs2020SimPollInterval, "seconds");
             })
 
         /*    no idea how to put a handler in for recvevents :( I'll come back to this later
@@ -893,13 +896,14 @@ function MSFS2020Disconnect ()
     }
 }
 // ============================================================================
-//                           FUNCTION: MSFS2020Connect
+//                           FUNCTION: MSFS2020RegisterSimvars
 // ============================================================================
-async function MSFS2020Connected (handle)
+async function MSFS2020RegisterSimvars (handle)
 {
     try
     {
         localConfig.state.msfsconnected = true;
+        localConfig.state.msfsconnecting = false;
         localConfig.msfs_api_connected_handle = handle;
         localConfig.EventHandles = []
         for (let i = 0; i < serverData.EventVars.length; i++)
@@ -974,7 +978,7 @@ async function MSFS2020Connected (handle)
     catch (err)
     {
         localConfig.state.msfsconnected = false;
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020Connected", "Error ", err.message);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020RegisterSimvars", "Error ", err.message);
     }
 }
 // ============================================================================
@@ -1097,6 +1101,8 @@ async function postTriggers ()
 function performActionGetLatLong (data)
 {
     let action = ""
+    if (localConfig.msfs_api.connected != true)
+        return;
     // Request for data, not a set
     if (data.type == "action_PLANE LATITUDE LONGITUDE_get")
     {
@@ -1109,12 +1115,11 @@ function performActionGetLatLong (data)
                     let triggertopost = findtriggerByMessageType(onRequestMessageType)
                     // returned data doesn't have spaces it has underscores
 
-                    triggertopost.parameters.lat = data["PLANE_LATITUDE"] * 180 / Math.PI;
+                    triggertopost.parameters.lat = String(data["PLANE_LATITUDE"] * 180 / Math.PI);
                     localConfig.msfs_api.get("PLANE LONGITUDE")
                         .then(data =>
                         {
-                            triggertopost.parameters.long = data["PLANE_LONGITUDE"] * 180 / Math.PI;
-
+                            triggertopost.parameters.long = String(data["PLANE_LONGITUDE"] * 180 / Math.PI);
                             sr_api.sendMessage(localConfig.DataCenterSocket,
                                 sr_api.ServerPacket(
                                     "ChannelData",

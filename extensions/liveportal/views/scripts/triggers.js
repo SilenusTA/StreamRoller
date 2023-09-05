@@ -608,7 +608,12 @@ function TriggerAction (action, triggerparams)
     if (action.paused)
         return
     // regular expression to test if input is a mathmatical equasion
+    // note this seems to get confused if a string has -1 in it.
+    // BUG::: need a better regex
     const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
+    // tests to get round the bug above
+    const bannedRegex = ["process", "system", "for", "while", "loop"];
+
     let params = {}
     // store the trigger params in the actrion in case the extension has use for them
     params.triggerparams = triggerparams.data
@@ -661,9 +666,17 @@ function TriggerAction (action, triggerparams)
 
             }
             // is this a mathmatical expression
-            if (re.test(tempAction))
+            if (re.test(tempAction) && !bannedRegex.includes(tempAction))
             {
-                tempAction = eval(tempAction).toString()
+                try
+                {
+                    tempAction = eval(tempAction).toString()
+                }
+                catch (err)
+                {
+                    // this is for when the regex fails and we try to eval a string
+                    tempAction = tempAction.toString()
+                }
             }
             params[property] = tempAction
         }
