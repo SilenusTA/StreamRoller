@@ -1410,10 +1410,7 @@ function reconnectChat (account)
                     .then(channel => 
                     {
                         logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
-                        if (serverConfig.enabletwitchchat === "on")
-                        {
-                            joinChatChannel(account);
-                        }
+
                     })
                     .catch((err) => 
                     {
@@ -1422,11 +1419,15 @@ function reconnectChat (account)
                     });
             })
         }
+        if (serverConfig.enabletwitchchat === "on")
+        {
+            joinChatChannel(account);
+        }
         localConfig.twitchClient[account].connecting = false;
     }
     catch (err)
     {
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
         localConfig.twitchClient[account].state.connected = false;
         localConfig.twitchClient[account].connecting = false;
     }
@@ -1451,7 +1452,7 @@ function joinChatChannel (account)
             .catch((err) =>
             {
                 localConfig.twitchClient[account].state.connected = false;
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err.message, " sheduling reconnect");
                 process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                 setTimeout(() =>
                 {
