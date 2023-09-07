@@ -1301,8 +1301,7 @@ function process_chat_data (channel, tags, chatmessage)
     {
 
         // set the channel name
-        //data.channel = channel
-        data.channel = "user:" + localConfig.twitchClient.user.connection.getChannels() + " bot:" + localConfig.twitchClient.bot.connection.getChannels()
+        data.channel = channel
         if (localConfig.twitchClient["user"].state.readonly)
             data.channel += " [Readonly]"
         if (localConfig.twitchClient["user"].state.emoteonly)

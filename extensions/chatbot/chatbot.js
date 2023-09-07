@@ -311,7 +311,7 @@ let serverConfig = structuredClone(default_serverConfig)
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "chatbot sends text through OpenAPI ChatGPT and puts the responce into twitch chat.",
+    description: "Chatbot sends text through OpenAPI ChatGPT and puts the responce into twitch chat.",
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
