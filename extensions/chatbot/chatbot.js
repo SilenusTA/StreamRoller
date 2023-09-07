@@ -311,7 +311,7 @@ let serverConfig = structuredClone(default_serverConfig)
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming. <a href='https://obsproject.com/'>OBS Website</a>",
+    description: "chatbot sends text through OpenAPI ChatGPT and puts the responce into twitch chat.",
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -852,12 +852,12 @@ function SendSettingsWidgetLarge (tochannel)
                         modalstring = modalstring.replaceAll("p" + profile_id + i + "text", x);
                         if (i.indexOf("q") == 0)
                         {
-                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Question 1</label>"
+                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Question " + i.replace("q", "") + "</label>"
                             profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "' />"
                         }
                         else
                         {
-                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Answer 1 </label>"
+                            profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Answer " + i.replace("a", "") + "</label>"
                             profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>"
                         }
 
