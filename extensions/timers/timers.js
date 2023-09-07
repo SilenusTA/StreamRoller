@@ -248,7 +248,11 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode")
         {
-            // ignore these messages
+            // ignore these messages as we don't have other extensions settings pages
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeCode")
+        {
+            // we don't currently have a large widget so ignore these
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {

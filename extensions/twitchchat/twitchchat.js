@@ -1291,7 +1291,7 @@ function process_chat_data (channel, tags, chatmessage)
     {
         if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")   
         {
-            console.log("############## NULL tags recieved in message ################")
+            console.log("############## NULL tags received in message ################")
             console.log("process_chat_data", channel, tags, chatmessage)
         }
         return;
@@ -1447,7 +1447,7 @@ function joinChatChannel (account)
             {
                 localConfig.twitchClient[account].state.connected = true;
                 logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername);
-                process_chat_data(chatmessagename, chatmessagetags, "Chat channel changed to " + serverConfig.streamername);
+                process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
             }
             )
             .catch((err) =>
