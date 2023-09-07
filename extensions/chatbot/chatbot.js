@@ -667,7 +667,7 @@ function handleSettingsWidgetLargeData (modalcode)
     for (const [key, value] of Object.entries(modalcode))
     {
         if (key.indexOf("temperature") > -1)
-            serverConfig[key] = value / 50;
+            serverConfig[key] = String(value / 50);
         else
             serverConfig[key] = value;
     }
@@ -994,9 +994,9 @@ function processTextMessage (data, triggerresponse = false)
     let messages = data.message;
     let starttime = Date.now();
     let modelToUse = {
-        model: serverConfig.chatbotqueryengine,
-        temperature: serverConfig.chatbotquerytemperature,
-        max_tokens: serverConfig.chatbotquerymaxtokenstouse,
+        model: serverConfig.chatbotautoresponseengine,
+        temperature: serverConfig.chatbotautoresponsetemperature,
+        max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
     }
     // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
     // this should really be a rollback timeout but this whole code needs re-writing at this point :P
@@ -1027,12 +1027,13 @@ function processTextMessage (data, triggerresponse = false)
     else
         messages = addPersonality(messages, serverConfig.currentprofile)
 
+    // update the engine to the data sent if filled in
     if (data.engine && data.engine != "")
-        modelToUse.temperature = data.engine;
+        modelToUse.model = data.engine;
     if (data.temperature && data.temperature != "")
-        modelToUse.temperature = data.temperature;
+        modelToUse.temperature = data.temperature.toString();
     if (data.maxtokens && data.maxtokens != "")
-        modelToUse.maxtokens = data.maxtokens;
+        modelToUse.max_tokens = data.maxtokens.toString();
 
     callOpenAI(messages, modelToUse)
         .then(chatMessageToPost =>
@@ -1096,6 +1097,7 @@ function processChatMessage (data)
     let starttime = Date.now();
     let messages_handled = ""
     let sub_messages = "";
+    let modelToUse = {}
 
     // lets work out what messages we want to push through the chatbot
     if (serverConfig.DEBUG_MODE === "on")
@@ -1275,11 +1277,32 @@ function processChatMessage (data)
     else if (translateToEnglish || submessage)
     {
         let messages = ""
-        let modelToUse = {
-            model: serverConfig.translatetoengengine,
-            temperature: serverConfig.translatetoengtagtemperature,
-            max_tokens: serverConfig.translatetoengtagmaxtokenstouse,
+
+        // translation model default settings
+        if (translateToEnglish)
+        {
+            modelToUse = {
+                model: serverConfig.translatetoengengine,
+                temperature: serverConfig.translatetoengtagtemperature,
+                max_tokens: serverConfig.translatetoengtagmaxtokenstouse,
+            }
         }
+        else // sub message default settings
+        {
+            modelToUse = {
+                model: serverConfig.chatbotnametriggerengine,
+                temperature: serverConfig.chatbotnametriggertemperature,
+                max_tokens: serverConfig.chatbotnametriggermaxtokenstouse,
+            }
+        }
+        // update the engine to the data sent if filled in
+        if (data.engine && data.engine != "")
+            modelToUse.model = data.engine;
+        if (data.temperature && data.temperature != "")
+            modelToUse.temperature = data.temperature.toString();
+        if (data.maxtokens && data.maxtokens != "")
+            modelToUse.max_tokens = data.maxtokens.toString();
+
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -1333,11 +1356,18 @@ function processChatMessage (data)
     } // is this a diect question from chat
     else if (directChatQuestion)
     {
-        let modelToUse = {
+        modelToUse = {
             model: serverConfig.chatbotqueryengine,
             temperature: serverConfig.chatbotquerytemperature,
             max_tokens: serverConfig.chatbotquerymaxtokenstouse,
         }
+        // update the engine to the data sent if filled in
+        if (data.engine && data.engine != "")
+            modelToUse.model = data.engine;
+        if (data.temperature && data.temperature != "")
+            modelToUse.temperature = data.temperature.toString();
+        if (data.maxtokens && data.maxtokens != "")
+            modelToUse.max_tokens = data.maxtokens.toString();
         if (serverConfig.DEBUG_MODE === "on")
         {
             console.log(greenColour + "--------- finished preprossing -------- " + resetColour)
@@ -1407,7 +1437,6 @@ function processChatMessage (data)
     }
     else
     {
-        let modelToUse = {}
         if (directChatbotTriggerTag)
         {
             modelToUse = {
@@ -1423,6 +1452,13 @@ function processChatMessage (data)
                 max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
             }
         }
+        // update the engine to the data sent if filled in
+        if (data.engine && data.engine != "")
+            modelToUse.model = data.engine;
+        if (data.temperature && data.temperature != "")
+            modelToUse.temperature = data.temperature.toString();
+        if (data.maxtokens && data.maxtokens != "")
+            modelToUse.max_tokens = data.maxtokens.toString();
         // ##############################################
         //         Processing a chat message
         // ##############################################
