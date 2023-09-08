@@ -18,4 +18,4 @@ timerfiles/
 chatdata/
 msfsdata/
 debug_only_testing*
-questions.txt
+extensions/quizbot/questions.txt
