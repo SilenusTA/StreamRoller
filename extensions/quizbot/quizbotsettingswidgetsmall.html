@@ -1,0 +1,72 @@
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">Quizbot Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>Quizbot will ask questions and check answers supplied. You need to add triggers
+                and actions to see anything in chat
+            </p>
+            <div class="form-group invisible">
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
+                    tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData"
+                    tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="quizbot_enabled" type="checkbox" id="quizbot_enabled"
+                        quizbot_enabledchecked>
+                    <label class="form-check-label" for="quizbot_enabled">Enable/Disable</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="quizbot_restart" type="checkbox" id="quizbot_restart"
+                        quizbot_restartchecked>
+                    <label class="form-check-label" for="quizbot_restart">Restart/Skip current question</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="quizbot_showanswerinconsole" type="checkbox"
+                        id="quizbot_showanswerinconsole" quizbot_showanswerinconsolechecked>
+                    <label class="form-check-label" for="quizbot_showanswerinconsole">Show the question and answers in
+                        the console</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="quizbot_filename" class="col-form-label">quizbot_filename</label>
+                <input type="text" name="quizbot_filename" class="form-control" id="quizbot_filename"
+                    value="quizbot_filenametext">
+            </div>
+
+            <div class="form-group">
+                <label for="quizbot_duration" class="col-form-label">quizbot_duration</label>
+                <input type="text" name="quizbot_duration" class="form-control" id="quizbot_duration"
+                    value="quizbot_durationtext">
+            </div>
+
+
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="quizbot_restore_defaults" type="checkbox"
+                        id="quizbot_restore_defaults" quizbot_restore_defaultschecked>
+                    <label class="form-check-label" for="quizbot_restore_defaults">Restore Defaults</label>
+                </div>
+            </div>
+        </div>
+
+        <HR>
+        <!-- Standard footer with submit and cancel buttons -->
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+<!-- END: -->
