@@ -214,7 +214,7 @@ async function loadExtensions (extensionFolder)
             ),
         )
     }
-    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: importing extension modules", err); }
+    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: importing extension modules", err.message); }
 
     // for each extension call it's initialise function
     try

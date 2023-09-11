@@ -64,7 +64,7 @@ const localConfig = {
     overloadprotection: 500,
 };
 const default_serverConfig = {
-    __version__: "0.3",
+    __version__: "0.4",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
@@ -293,6 +293,7 @@ const default_serverConfig = {
     // =============================
     // credentials dialog variables
     // =============================
+    credentialscount: "1",
     cred1name: "openAIkey",
     cred1value: "",
 
