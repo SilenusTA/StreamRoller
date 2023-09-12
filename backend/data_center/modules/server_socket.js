@@ -221,7 +221,7 @@ function onMessage (socket, server_packet)
             extensionlist_requesters_handles[extensionlist_requesters[i]] = setTimeout(() =>
             {
                 mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
-            }, 1000);
+            }, 2000);
         }
     }
     else
