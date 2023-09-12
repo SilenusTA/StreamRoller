@@ -100,6 +100,7 @@ let backend_server = null;
 let server_socket = null;
 let config = {}
 let extensionlist_requesters = []
+let extensionlist_requesters_handles = []
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -207,14 +208,20 @@ function onMessage (socket, server_packet)
     // check we have a valid socket for this extension, don't need to check if the extension exists as it will have been added above
     if (typeof (extensions[server_packet.from].socket) === "undefined" || !extensions[server_packet.from].socket)
     {
-        //      console.log("###### Adding new socket for Extension ", server_packet.from)
+        //console.log("###### Adding new socket for Extension ", server_packet.from)
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for ", server_packet.from);
         extensions[server_packet.from].socket = socket;
+        //console.log("extensionlist_requesters ", extensionlist_requesters)
         // if we add a new extension send the list out to anyone who has requested it so far to update them
         for (let i = 0; i < extensionlist_requesters.length; i++)
         {
-            //        console.log("resending extension list out to ", extensionlist_requesters[i])
-            mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
+            // buffer the extensionlist messages using a timer
+            //console.log("resending extension list out to ", extensionlist_requesters[i])
+            clearTimeout(extensionlist_requesters_handles[extensionlist_requesters[i]])
+            extensionlist_requesters_handles[extensionlist_requesters[i]] = setTimeout(() =>
+            {
+                mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
+            }, 1000);
         }
     }
     else
