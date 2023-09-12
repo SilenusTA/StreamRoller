@@ -302,7 +302,6 @@
         setTimeout(() =>
         {
             RequestExtList();
-            RequestChList();
             RequestLoggingLevel();
             setTimeout(() =>
             {
@@ -721,7 +720,6 @@
                 {
                     console.log("Heartbeat Received: missing extensions, requesting again")
                     RequestExtList();
-                    RequestChList();
                 }
             }
             else if (extension_packet.type === "TriggerAndActions")
@@ -2328,6 +2326,7 @@
                 "RequestExtensionsList",
                 serverConfig.extensionname,
             ));
+        RequestChList();
     }
     // ============================================================================
     //                           FUNCTION: RequestOBSScenes
