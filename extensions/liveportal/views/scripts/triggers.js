@@ -550,7 +550,7 @@ function CheckTriggers (event)
                                 {
                                     switch (searchtype)
                                     {
-                                        case "2"://doesn't match anywhere
+                                        case "2"://match anywhere
                                             if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
                                                 match = false;
                                             break;
@@ -565,7 +565,7 @@ function CheckTriggers (event)
                                     }
                                 }
                                 //check non string types for not matching
-                                else if (param[i] != "" && event.data.parameters[i] != param[i])
+                                else if (param[i] != "" && event.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
                                     match = false;
                             }
                         }

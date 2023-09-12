@@ -991,105 +991,115 @@ function heartBeatCallback ()
 // ============================================================================
 function processTextMessage (data, triggerresponse = false)
 {
-    // postback to extension/channel/direct to chat
-    let messages = data.message;
-    let starttime = Date.now();
-    let modelToUse = {
-        model: serverConfig.chatbotautoresponseengine,
-        temperature: serverConfig.chatbotautoresponsetemperature,
-        max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
-    }
-
-    // check ignore list
-    if (serverConfig.chatbotignorelist
-        && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.triggerparams.parameters.sender.toLowerCase()) > -1)
+    try
     {
-        if (serverConfig.DEBUG_MODE === "on")
-            console.log("ignoring message, user on ignore list")
-        return;
-    }
-    // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
-    // this should really be a rollback timeout but this whole code needs re-writing at this point :P
-    if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection
-        || localConfig.requestPending)
-    {
-        // random timeout between 200 and 500ms
-        var randomTimeout = (Math.random() * 300) + 200;
-        if (serverConfig.DEBUG_MODE === "on")
-            console.log(" ********************** waiting for rollback timeout:", randomTimeout)
-        setTimeout(() =>
+        // postback to extension/channel/direct to chat
+        let messages = data.message;
+        let starttime = Date.now();
+        let modelToUse = {
+            model: serverConfig.chatbotautoresponseengine,
+            temperature: serverConfig.chatbotautoresponsetemperature,
+            max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
+        }
+
+        // check ignore list
+        if (serverConfig.chatbotignorelist
+            && typeof (data.triggerparams.parameters) != "undefined"
+            && typeof (data.triggerparams.parameters.sender) != "undefined"
+            && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.triggerparams.parameters.sender.toLowerCase()) > -1)
         {
-            processTextMessage(data, triggerresponse)
-        }, randomTimeout);
-        return;
-    }
-    let directChatQuestion = (
-        // search the whole line
-        (serverConfig.chatbotquerytagstartofline == "off" &&
-            data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase()))
-        ||
-        // search for start of line
-        (serverConfig.chatbotquerytagstartofline == "on" &&
-            data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
-
-    if (directChatQuestion)
-        messages = [{ "role": "user", "content": messages }];
-    else
-        messages = addPersonality(messages, serverConfig.currentprofile)
-
-    // update the engine to the data sent if filled in
-    if (data.engine && data.engine != "")
-        modelToUse.model = data.engine;
-    if (data.temperature && data.temperature != "")
-        modelToUse.temperature = data.temperature.toString();
-    if (data.maxtokens && data.maxtokens != "")
-        modelToUse.max_tokens = data.maxtokens.toString();
-
-    callOpenAI(messages, modelToUse)
-        .then(chatMessageToPost =>
-        {
-            let msg = findtriggerByMessageType("trigger_chatbotResponse")
-            msg.parameters.message = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + chatMessageToPost
-            //if this is a trigger message then send out normally on the channel
-            if (triggerresponse)
-            {
-                // send the modal data to our channel
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket("ChannelData",
-                        serverConfig.extensionname,
-                        sr_api.ExtensionPacket(
-                            "trigger_chatbotResponse",
-                            serverConfig.extensionname,
-                            msg,
-                            serverConfig.channel,
-                        ),
-                        serverConfig.channel)
-                )
-            }
-            else
-            {
-                // send the modal data to the extension
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket("ExtensionMessage",
-                        serverConfig.extensionname,
-                        sr_api.ExtensionPacket(
-                            "trigger_chatbotResponse",
-                            serverConfig.extensionname,
-                            msg,
-                            serverConfig.channel,
-                            data.from,
-                        ),
-                        serverConfig.channel,
-                        data.from)
-                )
-            }
-
-        })
-        .catch(e =>
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e.message);
+            if (serverConfig.DEBUG_MODE === "on")
+                console.log("ignoring message, user on ignore list")
             return;
-        })
+        }
+        // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
+        // this should really be a rollback timeout but this whole code needs re-writing at this point :P
+        if (starttime - localConfig.lastrequesttime < localConfig.overloadprotection
+            || localConfig.requestPending)
+        {
+            // random timeout between 200 and 500ms
+            var randomTimeout = (Math.random() * 300) + 200;
+            if (serverConfig.DEBUG_MODE === "on")
+                console.log(" ********************** waiting for rollback timeout:", randomTimeout)
+            setTimeout(() =>
+            {
+                processTextMessage(data, triggerresponse)
+            }, randomTimeout);
+            return;
+        }
+        let directChatQuestion = (
+            // search the whole line
+            (serverConfig.chatbotquerytagstartofline == "off" &&
+                data.message.toLowerCase().includes(serverConfig.chatbotquerytag.toLowerCase()))
+            ||
+            // search for start of line
+            (serverConfig.chatbotquerytagstartofline == "on" &&
+                data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
+
+        if (directChatQuestion)
+            messages = [{ "role": "user", "content": messages }];
+        else
+            messages = addPersonality(messages, serverConfig.currentprofile)
+
+        // update the engine to the data sent if filled in
+        if (data.engine && data.engine != "")
+            modelToUse.model = data.engine;
+        if (data.temperature && data.temperature != "")
+            modelToUse.temperature = data.temperature.toString();
+        if (data.maxtokens && data.maxtokens != "")
+            modelToUse.max_tokens = data.maxtokens.toString();
+
+        callOpenAI(messages, modelToUse)
+            .then(chatMessageToPost =>
+            {
+                let msg = findtriggerByMessageType("trigger_chatbotResponse")
+                msg.parameters.message = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + chatMessageToPost
+                //if this is a trigger message then send out normally on the channel
+                if (triggerresponse)
+                {
+                    // send the modal data to our channel
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket("ChannelData",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "trigger_chatbotResponse",
+                                serverConfig.extensionname,
+                                msg,
+                                serverConfig.channel,
+                            ),
+                            serverConfig.channel)
+                    )
+                }
+                else
+                {
+                    // send the modal data to the extension
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket("ExtensionMessage",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "trigger_chatbotResponse",
+                                serverConfig.extensionname,
+                                msg,
+                                serverConfig.channel,
+                                data.from,
+                            ),
+                            serverConfig.channel,
+                            data.from)
+                    )
+                }
+
+            })
+            .catch(e =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e.message);
+                return;
+            })
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e.message, data);
+        return;
+    }
 }
 // ============================================================================
 //                    FUNCTION: processChatMessage

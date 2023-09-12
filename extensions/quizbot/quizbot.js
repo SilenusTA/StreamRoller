@@ -284,7 +284,6 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 stopQuiz();
-                serverConfig.quizbot_enabled = "off"
             }
         }
         else if (extension_packet.type === "action_QuizbotCheckAnswer")
@@ -579,15 +578,21 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 function heartBeatCallback ()
 {
+    let status = {
+        connected: serverConfig.quizbot_enabled == "on",
+        color: "red"
+    }
+    if (status.connected && localConfig.quizbotTimerHandle._destroyed)
+        status.color = "orange";
+    else if (status.connected && !localConfig.quizbotTimerHandle._destroyed)
+        status.color = "green";
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                {
-                    connected: serverConfig.quizbot_enabled == "on",
-                },
+                status,
                 serverConfig.channel),
             serverConfig.channel
         ),

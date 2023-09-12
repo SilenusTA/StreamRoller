@@ -144,7 +144,8 @@ const triggersandactions =
                 color: "",
                 firstmessage: false,
                 mod: false,
-                subscriber: false
+                subscriber: false,
+                vip: false,
             }
         }, {
             name: "TwitchChatActionReceived",
@@ -1607,7 +1608,7 @@ function chatLogin (account)
                 triggertosend.parameters.mod = userstate.mod
                 triggertosend.parameters.color = userstate.color
                 triggertosend.parameters.subscriber = userstate.subscriber
-
+                triggertosend.parameters.vip = userstate.vip == true
                 postChatTrigger(triggertosend)
             });
             localConfig.twitchClient[account].connection.on("messagedeleted", (channel, username, deletedMessage, userstate) => 
