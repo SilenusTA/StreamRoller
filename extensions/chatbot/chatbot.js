@@ -331,7 +331,7 @@ const triggersandactions =
             {
                 name: "OpenAIChatbotProcessText",
                 displaytitle: "Process text",
-                description: "Send some text through the chatbot",
+                description: "Send some text through the chatbot (users in original message on the ignore list will not get processed)",
                 messagetype: "action_ProcessText",
                 channel: serverConfig.channel,
                 parameters: {
@@ -998,6 +998,15 @@ function processTextMessage (data, triggerresponse = false)
         model: serverConfig.chatbotautoresponseengine,
         temperature: serverConfig.chatbotautoresponsetemperature,
         max_tokens: serverConfig.chatbotautoresponsemaxtokenstouse,
+    }
+
+    // check ignore list
+    if (serverConfig.chatbotignorelist
+        && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.triggerparams.parameters.sender.toLowerCase()) > -1)
+    {
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log("ignoring message, user on ignore list")
+        return;
     }
     // if we have just sent a request then delay to avoid overloading the API and getting 429 errors
     // this should really be a rollback timeout but this whole code needs re-writing at this point :P
