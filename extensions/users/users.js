@@ -185,6 +185,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "UpdateUserData")
         {
+
             if (server_packet.to === localConfig.EXTENSION_NAME)
             {
                 let newuser = false
@@ -192,17 +193,17 @@ function onDataCenterMessage (server_packet)
                 if (!serverData.userData[extension_packet.data.platform])
                     serverData.userData[extension_packet.data.platform] = [];
                 // new users
-                if (!serverData.userData[extension_packet.data.platform][extension_packet.data.username])
+                if (!serverData.userData[extension_packet.data.platform][extension_packet.data.name])
                 {
                     newuser = true;
-                    serverData.userData[extension_packet.data.platform][extension_packet.data.username] = {};
+                    serverData.userData[extension_packet.data.platform][extension_packet.data.name] = {};
                 }
                 if (newuser)
                 {
-                    serverData.userData[extension_packet.data.platform][extension_packet.data.username].firstseen = Date.now()
+                    serverData.userData[extension_packet.data.platform][extension_packet.data.name].firstseen = Date.now()
                     sendNewUserTrigger(extension_packet.data)
                 }
-                serverData.userData[extension_packet.data.platform][extension_packet.data.username].lastseen = Date.now()
+                serverData.userData[extension_packet.data.platform][extension_packet.data.name].lastseen = Date.now()
                 SaveDataToServer();
             }
         }
