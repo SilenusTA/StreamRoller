@@ -81,6 +81,7 @@ if (config.softwareversion != localConfig.version)
 logger.setLoggingLevel(config.logginglevel);
 console.log("serverSettings: ", config);
 console.log("\x1b[1m\x1b[33mload the url\x1b[31m", config.HOST + ":" + config.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");
+console.log("\x1b[1m\x1b[33mNote: Only load one version of the browser as mutliple versions will conflict with each other leading to repeated messages in chat\x1b[0m");
 // ============================================================================
 //                          IMPORTS/VARIABLES
 // ============================================================================
