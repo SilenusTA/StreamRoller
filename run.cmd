@@ -22,4 +22,4 @@ for /l %%x in (1, 1, 10) do (
 :waitfornode
 
 Start "Streamroller" node_modules\.bin\node.exe backend\data_center\server.js
-start http:\\localhost:3000
+rem start http:\\localhost:3000
