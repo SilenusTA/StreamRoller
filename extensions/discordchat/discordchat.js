@@ -212,7 +212,7 @@ function onDataCenterMessage (server_packet)
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
             {
-                if (server_packet.data != {})
+                if (server_packet.data != {} && typeof (server_packet.data.discordMessageBuffer) != "undefined")
                     serverData.discordMessageBuffer = server_packet.data.discordMessageBuffer;
             }
             SaveDataToServer();
