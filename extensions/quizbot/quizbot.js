@@ -417,7 +417,7 @@ function readQuizFile ()
     }
 }
 // ============================================================================
-//                           FUNCTION: sendFirstLine
+//                           FUNCTION: sendQuizStarted
 // ============================================================================
 function sendQuizStarted ()
 {
@@ -425,7 +425,7 @@ function sendQuizStarted ()
     let data = findtriggerByMessageType("trigger_QuizbotQuizStarted")
     let answer = QA[1].trim();
 
-    answer = answer.replaceAll(/[a-z]/ig, "#")
+    answer = answer.replaceAll(/[ -~]/ig, "#")
     data.parameters.question = QA[0].trim() + ": !answer " + answer
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -479,6 +479,7 @@ function checkAnswer (userAnswer)
 // ============================================================================
 function startQuiz ()
 {
+    // check if quiz is running
     if (typeof (localConfig.quizbotTimerHandle) != "undefined" && !localConfig.quizbotTimerHandle._destroyed)
         stopQuiz()
     localConfig.currentQuestionAnswer = Math.floor(Math.random() * localConfig.quizQuestions.length);
@@ -490,7 +491,13 @@ function startQuiz ()
         console.log("answer", "'" + currentQuestion[1].trim() + "'")
     }
     quizTimerCallback();
-    sendQuizStarted();
+    //timeout here is so we don't get "sending too quickly" when the bot isn't modded/vip
+    setTimeout(() =>
+    {
+        sendQuizStarted();
+    }, 2000);
+
+
 }
 // ============================================================================
 //                           FUNCTION: stopQuiz
