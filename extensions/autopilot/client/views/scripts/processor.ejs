@@ -1,0 +1,196 @@
+<!-- load the api to the streamroller server -->
+<script src="/streamroller-message-api.cjs" onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
+
+<script>
+
+    // local config for volatile data
+    const localConfig = {
+        host: "http://localhost",
+        port: "3000",
+        heartBeatTimeout: "5000",
+        DataCenterSocket: null,
+    }
+    localConfig.host = '<%= host %>';
+    localConfig.port = '<%= port %>';
+    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>');
+
+    // defaults for the serverConfig (our saved persistant data)
+    const default_serverConfig = {
+        __version__: "0.1",
+        extensionname: "autopilot_frontend",
+        channel: "AUTOPILOT_FRONTEND",
+        displaySettings: {
+            selectedGroup: ""
+        }
+    }
+    let serverConfig = structuredClone(default_serverConfig);
+
+    // ============================================================================
+    //                      FUNCTION: startProcessor
+    // ============================================================================
+    function startProcessor ()
+    {
+        ConnectToDataCenter(localConfig.host, localConfig.port);
+    }
+    // ============================================================================
+    //                           FUNCTION: ConnectToDataCenter
+    // ============================================================================
+    function ConnectToDataCenter (host, port)
+    {
+        try
+        {
+            localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+                host, port);
+        } catch (err)
+        {
+            console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterDisconnect
+    // ============================================================================
+    function onDataCenterDisconnect (reason)
+    {
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterConnect
+    // ============================================================================
+    function onDataCenterConnect (socket)
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestConfig",
+                serverConfig.extensionname
+            ));
+
+        //request software version
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestSoftwareVersion",
+                serverConfig.extensionname,
+                serverConfig.channel
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterMessage
+    // ============================================================================
+    function onDataCenterMessage (server_packet)
+    {
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED CONFIG
+        // -------------------------------------------------------------------------------------------------
+        if (server_packet.type === "ConfigFile")
+        {
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname
+                        + " ConfigFile Updated", "The config file has been Updated to the latest version v"
+                        + default_serverConfig.__version__ + ". Your settings may have changed ");
+                }
+                else
+                {
+                    // update our config
+                    if (server_packet.data != "")
+                    {
+                        serverConfig = structuredClone(server_packet.data)
+                    }
+                }
+                // update server log, mainly here if we have added new default options when a user
+                // updates their version of streamroller
+                SaveConfigToServer();
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED LOGGING LEVEL
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "SoftwareVersion")
+        {
+            document.getElementById("softwareversion").innerHTML = server_packet.data;
+
+        }
+        else if (server_packet.type === "ExtensionMessage")
+        {
+            let extension_packet = server_packet.data;
+
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED trigger and action data
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "TriggerAndActions")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    receivedTrigger(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED Unhandled extension message
+            // -------------------------------------------------------------------------------------------------
+            else
+            {
+                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   RECEIVED CHANNEL DATA
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "ChannelData")
+        {
+            let extension_packet = server_packet.data;
+            console.log(".onDataCenterMessage", "message ", extension_packet.type, " from ", extension_packet.from);
+            // -------------------------------------------------------------------------------------------------
+            //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+            // -------------------------------------------------------------------------------------------------
+            if (server_packet.type === "UnknownChannel")
+            {
+                //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+                // need to add some sort of flood control here so we are only attempting to join one at a time
+                console.log("UnknownChannel", server_packet)
+                /*
+                if (server_packet.data != "" && server_packet.channel != undefined)
+                {
+                    setTimeout(() =>
+                    {
+                        sr_api.sendMessage(localConfig.DataCenterSocket,
+                            sr_api.ServerPacket(
+                                "JoinChannel",
+                                serverConfig.extensionname,
+                                server_packet.data
+                            ));
+                    }, 10000);
+                    */
+            }
+        }
+        else if (server_packet.type === "UnknownExtension")
+        {
+            console.log(".onDataCenterMessage", "UnknownExtension:", server_packet)
+        }
+        else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+        )
+        {
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+
+        // ------------------------------------------------ unknown message type received -----------------------------------------------
+        else
+            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveConfigToServer
+    // ============================================================================
+    function SaveConfigToServer ()
+    {
+        // saves our serverConfig to the server so we can load it again next time we startup
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveConfig",
+                serverConfig.extensionname,
+                serverConfig,
+            ));
+    }
+
+
+</script>>
