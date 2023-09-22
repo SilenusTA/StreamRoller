@@ -562,17 +562,20 @@ function SaveDataToServer ()
 // ============================================================================
 function SendMacros (from)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ChannelData",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "UserMacros",
+    if (serverData.userPairings.macrotriggers != undefined)
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,
-                serverData.userPairings.macrotriggers.triggers,
-                serverConfig.channel),
-            serverConfig.channel
-        ),
-    );
+                sr_api.ExtensionPacket(
+                    "UserMacros",
+                    serverConfig.extensionname,
+                    serverData.userPairings.macrotriggers.triggers,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
 }
 // ============================================================================
 //                           FUNCTION: SendMacroImages
