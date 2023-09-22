@@ -63,6 +63,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Timers allow for actions to be triggered when a timer goes off.<BR> For Triggers just put the name of the timer in you want to trigger on.<BR> For Actions put the name and duration of the timer in you want to start.",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -71,7 +73,6 @@ const triggersandactions =
                 displaytitle: "Timer Started",
                 description: "A timer was started",
                 messagetype: "trigger_TimerStarted",
-                channel: serverConfig.channel,
                 parameters: {
                     name: "",
                     duration: "",
@@ -83,7 +84,6 @@ const triggersandactions =
                 displaytitle: "Timer Ended",
                 description: "A timer has finished",
                 messagetype: "trigger_TimerEnded",
-                channel: serverConfig.channel,
                 parameters: {
                     name: "",
                     duration: "",
@@ -95,7 +95,6 @@ const triggersandactions =
                 displaytitle: "Timer Running",
                 description: "A timer is running",
                 messagetype: "trigger_TimerRunning",
-                channel: serverConfig.channel,
                 parameters: {
                     name: "",
                     message: "",
@@ -112,7 +111,6 @@ const triggersandactions =
                 displaytitle: "Timer Start",
                 description: "Start a countdown timer, duration in seconds",
                 messagetype: "action_TimerStart",
-                channel: serverConfig.channel,
                 parameters: {
                     name: "",
                     duration: "",
@@ -124,7 +122,6 @@ const triggersandactions =
                 displaytitle: "Timer Stop",
                 description: "Stop a running timer",
                 messagetype: "action_TimerStop",
-                channel: serverConfig.channel,
                 parameters: {
                     name: ""
                 }

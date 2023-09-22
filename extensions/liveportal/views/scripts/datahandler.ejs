@@ -31,7 +31,7 @@
 
     //"use strict"
     const default_serverConfig = {
-        __version__: "0.2",
+        __version__: "0.3",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -315,6 +315,7 @@
                         RequestSongLists();
                         RquestPhilipsHueData();
                         RequestChatBuffer("discordchat");
+                        RequestMacros();
                         if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
                             twitchFactOfTheDay();
                     }, 1000);
@@ -384,8 +385,8 @@
                     if (server_packet.data != "")
                     {
                         serverData = structuredClone(server_packet.data);
-                        updateMacroList();
-                        updateMacroButtonsDisplay()
+                        // updateMacroList();
+                        // updateMacroButtonsDisplay()
                         SaveDataToServer();
                     }
                 }
@@ -693,8 +694,8 @@
             // -------------------------------------------------------------------------------------------------
             //                           CheckForTrigger
             // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type.startsWith("trigger_"))
-                CheckTriggers(extension_packet)
+            //if (extension_packet.type.startsWith("trigger_"))
+            //    CheckTriggers(extension_packet)
             // -------------------------------------------------------------------------------------------------
             //                           HEARTBEAT
             // -------------------------------------------------------------------------------------------------
@@ -718,13 +719,20 @@
                 }
                 else
                 {
-                    console.log("Heartbeat Received: missing extensions, requesting again")
+                    console.log("Heartbeat Received: missing extensions for ", extension_packet.from, ", requesting again")
                     RequestExtList();
                 }
             }
             else if (extension_packet.type === "TriggerAndActions")
             {
                 receivedTrigger(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED trigger and action data
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "UserMacros")
+            {
+                updateMacroButtonsDisplay(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
             //                           STREAMLABS_ALERT
@@ -2390,6 +2398,24 @@
             ));
     }
     // ============================================================================
+    //                           FUNCTION: RequestMacros
+    // ============================================================================
+    function RequestMacros ()
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestMacros",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "autopilot"),
+                "",
+                "autopilot"
+            ));
+    }
+    // ============================================================================
     //                           FUNCTION: RequestTwitchAccountNames
     // ============================================================================
     // Desription: Get our usernames from the twitch extension (so we can post as them)
@@ -3151,12 +3177,12 @@
     // ============================================================================
     //                           FUNCTION: updateMacroButtonsDisplay
     // ============================================================================
-    function updateMacroButtonsDisplay ()
+    function updateMacroButtonsDisplay (data)
     {
         // let card = document.getElementById("MacroButtonsCard");
         let scenesrow = document.getElementById("MacroButtonsRow");
         let rowdata = ""
-        let macrolist = serverData.macros
+        let macrolist = data
         // need to update this to show the current active scene when we know what kind of data we are getting
         let first = true
         let color = ""
@@ -3165,9 +3191,22 @@
         {
             for (let i = 0; i < macrolist.length; i++)
             {
+                let style = "style='"// start the style tag
+
                 if (macrolist[i].color != "")
-                    color = "style='background-color:" + macrolist[i].color + "'"
-                rowdata += '<div id="MacroButtons_' + i + '" ' + color + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
+                    color = macrolist[i].color
+                if (macrolist[i].backgroundcolor != "")
+                    backgroundcolor = macrolist[i].backgroundcolor
+                // style += "' "
+                //rowdata += '<div id="MacroButtons_' + i + '" ' + style + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
+                if (typeof (macrolist[i].image) != "undefined" && macrolist[i].image != "")
+                {
+                    rowdata += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + macrolist[i].image + "\"') onclick='activateMacro(\"" + i + "\")'></button>"
+                }
+                else
+                {
+                    rowdata += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' onclick='activateMacro(\"" + i + "\")'>" + macrolist[i].name + "</div>"
+                }
             }
         }
         else

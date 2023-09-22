@@ -82,7 +82,9 @@ let serverConfig = structuredClone(default_serverConfig)
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Random fact will grab a random phrase or saying for your enjoyment",
+    description: "Handles streamlabs alerts and data",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -92,7 +94,6 @@ const triggersandactions =
                 displaytitle: "Streamlabs Donation Received",
                 description: "A Streamlabs donation was received",
                 messagetype: "trigger_StreamlabsDonationReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     amount: "",
@@ -105,7 +106,6 @@ const triggersandactions =
                 displaytitle: "Merch Purchase",
                 description: "Someone purchased your Merch",
                 messagetype: "trigger_MerchPurchaseReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     message: "",
@@ -118,7 +118,6 @@ const triggersandactions =
                 displaytitle: "LoyaltyStore Redemption",
                 description: "Someone Reddemed something from your LoyaltyStore",
                 messagetype: "trigger_StreamlabsLoyaltyStoreRedemptionReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     viewcount: "",
@@ -130,7 +129,6 @@ const triggersandactions =
                 displaytitle: "Follow on Twitch",
                 description: "A Viewer Followed your twitch stream",
                 messagetype: "trigger_TwitchFollowReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: ""
                 }
@@ -140,7 +138,6 @@ const triggersandactions =
                 displaytitle: "Subscription on Twitch",
                 description: "Someone Subscribed to your twitch stream",
                 messagetype: "trigger_TwitchSubscriptionReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     type: "",
@@ -153,7 +150,6 @@ const triggersandactions =
                 displaytitle: "Resub on Twitch",
                 description: "Someone Resubed to your twitch stream",
                 messagetype: "trigger_TwitchResubReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     months: "",
@@ -165,7 +161,6 @@ const triggersandactions =
                 displaytitle: "Host on Twitch",
                 description: "Someone Hosted your stream on twitch",
                 messagetype: "trigger_TwitchHostReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     raiders: ""
@@ -176,7 +171,6 @@ const triggersandactions =
                 displaytitle: "Bits on Twitch",
                 description: "Someone Donated bits on Twitch",
                 messagetype: "trigger_TwitchBitsReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     amount: "",
@@ -188,7 +182,6 @@ const triggersandactions =
                 displaytitle: "Raid on Twitch",
                 description: "Someone Raided your stream on Twitch",
                 messagetype: "trigger_TwitchRaidReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     viewcount: "",
@@ -199,7 +192,6 @@ const triggersandactions =
                 displaytitle: "CharityDonation on Twitch",
                 description: "Someone donated to charity on your Twitch stream",
                 messagetype: "trigger_TwitchCharityDonationReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     amount: "",
@@ -212,7 +204,6 @@ const triggersandactions =
                 displaytitle: "SubMystery gift on Twitch",
                 description: "Someone figted some subs on your Twitch stream",
                 messagetype: "trigger_TwitchSubMysteryGiftReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     gifter: "",
                     amount: ""
@@ -224,7 +215,6 @@ const triggersandactions =
                 displaytitle: "Subscription on YouTube",
                 description: "Someone Subscribed on YouTube",
                 messagetype: "trigger_YouTubeSubscriptionReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: ""
                 }
@@ -234,7 +224,6 @@ const triggersandactions =
                 displaytitle: "Member on YouTube",
                 description: "A Member joined on YouTube",
                 messagetype: "trigger_YouTubeMemberReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     months: "",
@@ -247,7 +236,6 @@ const triggersandactions =
                 displaytitle: "Superchat on YouTube",
                 description: "Someone Superchated on YouTube",
                 messagetype: "trigger_YouTubeSuperchatReceived",
-                channel: serverConfig.channel,
                 parameters: {
                     username: "",
                     amount: "",
@@ -260,7 +248,6 @@ const triggersandactions =
                 displaytitle: "StreamLabs data dump",
                 description: "Stream labs data dump, ie subs/month, top10 donaters etc etc",
                 messagetype: "trigger_StreamlabsDataDump",
-                channel: serverConfig.channel,
                 parameters: {
                     data: ""
                 }
@@ -270,7 +257,6 @@ const triggersandactions =
                 displaytitle: "StreamLabs Underlying data dump",
                 description: "Stream labs Underlying data dump, ie subs/month, top10 donaters etc etc",
                 messagetype: "trigger_StreamlabsDataDumpUnderlying",
-                channel: serverConfig.channel,
                 parameters: {
                     data: ""
                 }

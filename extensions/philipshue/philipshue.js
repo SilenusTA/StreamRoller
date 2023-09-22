@@ -83,6 +83,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Choose the bulbs, lamps or fixtures that fit your home and your personality. Customise the settings to fit your needs. Set automations to make life easier. Your home is personal (and your smart lighting should be too). <a href='https://www.philips-hue.com/'>Philips Hue</a>",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     /*triggers:
         [
@@ -96,7 +98,6 @@ const triggersandactions =
                 displaytitle: "Activate Scene",
                 description: "Activates a given scene in the Philips Hue hub",
                 messagetype: "action_ActivateScene",
-                channel: serverConfig.channel,
                 parameters:
                 {
                     sceneName: ""//or sceneID if the sender has it

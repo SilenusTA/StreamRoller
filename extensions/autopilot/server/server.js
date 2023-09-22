@@ -1,0 +1,619 @@
+/**
+ * Copyright (C) 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+import fs from "fs";
+
+const localConfig = {
+    host: "http://localhost",
+    port: "3000",
+    heartBeatHandle: null,
+    heartBeatTimeout: "5000",
+    DataCenterSocket: null,
+}
+// defaults for the serverConfig (our saved persistant data)
+const default_serverConfig = {
+    __version__: "0.1",
+    extensionname: "autopilot",
+    channel: "AUTOPILOT_BE",
+}
+let serverConfig = structuredClone(default_serverConfig);
+
+const default_serverData = {
+    __version__: "0.1",
+    userPairings: {}
+}
+
+let serverData = structuredClone(default_serverData);
+// ============================================================================
+//                           FUNCTION: startClient
+// ============================================================================
+async function startServer (host, port, heartbeat)
+{
+    // setup the express app that will handle client side page requests
+    //app.use("/images/", express.static(__dirname + '/public/images'));
+    localConfig.host = host;
+    localConfig.port = port;
+    try
+    {
+        ConnectToDataCenter(localConfig.host, localConfig.port);
+    }
+    catch (err)
+    {
+        logger.err(serverConfig.extensionname + "autopilot.startServer", "initialise failed:", err);
+    }
+}
+// ============================================================================
+//                           FUNCTION: ConnectToDataCenter
+// ============================================================================
+function ConnectToDataCenter (host, port)
+{
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+            host, port);
+    } catch (err)
+    {
+        logger.err(serverConfig.extensionname + "datahandler.initialise", "DataCenterSocket connection failed:", err);
+    }
+}
+function onDataCenterDisconnect (reason)
+{
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+function onDataCenterConnect (socket)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestConfig",
+            serverConfig.extensionname
+        ));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestData",
+            serverConfig.extensionname
+        ));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+    );
+    RequestExtList();
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+function onDataCenterMessage (server_packet)
+{
+    // -------------------------------------------------------------------------------------------------
+    //                  RECEIVED CONFIG
+    // -------------------------------------------------------------------------------------------------
+    if (server_packet.type === "ConfigFile")
+    {
+        // check it is our config
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname
+                    + " ConfigFile Updated", "The config file has been Updated to the latest version v"
+                    + default_serverConfig.__version__ + ". Your settings may have changed " + "\x1b[0m");
+            }
+            else
+            {
+                // update our config
+                if (server_packet.data != "")
+                    serverConfig = structuredClone(server_packet.data)
+            }
+            // update server log, mainly here if we have added new default options when a user
+            // updates their version of streamroller
+            SaveConfigToServer();
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED DATA File
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "DataFile")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverData.__version__)
+            {
+                serverData = structuredClone(default_serverData);
+                console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                SaveDataToServer()
+            }
+            else
+            {
+                if (server_packet.data != "")
+                {
+                    serverData = structuredClone(server_packet.data);
+                    SendUserPairings("");
+                }
+            }
+
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED EXTENSION LIST
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ExtensionList")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            localConfig.extensions = server_packet.data
+            RequestChList();
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                  RECEIVED CHANNEL LIST
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ChannelList")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            localConfig.channels = server_packet.data
+            localConfig.channels.forEach(element =>
+            {
+                if (element != serverConfig.channel)
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            element
+                        ));
+            });
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                      ### EXTENSION MESSAGE ###
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        if (extension_packet.type === "RequestUserTriggers")
+        {
+            SendUserPairings(extension_packet.from)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestMacroImages")
+        {
+            SendMacroImages(extension_packet.from)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   UPDATED USER PAIRINGS RECEIVED
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "UpdateUserPairings")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                ProcessUserPairings(extension_packet.data)
+                SendUserPairings(server_packet.from)
+                SaveDataToServer()
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST MACROS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestMacros")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+                SendMacros(server_packet.from)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   RECEIVED Unhandled extension message
+        // -------------------------------------------------------------------------------------------------
+        else
+        {
+            //console.log("ExtensionMessage not handled ", extension_packet)
+            //    logger.log(serverConfig.extensionname + ".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED CHANNEL DATA
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        // -------------------------------------------------------------------------------------------------
+        //                           CheckForTrigger
+        // -------------------------------------------------------------------------------------------------
+        if (extension_packet.type.startsWith("trigger_"))
+        {
+            CheckTriggers(extension_packet)
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "UnknownChannel")
+    {
+        // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+        // need to add some sort of flood control here so we are only attempting to join one at a time
+        console.log("UnknownChannel", server_packet)
+
+        if (server_packet.data != "" && server_packet.channel != undefined)
+        {
+            setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        serverConfig.extensionname,
+                        server_packet.data
+                    ));
+            }, 10000);
+
+        }
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "HeartBeat"
+        || server_packet.type === "UnknownExtension"
+        || server_packet.type === "ChannelJoined"
+    )
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled message type:", server_packet);
+
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+function SaveConfigToServer ()
+{
+    // saves our serverConfig to the server so we can load it again next time we startup
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveConfig",
+            serverConfig.extensionname,
+            serverConfig,
+        ));
+}
+
+// ============================================================================
+//                           FUNCTION: CheckTriggers
+// ============================================================================
+function CheckTriggers (data)
+{
+    if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
+    {
+        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
+        {
+            if (data.dest_channel === value.trigger.channel
+                && value.trigger.type == data.type
+                && data.from === value.trigger.extension)
+                ProcessReceivedTrigger(value, data)
+        }
+    }
+}
+// ============================================================================
+//                           FUNCTION: ProcessReceivedTrigger
+// ============================================================================
+function ProcessReceivedTrigger (pairing, receivedtrigger)
+{
+    //check if the event fields match the trigger fields we have set for this entry
+
+    // if parameters are entered we need to check that they all match
+    // before we trigger the action (ie if one fails to match then we must ignore this trigger)
+    // IE ALL CHECKS BELOW SHOULD BE FOR FAILURES TO MATCH
+    let match = true
+    // we have the correct extension, channel and message type
+    // lets check the variables to see if those are a match
+    pairing.trigger.data.forEach((param) =>
+    {
+        for (var i in param)
+        {
+            try
+            {
+                // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
+                if (i.indexOf("MATCHER_") != 0 && i != "cooldown" && i != "lastrun")
+                {
+                    // get the relevent matcher for this value
+                    let searchtype = param["MATCHER_" + i]
+                    if (typeof (receivedtrigger.data.parameters[i]) == "string")// && typeof param[i] === "string")
+                    {
+                        switch (searchtype)
+                        {
+                            case "2"://match anywhere
+                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                    match = false;
+                                break;
+                            case "3"://match start of line only
+                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
+                                    match = false;
+                                break;
+                            default:
+                                // check for exact match
+                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                    match = false;
+                        }
+                    }
+                    //check non string types for not matching
+                    else if (param[i] != "" && receivedtrigger.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
+                        match = false;
+                }
+            }
+            catch (err)
+            {
+                console.log("ProcessReceivedTrigger ERROR", pairing.trigger.data)
+                console.log("CheckTriggers error", err)
+                match = false;
+            }
+            if (!match)
+                break;
+        }
+
+    })
+    if (match)
+    {
+        // if we have a cooldown see if we have matched it
+        if (pairing.trigger.cooldown > 0)
+        {
+            const d = new Date();
+            let now = d.getTime()
+            // are we still in the the cooldown period
+            if (pairing.trigger.lastrun + (pairing.trigger.cooldown * 1000) > now)
+                return
+            else
+                pairing.trigger.lastrun = now
+        }
+        TriggerAction(pairing.action, receivedtrigger)
+    }
+
+}
+// ============================================================================
+//                           FUNCTION: TriggerAction
+// ============================================================================
+function TriggerAction (action, triggerparams)
+{
+    if (action.paused)
+        return
+    // regular expression to test if input is a mathmatical equasion
+    // note this seems to get confused if a string has -1 in it.
+    // BUG::: need a better regex
+    const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
+    // tests to get round the bug above
+    const bannedRegex = ["process", "system", "for", "while", "loop"];
+
+    let params = {}
+    // store the trigger params in the actrion in case the extension has use for them
+    params.triggerparams = triggerparams.data
+    // loop through each action field
+    for (var i in action.data)
+    {
+        //loop through each action field name
+        for (const property in action.data[i])
+        {
+            // store the undmodifed field data
+            let tempAction = action.data[i][property]
+            // *************************
+            // check for user variables
+            // *************************
+            // check if we have %%var%% in the field
+            let nextVarIndex = action.data[i][property].indexOf("%%")
+            // loop through all %%vars%%
+            while (nextVarIndex > -1)
+            {
+                let endVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                // we have a user variable
+                if (endVarIndex > -1)
+                {
+                    // get the full variable
+                    let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
+
+                    // check if we have a word option
+                    if (sourceVar.indexOf(":") > -1)
+                    {
+                        // get the position of the :
+                        let stringIndex = sourceVar.indexOf(":")
+                        // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
+                        let wordNumber = (sourceVar.substr(stringIndex + 1)) - 1
+                        // get the trigger field
+                        let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                        // split the data into an array so we can index the work the user wants
+                        const sourceArray = sourceData.split(" ");
+                        // replace the user vars with the data requested
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray[wordNumber])
+                    }
+                    else
+                    {
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", triggerparams.data.parameters[sourceVar])
+                    }
+                }
+                if (typeof tempAction == "string")
+                    nextVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                else
+                    nextVarIndex = -1;
+
+            }
+            // is this a mathmatical expression
+            if (re.test(tempAction) && !bannedRegex.includes(tempAction))
+            {
+                try
+                {
+                    tempAction = eval(tempAction).toString()
+                }
+                catch (err)
+                {
+                    // this is for when the regex fails and we try to eval a string
+                    tempAction = tempAction.toString()
+                }
+            }
+            params[property] = tempAction
+        }
+    }
+    // all actions are handled through the SR socket interface
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                action.type,
+                serverConfig.extensionname,
+                params,
+                "",
+                action.extension),
+            "",
+            action.extension
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: ProcessUserPairings
+// ============================================================================
+function ProcessUserPairings (userPairings)
+{
+    if (userPairings != null
+        && typeof (userPairings) != "undefined"
+        && userPairings != ""
+        && Object.keys(userPairings).length != 0)
+    {
+        serverData.userPairings = structuredClone(userPairings);
+        SaveDataToServer();
+    }
+    else
+        logger.err(serverConfig.extensionname + ".ProcessUserPairings", "empty userPairings received");
+}
+// ============================================================================
+//                           FUNCTION: RequestExtList
+// ============================================================================
+function RequestExtList ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestExtensionsList",
+            serverConfig.extensionname,
+        ));
+}
+// ============================================================================
+//                           FUNCTION: RequestChList
+// ============================================================================
+function RequestChList ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestChannelsList",
+            serverConfig.extensionname,
+        ));
+}
+// ============================================================================
+//                           FUNCTION: SendUserPairings
+// ============================================================================
+
+function SendUserPairings (to)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "UserPairings",
+                serverConfig.extensionname,
+                serverData.userPairings,
+                serverConfig.channel,
+                to),
+            serverConfig.channel,
+            to
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+function SaveDataToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            serverConfig.extensionname,
+            serverData));
+}
+// ============================================================================
+//                           FUNCTION: SendMacros
+// ============================================================================
+function SendMacros (from)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "UserMacros",
+                serverConfig.extensionname,
+                serverData.userPairings.macrotriggers.triggers,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: SendMacroImages
+// ============================================================================
+function SendMacroImages (from)
+{
+    let imagelist = fs.readdirSync(__dirname + "/../public/images/deckicons")
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "MacroImages",
+                serverConfig.extensionname,
+                imagelist,
+                "",
+                from),
+            "",
+            from
+        ),
+    );
+}
+
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback ()
+{
+    let status = false;
+    if (serverConfig.autopilotenabled == "on")
+        status = true;
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                { connected: status },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+export { startServer };

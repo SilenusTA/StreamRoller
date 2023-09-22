@@ -111,6 +111,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Streamer songlist (SSL) is a tool for streamers to keep track of songs in a queue that viewers requests <a href='https://www.streamersonglist.com/'>SSL Website</a>",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -119,7 +121,6 @@ const triggersandactions =
                 displaytitle: "Song Added To Queue",
                 description: "Song was added to queue",
                 messagetype: "trigger_SongAddedToQueue",
-                channel: serverConfig.channel,
                 parameters: {
                     songName: "",
                     textMessage: ""
@@ -131,7 +132,6 @@ const triggersandactions =
                 displaytitle: "Current Song Changed",
                 description: "Current song changed",
                 messagetype: "trigger_CurrentSongChange",
-                channel: serverConfig.channel,
                 parameters: {
                     songName: "",
                     textMessage: ""
@@ -147,7 +147,6 @@ const triggersandactions =
                 displaytitle: "Add Song To Queue",
                 description: "Add a song to the queue",
                 messagetype: "action_AddSongToQueue",
-                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
             ,
@@ -156,7 +155,6 @@ const triggersandactions =
                 displaytitle: "Mark Song as played",
                 description: "Mark a song as played",
                 messagetype: "action_MarkSongAsPlayed",
-                channel: serverConfig.channel,
                 parameters: { songName: "" }
             }
         ],

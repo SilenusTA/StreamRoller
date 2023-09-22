@@ -104,6 +104,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -112,7 +114,6 @@ const triggersandactions =
                 displaytitle: "Somthing happened",
                 description: "The Demo extension did something that you might like to know about",
                 messagetype: "trigger_DemoextensionSomethingHappened",
-                channel: serverConfig.channel,
                 parameters: { message: "" }
             }
         ],
@@ -124,7 +125,6 @@ const triggersandactions =
                 displaytitle: "Do your Stuff",
                 description: "A request for the demo extension to do something useful",
                 messagetype: "action_DemoextensionDoStuff",
-                channel: serverConfig.channel,
                 parameters: { message: "" }
             }
 

@@ -313,6 +313,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Chatbot sends text through OpenAPI ChatGPT and puts the responce into twitch chat.",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -321,7 +323,6 @@ const triggersandactions =
                 displaytitle: "Response from chatbot",
                 description: "The OpenAI chatbot returned a response",
                 messagetype: "trigger_chatbotResponse",
-                channel: serverConfig.channel,
                 parameters: { message: "" }
             }
         ],
@@ -333,7 +334,6 @@ const triggersandactions =
                 displaytitle: "Process text",
                 description: "Send some text through the chatbot (users in original message on the ignore list will not get processed)",
                 messagetype: "action_ProcessText",
-                channel: serverConfig.channel,
                 parameters: {
                     message: "",
                     engine: "",
@@ -346,7 +346,6 @@ const triggersandactions =
                 displaytitle: "Change Profile",
                 description: "Switches the chatbot to the given profile",
                 messagetype: "action_ChangeProfile",
-                channel: serverConfig.channel,
                 parameters: { profile: "0" }
             }
         ]

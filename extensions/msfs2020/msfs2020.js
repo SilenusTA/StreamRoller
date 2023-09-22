@@ -76,6 +76,8 @@ const default_triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
+    version: "0.1",
+    channel: serverConfig.channel,
     triggers:
         [
             {
@@ -83,7 +85,6 @@ const default_triggersandactions =
                 displaytitle: "Current lat/long (OnRequest)",
                 description: "The current lat long in one message with separate variables",
                 messagetype: "trigger_onRequest_PLANE LATITUDE LONGITUDE",
-                channel: serverConfig.channel,
                 parameters: { lat: "", long: "" }
             }
         ],
@@ -94,7 +95,6 @@ const default_triggersandactions =
                 displaytitle: "Get lat/long (Get)",
                 description: "Get the current lat long in one message",
                 messagetype: "action_PLANE LATITUDE LONGITUDE_get",
-                channel: serverConfig.channel,
                 parameters: {}
             }
         ],
@@ -190,7 +190,7 @@ function onDataCenterMessage (server_packet)
                 serverData = structuredClone(default_serverData)
                 console.log("\x1b[31m" + serverConfig.extensionname + " DataFile Updated", "The data file has been Restored. Your settings may have changed" + "\x1b[0m");
             }
-            if (server_packet.to === serverConfig.extensionname && server_packet.data != undefined
+            if (server_packet.to === serverConfig.extensionname && server_packet.data != undefined && server_packet.data.SimVars != undefined
                 && Object.keys(server_packet.data.SimVars).length > 0)
             {
                 // SaveDataToServer();
@@ -723,7 +723,6 @@ function initSimVarsandTriggers ()
                     displaytitle: SystemEvents[serverData.EventVars[i]].name,
                     description: SystemEvents[serverData.EventVars[i]].desc,
                     messagetype: "trigger_" + SystemEvents[serverData.EventVars[i]].name,
-                    channel: serverConfig.channel,
                     parameters: { data: "" }
                 });
             triggersandactions.triggers.push(
@@ -732,7 +731,6 @@ function initSimVarsandTriggers ()
                     displaytitle: SystemEvents[serverData.EventVars[i]].name + " (OnChange)",
                     description: SystemEvents[serverData.EventVars[i]].desc,
                     messagetype: "trigger_onChange_" + SystemEvents[serverData.EventVars[i]].name,
-                    channel: serverConfig.channel,
                     parameters: { data: "" }
                 });
         }
@@ -751,7 +749,6 @@ function initSimVarsandTriggers ()
                             displaytitle: serverData.SimVars[varKeys[i]].name + "(Set)",
                             description: "Set the simvar " + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                             messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
-                            channel: serverConfig.channel,
                             parameters: { index: "0", data: "" }
                         }
                     )
@@ -764,7 +761,6 @@ function initSimVarsandTriggers ()
                             displaytitle: serverData.SimVars[varKeys[i]].name + "(Set)",
                             description: "Set the simvar " + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                             messagetype: "action_" + serverData.SimVars[varKeys[i]].name,
-                            channel: serverConfig.channel,
                             parameters: { data: "" }
                         }
                     )
@@ -779,7 +775,6 @@ function initSimVarsandTriggers ()
                         displaytitle: serverData.SimVars[varKeys[i]].name + "(Get)",
                         description: "Request the value, will be returned in a 'name_(Single) 'trigger" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                         messagetype: "action_" + serverData.SimVars[varKeys[i]].name + "_get",
-                        channel: serverConfig.channel,
                         parameters: { index: "0" }
                     }
                 )
@@ -792,7 +787,6 @@ function initSimVarsandTriggers ()
                         displaytitle: serverData.SimVars[varKeys[i]].name + "(Get)",
                         description: "Request the value, will be returned in a 'name_(Single) 'trigger" + serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units,
                         messagetype: "action_" + serverData.SimVars[varKeys[i]].name + "_get",
-                        channel: serverConfig.channel,
                         parameters: {}
                     }
                 )
@@ -814,7 +808,6 @@ function initSimVarsandTriggers ()
                         displaytitle: serverData.SimVars[varKeys[i]].name + " (Poll)",
                         description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
                         messagetype: "trigger_" + serverData.SimVars[varKeys[i]].name,
-                        channel: serverConfig.channel,
                         parameters: paramdata
                     }
                 )
@@ -826,7 +819,6 @@ function initSimVarsandTriggers ()
                         displaytitle: serverData.SimVars[varKeys[i]].name + " (OnChange)",
                         description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
                         messagetype: "trigger_onChange_" + serverData.SimVars[varKeys[i]].name,
-                        channel: serverConfig.channel,
                         parameters: paramdata
                     }
                 )
@@ -837,7 +829,6 @@ function initSimVarsandTriggers ()
                         displaytitle: serverData.SimVars[varKeys[i]].name + " (OnRequest)",
                         description: serverData.SimVars[varKeys[i]].desc + ": Units " + serverData.SimVars[varKeys[i]].units + ": settable " + serverData.SimVars[varKeys[i]].settable,
                         messagetype: "trigger_onRequest_" + serverData.SimVars[varKeys[i]].name,
-                        channel: serverConfig.channel,
                         parameters: paramdata
                     }
                 )

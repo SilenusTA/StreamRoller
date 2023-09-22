@@ -1,0 +1,358 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<script src="/streamroller-message-api.cjs"></script>
+<script src="/autopilot/scripts/triggers.js" onerror="scriptLoadFailed('triggers.js')"></script>
+<script>
+
+    //"use strict"
+    const default_serverConfig = {
+        __version__: "0.11",
+        extensionname: "autopilot_frontend",
+        //channel: "AUTPILOT_FE",
+        autopilotenabled: "off",
+        logginglevel: "0",
+        autopilot_restore_defaults: "off",
+    };
+    let serverConfig = structuredClone(default_serverConfig);
+    let serverData = {}
+    const localConfig =
+    {
+        heartBeatTimeout: "6000",
+        connected: true,
+        DataCenterSocket: null
+
+    }
+
+    var host = '<%= host %>';
+    var port = '<%= port %>';
+    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+
+    window.addEventListener('load',
+        function ()
+        {
+            ConnectToDataCenter(host, port);
+        });
+
+    // ============================================================================
+    //                           FUNCTION: ConnectToDataCenter
+    // ============================================================================
+    function ConnectToDataCenter (host, port)
+    {
+        try
+        {
+            localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+                host, port);
+        } catch (err)
+        {
+            console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterDisconnect
+    // ============================================================================
+    function onDataCenterDisconnect (reason)
+    {
+        localConfig.connected = false;
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterConnect
+    // ============================================================================
+    function onDataCenterConnect (socket)
+    {
+        // Create/Join the channels we need for this
+        //sr_api.sendMessage(localConfig.DataCenterSocket,
+        //    sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestConfig",
+                serverConfig.extensionname
+            ));
+        //sr_api.sendMessage(localConfig.DataCenterSocket,
+        //    sr_api.ServerPacket("RequestData", serverConfig.extensionname));
+
+        //request software version
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestSoftwareVersion",
+                serverConfig.extensionname,
+                ""//serverConfig.channel
+            ));
+        RequestExtList();
+        RequestMacroImages();
+        RequestUserTriggers()
+        //heartBeatCallback();
+        localConfig.connected = true;
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterMessage
+    // ============================================================================
+    function onDataCenterMessage (server_packet)
+    {
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED CONFIG
+        // -------------------------------------------------------------------------------------------------
+        if (server_packet.type === "ConfigFile")
+        {
+
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    // update our config
+                    if (server_packet.data != "")
+                    {
+                        serverConfig = structuredClone(server_packet.data)
+                    }
+                }
+                // if we have new stuff in our config (software update) but the user doesn't we need to save it                
+                SaveConfigToServer();
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   RECEIVED EXTENSION LIST
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "ExtensionList")
+        {
+            // call the triggers code to request the triggers/actions from each extension in the list
+            try
+            {
+                initTriggersAndActions(server_packet.data);
+            }
+            catch {
+                console.log("initTriggersAndActions not loaded yet, recheduling")
+                //probably not loaded yet
+                setTimeout(() =>
+                {
+                    initTriggersAndActions(server_packet.data);
+                }, 500);
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED SOFTWARE VERSION
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "SoftwareVersion")
+        {
+            localConfig.SoftwareVersion = server_packet.data;
+            document.getElementById("softwareversion").innerHTML = server_packet.data
+        }
+        else if (server_packet.type === "ExtensionMessage")
+        {
+            let extension_packet = server_packet.data;
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED trigger and action data
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "TriggerAndActions")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    receivedTrigger(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED UserPairings
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "UserPairings")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    receivedUserPairings(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED GetMacroImages
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "MacroImages")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    updateMacroImageList(extension_packet.data);
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED Unhandled extension message
+            // -------------------------------------------------------------------------------------------------
+            else
+            {
+                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                       RECEIVED CHANNEL DATA
+        //                  from a channel we are monitoring
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "ChannelData")
+        {
+            let extension_packet = server_packet.data;
+            // example of a channel message
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED UserPairings
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "UserPairings")
+            {
+                if (extension_packet.to == serverConfig.extensionname
+                    && server_packet.channel)
+                    receivedUserPairings(extension_packet.data)
+                else
+                    console.log("UserPairings received but channel not recognised", extension_packet)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           UNHANDLED CHANNEL DATA
+            // -------------------------------------------------------------------------------------------------
+            else
+            {
+                console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "UnknownChannel")
+        {
+            //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+            // need to add some sort of flood control here so we are only attempting to join one at a time
+            if (server_packet.data != "")
+            {
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin", server_packet);
+                setTimeout(() =>
+                {
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            server_packet.data
+                        ));
+                }, 10000);
+            }
+            //else
+            //console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
+
+            // -------------------------------------------------------------------------------------------------
+            //                           IGNORING THESE MESSAGE (to save loging them)
+            // -------------------------------------------------------------------------------------------------
+        } else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+        )
+        {
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+        // ------------------------------------------------ unknown message type received -----------------------------------------------
+        else
+            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveConfigToServer
+    // ============================================================================
+    function SaveConfigToServer ()
+    {
+        // saves our serverConfig to the server so we can load it again next time we startup
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveConfig",
+                serverConfig.extensionname,
+                serverConfig,
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveDataToServer
+    // ============================================================================
+    function SaveDataToServer ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveData",
+                serverConfig.extensionname,
+                serverData));
+    }
+    // ============================================================================
+    //                           FUNCTION: RequestExtList
+    // ============================================================================
+    function RequestExtList ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestExtensionsList",
+                serverConfig.extensionname,
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION:DisplayAlertMessages
+    // ============================================================================
+    function DisplayAlertMessages (message)
+    {
+        let cardref = document.getElementById("AlertCardText");
+        cardref.innerHTML = cardref.innerHTML + message
+        // keep scroll at the bottom of the card
+        var cardScrollHeight = cardref.scrollHeight;
+        cardref.scrollTo(0, cardScrollHeight + 1);
+    }
+    // ============================================================================
+    //                           FUNCTION:RequestMacroImages
+    // ============================================================================
+    function RequestMacroImages ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket("RequestMacroImages",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "autopilot"),
+                "",
+                "autopilot"
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION:RequestUserTriggers
+    // ============================================================================
+    function RequestUserTriggers ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket("RequestUserTriggers",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "autopilot"),
+                "",
+                "autopilot"
+            ));
+    }
+    // ============================================================================
+    //                     FUNCTION: sortByKey
+    //              sorts an array of objects based on a key
+    // ============================================================================
+    function updateMacroImageList (imagelist)
+    {
+        let ele = document.getElementById("imagepickerlinks")
+        let imagehtml = ""
+        for (let i = 0; i < imagelist.length; i++)
+            imagehtml += "<img class='deckicon' src='/autopilot/images/deckicons/" + imagelist[i] + "' alt='" + imagelist[i] + "' onclick='setMacroImageTag(\"" + imagelist[i] + "\")'>"
+        ele.innerHTML = imagehtml
+    }
+</script>

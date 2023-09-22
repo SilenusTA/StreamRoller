@@ -131,8 +131,10 @@ GetVideoSettings
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Chat is an OpenAI ChatGPT bot that uses OpenAI to provide AI responses to chat and questions. <a href='https://openai.com/'>openAI's Website</a>",
+    description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming",
     // these are messages we can sendout that other extensions might want to use to trigger an action
+    version: "0.1",
+    channel: serverConfig.channel,
     triggers:
         [
             {
@@ -140,7 +142,6 @@ const triggersandactions =
                 displaytitle: "Stream Started",
                 description: "Stream Started",
                 messagetype: "trigger_StreamStarted",
-                channel: serverConfig.channel,
                 parameters: {}
             },
             {
@@ -148,7 +149,6 @@ const triggersandactions =
                 displaytitle: "Stream Stopped",
                 description: "Stream Stopped",
                 messagetype: "trigger_StreamStopped",
-                channel: serverConfig.channel,
                 parameters: {}
             },
             {
@@ -156,7 +156,6 @@ const triggersandactions =
                 displaytitle: "Scene Changed",
                 description: "Scene was changed",
                 messagetype: "trigger_SceneChanged",
-                channel: serverConfig.channel,
                 parameters: { sceneName: "" }
             }
         ],
@@ -168,7 +167,6 @@ const triggersandactions =
                 displaytitle: "Toggle Filter",
                 description: "Enable/Disable a filter (true/false)",
                 messagetype: "action_ToggleFilter",
-                channel: serverConfig.channel,
                 parameters: { sourceName: "", filterName: "", filterEnabled: "" }
             },
             {
@@ -176,7 +174,6 @@ const triggersandactions =
                 displaytitle: "Change Scene",
                 description: "Switch to the OBS scene provided by sceneName",
                 messagetype: "action_ChangeScene",
-                channel: serverConfig.channel,
                 parameters: { sceneName: "", enabled: "" }
             },
             {
@@ -184,7 +181,6 @@ const triggersandactions =
                 displaytitle: "Turn a source on or off",
                 description: "Turn a source on or off, ie to enable animations, cameraas etc",
                 messagetype: "action_EnableSource",
-                channel: serverConfig.channel,
                 parameters: { sceneName: "", sourceName: "", enabled: "" }
             },
             {
@@ -192,7 +188,6 @@ const triggersandactions =
                 displaytitle: "Toggle mute on the selected source",
                 description: "Toggles mute on the source selected, suggest that mic is put in to it's own scene and imported into all others to make this universal",
                 messagetype: "action_ToggleMute",
-                channel: serverConfig.channel,
                 parameters: { sourceName: "", enabled: "" }
             },
             {
@@ -200,7 +195,6 @@ const triggersandactions =
                 displaytitle: "Set Scene Item Transform",
                 description: "Sets the Scene Transform for a given item (note rotation respects the alignment in OBS. It's recommneded to set alightment in OBS to center)",
                 messagetype: "action_SetSceneItemTransform",
-                channel: serverConfig.channel,
                 parameters: {
                     sceneName: "",
                     sourceName: "",

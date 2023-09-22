@@ -129,13 +129,14 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
+    version: "0.1",
+    channel: serverConfig.channel,
     triggers:
         [{
             name: "TwitchChatChatMessageReceived",
             displaytitle: "Chat Message",
             description: "A chat message was received",
             messagetype: "trigger_ChatMessageReceived",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatMessageReceived",
                 textMessage: "[username]: [message]",
@@ -152,7 +153,6 @@ const triggersandactions =
             displaytitle: "Chat Action",
             description: "A chat action was received (a /me message)",
             messagetype: "trigger_ChatActionReceived",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatActionReceived",
                 textMessage: "[message]",
@@ -168,7 +168,6 @@ const triggersandactions =
             displaytitle: "Chat Ban",
             description: "A chat users was banned",
             messagetype: "trigger_ChatBanReceived",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatBanReceived",
                 textMessage: "[username] was banned for [timeout]s: [reason]",
@@ -180,7 +179,6 @@ const triggersandactions =
             displaytitle: "Chat MessageDeleted",
             description: "A chat message was deleted ",
             messagetype: "trigger_ChatMessageDeleted",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatMessageDeleted",
                 textMessage: "[Username]'s message was deleted",
@@ -192,7 +190,6 @@ const triggersandactions =
             displaytitle: "Chat PrimePaidUpgrade",
             description: "A user paid to upgrade their prime sub ",
             messagetype: "trigger_ChatPrimePaidUpgrade",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatPrimePaidUpgrade",
                 textMessage: "[Username] upgraded their prime",
@@ -203,7 +200,6 @@ const triggersandactions =
             displaytitle: "Someone Raided",
             description: "Another streamer raided you",
             messagetype: "trigger_ChatRaid",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatRaid",
                 textMessage: "[Username] raided with [viewers]",
@@ -215,7 +211,6 @@ const triggersandactions =
             displaytitle: "Points Redeemed",
             description: "Viewer reddemed chat points",
             messagetype: "trigger_ChatRedeem",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatRedeem",
                 textMessage: "[Username] redeemed chat points",
@@ -228,7 +223,6 @@ const triggersandactions =
             displaytitle: "Someone Resubbed",
             description: "Someone Resubbed",
             messagetype: "trigger_ChatResub",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatResub",
                 textMessage: "[Username] resubbed: [message]",
@@ -241,7 +235,6 @@ const triggersandactions =
             displaytitle: "Roomstate message",
             description: "This message contains things like sub-only mode etc",
             messagetype: "trigger_ChatRoomstate",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatRoomstate",
                 textMessage: "Roomstate changed",
@@ -257,7 +250,6 @@ const triggersandactions =
             displaytitle: "Someone Subscribed",
             description: "Someone Subscribed",
             messagetype: "trigger_ChatSubscription",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatSubscription",
                 textMessage: "[Username] subscribed: [message]",
@@ -270,7 +262,6 @@ const triggersandactions =
             displaytitle: "Viewer Timeout",
             description: "A viewer was timedout",
             messagetype: "trigger_ChatTimeout",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatTimeout",
                 textMessage: "[Username] was timedout for [duration]:[reason]",
@@ -283,7 +274,6 @@ const triggersandactions =
             displaytitle: "SubMysteryGift",
             description: "A viewer Gifted a sub",
             messagetype: "trigger_ChatSubMysteryGift",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatSubMysteryGift",
                 textMessage: "[Username] received a giftsub",
@@ -296,7 +286,6 @@ const triggersandactions =
             displaytitle: "Automod action",
             description: "Automod action happened",
             messagetype: "trigger_ChatAutoMod",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatAutoMod",
                 textMessage: "no default message",
@@ -309,7 +298,6 @@ const triggersandactions =
             displaytitle: "Chat Reconnected",
             description: "Chat Reconnected",
             messagetype: "trigger_ChatReconnect",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatReconnect",
                 textMessage: "Reconnect",
@@ -319,7 +307,6 @@ const triggersandactions =
             displaytitle: "Anon Gift Paid Upgrade",
             description: "Your guess is as good as mine on this one",
             messagetype: "trigger_ChatAnonGiftPaidUpgrade",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatAnonGiftPaidUpgrade",
                 textMessage: "[Username] received an annonomous paid upgrade (I think)",
@@ -330,7 +317,6 @@ const triggersandactions =
             displaytitle: "Anon Sub Mystery Gift",
             description: "Someone Gifted an Sub Anonymously",
             messagetype: "trigger_ChatAnonSubMysteryGift",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatAnonSubMysteryGift",
                 textMessage: "anon sub mystery gift x[numbOfSubs]",
@@ -342,7 +328,6 @@ const triggersandactions =
             displaytitle: "Anon Sub Gift",
             description: "Someone Gifted an Sub",
             messagetype: "trigger_ChatAnonSubGift",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatAnonSubGift",
                 textMessage: "[Username] received an anon sub gift: [message]",
@@ -354,7 +339,6 @@ const triggersandactions =
             displaytitle: "Somone Cheered",
             description: "Someone donated bits",
             messagetype: "trigger_ChatCheer",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatCheer",
                 textMessage: "[Username] Cheered with [bits]",
@@ -367,8 +351,7 @@ const triggersandactions =
             displaytitle: "Mod?!?",
             description: "A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is",
             messagetype: "trigger_ChatMod",
-            channel: serverConfig.channel,
-            parameters: {
+                        parameters: {
                 type: "trigger_ChatMod",
                 textMessage: "no default message",  
                 username: ""
@@ -378,8 +361,7 @@ const triggersandactions =
             displaytitle: "Mods?!?",
             description: "A Mods message was received, possibly a list of mods in this channel. need to log it and see",
             messagetype: "trigger_ChatMods",
-            channel: serverConfig.channel,
-            parameters: {
+                        parameters: {
                 type: "trigger_ChatMods",
                 textMessage: "mod list received",  
                 message: ""
@@ -390,7 +372,6 @@ const triggersandactions =
             displaytitle: "A sub was gifted",
             description: "Someone gifted a sub to another viewer",
             messagetype: "trigger_ChatSubGift",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatSubGift",
                 textMessage: "[Username] gifed a sub to [Username] ",
@@ -403,7 +384,6 @@ const triggersandactions =
             displaytitle: "Channel Subscribers",
             description: "Subscribers",
             messagetype: "trigger_ChatSubscribers",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatSubscribers",
                 textMessage: "List of subscribers (I think)",
@@ -415,7 +395,6 @@ const triggersandactions =
             displaytitle: "Channel Vips",
             description: "Channel Vips",
             messagetype: "trigger_ChatVips",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatVips",
                 textMessage: "List of Vips(I think)",
@@ -427,7 +406,6 @@ const triggersandactions =
             displaytitle: "Clear Chat",
             description: "Chat was cleared",
             messagetype: "trigger_ChatClear",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatClear",
                 textMessage: "Chat was cleared",
@@ -439,8 +417,7 @@ const triggersandactions =
             displaytitle: "Unmod",
             description: "Someone was un-modded",
             messagetype: "trigger_ChatUnmod",
-            channel: serverConfig.channel,
-            parameters: {
+                        parameters: {
                 type: "trigger_ChatUnmod",
                 textMessage: "no default message",  
                 username: "",
@@ -450,8 +427,7 @@ const triggersandactions =
             displaytitle: "EmoteSet",
             description: "Emote set (currently passed through, if there is a need let me know)",
             messagetype: "trigger_ChatEmoteSet",
-            channel: serverConfig.channel,
-            parameters: {
+                        parameters: {
                 type: "trigger_ChatEmoteSet",
                 textMessage: "emote set received",  
                 message: "",
@@ -462,7 +438,6 @@ const triggersandactions =
             displaytitle: "FollowersOnly",
             description: "FollowersOnly mode was changed",
             messagetype: "trigger_ChatFollowersOnly",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatFollowersOnly",
                 textMessage: "Follower only mode [enabled] for [length]",
@@ -474,7 +449,6 @@ const triggersandactions =
             displaytitle: "GiftPaidUpgrade",
             description: "Someone gifted a paid upgrade",
             messagetype: "trigger_ChatGiftPaidUpgrade",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatGiftPaidUpgrade",
                 textMessage: "[Username] upgraded [Username] to a paid sub",
@@ -486,7 +460,6 @@ const triggersandactions =
             displaytitle: "EmoteOnly",
             description: "EmoteOnly mode changed",
             messagetype: "trigger_ChatEmoteOnly",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatEmoteOnly",
                 textMessage: "Emote only mode [enabled]",
@@ -497,7 +470,6 @@ const triggersandactions =
             displaytitle: "r9kbeta",
             description: "r9kbeta mode changed",
             messagetype: "trigger_Chatr9kbeta",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_Chatr9kbeta",
                 textMessage: "r9kBeta mode [message]",
@@ -508,7 +480,6 @@ const triggersandactions =
             displaytitle: "Slowmode",
             description: "Slowmode mode changed",
             messagetype: "trigger_ChatSlowmode",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatSlowmode",
                 textMessage: "Slowmode [enabled] for [length]",
@@ -520,7 +491,6 @@ const triggersandactions =
             displaytitle: "Whisper",
             description: "Someone Whispered you or the bot",
             messagetype: "trigger_ChatWhisper",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatWhisper",
                 textMessage: "Whisper from [Username]: [message]",
@@ -532,7 +502,6 @@ const triggersandactions =
             displaytitle: "Notice",
             description: "You received a notice (ie about chat being in follower mode etc)",
             messagetype: "trigger_ChatNotice",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatNotice",
                 textMessage: "Notice: [message]",
@@ -544,7 +513,6 @@ const triggersandactions =
             displaytitle: "Disconnected",
             description: "Chat was Disconnected",
             messagetype: "trigger_ChatDisconnected",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatDisconnected",
                 textMessage: "Disconnected: [reason]",
@@ -556,8 +524,7 @@ const triggersandactions =
             displaytitle: "ServerChange",
             description: "Chat server changed",
             messagetype: "trigger_ChatServerChange",
-            channel: serverConfig.channel,
-            parameters: {
+                        parameters: {
                 type: "trigger_ChatServerChange",
                 textMessage: "Server changed to [channel]",  
                 channel: ""
@@ -568,7 +535,6 @@ const triggersandactions =
             displaytitle: "Connected",
             description: "Chat was connected",
             messagetype: "trigger_ChatConnected",
-            channel: serverConfig.channel,
             parameters: {
                 type: "trigger_ChatConnected",
                 textMessage: "Connected to [address][port]",
@@ -581,8 +547,7 @@ const triggersandactions =
                 displaytitle: "Connecting",
                 description: "Chat is connecting",
                 messagetype: "trigger_ChatConnecting",
-                channel: serverConfig.channel,
-                parameters: {
+                                parameters: {
                     type: "trigger_ChatConnecting",
                     textMessage: "Connecting to [address][port]",  
                     address: "",
@@ -593,8 +558,7 @@ const triggersandactions =
                 displaytitle: "Logon",
                 description: "Logged in to chat",
                 messagetype: "trigger_ChatLogon",
-                channel: serverConfig.channel,
-                parameters: {
+                                parameters: {
                     type: "trigger_ChatLogon",
                     textMessage: "Logon",  
                 }
@@ -603,8 +567,7 @@ const triggersandactions =
                 displaytitle: "Chat Join",
                 description: "Somone Joined the chat",
                 messagetype: "trigger_ChatJoin",
-                channel: serverConfig.channel,
-                parameters: {
+                                parameters: {
                     type: "trigger_ChatJoin",
                     textMessage: "[username] Joined [channel]",
                     username: "",
@@ -615,8 +578,7 @@ const triggersandactions =
                 displaytitle: "Part",
                 description: "Somone Left the chat",
                 messagetype: "trigger_ChatPart",
-                channel: serverConfig.channel,
-                parameters: {
+                                parameters: {
                     type: "trigger_ChatPart",
                     textMessage: "[username] Left",
                     username: ""
@@ -630,7 +592,6 @@ const triggersandactions =
             displaytitle: "Post Twitch Message",
             description: "Post a message to twitch chat",
             messagetype: "action_SendChatMessage",
-            channel: serverConfig.channel,
             parameters: {
                 account: "",
                 message: ""

@@ -95,12 +95,19 @@ import * as childprocess from "child_process"
 import process from 'node:process';
 
 const channels = [];
-let extensions = {};
+let extensions = {};// all extensions
+let connected_extensionlist = [];// extensions with a socket connection
 let backend_server = null;
 let server_socket = null;
 let config = {}
+// these maintain a list of extensions that have requested an extension list
+// it only handles 'connected' extensions and will ignore extensions without 
+// a valid socket connection
 let extensionlist_requesters = []
 let extensionlist_requesters_handles = []
+let all_extensionlist_requesters = []
+let all_extensionlist_requesters_handles = []
+
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -164,7 +171,18 @@ function onConnect (socket)
  */
 function onDisconnect (socket, reason)
 {
-    logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onDisconnect", reason, socket.id);
+    // set the extension as disconnected
+    let ext = Object.keys(extensions).find((entry) => (extensions[entry].socket != undefined && extensions[entry].socket.id == socket.id))
+    connected_extensionlist[ext] = socket.connected
+    // the disconnected extension previously was on our requesters list so we need to remove it
+    if (extensionlist_requesters.includes(ext))
+    {
+        clearTimeout(extensionlist_requesters_handles[ext])
+        extensionlist_requesters.splice(extensionlist_requesters.indexOf(ext), 1)
+    }
+    // update anyone who has previously reqested an extension list
+    updateExtensionsListRequesters()
+    logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onDisconnect", reason, socket);
 }
 // ============================================================================
 //                           FUNCTION: onMessage
@@ -176,12 +194,10 @@ function onDisconnect (socket, reason)
  */
 function onMessage (socket, server_packet)
 {
-    //console.log(("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet))
     logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet);
     // make sure we are using the same api version
     if (server_packet.version != config.apiVersion)
     {
-        //console.log("onMessage2" ,server_packet)
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "Version mismatch:", server_packet.version, "!=", config.apiVersion);
 
@@ -201,28 +217,15 @@ function onMessage (socket, server_packet)
     }
     // add this socket to the extension if it doesn't already exist
     if (typeof (extensions[server_packet.from]) === "undefined" || !extensions[server_packet.from])
-    {
-        //        console.log("###### Adding new extension for ", server_packet.from)
         extensions[server_packet.from] = {};
-    }
     // check we have a valid socket for this extension, don't need to check if the extension exists as it will have been added above
     if (typeof (extensions[server_packet.from].socket) === "undefined" || !extensions[server_packet.from].socket)
     {
-        //console.log("###### Adding new socket for Extension ", server_packet.from)
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "registering new socket for ", server_packet.from);
         extensions[server_packet.from].socket = socket;
-        //console.log("extensionlist_requesters ", extensionlist_requesters)
+        connected_extensionlist[server_packet.from] = extensions[server_packet.from].socket.connected
         // if we add a new extension send the list out to anyone who has requested it so far to update them
-        for (let i = 0; i < extensionlist_requesters.length; i++)
-        {
-            // buffer the extensionlist messages using a timer
-            //console.log("resending extension list out to ", extensionlist_requesters[i])
-            clearTimeout(extensionlist_requesters_handles[extensionlist_requesters[i]])
-            extensionlist_requesters_handles[extensionlist_requesters[i]] = setTimeout(() =>
-            {
-                mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], extensions);
-            }, 2000);
-        }
+        updateExtensionsListRequesters()
     }
     else
     {
@@ -232,13 +235,14 @@ function onMessage (socket, server_packet)
         if (extensions[server_packet.from].socket.id != socket.id)
         {
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Extension socket id changed for " + server_packet.from);
-            //console.log(extensions[server_packet.from])
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Data ", server_packet);
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Previous id " + extensions[server_packet.from].socket.id);
             logger.warn("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "New id " + socket.id);
             //update the extensions socket as it has changed
             extensions[server_packet.from].socket = socket;
+
         }
+        connected_extensionlist[server_packet.from] = extensions[server_packet.from].socket.connected
     }
     // process the clients request
     if (server_packet.type === "RequestSoftwareVersion")
@@ -280,9 +284,14 @@ function onMessage (socket, server_packet)
         mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "RequestExtensionsList")
     {
-        //        console.log("extension list requested")
         if (!extensionlist_requesters.includes(server_packet.from))
             extensionlist_requesters.push(server_packet.from)
+        mh.sendExtensionList(socket, server_packet.from, connected_extensionlist);
+    }
+    else if (server_packet.type === "RequestAllExtensionsList")
+    {
+        if (!all_extensionlist_requesters.includes(server_packet.from))
+            all_extensionlist_requesters.push(server_packet.from)
         mh.sendExtensionList(socket, server_packet.from, extensions);
     }
     else if (server_packet.type === "RequestChannelsList")
@@ -320,7 +329,34 @@ function onMessage (socket, server_packet)
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
 
 }
-
+// ============================================================================
+//                      updateExtensionsListRequesters()
+// ===========================================================================
+function updateExtensionsListRequesters ()
+{
+    // update users who reqested exentsions with sockets
+    for (let i = 0; i < extensionlist_requesters.length; i++)
+    {
+        // buffer the extensionlist messages using a timer
+        clearTimeout(extensionlist_requesters_handles[extensionlist_requesters[i]])
+        extensionlist_requesters_handles[extensionlist_requesters[i]] = setTimeout(() =>
+        {
+            // send the connected extension list
+            mh.sendExtensionList(extensions[extensionlist_requesters[i]].socket, extensionlist_requesters[i], connected_extensionlist);
+        }, 2000);
+    }
+    // update users who have requested the full list (even extensions without sockets)
+    for (let i = 0; i < all_extensionlist_requesters.length; i++)
+    {
+        // buffer the extensionlist messages using a timer
+        clearTimeout(all_extensionlist_requesters_handles[all_extensionlist_requesters[i]])
+        all_extensionlist_requesters_handles[all_extensionlist_requesters[i]] = setTimeout(() =>
+        {
+            // send the connected extension list
+            mh.sendExtensionList(extensions[all_extensionlist_requesters[i]].socket, all_extensionlist_requesters[i], extensions);
+        }, 2000);
+    }
+}
 // ============================================================================
 //                           EXPORTS:
 // ============================================================================

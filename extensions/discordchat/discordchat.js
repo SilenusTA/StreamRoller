@@ -86,6 +86,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Discord provides an easy way to talk over voice, video, and text. Talk, chat, hang out, and stay close with your friends and communities.",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -94,7 +96,6 @@ const triggersandactions =
                 displaytitle: "Discord Message Posted",
                 description: "A message was posted to a discord chat room",
                 messagetype: "trigger_DiscordMessageReceived",
-                channel: serverConfig.channel,
                 parameters:
                 {
                     channel: "",
@@ -111,7 +112,6 @@ const triggersandactions =
                 displaytitle: "Post Message",
                 description: "Post a message to a discord channel",
                 messagetype: "action_DiscordPostMessage",
-                channel: serverConfig.channel,
                 parameters:
                 {
                     channel: "",
@@ -212,7 +212,7 @@ function onDataCenterMessage (server_packet)
             // check it is our config
             if (server_packet.to === serverConfig.extensionname)
             {
-                if (server_packet.data != {} && typeof (server_packet.data.discordMessageBuffer) != "undefined")
+                if (Object.keys(server_packet.data).length != 0 && typeof (server_packet.data.discordMessageBuffer) != "undefined")
                     serverData.discordMessageBuffer = server_packet.data.discordMessageBuffer;
             }
             SaveDataToServer();
@@ -598,7 +598,7 @@ function connectToDiscord (credentials)
         localConfig.discordClient.on("ready", function (e)
         {
             localConfig.status.connected = true;
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
+            //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
             //let messagedata = { name: message.author.username, message: message.content }
             process_chat_data({ author: { username: "System" }, content: "Connected to Discord" });
             //process_chat_data(localConfig.discordClient.user.tag, chatmessagetags, "Chat Connected to " + serverConfig.streamername)

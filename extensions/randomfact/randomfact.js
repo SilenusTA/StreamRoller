@@ -59,6 +59,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Random fact will grab a random phrase or saying for your enjoyment",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
         [
@@ -67,7 +69,6 @@ const triggersandactions =
                 displaytitle: "Random fact receieved",
                 description: "An interesting or amusing random fact was received",
                 messagetype: "trigger_RandomFact",
-                channel: serverConfig.channel,
                 parameters: { randomFact: "" }
             }
         ],
@@ -79,7 +80,6 @@ const triggersandactions =
                 displaytitle: "Request Random Fact",
                 description: "Requests a random fact",
                 messagetype: "action_RequestRandomFact",
-                channel: serverConfig.channel,
                 parameters: {}
             }
         ],

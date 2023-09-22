@@ -61,6 +61,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "User interactions",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     // these are messages we can receive to perform an action
     triggers:
@@ -70,7 +72,6 @@ const triggersandactions =
                 displaytitle: "First Time Poster",
                 description: "Someone has posted in the chat for the first time",
                 messagetype: "trigger_NewChatter",
-                channel: serverConfig.channel,
                 parameters: {
                     name: "",
                     message: "",

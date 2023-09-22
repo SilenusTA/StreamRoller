@@ -59,6 +59,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Quiz bot, ask chat a question",
+    version: "0.1",
+    channel: serverConfig.channel,
     triggers:
         [
             {
@@ -66,7 +68,6 @@ const triggersandactions =
                 displaytitle: "QuizStarted",
                 description: "Quiz was started, restarted or a new question was asked",
                 messagetype: "trigger_QuizbotQuizStarted",
-                channel: serverConfig.channel,
                 parameters: { question: "" }
             },
             {
@@ -74,7 +75,6 @@ const triggersandactions =
                 displaytitle: "QuizStopped",
                 description: "Quiz was stopped",
                 messagetype: "trigger_QuizbotQuizStopped",
-                channel: serverConfig.channel,
                 parameters: { question: "", answer: "" }
             },
             {
@@ -82,7 +82,6 @@ const triggersandactions =
                 displaytitle: "QuizTimeout",
                 description: "Quiz Question timedout",
                 messagetype: "trigger_QuizbotQuizTimeout",
-                channel: serverConfig.channel,
                 parameters: { question: "", answer: "" }
             },
             {
@@ -90,7 +89,6 @@ const triggersandactions =
                 displaytitle: "IncorrectAnswer",
                 description: "Someone provided an incorrec answer",
                 messagetype: "trigger_QuizbotIncorrectAnwser",
-                channel: serverConfig.channel,
                 parameters: { user: "", question: "", answer: "" }
             },
             {
@@ -98,7 +96,6 @@ const triggersandactions =
                 displaytitle: "CorrectAnswer",
                 description: "Someone answered the quiz question correctly",
                 messagetype: "trigger_CorrectAnswer",
-                channel: serverConfig.channel,
                 parameters: { user: "", question: "", answer: "" }
             },
         ],
@@ -109,7 +106,6 @@ const triggersandactions =
                 displaytitle: "Start-Restart the quiz",
                 description: "Start, restart or skip current question",
                 messagetype: "action_QuizbotStartQuiz",
-                channel: serverConfig.channel,
                 parameters: {}
             },
             {
@@ -117,7 +113,6 @@ const triggersandactions =
                 displaytitle: "Stop the quiz",
                 description: "Stop the Quiz",
                 messagetype: "action_QuizbotStopQuiz",
-                channel: serverConfig.channel,
                 parameters: {}
             },
             {
@@ -125,7 +120,6 @@ const triggersandactions =
                 displaytitle: "Check an answer",
                 description: "Check if answer is correct (including chat tag, ie !answer",
                 messagetype: "action_QuizbotCheckAnswer",
-                channel: serverConfig.channel,
                 parameters: { user: "", answer: "" }
             }
 
@@ -425,7 +419,7 @@ function sendQuizStarted ()
     let data = findtriggerByMessageType("trigger_QuizbotQuizStarted")
     let answer = QA[1].trim();
 
-    answer = answer.replaceAll(/[ -~]/ig, "#")
+    answer = answer.replaceAll(/[!-~]/ig, "#")
     data.parameters.question = QA[0].trim() + ": !answer " + answer
 
     sr_api.sendMessage(localConfig.DataCenterSocket,

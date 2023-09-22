@@ -19,88 +19,93 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- /*@import url('/liveportal/stylesheets/Audiowide-Regular.ttf');*/
+/*@import url('/liveportal/stylesheets/Audiowide-Regular.ttf');*/
 @font-face {
-	font-family: 'Audiowide-Regular';
-	src: url(/liveportal/stylesheets/Audiowide-Regular.ttf);
-	}
-body,html
-{
+  font-family: 'Audiowide-Regular';
+  src: url(/liveportal/stylesheets/Audiowide-Regular.ttf);
+}
+
+body,
+html {
   font-family: "Audiowide-Regular";
   height: 100%;
 }
-.card-title
-{
+
+.card-title {
   font-family: "Audiowide-Regular";
   padding-top: 1px;
   padding-bottom: 1px;
   margin-bottom: 0px;
 }
-input
-{
-  background-color:rgb(189, 189, 189);
+
+input {
+  background-color: rgb(189, 189, 189);
 }
-.form-control
-{
-  background-color:rgb(189, 189, 189);
+
+.form-control {
+  background-color: rgb(189, 189, 189);
 }
-.form-check-input
-{
-  background-color:rgb(189, 189, 189);
+
+.form-check-input {
+  background-color: rgb(189, 189, 189);
 }
 
 
-#ChatMessagesCard
-{
+#ChatMessagesCard {
   font-family: sans-serif;
 }
-#ModMessagesCard
-{
+
+#ModMessagesCard {
   font-family: sans-serif;
 }
-#MessagesCard
-{
+
+#MessagesCard {
   font-family: sans-serif;
 }
-#TriggersPageCard
-{
+
+#TriggersPageCard {
   font-family: sans-serif;
 }
-a 
-{
+
+a {
   color: #1ea0d3;
 }
+
 .navbar {
   padding-top: 0px;
   padding-bottom: 0px;
 }
-.nav-tabs
-{
+
+.nav-tabs {
   border: 0px;
   padding: 1px;
 }
-#SettingsPageTabs
-{
+
+#SettingsPageTabs {
   border: 1px dotted grey
 }
-.modal{
-      font-family: "Noto Sans";
-    font-size: large;
+
+.modal {
+  font-family: "Noto Sans";
+  font-size: large;
 }
-.settings-body{
-      font-family: "Noto Sans";
-    font-size: large;
+
+.settings-body {
+  font-family: "Noto Sans";
+  font-size: large;
 }
-.card-body{
+
+.card-body {
   padding-top: 1px;
   padding-bottom: 1px;
 }
+
 .btn:focus {
   outline: none;
   box-shadow: none;
 }
-.extensioncardicon
-{
+
+.extensioncardicon {
   color: #1ea0d3;
   /* Change the color */
   font-weight: bold;
@@ -109,10 +114,11 @@ a
   /* Needed to add space between the bullet and the text */
   width: 1em;
 }
-.dropdown-menu 
-{
+
+.dropdown-menu {
   border: 1px solid grey;
 }
+
 .box {
   display: flex;
   flex-flow: column;
@@ -131,9 +137,27 @@ a
   flex-basis: auto
   */
 }
+
 .box .row.content {
   flex: 1 1 auto;
 }
+
 .box .row.footer {
   flex: 0 1 40px;
+}
+
+.deckicon {
+  width: 75px;
+  height: 75px;
+  background-repeat: no-repeat !important;
+}
+
+.nodeckicon {
+  width: 75px;
+  height: 75px;
+  font-size: .8rem;
+  padding: 0px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

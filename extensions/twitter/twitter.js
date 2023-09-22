@@ -72,6 +72,8 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Send a tweet",
+    version: "0.1",
+    channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     // these are messages we can receive to perform an action
     actions:
@@ -81,7 +83,6 @@ const triggersandactions =
                 displaytitle: "Post a Tweet",
                 description: "Post a message to twtter",
                 messagetype: "action_PostTweet",
-                channel: serverConfig.channel,
                 parameters: {
                     message: ""
                 }
