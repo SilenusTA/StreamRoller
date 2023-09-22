@@ -226,6 +226,14 @@ function onDataCenterMessage (server_packet)
                 SendMacros(server_packet.from)
         }
         // -------------------------------------------------------------------------------------------------
+        //                   REQUEST MACROS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "TriggerMacro")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+                TriggerMacro(extension_packet.data)
+        }
+        // -------------------------------------------------------------------------------------------------
         //                   RECEIVED Unhandled extension message
         // -------------------------------------------------------------------------------------------------
         else
@@ -300,12 +308,29 @@ function SaveConfigToServer ()
             serverConfig,
         ));
 }
-
+// ============================================================================
+//                           FUNCTION: function TriggerMacro
+// ============================================================================
+function TriggerMacro (data)
+{
+    //console.log("checking triggers", data)
+    //console.log("CheckTriggers", data, serverData.userPairings.pairings)
+    if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
+    {
+        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
+        {
+            if (data.name == value.trigger.name
+                && value.trigger.messagetype == data.type)
+                TriggerAction(value.action, { data: data })
+        }
+    }
+}
 // ============================================================================
 //                           FUNCTION: CheckTriggers
 // ============================================================================
 function CheckTriggers (data)
 {
+    //console.log("CheckTriggers", data, serverData.userPairings.pairings)
     if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
     {
         for (const [key, value] of Object.entries(serverData.userPairings.pairings))

@@ -32,6 +32,7 @@ let triggersandactions =
                 description: "autopilottesttrigger",
                 displaytitle: "autopilottesttrigger",
                 messagetype: "trigger_autopilottesttrigger",
+                extensionname: "autopilot",
                 color: "",
                 backgroundcolor: "",
                 image: "",
@@ -502,6 +503,7 @@ function createMacro (e)
         name: macroname,
         description: macrodescription,
         displaytitle: macroname,
+        extensionname: "autopilot",
         messagetype: "trigger_" + macroname,
         color: macrocolor,
         backgroundcolor: macrobackgroundcolor,
@@ -609,7 +611,7 @@ function checkTriggerIsValid (trigger)
 //                          FUNCTION: CheckTriggers
 //          This will receive all channel mesage to check against triggers
 // ============================================================================
-function CheckTriggers (event)
+/*function CheckTriggers (event)
 {
     //loop through our trigger groups
     for (var group in serverData.AllTriggersAndActions)
@@ -704,7 +706,7 @@ function TriggerAction (action, triggerparams)
     // regular expression to test if input is a mathmatical equasion
     // note this seems to get confused if a string has -1 in it.
     // BUG::: need a better regex
-    const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
+    const re = /(?:(?:^|[-+_*                        /])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
     // tests to get round the bug above
     const bannedRegex = ["process", "system", "for", "while", "loop"];
 
@@ -789,7 +791,7 @@ function TriggerAction (action, triggerparams)
             action.extension
         ),
     );
-}
+}*/
 // ============================================================================
 //                       FUNCTION: populateTriggersTable
 //                  Shows the current tirgger pairings on screen 

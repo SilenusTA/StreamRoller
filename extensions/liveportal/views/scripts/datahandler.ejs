@@ -387,9 +387,10 @@
                         serverData = structuredClone(server_packet.data);
                         // updateMacroList();
                         // updateMacroButtonsDisplay()
-                        SaveDataToServer();
+
                     }
                 }
+                SaveDataToServer();
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -732,6 +733,7 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "UserMacros")
             {
+                localConfig.macros = structuredClone(extension_packet.data);
                 updateMacroButtonsDisplay(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
@@ -3156,20 +3158,33 @@
     // ============================================================================
     function activateMacro (Id)
     {
-        if (typeof (serverData.macros[Id]) != "undefined")
+        if (typeof (localConfig.macros[Id]) != "undefined")
         {
             // we mock up an incoming message data packet and send it to 
             // the normal check system so it appears like any other trigger
-            CheckTriggers(
+            /*CheckTriggers(
                 sr_api.ExtensionPacket(
-                    serverData.macros[Id].messagetype,
+                    localConfig.macros[Id].messagetype,
                     serverConfig.extensionname,
-                    {},
-                    serverConfig.channel,
-                    ""),
-                serverConfig.channel,
-                ""
-            )
+                    localConfig.macros[Id],
+                    "",
+                    "autopilot"),
+                "",
+                "autopilot",
+            )*/
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerMacro",
+                        serverConfig.extensionname,
+                        localConfig.macros[Id],
+                        "",
+                        localConfig.macros[Id].extensionname),
+                    "",
+                    localConfig.macros[Id].extensionname
+                ),
+            );
 
 
         }
