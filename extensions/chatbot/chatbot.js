@@ -618,7 +618,7 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
-// due to the dropdown selector we have used we need special code to hadnlt the 
+// due to the dropdown selector we have used we need special code to handle the 
 // return from the modal.
 // =========================================================================== 
 function handleSettingsWidgetSmallData (modalcode)
@@ -636,9 +636,9 @@ function handleSettingsWidgetSmallData (modalcode)
     serverConfig.currentprofile = modalcode.chatbotprofilepicker;
 }
 // ===========================================================================
-//                           FUNCTION: handleSettingsWidgetSmallData
+//                           FUNCTION: handleSettingsWidgetLargeData
 // ===========================================================================
-// due to the dropdown selector we have used we need special code to hadnlt the 
+// due to the dropdown selector we have used we need special code to handle the 
 // return from the modal.
 // =========================================================================== 
 function handleSettingsWidgetLargeData (modalcode)
@@ -701,14 +701,6 @@ function handleSettingsWidgetLargeData (modalcode)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-// ===========================================================================
-/**
- * send some modal code to be displayed on the admin page or somewhere else
- * this is done as part of the webpage request for modal message we get from 
- * extension. It is a way of getting some user feedback via submitted forms
- * from a page that supports the modal system
- * @param {String} tochannel 
- */
 function SendSettingsWidgetSmall (tochannel)
 {
     fs.readFile(__dirname + "/chatbotsettingswidgetsmall.html", function (err, filedata)

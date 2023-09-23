@@ -34,9 +34,10 @@ const default_serverConfig = {
     __version__: "0.1",
     extensionname: "autopilot",
     channel: "AUTOPILOT_BE",
+    autopilotenabled: "on",
+    autopilotresetdefaults: "off"
 }
 let serverConfig = structuredClone(default_serverConfig);
-
 let serverData = structuredClone(default_serverData);
 const triggersandactions =
 {
@@ -180,7 +181,6 @@ function onDataCenterMessage (server_packet)
                     SendMacros()
                 }
             }
-
         }
     }
     // -------------------------------------------------------------------------------------------------
@@ -220,7 +220,41 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
-        if (extension_packet.type === "SendTriggerAndActions")
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR SETTINGS DIALOG
+        // -------------------------------------------------------------------------------------------------
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+        {
+            SendSettingsWidgetSmall(extension_packet.from);
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   SETTINGS DIALOG DATA
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                if (extension_packet.data.autopilotresetdefaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    serverData = structuredClone(default_serverData);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
+                    SaveConfigToServer();
+                    SaveDataToServer();
+                }
+                else
+                {
+                    handleSettingsWidgetSmallData(extension_packet.data);
+                    SendUserPairings("");
+                    SendMacros();
+                    SaveConfigToServer();
+                }
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "SendTriggerAndActions")
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
@@ -348,6 +382,62 @@ function SaveConfigToServer ()
             serverConfig,
         ));
 }
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+function SendSettingsWidgetSmall (tochannel)
+{
+    fs.readFile(__dirname + "/autopilotsettingswidgetsmall.html", function (err, filedata)
+    {
+        if (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+            //throw err;
+        }
+        else
+        {
+            //get the file as a string
+            let modalstring = filedata.toString();
+
+            // mormal replaces
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) === "string" || typeof (value) === "number")
+                    modalstring = modalstring.replaceAll(key + "text", value);
+            }
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: handleSettingsWidgetSmallData
+// ===========================================================================
+function handleSettingsWidgetSmallData (modalcode)
+{
+    serverConfig.autopilotenabled = "off";
+    serverConfig.autopilotresetdefaults = "off";
+    for (const [key, value] of Object.entries(modalcode))
+        serverConfig[key] = value;
+}
 // ============================================================================
 //                           FUNCTION: CheckTriggers
 // ============================================================================
@@ -444,6 +534,8 @@ function TriggerAction (action, triggerparams)
 {
     if (action.paused)
         return
+    if (serverConfig.autopilotenabled != "on")
+        return;
     // regular expression to test if input is a mathmatical equasion
     // note this seems to get confused if a string has -1 in it.
     // BUG::: need a better regex
@@ -641,7 +733,6 @@ function SendMacroImages (from)
         ),
     );
 }
-
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================

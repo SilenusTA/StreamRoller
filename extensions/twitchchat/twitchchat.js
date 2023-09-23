@@ -898,9 +898,8 @@ function onDataCenterMessage (server_packet)
                     name = localConfig.usernames.bot.name
                 else
                     name = extension_packet.data.account
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage diverted due to debug message flag", extension_packet.data.message);
-                console.log("Not posting to twitch due to debug flag 'on' in settings", extension_packet.data.message)
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "(localpost debuginng turned on in settings) " + name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
+                //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage Not posting to twitch due to debug flag 'on' in settings", extension_packet.data.message);
+                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "(localpost debug turned on in settings) " + name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
             }
         }
         else if (extension_packet.type === "RequestAccountNames")
@@ -1258,43 +1257,40 @@ function process_chat_data (channel, tags, chatmessage)
         }
         return;
     }
-    // need to define our chat message format
-    if (serverConfig.enabletwitchchat === "on")
-    {
 
-        // set the channel name
-        data.channel = channel
-        if (localConfig.twitchClient["user"].state.readonly)
-            data.channel += " [Readonly]"
-        if (localConfig.twitchClient["user"].state.emoteonly)
-            data.channel += " [Emoteonly]"
-        if (localConfig.twitchClient["user"].state.followersonly != -1)
-            data.channel += " [Followersonly (" + localConfig.twitchClient["user"].state.followersonly + ")]"
-        if (localConfig.twitchClient["user"].state.r9k)
-            data.channel += " [r9k]"
-        if (localConfig.twitchClient["user"].state.slowmode)
-            data.channel += " [Slowmode]"
-        if (localConfig.twitchClient["user"].state.subsonly)
-            data.channel += " [Subsonly]"
+    // set the channel name
+    data.channel = channel
+    if (localConfig.twitchClient["user"].state.readonly)
+        data.channel += " [Readonly]"
+    if (localConfig.twitchClient["user"].state.emoteonly)
+        data.channel += " [Emoteonly]"
+    if (localConfig.twitchClient["user"].state.followersonly != -1)
+        data.channel += " [Followersonly (" + localConfig.twitchClient["user"].state.followersonly + ")]"
+    if (localConfig.twitchClient["user"].state.r9k)
+        data.channel += " [r9k]"
+    if (localConfig.twitchClient["user"].state.slowmode)
+        data.channel += " [Slowmode]"
+    if (localConfig.twitchClient["user"].state.subsonly)
+        data.channel += " [Subsonly]"
 
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "ChannelData",
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "ChatMessage",
                 localConfig.EXTENSION_NAME,
-                sr_api.ExtensionPacket(
-                    "ChatMessage",
-                    localConfig.EXTENSION_NAME,
-                    data,
-                    serverConfig.channel
-                ),
+                data,
                 serverConfig.channel
-            ));
-        // lets store the chat history
-        serverData.chatMessageBuffer.push(data);
-        // keep the number of chat items down to the size of the buffer.
-        while (serverData.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
-            serverData.chatMessageBuffer.shift();
-    }
+            ),
+            serverConfig.channel
+        ));
+    // lets store the chat history
+    serverData.chatMessageBuffer.push(data);
+    // keep the number of chat items down to the size of the buffer.
+    while (serverData.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
+        serverData.chatMessageBuffer.shift();
+
     //update the user data (ie last seen etc)
     if (serverConfig.updateUserLists === "on" && tags["display-name"])
         updateUserList({ name: tags["display-name"], platform: "twitch", message: chatmessage })

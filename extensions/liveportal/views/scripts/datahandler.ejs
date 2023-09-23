@@ -441,19 +441,6 @@
             {
                 RequestOBSScenes("obs");
             }
-            // call the triggers code to request the triggers/actions from each extension in the list
-            try
-            {
-                initTriggersAndActions(server_packet.data);
-            }
-            catch {
-                console.log("initTriggersAndActions not loaded yet, recheduling")
-                //probably not loaded yet
-                setTimeout(() =>
-                {
-                    initTriggersAndActions(server_packet.data);
-                }, 500);
-            }
         }
         else if (server_packet.type === "ExtensionMessage")
         {
@@ -729,7 +716,6 @@
             else if (extension_packet.type === "UserMacros")
             {
                 localConfig.macros = structuredClone(extension_packet.data);
-                console.log("Received UserMacros", server_packet)
                 updateMacroButtonsDisplay(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
@@ -3198,7 +3184,6 @@
         let first = true
         let color = ""
         let backgroundcolor = ""
-        console.log("updateMacroButtonsDisplay", data)
         if (macrolist && macrolist.length > 0)
         {
             for (let i = 0; i < macrolist.length; i++)

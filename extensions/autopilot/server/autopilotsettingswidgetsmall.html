@@ -1,0 +1,49 @@
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">Autopilot Settings</h5>
+            <button type="button" class="btn-close bg-light" title="Close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group invisible">
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext"
+                    tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData"
+                    tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+
+            <p>Autopilot handles triggers and actions that allow you to have fine tuned control over your stream.
+                Use the main autopilot tab (top of the main page) to setup actions that are triggered from events
+                while streaming.
+            </p>
+
+            <!-- fields for user interaction -->
+            <!-- enable/disable chatbot -->
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="autopilotenabled" type="checkbox" id="autopilotenabled"
+                        autopilotenabledchecked>
+                    <label class="form-check-label" for="autopilotenabled">Enable/Disable Autopilot</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="autopilotresetdefaults" type="checkbox"
+                        id="autopilotresetdefaults" autopilotresetdefaultschecked>
+                    <label class="form-check-label" for="autopilotresetdefaults">Reset to defaults (Warning: This will
+                        remove all your custom triggers and actions)</label>
+                </div>
+            </div>
+
+            <!-- Standard footer with submit and cancel buttons -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- END: -->
