@@ -46,6 +46,7 @@ jobs:
           del ./SoftwareVersion.txt
           dir ./S*
           echo TESTBUILD #${{github.run_number}}.${{ github.run_attempt }} > ./SoftwareVersion.txt
+          echo tesing > ./SoftwareVersion.txt
           dir ./S*
           type ./SoftwareVersion.txt
     - name: Creating exe
