@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*.*.*"
+  schedule:
+    - cron: "0 0 * * 1"
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
