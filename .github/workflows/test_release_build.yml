@@ -39,10 +39,15 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '18.6.0'
-    - name: Create Version.txt
+    - name: Create SoftwareVersion.txt
       run: |
-          rm SoftwareVersion.txt
+          dir S*
+          type SoftwareVersion.txt
+          del SoftwareVersion.txt
+          dir S*
           echo TESTBUILD #${{github.run_number}}.${{ github.run_attempt }} > SoftwareVersion.txt
+          dir S*
+          type SoftwareVersion.txt
     - name: Creating exe
       run: |
           npm i -D caxa
