@@ -20,6 +20,7 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import fs from "fs";
+import { default_serverData } from "./default_data.js"
 
 const localConfig = {
     host: "http://localhost",
@@ -36,12 +37,36 @@ const default_serverConfig = {
 }
 let serverConfig = structuredClone(default_serverConfig);
 
-const default_serverData = {
-    __version__: "0.1",
-    userPairings: {}
-}
-
 let serverData = structuredClone(default_serverData);
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Autopilot handles triggers/actions that allow the user to perform interesting interactions betewen extensions",
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    version: "0.1",
+    channel: serverConfig.channel,
+    triggers:
+        [
+            {
+                name: "Activate Macro",
+                displaytitle: "Activate Macro",
+                description: "Activate a macro function",
+                messagetype: "trigger_ActivateMacro",
+                parameters: {}
+            },
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "Macro Triggered",
+                displaytitle: "Macro Triggered",
+                description: "A Macro was triggered",
+                messagetype: "action_MacroTriggered",
+                parameters: { name: "" }
+            },
+        ],
+}
 // ============================================================================
 //                           FUNCTION: startClient
 // ============================================================================
@@ -142,6 +167,8 @@ function onDataCenterMessage (server_packet)
                 serverData = structuredClone(default_serverData);
                 console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
                 SaveDataToServer()
+                SendUserPairings("");
+                SendMacros()
             }
             else
             {
@@ -149,6 +176,7 @@ function onDataCenterMessage (server_packet)
                 {
                     serverData = structuredClone(server_packet.data);
                     SendUserPairings("");
+                    SendMacros()
                 }
             }
 
@@ -191,10 +219,27 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
+        if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
         // -------------------------------------------------------------------------------------------------
         //                   REQUEST FOR USER TRIGGERS
         // -------------------------------------------------------------------------------------------------
-        if (extension_packet.type === "RequestUserTriggers")
+        else if (extension_packet.type === "RequestUserTriggers")
         {
             SendUserPairings(extension_packet.from)
         }
@@ -213,7 +258,8 @@ function onDataCenterMessage (server_packet)
             if (server_packet.to === serverConfig.extensionname)
             {
                 ProcessUserPairings(extension_packet.data)
-                SendUserPairings(server_packet.from)
+                SendUserPairings("");
+                SendMacros()
                 SaveDataToServer()
             }
         }
@@ -223,15 +269,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "RequestMacros")
         {
             if (server_packet.to === serverConfig.extensionname)
-                SendMacros(server_packet.from)
-        }
-        // -------------------------------------------------------------------------------------------------
-        //                   REQUEST MACROS
-        // -------------------------------------------------------------------------------------------------
-        else if (extension_packet.type === "TriggerMacro")
-        {
-            if (server_packet.to === serverConfig.extensionname)
-                TriggerMacro(extension_packet.data)
+                SendMacros()
         }
         // -------------------------------------------------------------------------------------------------
         //                   RECEIVED Unhandled extension message
@@ -251,6 +289,7 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         // -------------------------------------------------------------------------------------------------
         //                           CheckForTrigger
+        //                   These are triggers in other extensions
         // -------------------------------------------------------------------------------------------------
         if (extension_packet.type.startsWith("trigger_"))
         {
@@ -309,35 +348,15 @@ function SaveConfigToServer ()
         ));
 }
 // ============================================================================
-//                           FUNCTION: function TriggerMacro
-// ============================================================================
-function TriggerMacro (data)
-{
-    //console.log("checking triggers", data)
-    //console.log("CheckTriggers", data, serverData.userPairings.pairings)
-    if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
-    {
-        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
-        {
-            if (data.name == value.trigger.name
-                && value.trigger.messagetype == data.type)
-                TriggerAction(value.action, { data: data })
-        }
-    }
-}
-// ============================================================================
 //                           FUNCTION: CheckTriggers
 // ============================================================================
 function CheckTriggers (data)
 {
-    //console.log("CheckTriggers", data, serverData.userPairings.pairings)
     if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
     {
         for (const [key, value] of Object.entries(serverData.userPairings.pairings))
         {
-            if (data.dest_channel === value.trigger.channel
-                && value.trigger.type == data.type
-                && data.from === value.trigger.extension)
+            if (value.trigger.messagetype == data.data.messagetype)
                 ProcessReceivedTrigger(value, data)
         }
     }
@@ -392,7 +411,7 @@ function ProcessReceivedTrigger (pairing, receivedtrigger)
             catch (err)
             {
                 console.log("ProcessReceivedTrigger ERROR", pairing.trigger.data)
-                console.log("CheckTriggers error", err)
+                console.log("ProcessReceivedTrigger error", err)
                 match = false;
             }
             if (!match)
@@ -503,7 +522,7 @@ function TriggerAction (action, triggerparams)
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                action.type,
+                action.messagetype,
                 serverConfig.extensionname,
                 params,
                 "",
@@ -524,7 +543,6 @@ function ProcessUserPairings (userPairings)
         && Object.keys(userPairings).length != 0)
     {
         serverData.userPairings = structuredClone(userPairings);
-        SaveDataToServer();
     }
     else
         logger.err(serverConfig.extensionname + ".ProcessUserPairings", "empty userPairings received");
@@ -585,7 +603,7 @@ function SaveDataToServer ()
 // ============================================================================
 //                           FUNCTION: SendMacros
 // ============================================================================
-function SendMacros (from)
+function SendMacros ()
 {
     if (serverData.userPairings.macrotriggers != undefined)
     {

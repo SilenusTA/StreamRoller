@@ -21,25 +21,7 @@ let usertriggerslist = {
 // this will hold macros we create as for our dummy triggers
 let triggersandactions =
 {
-    extensionname: "macros",
-    description: "Macros (dummy triggers)",
-    version: "0.1",
-    channel: "AUTOPILOT_BE",
-    triggers:
-        [
-            {
-                name: "autopilottesttrigger",
-                description: "autopilottesttrigger",
-                displaytitle: "autopilottesttrigger",
-                messagetype: "trigger_autopilottesttrigger",
-                extensionname: "autopilot",
-                color: "",
-                backgroundcolor: "",
-                image: "",
-                parameters: {}
-            }
-        ],
-    // these are messages we can receive to perform an action
+    triggers: [],
     actions: []
 }
 //helper functions 
@@ -568,6 +550,8 @@ function deleteMacro (e)
 }
 function populateMacroDisplay ()
 {
+    if (usertriggerslist.macrotriggers == undefined)
+        return;
     let element = document.getElementById("existing_macro_list")
     let tempstring = ""
     for (let i = 0; i < usertriggerslist.macrotriggers.triggers.length; i++)
@@ -843,7 +827,7 @@ function populateTriggersTable ()
                 tablerows += "<td scope='row' role='button' onclick='delteTriggerAction(\"" + group + "\"," + i + ")'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-trash' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z'/><path d='M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z'/></svg ></td > "
                 // TRIGGERS
                 tablerows += "<td>" + usertriggerslist.pairings[i].trigger.extension + "</td>"
-                tablerows += "<td>" + usertriggerslist.pairings[i].trigger.type.replace("trigger_", "").replace("_get", "") + "</td>"
+                tablerows += "<td>" + usertriggerslist.pairings[i].trigger.messagetype.replace("trigger_", "").replace("_get", "") + "</td>"
                 tablerows += "<td>"
                 let morethanoneentry = false
                 for (let j = 0; j < usertriggerslist.pairings[i].trigger.data.length; j++) 
@@ -887,7 +871,7 @@ function populateTriggersTable ()
 
                 // ACTIONS
                 tablerows += "<td>" + usertriggerslist.pairings[i].action.extension + "</td>"
-                tablerows += "<td>" + usertriggerslist.pairings[i].action.type.replace("action_", "") + "</td>"
+                tablerows += "<td>" + usertriggerslist.pairings[i].action.messagetype.replace("action_", "") + "</td>"
                 tablerows += "<td>"
                 morethanoneentry = false
                 for (let j = 0; j < usertriggerslist.pairings[i].action.data.length; j++) 
@@ -1069,7 +1053,7 @@ function triggerActionButton (group, id)
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                action.type,
+                action.messagetype,
                 serverConfig.extensionname,
                 params,
                 "",

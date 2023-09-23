@@ -21,9 +21,7 @@
  
 -->
 <script src="/streamroller-message-api.cjs" onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
-<script src="/liveportal/scripts/triggers.js" onerror="scriptLoadFailed('triggers.js')"></script>
 <!-- placehold we will use for inserting widgets-->
-
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 
 
@@ -385,9 +383,6 @@
                     if (server_packet.data != "")
                     {
                         serverData = structuredClone(server_packet.data);
-                        // updateMacroList();
-                        // updateMacroButtonsDisplay()
-
                     }
                 }
                 SaveDataToServer();
@@ -734,6 +729,7 @@
             else if (extension_packet.type === "UserMacros")
             {
                 localConfig.macros = structuredClone(extension_packet.data);
+                console.log("Received UserMacros", server_packet)
                 updateMacroButtonsDisplay(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
@@ -3173,16 +3169,16 @@
                 "autopilot",
             )*/
             sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
+                sr_api.ServerPacket("ChannelData",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "TriggerMacro",
+                        localConfig.macros[Id].messagetype,
                         serverConfig.extensionname,
                         localConfig.macros[Id],
-                        "",
-                        localConfig.macros[Id].extensionname),
-                    "",
-                    localConfig.macros[Id].extensionname
+                        serverConfig.channel,
+                        ""),
+                    serverConfig.channel,
+                    ""
                 ),
             );
 
@@ -3201,7 +3197,8 @@
         // need to update this to show the current active scene when we know what kind of data we are getting
         let first = true
         let color = ""
-
+        let backgroundcolor = ""
+        console.log("updateMacroButtonsDisplay", data)
         if (macrolist && macrolist.length > 0)
         {
             for (let i = 0; i < macrolist.length; i++)
