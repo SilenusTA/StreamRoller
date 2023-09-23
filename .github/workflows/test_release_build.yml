@@ -42,6 +42,12 @@ jobs:
     - name: Create Version.txt
       run: |
           echo TESTBUILD #${{github.run_number}} > SoftwareVersion.txt
+    - name: Output Run ID
+      run: echo ${{ github.run_id }}
+    - name: Output Run Number
+      run: echo ${{ github.run_number }}
+    - name: Output Run Attempt
+      run: echo ${{ github.run_attempt }}
     - name: Creating exe
       run: |
           cat extensions/chatbot/chatbot.js
