@@ -48,21 +48,22 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "Activate Macro",
-                displaytitle: "Activate Macro",
-                description: "Activate a macro function",
-                messagetype: "trigger_ActivateMacro",
+                name: "Macro Triggered",
+                displaytitle: "Macro Triggered",
+                description: "A Macro was triggered",
+                messagetype: "trigger_MacroTriggered",
                 parameters: {}
             },
+
         ],
     // these are messages we can receive to perform an action
     actions:
         [
             {
-                name: "Macro Triggered",
-                displaytitle: "Macro Triggered",
-                description: "A Macro was triggered",
-                messagetype: "action_MacroTriggered",
+                name: "Activate Macro",
+                displaytitle: "Activate Macro",
+                description: "Activate a macro function",
+                messagetype: "action_ActivateMacro",
                 parameters: { name: "" }
             },
         ],

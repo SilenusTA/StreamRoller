@@ -1581,7 +1581,7 @@ async function callOpenAI (string_array, modelToUse)
             {
                 localConfig.requestPending = false;
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response")
-                return
+                return "Failed to get a response from chatbot, server might be down"
             }
             if (serverConfig.DEBUG_MODE === "on")
             {
@@ -1615,9 +1615,15 @@ async function callOpenAI (string_array, modelToUse)
         {
             localConfig.requestPending = false;
             if (serverConfig.chatbotenabled === "off")
+            {
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "chatbot turned off by user");
+                return "chatbot is turned off"
+            }
             else if (!localConfig.openAIKey)
+            {
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "No chatbot credentials set");
+                return "chatbot has no login credentials"
+            }
         }
 
     } catch (err)
@@ -1625,6 +1631,7 @@ async function callOpenAI (string_array, modelToUse)
         localConfig.lastResultSuccess = false;
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".callOpenAI", "openAI error:", err.message);
     }
+    return "chatbot sorry I failed in the quest you sent me on!"
 }
 // ============================================================================
 //                           FUNCTION: addPersonality

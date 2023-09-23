@@ -396,7 +396,7 @@ function createTriggerAction (e)
             name: document.getElementById("triggerExtensionChoserTriggerName").value,
             extension: extname,
             channel: channel,
-            type: $("#triggerExtensionTriggers option:selected").attr('data'),
+            messagetype: $("#triggerExtensionTriggers option:selected").attr('data'),
             data: []
 
         },
@@ -405,7 +405,7 @@ function createTriggerAction (e)
             name: document.getElementById("actionExtensionChoserActionName").value,
             extension: document.getElementById("actionExtensionChoser").value,
             channel: document.getElementById("actionExtensionChoserChannel").value,
-            type: $("#actionExtensionAction option:selected").attr('data'),
+            messagetype: $("#actionExtensionAction option:selected").attr('data'),
             data: []
         }
     }
@@ -564,11 +564,11 @@ function populateMacroDisplay ()
             backgroundcolor = usertriggerslist.macrotriggers.triggers[i].backgroundcolor
         if (typeof (usertriggerslist.macrotriggers.triggers[i].image) != "undefined" && usertriggerslist.macrotriggers.triggers[i].image != "")
         {
-            tempstring += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + usertriggerslist.macrotriggers.triggers[i].image + "\"')></button>"
+            tempstring += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + usertriggerslist.macrotriggers.triggers[i].image + "\"') title='" + usertriggerslist.macrotriggers.triggers[i].name + "'></button>"
         }
         else
         {
-            tempstring += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";'>" + usertriggerslist.macrotriggers.triggers[i].name + "</div>"
+            tempstring += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' title='" + usertriggerslist.macrotriggers.triggers[i].name + "'>" + usertriggerslist.macrotriggers.triggers[i].name + "</div>"
         }
     }
     element.innerHTML = tempstring
@@ -591,191 +591,6 @@ function checkTriggerIsValid (trigger)
         alert("Couldn't find channel", trigger.action.channel)*/
     return true;
 }
-// ============================================================================
-//                          FUNCTION: CheckTriggers
-//          This will receive all channel mesage to check against triggers
-// ============================================================================
-/*function CheckTriggers (event)
-{
-    //loop through our trigger groups
-    for (var group in serverData.AllTriggersAndActions)
-    {
-        // loop through our saved triggers and actions
-        serverData.AllTriggersAndActions[group].list.forEach((entry) =>
-        {
-            //check if the event fields match the trigger fields we have set for this entry
-            if (event.dest_channel === entry.trigger.channel
-                && event.from === entry.trigger.extension
-                && event.type === entry.trigger.type
-            )
-            {
-                // if parameters are entered we need to check that they all match
-                // before we trigger the action (ie if one fails to match then we must ignore this trigger)
-                // IE ALL CHECKS BELOW SHOULD BE FOR FAILURES TO MATCH
-                let match = true
-                // we have the correct extension, channel and message type
-                // lets check the variables to see if those are a match
-                entry.trigger.data.forEach((param) =>
-                {
-                    for (var i in param)
-                    {
-                        try
-                        {
-                            // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
-                            if (i.indexOf("MATCHER_") != 0 && i != "cooldown" && i != "lastrun")
-                            {
-                                // see if we have a MATCHER object (have to check in case someone has old software before we add this field)
-                                let searchtype = param["MATCHER_" + i]
-                                if (typeof event.data.parameters[i] == "string")// && typeof param[i] === "string")
-                                {
-                                    switch (searchtype)
-                                    {
-                                        case "2"://match anywhere
-                                            if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
-                                                match = false;
-                                            break;
-                                        case "3"://match start of line only
-                                            if (param[i] != "" && event.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
-                                                match = false;
-                                            break;
-                                        default:
-                                            // check for exact match
-                                            if (param[i] != "" && event.data.parameters[i].toLowerCase() != param[i].toLowerCase())
-                                                match = false;
-                                    }
-                                }
-                                //check non string types for not matching
-                                else if (param[i] != "" && event.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
-                                    match = false;
-                            }
-                        }
-                        catch (err)
-                        {
-                            console.log(event)
-                            console.log("CheckTriggers error", err)
-                            match = false;
-                        }
-                        if (!match)
-                            break;
-                    }
-
-                })
-                if (match)
-                {
-                    // if we have a cooldown see if we have matched it
-                    if (entry.trigger.cooldown > 0)
-                    {
-                        const d = new Date();
-                        let now = d.getTime()
-                        // are we still in the the cooldown period
-                        if (entry.trigger.lastrun + (entry.trigger.cooldown * 1000) > now)
-                            return
-                        else
-                            entry.trigger.lastrun = now
-                    }
-                    TriggerAction(entry.action, event)
-                }
-            }
-        })
-    }
-}
-// ============================================================================
-//                          FUNCTION: TriggerAction
-//                          Triggers an action 
-// ============================================================================
-function TriggerAction (action, triggerparams)
-{
-    if (action.paused)
-        return
-    // regular expression to test if input is a mathmatical equasion
-    // note this seems to get confused if a string has -1 in it.
-    // BUG::: need a better regex
-    const re = /(?:(?:^|[-+_*                        /])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
-    // tests to get round the bug above
-    const bannedRegex = ["process", "system", "for", "while", "loop"];
-
-    let params = {}
-    // store the trigger params in the actrion in case the extension has use for them
-    params.triggerparams = triggerparams.data
-    // loop through each action field
-    for (var i in action.data)
-    {
-        //loop through each action field name
-        for (const property in action.data[i])
-        {
-            // store the undmodifed field data
-            let tempAction = action.data[i][property]
-            // *************************
-            // check for user variables
-            // *************************
-            // check if we have %%var%% in the field
-            let nextVarIndex = action.data[i][property].indexOf("%%")
-            // loop through all %%vars%%
-            while (nextVarIndex > -1)
-            {
-                let endVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
-                // we have a user variable
-                if (endVarIndex > -1)
-                {
-                    // get the full variable
-                    let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
-
-                    // check if we have a word option
-                    if (sourceVar.indexOf(":") > -1)
-                    {
-                        // get the position of the :
-                        let stringIndex = sourceVar.indexOf(":")
-                        // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
-                        let wordNumber = (sourceVar.substr(stringIndex + 1)) - 1
-                        // get the trigger field
-                        let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
-                        // split the data into an array so we can index the work the user wants
-                        const sourceArray = sourceData.split(" ");
-                        // replace the user vars with the data requested
-                        tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray[wordNumber])
-                    }
-                    else
-                    {
-                        tempAction = tempAction.replace("%%" + sourceVar + "%%", triggerparams.data.parameters[sourceVar])
-                    }
-                }
-                if (typeof tempAction == "string")
-                    nextVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
-                else
-                    nextVarIndex = -1;
-
-            }
-            // is this a mathmatical expression
-            if (re.test(tempAction) && !bannedRegex.includes(tempAction))
-            {
-                try
-                {
-                    tempAction = eval(tempAction).toString()
-                }
-                catch (err)
-                {
-                    // this is for when the regex fails and we try to eval a string
-                    tempAction = tempAction.toString()
-                }
-            }
-            params[property] = tempAction
-        }
-    }
-    // all actions are handled through the SR socket interface
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ExtensionMessage",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                action.type,
-                serverConfig.extensionname,
-                params,
-                "",
-                action.extension),
-            "",
-            action.extension
-        ),
-    );
-}*/
 // ============================================================================
 //                       FUNCTION: populateTriggersTable
 //                  Shows the current tirgger pairings on screen 
@@ -803,16 +618,18 @@ function populateTriggersTable ()
 
         // show hide button
         tablerows += " <a class='btn btn-secondary' href='javascript:ShowHideTriggerGroup(\"" + group + "\");' role = 'button' style='padding:0px' title='Show/Hide Group'>"
-        if (localStorage.getItem(group + "visible") == "true")
-            tablerows += "<img src='/liveportal/images/hide.png' width='40px' /></a>"
-        else
+        if (localStorage.getItem(group + "visible") == "false")
             tablerows += "<img src='/liveportal/images/show.png' width='40px' /></a>";
+        else
+            tablerows += "<img src='/liveportal/images/hide.png' width='40px' /></a>"
+
 
         // group table
-        if (localStorage.getItem(group + "visible") == "true")
-            tablerows += "</div><tbody id='" + group + "_TriggerGroupDisplay'style='display: block;'>";
-        else
+        if (localStorage.getItem(group + "visible") == "false")
             tablerows += "</div><tbody id='" + group + "_TriggerGroupDisplay'style='display: none;'>";
+        else
+            tablerows += "</div><tbody id='" + group + "_TriggerGroupDisplay'style='display: block;'>";
+
 
         // table data
         for (let i = 0; i < usertriggerslist.pairings.length; i++) 
@@ -919,16 +736,17 @@ function ShowHideTriggerGroup (name)
 {
     let group = document.getElementById(name + "_TriggerGroupDisplay")
     let visible = localStorage.getItem(name + "visible")
-    if (visible == "true")
-    {
-        localStorage.setItem(name + "visible", "false")
-        group.style.display = "block"
-    }
-    else
+    if (visible == "false")
     {
         localStorage.setItem(name + "visible", "true")
         group.style.display = "none"
     }
+    else
+    {
+        localStorage.setItem(name + "visible", "false")
+        group.style.display = "block"
+    }
+
     populateTriggersTable()
 }
 // ============================================================================
