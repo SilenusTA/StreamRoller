@@ -41,16 +41,10 @@ jobs:
         node-version: '18.6.0'
     - name: Create Version.txt
       run: |
-          echo TESTBUILD #${{github.run_number}} > SoftwareVersion.txt
-    - name: Output Run ID
-      run: echo ${{ github.run_id }}
-    - name: Output Run Number
-      run: echo ${{ github.run_number }}
-    - name: Output Run Attempt
-      run: echo ${{ github.run_attempt }}
+          rm SoftwareVersion.txt
+          echo TESTBUILD #${{github.run_number}}. ${{ github.run_attempt }} > SoftwareVersion.txt
     - name: Creating exe
       run: |
-          cat extensions/chatbot/chatbot.js
           npm i -D caxa
           npm install
           npx caxa -m "Unpacking " -i . -o StreamRoller.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
