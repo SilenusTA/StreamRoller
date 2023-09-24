@@ -17,7 +17,7 @@
 
 // these are defult triggers so the user has something to look at during startup.
 const default_serverData = {
-    __version__: "0.2.1",
+    __version__: "0.2.2",
     userPairings: {
         "pairings": [
             {
@@ -205,10 +205,10 @@ const default_serverData = {
             {
                 "group": "Quiz_1",
                 "trigger": {
-                    "name": "quizbotCorrectAnswer",
+                    "name": "quizbotIncorrectAnswer",
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",
-                    "messagetype": "trigger_CorrectAnswer",
+                    "messagetype": "trigger_QuizbotIncorrectAnwser",
                     "data": [
                         {
                             "MATCHER_user": "1",
@@ -247,7 +247,7 @@ const default_serverData = {
                     "name": "quizbotCorrectAnswer",
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",
-                    "messagetype": "trigger_CorrectAnswer",
+                    "messagetype": "trigger_QuizbotCorrectAnswer",
                     "data": [
                         {
                             "MATCHER_user": "1",

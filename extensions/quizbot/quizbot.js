@@ -95,7 +95,7 @@ const triggersandactions =
                 name: "quizbotCorrectAnswer",
                 displaytitle: "CorrectAnswer",
                 description: "Someone answered the quiz question correctly",
-                messagetype: "trigger_CorrectAnswer",
+                messagetype: "trigger_QuizbotCorrectAnswer",
                 parameters: { user: "", question: "", answer: "" }
             },
         ],
@@ -444,7 +444,7 @@ function checkAnswer (userAnswer)
     let data = {}
     let messagetype = ""
     if (currentAnswer.toLowerCase().indexOf(answer.toLowerCase()) > -1)
-        messagetype = "trigger_CorrectAnswer";
+        messagetype = "trigger_QuizbotCorrectAnswer";
     else
         messagetype = "trigger_QuizbotIncorrectAnwser";
     data = findtriggerByMessageType(messagetype);

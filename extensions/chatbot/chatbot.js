@@ -79,7 +79,7 @@ const default_serverConfig = {
     translatetoeng: "off",
     submessageenabled: "off",
 
-    chatbotignorelist: "",
+    chatbotignorelist: "Nightbot, SonglistBot",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
     chatbotTimerMin: "1", // min delay before starting
@@ -87,7 +87,7 @@ const default_serverConfig = {
     // how much chat history to send to chatGPT to use in the query
     chatbotMessageMaxLines: "5",
     // minimum number of charactors to consider before using the message for submission
-    chatbotminmessagelength: "20",
+    chatbotminmessagelength: "10",
     // slow the response down as if someone has actually type it
     chatbottypingdelay: "0.2",
     // setup the personality of the chatbot
