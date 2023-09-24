@@ -80,7 +80,7 @@ const localConfig = {
 // pages that the backend server gives access to in the browser)
 const default_serverConfig = {
     // version number. when updated the first run will force an overwrite of config data
-    __version__: "0.1",
+    __version__: "0.2",
     // add our name so we can tell if we receive this localConfig from the server
     extensionname: localConfig.EXTENSION_NAME,
     // the channel name this extension will use for sending/receiving data.
@@ -104,7 +104,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:

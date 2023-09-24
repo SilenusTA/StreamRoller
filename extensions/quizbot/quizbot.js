@@ -42,7 +42,7 @@ const localConfig = {
 };
 
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.2",
     extensionname: "quizbot",
     channel: "QUIZBOT_CHANNEL",
     // setting variables
@@ -59,7 +59,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Quiz bot, ask chat a question",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [

@@ -87,7 +87,7 @@ localConfig.twitchClient["user"] = {
     }
 }
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
@@ -129,7 +129,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [{

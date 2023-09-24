@@ -61,7 +61,7 @@ const localConfig = {
 };
 //this object will be overwritten from the sever data if it exists
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL, // backend socket channel.
     monitoring_channel: "stream-mod-messages", // discord channel
@@ -86,7 +86,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Discord provides an easy way to talk over voice, video, and text. Talk, chat, hang out, and stay close with your friends and communities.",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:

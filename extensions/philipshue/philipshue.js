@@ -61,7 +61,7 @@ const localConfig = {
 
 };
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: "philipshue",
     channel: "PHILIPSHUE_CHANNEL",
     // sesttings dialog variables
@@ -83,7 +83,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Choose the bulbs, lamps or fixtures that fit your home and your personality. Customise the settings to fit your needs. Set automations to make life easier. Your home is personal (and your smart lighting should be too). <a href='https://www.philips-hue.com/'>Philips Hue</a>",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     /*triggers:

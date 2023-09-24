@@ -26,7 +26,7 @@
 
     //"use strict"
     const default_serverConfig = {
-        __version__: "0.11",
+        __version__: "0.2.1",
         extensionname: "autopilot_frontend",
         //channel: "AUTPILOT_FE",
         autopilotenabled: "off",
@@ -34,13 +34,12 @@
         autopilot_restore_defaults: "off",
     };
     let serverConfig = structuredClone(default_serverConfig);
-    let serverData = {}
+
     const localConfig =
     {
         heartBeatTimeout: "6000",
         connected: true,
         DataCenterSocket: null
-
     }
 
     var host = '<%= host %>';
@@ -273,17 +272,6 @@
                 serverConfig.extensionname,
                 serverConfig,
             ));
-    }
-    // ============================================================================
-    //                           FUNCTION: SaveDataToServer
-    // ============================================================================
-    function SaveDataToServer ()
-    {
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "SaveData",
-                serverConfig.extensionname,
-                serverData));
     }
     // ============================================================================
     //                           FUNCTION: RequestExtList

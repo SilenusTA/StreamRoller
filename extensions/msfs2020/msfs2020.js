@@ -62,7 +62,7 @@ const localConfig = {
 };
 
 const default_serverConfig = {
-    __version__: "0.2",//0.3
+    __version__: "0.2.1",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     msfs2020ennabled: "off",
@@ -76,7 +76,7 @@ const default_triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [
@@ -104,7 +104,7 @@ let triggersandactions = structuredClone(default_triggersandactions)
 
 const default_serverData =
 {
-    __version__: "0.1",
+    __version__: "0.2",
     SimVars: {},
     EventVars:
         ["AIRCRAFT_LOADED", "CRASHED", "CRASH_RESET", "CUSTOM_MISSION_ACTION_EXECUTED"

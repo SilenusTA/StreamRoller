@@ -31,7 +31,7 @@ const localConfig = {
 }
 // defaults for the serverConfig (our saved persistant data)
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.1.1",
     extensionname: "autopilot",
     channel: "AUTOPILOT_BE",
     autopilotenabled: "on",
@@ -44,7 +44,7 @@ const triggersandactions =
     extensionname: serverConfig.extensionname,
     description: "Autopilot handles triggers/actions that allow the user to perform interesting interactions betewen extensions",
     // these are messages we can sendout that other extensions might want to use to trigger an action
-    version: "0.1",
+    version: "0.1.1",
     channel: serverConfig.channel,
     triggers:
         [

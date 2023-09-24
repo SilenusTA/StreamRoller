@@ -29,7 +29,7 @@
 
     //"use strict"
     const default_serverConfig = {
-        __version__: "0.3",
+        __version__: "0.1.2",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -86,20 +86,10 @@
     };
     let serverConfig = structuredClone(default_serverConfig);
     const default_serverData = {
-        __version__: "0.1",
-        macros: [],
-        AllTriggersAndActions:
-        {
-            "default": { show: true, list: [] },
-            "MACROS": { show: true, list: [] }
-        }
+        __version__: "0.1.2",
     }
 
     let serverData = structuredClone(default_serverData);
-    serverData.AllTriggersAndActions = {
-        "default": { show: true, list: [] },
-        "MACROS": { show: true, list: [] }
-    };
 
     const localConfig =
     {
@@ -2298,8 +2288,8 @@
     {
         let container = document.getElementById(messageBoxName)
         // only scroll if the mouse isn't down (user srolling) or if we are already 
-        // within 40 pixels of the new mesages coming in. 
-        if (!localConfig.mouseDown && ((container.scrollHeight - (container.scrollTop + container.clientHeight)) < 40))
+        // within 100 pixels of the new mesages coming in. 
+        if (!localConfig.mouseDown && ((container.scrollHeight - (container.scrollTop + container.clientHeight)) < 100))
             container.scrollTop = container.scrollHeight + 1;
 
     }

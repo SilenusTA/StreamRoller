@@ -67,7 +67,7 @@ let localConfig = {
 };
 
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabled: "off",
@@ -83,7 +83,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Handles streamlabs alerts and data",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:

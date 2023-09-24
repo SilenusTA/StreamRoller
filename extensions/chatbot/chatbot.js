@@ -64,7 +64,7 @@ const localConfig = {
     overloadprotection: 500,
 };
 const default_serverConfig = {
-    __version__: "0.4",
+    __version__: "0.5",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
 
@@ -313,7 +313,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Chatbot sends text through OpenAPI ChatGPT and puts the responce into twitch chat.",
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:

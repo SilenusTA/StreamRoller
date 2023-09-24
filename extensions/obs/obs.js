@@ -76,7 +76,7 @@ const localConfig = {
 };
 //sever config (stuff we want to save over runs)
 const default_serverConfig = {
-    __version__: 0.1,
+    __version__: 0.2,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enableobs: "off",
@@ -133,7 +133,7 @@ const triggersandactions =
     extensionname: serverConfig.extensionname,
     description: "OBS (Open Broadcaster Software) is a free and open source software for video recording and live streaming",
     // these are messages we can sendout that other extensions might want to use to trigger an action
-    version: "0.1",
+    version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [
