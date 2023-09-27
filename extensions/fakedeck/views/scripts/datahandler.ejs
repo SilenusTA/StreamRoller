@@ -1,0 +1,423 @@
+<script src="/streamroller-message-api.cjs"></script>
+<script>
+
+    //"use strict"
+    const default_serverConfig = {
+        __version__: "0.1",
+        extensionname: "fakedeck",
+        channel: "FAKEDECK_CHANNEL",
+        fakedeckenabled: "off",
+        logginglevel: "0",
+        fakedeck_restore_defaults: "off",
+    };
+    let serverConfig = structuredClone(default_serverConfig);
+    let serverData = {}
+    const localConfig =
+    {
+        heartBeatTimeout: "6000",
+        connected: true,
+        DataCenterSocket: null
+
+    }
+
+    var host = '<%= host %>';
+    var port = '<%= port %>';
+    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+
+    window.addEventListener('load',
+        function ()
+        {
+            ConnectToDataCenter(host, port);
+        });
+
+    // ============================================================================
+    //                           FUNCTION: ConnectToDataCenter
+    // ============================================================================
+    function ConnectToDataCenter (host, port)
+    {
+        try
+        {
+            localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+                host, port);
+        } catch (err)
+        {
+            console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterDisconnect
+    // ============================================================================
+    function onDataCenterDisconnect (reason)
+    {
+        localConfig.connected = false;
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterConnect
+    // ============================================================================
+    function onDataCenterConnect (socket)
+    {
+        // Create/Join the channels we need for this
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestConfig",
+                serverConfig.extensionname
+            ));
+
+        //request software version
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestSoftwareVersion",
+                serverConfig.extensionname,
+                serverConfig.channel
+            ));
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "JoinChannel",
+                serverConfig.extensionname,
+                "AUTOPILOT_BE"
+            ));
+        RequestMacros();
+        //heartBeatCallback();
+        localConfig.connected = true;
+    }
+    // ============================================================================
+    //                           FUNCTION: onDataCenterMessage
+    // ============================================================================
+    function onDataCenterMessage (server_packet)
+    {
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED CONFIG
+        // -------------------------------------------------------------------------------------------------
+        if (server_packet.type === "ConfigFile")
+        {
+
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    // update our config
+                    if (server_packet.data != "")
+                    {
+                        serverConfig = structuredClone(server_packet.data)
+                    }
+                }
+                // if we have new stuff in our config (software update) but the user doesn't we need to save it                
+                SendSettingsWidgetSmall("");
+                SaveConfigToServer();
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                  RECEIVED SOFTWARE VERSION
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "SoftwareVersion")
+        {
+            localConfig.SoftwareVersion = server_packet.data;
+        }
+        else if (server_packet.type === "ExtensionMessage")
+        {
+            let extension_packet = server_packet.data;
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED SETTINGS WIDGET SMALL REQUEST
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            {
+                //SendSettingsWidgetSmall(extension_packet.from);
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED MODAL DATA (someone hit submit on our dialog)
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "SettingsWidgetSmallData")
+            {
+                // check that it is not from us as we process our own code internally
+                if (extension_packet.from != serverConfig.extensionname)
+                {
+                    // lets reset our config checkbox settings (modal will omit ones not
+                    // checked in checkboxes so set them to "off" here first if you have them)
+                    // set our config values to the ones in message
+                    for (const [key, value] of Object.entries(serverConfig))
+                    {
+                        //lets check our settings and send out updates as required
+                        if (value === "on" && !extension_packet.data[key])
+                            serverConfig[key] = "off";
+                        else if (key in extension_packet.data)
+                            serverConfig[key] = extension_packet.data[key];
+                    }
+                    SaveConfigToServer();
+                    // update anyone that may have out modal
+                    SendSettingsWidgetSmall("");
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED Unhandled extension message
+            // -------------------------------------------------------------------------------------------------
+            else
+            {
+                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                       RECEIVED CHANNEL DATA
+        //                  from a channel we are monitoring
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "ChannelData")
+        {
+            let extension_packet = server_packet.data;
+            if (extension_packet.type === "UserMacros")
+            {
+                localConfig.macros = structuredClone(extension_packet.data);
+                updateMacroButtonsDisplay(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           IGNORED CHANNEL DATA
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "HeartBeat")
+            {
+                //
+
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           UNHANDLED CHANNEL DATA
+            // -------------------------------------------------------------------------------------------------
+            else
+            {
+                console.log(".onDataCenterMessage", "Channel Data", server_packet, "not handled");
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+        // -------------------------------------------------------------------------------------------------
+        else if (server_packet.type === "UnknownChannel")
+        {
+            //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+            // need to add some sort of flood control here so we are only attempting to join one at a time
+            if (server_packet.data != "")
+            {
+                console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, scheduling rejoin");
+                setTimeout(() =>
+                {
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            server_packet.data
+                        ));
+                }, 10000);
+            }
+            //else
+            //console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
+
+            // -------------------------------------------------------------------------------------------------
+            //                           IGNORING THESE MESSAGE (to save loging them)
+            // -------------------------------------------------------------------------------------------------
+        } else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+        )
+        {
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+        // ------------------------------------------------ unknown message type received -----------------------------------------------
+        else
+            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveConfigToServer
+    // ============================================================================
+    function SaveConfigToServer ()
+    {
+        // saves our serverConfig to the server so we can load it again next time we startup
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveConfig",
+                serverConfig.extensionname,
+                serverConfig,
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: SaveDataToServer
+    // ============================================================================
+    // Desription:save data on backend data store
+    // Parameters: none
+    // ----------------------------- notes ----------------------------------------
+    // none
+    // ===========================================================================
+    function SaveDataToServer ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "SaveData",
+                serverConfig.extensionname,
+                serverData));
+    }
+    // ===========================================================================
+    //                           FUNCTION: SendSettingsWidgetSmall
+    // ===========================================================================
+    // Desription: Send the modal code back after setting the defaults according 
+    // to our server settings
+    // Parameters: channel to send data to
+    // ----------------------------- notes ---------------------------------------
+    // none
+    // ===========================================================================
+    function SendSettingsWidgetSmall (toextension)
+    {
+        let modalstring = document.getElementById("FakeDeckSettingsWidgetSmall_Placeholder").innerHTML
+        //fakedeckData.extensions[serverConfig.extensionname].settingswidgetsmall;
+        // first lets update our modal to the current settings
+        for (const [key, value] of Object.entries(serverConfig))
+        {
+            // true values represent a checkbox so replace the "[key]checked" values with checked
+            if (value === "on")
+                modalstring = modalstring.replaceAll(key + "checked", "checked");
+            else if (typeof (value) == "string" || typeof (value) == "number")
+                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
+        }
+        // send the modal data to the server
+        // send the modal data to the server
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "SettingsWidgetSmallCode",
+                    serverConfig.extensionname,
+                    modalstring,
+                    serverConfig.channel,
+                    toextension
+                ),
+                serverConfig.channel,
+                toextension
+            ));
+    }
+
+
+    // ============================================================================
+    //                           FUNCTION: updateMacroButtonsDisplay
+    // ============================================================================
+    function updateMacroButtonsDisplay (data)
+    {
+        // let card = document.getElementById("MacroButtonsCard");
+        let scenesrow = document.getElementById("MacroButtonsRow");
+        let rowdata = ""
+        let macrolist = data
+        // need to update this to show the current active scene when we know what kind of data we are getting
+        let first = true
+        let color = ""
+        let backgroundcolor = ""
+        if (macrolist && macrolist.length > 0)
+        {
+            for (let i = 0; i < macrolist.length; i++)
+            {
+                let style = "style='"// start the style tag
+
+                if (macrolist[i].color != "")
+                    color = macrolist[i].color
+                if (macrolist[i].backgroundcolor != "")
+                    backgroundcolor = macrolist[i].backgroundcolor
+                // style += "' "
+                //rowdata += '<div id="MacroButtons_' + i + '" ' + style + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
+                if (typeof (macrolist[i].image) != "undefined" && macrolist[i].image != "")
+                {
+                    rowdata += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + macrolist[i].image + "\"') onclick='activateMacro(\"" + i + "\")' title='" + macrolist[i].name + "'></button>"
+                }
+                else
+                {
+                    rowdata += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' onclick='activateMacro(\"" + i + "\")'>" + macrolist[i].name + "</div>"
+                }
+            }
+        }
+        else
+            rowdata += '<div id="MacroButtons_no_scense_available" class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Macros availabe</div>';
+        document.getElementById("MacroButtonsRow").innerHTML = rowdata;
+    }
+    // ============================================================================
+    //                           FUNCTION: RequestMacros
+    // ============================================================================
+    function RequestMacros ()
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestMacros",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "autopilot"),
+                "",
+                "autopilot"
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: activateMacro
+    // ============================================================================
+    function activateMacro (Id)
+    {
+        if (typeof (localConfig.macros[Id]) != "undefined")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ChannelData",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        localConfig.macros[Id].messagetype,
+                        serverConfig.extensionname,
+                        localConfig.macros[Id],
+                        serverConfig.channel,
+                        ""),
+                    serverConfig.channel,
+                    ""
+                ),
+            );
+
+
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: heartBeatCallback
+    // ============================================================================
+    function heartBeatCallback ()
+    {
+        let status = {
+            connected: false,
+
+        }
+        if (serverConfig.fakedeckenabled == "off")
+        {
+            status = {
+                connected: false,
+                color: "red"
+            }
+        }
+        else
+        {
+            status = {
+                connected: true,
+                color: "green"
+            }
+        }
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "HeartBeat",
+                    serverConfig.extensionname,
+                    status,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+        localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+    }
+
+
+</script>
