@@ -97,6 +97,13 @@
                 serverConfig.extensionname,
                 ""//serverConfig.channel
             ));
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "JoinChannel",
+                serverConfig.extensionname,
+                "AUTOPILOT_BE"
+            ));
         RequestExtList();
         RequestMacroImages();
         RequestUserTriggers()
@@ -209,18 +216,23 @@
             // -------------------------------------------------------------------------------------------------
             if (extension_packet.type === "UserPairings")
             {
-                if (extension_packet.to == serverConfig.extensionname
-                    && server_packet.channel)
-                    receivedUserPairings(extension_packet.data)
-                else
-                    console.log("UserPairings received but channel not recognised", extension_packet)
+                receivedUserPairings(extension_packet.data)
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           Ignore these messages
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "HeartBeat"
+                || extension_packet.type === "UserMacros"
+            )
+            {
+                // ignoring these messages
             }
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA
             // -------------------------------------------------------------------------------------------------
             else
             {
-                console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
+                console.log(".onDataCenterMessage", "Channel Data ", server_packet, " not handled");
             }
         }
         // -------------------------------------------------------------------------------------------------

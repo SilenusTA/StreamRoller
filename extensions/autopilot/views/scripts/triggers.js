@@ -219,7 +219,7 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "<div class='col-2'>"
             // add the matcher dropdown to each variable name
             triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "'>"
-            triggerextensionparameters += "<div class='form-group'><option data='1' class='form-control' value='1'>Exact Match</option>";
+            triggerextensionparameters += "<div class='form-group'><option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
             triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
             triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
             triggerextensionparameters += "</select>"
@@ -450,7 +450,7 @@ function createTriggerAction (e)
         //serverData.AllTriggersAndActions[groupname].list.push(SingleEvent);
     }
     updateServerPairingsList()
-    populateTriggersTable();
+    //populateTriggersTable();
     return false;
 }
 
@@ -504,7 +504,7 @@ function createMacro (e)
     //mimic the triggers being sent to us
     receivedTrigger(triggersandactions);
     updateServerPairingsList();
-    populateMacroDisplay()
+    //populateMacroDisplay()
 
     return false;
 }
@@ -516,7 +516,11 @@ function createMacro (e)
 function deleteMacro (e)
 {
     let macroname = document.getElementById("macroName").value
+
+    if (!window.confirm("Delete " + macroname + "?"))
+        return;
     let deleted = false
+
     // delete from the currently loaded extension triggers
     for (let i = 0; i < fulltriggerslist.triggers.macros.length; i++)
     {
@@ -542,15 +546,15 @@ function deleteMacro (e)
     if (deleted)
     {
         updateServerPairingsList()
-        addTriggerEntries()
-        populateMacroDisplay()
+        //addTriggerEntries()
+        //populateMacroDisplay()
     }
 
     return false;
 }
 function populateMacroDisplay ()
 {
-    if (usertriggerslist.macrotriggers == undefined)
+    if (usertriggerslist.macrotriggers == undefined || usertriggerslist.macrotriggers.length == 0)
         return;
     let element = document.getElementById("existing_macro_list")
     let tempstring = ""
@@ -607,21 +611,21 @@ function populateTriggersTable ()
         tablerows += "<div><span class='fs-4'>Group(" + itemCounter(usertriggerslist.pairings, "group", group) + "): " + group + " </span>"
         // delete group button
         tablerows += " <a class='btn btn-secondary' href='javascript:DeleteTriggerGroup(\"" + group + "\");'role = 'button' style='padding:0px' title='Delete Group'>"
-        tablerows += "<img src='/liveportal/images/trash.png' width='40px' /></a>"
+        tablerows += "<img src='/autopilot/images/trash.png' width='40px' /></a>"
 
         // play button
         tablerows += " <a class='btn btn-secondary' href='javascript:unPauseGroupButton(\"" + group + "\");'role = 'button' style='padding:0px' title='Unpause group'>"
-        tablerows += "<img src='/liveportal/images/play.png' width='40px' /></a>"
+        tablerows += "<img src='/autopilot/images/play.png' width='40px' /></a>"
         // pause button
         tablerows += " <a class='btn btn-secondary' href='javascript:pauseGroupButton(\"" + group + "\");'role = 'button' style='padding:0px' title='Pause group'>"
-        tablerows += "<img src='/liveportal/images/pause.png' width='40px' /></a>"
+        tablerows += "<img src='/autopilot/images/pause.png' width='40px' /></a>"
 
         // show hide button
         tablerows += " <a class='btn btn-secondary' href='javascript:ShowHideTriggerGroup(\"" + group + "\");' role = 'button' style='padding:0px' title='Show/Hide Group'>"
         if (localStorage.getItem(group + "visible") == "false")
-            tablerows += "<img src='/liveportal/images/show.png' width='40px' /></a>";
+            tablerows += "<img src='/autopilot/images/show.png' width='40px' /></a>";
         else
-            tablerows += "<img src='/liveportal/images/hide.png' width='40px' /></a>"
+            tablerows += "<img src='/autopilot/images/hide.png' width='40px' /></a>"
 
 
         // group table
@@ -629,7 +633,6 @@ function populateTriggersTable ()
             tablerows += "</div><tbody id='" + group + "_TriggerGroupDisplay'style='display: none;'>";
         else
             tablerows += "</div><tbody id='" + group + "_TriggerGroupDisplay'style='display: block;'>";
-
 
         // table data
         for (let i = 0; i < usertriggerslist.pairings.length; i++) 
@@ -705,17 +708,22 @@ function populateTriggersTable ()
                 {
                     // play button
                     tablerows += "<td><a class='btn btn-secondary' href='javascript:pauseActionButton(" + i + ");'role = 'button' style='padding:0px' title='Unpause action'>"
-                    tablerows += "<img src='/liveportal/images/play.png' width='30px' /></a></td>"
+                    tablerows += "<img src='/autopilot/images/play.png' width='30px' /></a></td>"
                 }
                 else
                 {
                     // pause button
                     tablerows += "<td><a class='btn btn-secondary' href='javascript:pauseActionButton(" + i + ");'role = 'button' style='padding:0px' title='Pause action'>"
-                    tablerows += "<img src='/liveportal/images/pause.png' width='30px' /></a></td>"
+                    tablerows += "<img src='/autopilot/images/pause.png' width='30px' /></a></td>"
                 }
 
+                // edit button
+                tablerows += "<td><a class='btn btn-secondary' data-toggle='modal' data-target='#editPairingModal' href='javascript:EditPairingButton(this,\"" + group + "\"," + i + ");'role = 'button' style='padding:0px' title='Edit'>"
+                tablerows += "<img src='/autopilot/images/edit.png' width='30px' /></a></td>"
+
+                // run button
                 tablerows += "<td><a class='btn btn-secondary' href='javascript:triggerActionButton(\"" + group + "\"," + i + ");'role = 'button' style='padding:0px' title='Run action'>"
-                tablerows += "<img src='/liveportal/images/run.png' width='30px' /></a></td>"
+                tablerows += "<img src='/autopilot/images/run.png' width='30px' /></a></td>"
 
                 tablerows += "</tr >"
             }
@@ -755,6 +763,8 @@ function ShowHideTriggerGroup (name)
 // ============================================================================
 function DeleteTriggerGroup (name)
 {
+    if (!window.confirm("Delete " + name + "?"))
+        return;
 
     if (usertriggerslist.groups.find(x => x.name == name) != undefined)
     {
@@ -777,8 +787,8 @@ function DeleteTriggerGroup (name)
     }
     else
         alert("can't find group")
-    populateTriggersTable()
-    populateGroupNamesDropdown();
+    //populateTriggersTable()
+    //populateGroupNamesDropdown();
     updateServerPairingsList()
 }
 // ============================================================================
@@ -798,8 +808,8 @@ function addNewTriggerGroup (groupname)
     if (usertriggerslist.groups.find(x => x.name == groupname) == undefined)
         usertriggerslist.groups.push({ name: groupname, show: true })
     updateServerPairingsList()
-    populateTriggersTable()
-    populateGroupNamesDropdown()
+    //populateTriggersTable()
+    //populateGroupNamesDropdown()
 }
 
 // ============================================================================
@@ -808,10 +818,12 @@ function addNewTriggerGroup (groupname)
 // ============================================================================
 function delteTriggerAction (group, id)
 {
+    if (!window.confirm("Delete?"))
+        return;
     if (usertriggerslist.pairings[id].group == group)
         usertriggerslist.pairings.splice(id, 1)
     updateServerPairingsList();
-    populateTriggersTable();
+    //populateTriggersTable();
 }
 // ============================================================================
 //                     FUNCTION: pauseActionButton
@@ -821,7 +833,7 @@ function pauseActionButton (id)
 {
     usertriggerslist.pairings[id].action.paused = !(usertriggerslist.pairings[id].action.paused)
     updateServerPairingsList()
-    populateTriggersTable();
+    //populateTriggersTable();
 }
 // ============================================================================
 //                     FUNCTION: pauseGroupButton
@@ -836,7 +848,7 @@ function pauseGroupButton (group)
     });
 
     updateServerPairingsList()
-    populateTriggersTable();
+    //populateTriggersTable();
 }
 // ============================================================================
 //                     FUNCTION: pauseGroupButton
@@ -851,7 +863,7 @@ function unPauseGroupButton (group)
     });
 
     updateServerPairingsList()
-    populateTriggersTable();
+    //populateTriggersTable();
 }
 // ============================================================================
 //                     FUNCTION: triggerActionButton
@@ -920,6 +932,197 @@ function receivedUserPairings (data)
         addActionEntries();
         populateTriggersTable();
     }
+}
+
+// ============================================================================
+//                     FUNCTION: EditPairingButton
+//              button on the page for users to edit the pairings
+// ============================================================================
+function EditPairingButton (event, g, i)
+{
+    $("#editPairingModal").modal("show")
+
+    let pairing = usertriggerslist.pairings[i]
+    let tablerows = "<input type='hidden' name='triggerpariringid' value='" + i + "' tabindex='-1'>"
+
+    tablerows += "<table><tbody>"
+    tablerows += "<tr><td>"
+    tablerows += '<select id="triggerExtensionPairingModalGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger" title="' + usertriggerslist.pairings[i].group + '" value="1" name="triggerExtensionPairingModalGroupName">'
+
+    // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
+
+    let selected = ""
+    for (let i = 0; i < usertriggerslist.groups.length; i++)
+    {
+        if (usertriggerslist.groups[i].name == usertriggerslist.pairings[i].group)
+            selected = " selected"
+        else
+            selected = ""
+        tablerows += "<option name='" + usertriggerslist.groups[i].name + "' class='btn btn-secondary' value=" + usertriggerslist.groups[i].name + selected + ">" + usertriggerslist.groups[i].name + "</option>";
+    }
+    tablerows += '</select>'
+    tablerows += "</td></tr>"
+
+    tablerows += "<tr><Th colspan='3'><H3>Trigger</h3></Th></tr>"
+    tablerows += "<TR><Th colspan='3'>" + pairing.trigger.extension + " -> " + pairing.trigger.messagetype.replace("trigger_", "") + "</Th></Tr>"
+
+    for (let j = 0; j < pairing.trigger.data.length; j++) 
+    {
+        tablerows += "<TR>"
+        for (let item in pairing.trigger.data[j])
+        {
+            if (item.indexOf("MATCHER_") != 0)
+            {
+                tablerows += "<td>" + item + "</td>"
+
+                tablerows += "<td>"
+                tablerows += "<input id='triggerExtensionEditTriggerParameters" + item + "' name='triggerExtensionEditTriggerParameters" + item + "' type=text value='" + pairing.trigger.data[j][item] + "'></input>"
+                tablerows += "</td>"
+                // add the matcher object
+                tablerows += "<td>"
+                let searchtype = 1;
+                //get the matcher object if there is one
+                let temp = pairing.trigger.data.find((o) => typeof (o["MATCHER_" + item]) != "undefined")
+                // if we have a matcher object get the value so we can change the symbol on screen (=/^/* for exact, startswith, anywhere)
+                if (temp)
+                    searchtype = temp["MATCHER_" + item]
+                tablerows += "<div class='col-2'>"
+                // add the matcher dropdown to each variable name
+                tablerows += "<select id='triggerExtensionEditTriggerParametersMATCHER_" + item + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionEditTriggerParametersMATCHER_" + item + "'>"
+                tablerows += "<div class='form-group'>"
+                if (searchtype == 1)
+                    tablerows += "<option selected data='Exact' class='form-control' value='1'>Exact Match</option>";
+                else
+                    tablerows += "<option data='Exact' class='form-control' value='1'>Exact Match</option>";
+
+                if (searchtype == 2)
+                    tablerows += "<option selected data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+                else
+                    tablerows += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+
+                if (searchtype == 3)
+                    tablerows += "<option selected data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+                else
+                    tablerows += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+                tablerows += "</select>"
+                tablerows += "</div>"
+                tablerows += "</td>"
+
+            }
+        }
+        tablerows += "</TR>"
+    }
+    tablerows += "<tr><td colspan=3><hr></td></tr>"
+
+    // ACTIONS
+    tablerows += "<tr><Th colspan='3'><H3>Action</h3></Th></tr>"
+    tablerows += "<TR><Th colspan='3'>" + pairing.action.extension + " -> " + pairing.action.messagetype.replace("action_", "") + "</Th></Tr>"
+    tablerows += "<tr>"
+
+    for (let j = 0; j < pairing.action.data.length; j++) 
+    {
+        tablerows += "<TR>"
+        for (let item in pairing.action.data[j])
+        {
+            if (item.indexOf("MATCHER_") != 0)
+            {
+                tablerows += "<td>" + item + "</td>"
+                tablerows += "<td>"
+                tablerows += "<input id='triggerExtensionEditActionParameters" + item + "' name='triggerExtensionEditActionParameters" + item + "'  type=text value='" + pairing.action.data[j][item] + "'></input>"
+
+                tablerows += "</td>"
+                // add the matcher object
+                tablerows += "<td>"
+                let searchtype = 1;
+                //get the matcher object if there is one
+                let temp = pairing.action.data.find((o) => typeof (o["MATCHER_" + item]) != "undefined")
+                // if we have a matcher object get the value so we can change the symbol on screen (=/^/* for exact, startswith, anywhere)
+                if (temp)
+                    searchtype = temp["MATCHER_" + item]
+                tablerows += "<div class='col-2'>"
+                // add the matcher dropdown to each variable name
+                tablerows += "<select id='triggerExtensionEditActionParametersMATCHER_" + item + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionEditActionParametersMATCHER_" + item + "'>"
+                tablerows += "<div class='form-group'>"
+                if (searchtype == 1)
+                    tablerows += "<option selected data='Exact' class='form-control' value='1'>Exact Match</option>";
+                else
+                    tablerows += "<option data='Exact' class='form-control' value='1'>Exact Match</option>";
+
+                if (searchtype == 2)
+                    tablerows += "<option selected data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+                else
+                    tablerows += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+
+                if (searchtype == 3)
+                    tablerows += "<option selected data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+                else
+                    tablerows += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+                tablerows += "</select>"
+                tablerows += "</div>"
+                tablerows += "</td>"
+
+            }
+        }
+        tablerows += "</TR>"
+    }
+
+    tablerows += "</tbody></table>"
+    document.getElementById("updatePairingEditForm").innerHTML = tablerows
+}
+// ============================================================================
+//                     FUNCTION: EditPairingButton
+//              button on the page for users to edit the pairings
+// ============================================================================
+function UpdatePairingButton (event)
+{
+    let triggerpattern = "triggerExtensionEditTriggerParameters"
+    let actionpattern = "triggerExtensionEditActionParameters"
+    // get the modal data as an array
+    let fieldsAsArray = $('#updatePairingEditForm').serializeArray();
+    // convert our array of objects into a more usable object
+    let fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+    let pairingID = fieldsAsObject.triggerpariringid
+    if (pairingID == undefined)
+        alert("Trigger/Action pair not found")
+
+    for (const [key, value] of Object.entries(fieldsAsObject))
+    {
+        // we have a trigger variable
+        if (key.indexOf(triggerpattern) == 0)
+        {
+            let field = key.replace(triggerpattern, "")
+            for (let i = 0; i < usertriggerslist.pairings[pairingID].trigger.data.length; i++)
+            {
+                if (usertriggerslist.pairings[pairingID].trigger.data[i][field] != undefined)
+                    usertriggerslist.pairings[pairingID].trigger.data[i][field] = value
+            }
+
+        }
+        // we have an action variable
+        else if (key.indexOf(actionpattern) == 0)
+        {
+            let field = key.replace(actionpattern, "")
+            for (let i = 0; i < usertriggerslist.pairings[pairingID].action.data.length; i++)
+            {
+                if (usertriggerslist.pairings[pairingID].action.data[i][field] != undefined)
+                    usertriggerslist.pairings[pairingID].action.data[i][field] = value
+            }
+            //usertriggerslist.pairings[pairingID].action.data[field] = value
+        }
+        else if (key.indexOf("triggerExtensionPairingModalGroupName") == 0)
+        {
+            usertriggerslist.pairings[pairingID].group = value;
+        }
+        else if (key.indexOf("triggerpairingid") == 0)
+        {
+            //ignore the id as we have already used it
+        }
+        else
+            console.log("Not updating ", key, "=", value)
+
+    }
+    $("#editPairingModal").modal("hide")
+    updateServerPairingsList();
 }
 // ============================================================================
 //                     FUNCTION: setMacroImageTag

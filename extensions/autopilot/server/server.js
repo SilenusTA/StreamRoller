@@ -293,9 +293,9 @@ function onDataCenterMessage (server_packet)
             if (server_packet.to === serverConfig.extensionname)
             {
                 ProcessUserPairings(extension_packet.data)
+                SaveDataToServer()
                 SendUserPairings("");
                 SendMacros()
-                SaveDataToServer()
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -668,19 +668,34 @@ function RequestChList ()
 
 function SendUserPairings (to)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ExtensionMessage",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "UserPairings",
+    if (to != "")
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
-                serverData.userPairings,
+                sr_api.ExtensionPacket(
+                    "UserPairings",
+                    serverConfig.extensionname,
+                    serverData.userPairings,
+                    serverConfig.channel,
+                    to),
                 serverConfig.channel,
-                to),
-            serverConfig.channel,
-            to
-        ),
-    );
+                to
+            ),
+        );
+    else
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "UserPairings",
+                    serverConfig.extensionname,
+                    serverData.userPairings,
+                    serverConfig.channel,
+                    to),
+                serverConfig.channel,
+                to
+            ),
+        );
 }
 // ============================================================================
 //                           FUNCTION: SaveDataToServer

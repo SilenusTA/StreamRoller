@@ -70,6 +70,7 @@ const default_serverConfig = {
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
     enablestreamersonglist: "off",
+    streamersonglistname: "",
     pollSongQueueTimeout: 180000, // check for updated queue every 3 minutes in case the socket goes down
     pollSongListTimeout: 300000, // check for updated songs every 5 minutes in case the socket goes down
     heartBeatTimeout: 5000,
@@ -430,7 +431,7 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
-//                           FUNCTION: SendSettingsWidgetSmall
+//                           FUNCTION: sendTriggersAndActions
 // ===========================================================================
 function sendTriggersAndActions (from)
 {

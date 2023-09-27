@@ -170,3 +170,21 @@ a {
 .imagemodal {
   max-width: 90% !important;
 }
+
+
+.editmodal {
+  text-align: center !important;
+  max-width: 100%;
+  width: auto !important;
+  top: auto !important;
+  left: auto !important;
+  position: absolute !important;
+  float: left !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.editmodal td {
+  border-width: 1px !important;
+}
