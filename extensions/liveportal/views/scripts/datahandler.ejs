@@ -227,6 +227,8 @@
     // ===========================================================================
     function ConnectToDataCenter (host, port)
     {
+        localConfig.host = host;
+        localConfig.port = port;
         try
         {
             DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,

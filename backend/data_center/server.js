@@ -39,6 +39,7 @@ import * as cm from "./modules/common.js";
 import * as logger from "./modules/logger.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 import * as ServerSocket from "./modules/server_socket.js";
+import * as os from "os";
 
 // load our config settings from the config store
 let config = cm.loadConfig("datacenter");
@@ -77,6 +78,23 @@ if (config.softwareversion != localConfig.version)
     cm.saveConfig(config.extensionname, config);
 }
 
+// set the local IP address to this machine
+var interfaces = os.networkInterfaces();
+var addresses = [];
+for (var k in interfaces)
+{
+    for (var k2 in interfaces[k])
+    {
+        console.log("k2", k)
+        var address = interfaces[k][k2];
+        if (address.family === 'IPv4' && !address.internal)
+        {
+            addresses.push(address.address);
+        }
+    }
+}
+if (addresses[0] != undefined || addresses[0] != "")
+    config.HOST = addresses[0];
 
 logger.setLoggingLevel(config.logginglevel);
 console.log("serverSettings: ", config);
@@ -91,6 +109,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import express from "express";
 import http from "http";
 import * as fs from "fs/promises";
+
 // set our localion
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // app server start
