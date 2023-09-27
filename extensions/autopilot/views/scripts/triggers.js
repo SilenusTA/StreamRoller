@@ -947,14 +947,14 @@ function EditPairingButton (event, g, i)
 
     tablerows += "<table><tbody>"
     tablerows += "<tr><td>"
-    tablerows += '<select id="triggerExtensionPairingModalGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger" title="' + usertriggerslist.pairings[i].group + '" value="1" name="triggerExtensionPairingModalGroupName">'
+    tablerows += '<select id="triggerExtensionPairingModalGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger" title="' + g + '" value="1" name="triggerExtensionPairingModalGroupName">'
 
     // that happen within StreamRoller. Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending on chats mood etc.";
 
     let selected = ""
     for (let i = 0; i < usertriggerslist.groups.length; i++)
     {
-        if (usertriggerslist.groups[i].name == usertriggerslist.pairings[i].group)
+        if (usertriggerslist.groups[i].name == g)
             selected = " selected"
         else
             selected = ""
@@ -1096,7 +1096,6 @@ function UpdatePairingButton (event)
                 if (usertriggerslist.pairings[pairingID].trigger.data[i][field] != undefined)
                     usertriggerslist.pairings[pairingID].trigger.data[i][field] = value
             }
-
         }
         // we have an action variable
         else if (key.indexOf(actionpattern) == 0)
