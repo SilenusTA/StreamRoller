@@ -995,9 +995,9 @@ function processTextMessage (data, triggerresponse = false)
 
         // check ignore list
         if (serverConfig.chatbotignorelist
-            && typeof (data.triggerparams.parameters) != "undefined"
-            && typeof (data.triggerparams.parameters.sender) != "undefined"
-            && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.triggerparams.parameters.sender.toLowerCase()) > -1)
+            && typeof (data.parameters) != "undefined"
+            && typeof (data.parameters.sender) != "undefined"
+            && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.parameters.sender.toLowerCase()) > -1)
         {
             if (serverConfig.DEBUG_MODE === "on")
                 console.log("ignoring message, user on ignore list")
