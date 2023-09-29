@@ -17,7 +17,7 @@
 
 // these are defult triggers so the user has something to look at during startup.
 const default_serverData = {
-    __version__: "0.2.2",
+    __version__: "0.2.3",
     userPairings: {
         "pairings": [
             {
