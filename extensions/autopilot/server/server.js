@@ -488,6 +488,10 @@ function ProcessReceivedTrigger (pairing, receivedtrigger)
                                 if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
                                     match = false;
                                 break;
+                            case "4"://doesn't match
+                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
+                                    match = false;
+                                break;
                             default:
                                 // check for exact match
                                 if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
@@ -556,6 +560,7 @@ function TriggerAction (action, triggerparams)
             let tempAction = action.data[i][property]
             // *************************
             // check for user variables
+            // we need a better way to do this. messy code
             // *************************
             // check if we have %%var%% in the field
             let nextVarIndex = action.data[i][property].indexOf("%%")
@@ -568,20 +573,37 @@ function TriggerAction (action, triggerparams)
                 {
                     // get the full variable
                     let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
-
-                    // check if we have a word option
+                    // at this point we will have either (example uses the message field and word number 2)
+                    // message, 
+                    // message:2 
+                    // message:2*
+                    // check if we have a word number option 
                     if (sourceVar.indexOf(":") > -1)
                     {
                         // get the position of the :
                         let stringIndex = sourceVar.indexOf(":")
                         // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
-                        let wordNumber = (sourceVar.substr(stringIndex + 1)) - 1
-                        // get the trigger field
-                        let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
-                        // split the data into an array so we can index the work the user wants
-                        const sourceArray = sourceData.split(" ");
-                        // replace the user vars with the data requested
-                        tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray[wordNumber])
+                        // (note currenly only works with 1 digit so 0-9 words can be selected)
+                        let wordNumber = (sourceVar.substr(stringIndex + 1, 1)) - 1
+                        // check if we have the *
+                        if ((sourceVar.substr(stringIndex + 2) == "*"))
+                        {
+                            // get the trigger field (ie the named variable data)
+                            let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            const sourceArray = sourceData.split(" ");
+                            // remove the first number of words the user specified
+                            for (var x = 0; x < wordNumber; x++)
+                                sourceArray.splice(0, 1)
+                            tempAction = sourceArray.join(" ").trim()
+                        }
+                        else
+                        {
+                            // get the trigger field (ie the named variable data)
+                            let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            // split the data into an array so we can index the work the user wants
+                            const sourceArray = sourceData.split(" ");
+                            tempAction = sourceArray[wordNumber]
+                        }
                     }
                     else
                     {

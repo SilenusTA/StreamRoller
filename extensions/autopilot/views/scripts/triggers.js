@@ -222,6 +222,7 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "<div class='form-group'><option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
             triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
             triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+            triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
             triggerextensionparameters += "</select>"
             triggerextensionparameters += "</div>"
             triggerextensionparameters += "<div class='w-100'></div>"
@@ -680,6 +681,9 @@ function populateTriggersTable ()
                                 case "3":
                                     symbol = "^"
                                     break;
+                                case "4":
+                                    symbol = "!"
+                                    break;
                                 default:
                                     symbol = "="
                             }
@@ -1004,6 +1008,12 @@ function EditPairingButton (event, g, i)
                     tablerows += "<option selected data='Start of line' class='form-control' value='3'>Start of line</option></div>";
                 else
                     tablerows += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+
+                if (searchtype == 4)
+                    tablerows += "<option selected data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
+                else
+                    tablerows += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
+
                 tablerows += "</select>"
                 tablerows += "</div>"
                 tablerows += "</td>"
@@ -1057,6 +1067,12 @@ function EditPairingButton (event, g, i)
                     tablerows += "<option selected data='Start of line' class='form-control' value='3'>Start of line</option></div>";
                 else
                     tablerows += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
+
+                if (searchtype == 4)
+                    tablerows += "<option selected data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
+                else
+                    tablerows += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
+
                 tablerows += "</select>"
                 tablerows += "</div>"
                 tablerows += "</td>"

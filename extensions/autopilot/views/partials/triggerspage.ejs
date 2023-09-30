@@ -29,9 +29,18 @@
     <h4>Action Variables</h4>
     You can select a field to put into the action using %%name%%. ie if you want to add a chat message sender name into
     a field use %%sender%%
-    <BR>to select a specific word from a field (ie for a command in chat eg '!setscore 5') you can trigger on
+    <BR>To select a specific word from a field (ie for a command in chat eg '!setscore 5') you can trigger on
     '!setscore' in a twitch chat message and used
     '%%message:2%%' in the action field to select only the second item (in this case the '5')
+    <BR>If you add a "*" after the number you will get the rest of the string.
+    ie '!title' in a twitch chat message and used
+    '%%message:2*%%' in the action field to everything after the !title part.
+    so
+    <ul>
+      <li>&ltchatmessage&gt !title some new game to try out</li>
+      <li>&ltcommand&gt %%message:2*%%</li>
+      <li>&ltresult&gt some new game to try out</li>
+    </ul>
     </p>
 
     <!--

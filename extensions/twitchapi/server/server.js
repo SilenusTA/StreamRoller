@@ -38,6 +38,7 @@ const localConfig =
     pubsubheartbeatInterval: 1000 * 5, //ms between PING's (must be every 5 minutes or less)
     pubsubreconnectInterval: 1000 * 3, //ms to wait before reconnect
     userData: "",
+    userId: "",
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
@@ -99,13 +100,13 @@ const triggersandactions =
         ],
     actions:
         [
-            /* {
-                 name: "Activate Macro",
-                 displaytitle: "Activate Macro",
-                 description: "Activate a macro function",
-                 messagetype: "action_ActivateMacro",
-                 parameters: { name: "" }
-             },*/
+            {
+                name: "ChangeTitle",
+                displaytitle: "Change Title",
+                description: "Change channel title",
+                messagetype: "action_TwitchAPIChangeTitle",
+                parameters: { title: "" }
+            },
         ],
 }
 // ============================================================================
@@ -287,6 +288,12 @@ function onDataCenterMessage (server_packet)
                     server_packet.from
                 )
             )
+
+        }
+        else if (extension_packet.type === "action_TwitchAPIChangeTitle")
+        {
+            if (extension_packet.data.title != "")
+                setStreamTitle(extension_packet.data.title)
         }
         else if (extension_packet.type === "TwitchConnected")
         {
@@ -598,11 +605,11 @@ function twitchapi_parseMessage (rawdata)
 // ============================================================================
 function twitchapi_addlisteners ()
 {
-    if (localConfig.userData != "" && localConfig.status.connected)
+    if (localConfig.userId != "" && localConfig.status.connected)
     {
         for (let i = 0; i < serverConfig.topicstolistento.length; i++)
         {
-            twitchapi_listen(serverConfig.topicstolistento[i] + localConfig.userData[0].id)
+            twitchapi_listen(serverConfig.topicstolistento[i] + localConfig.userId)
         }
     }
     else
@@ -625,11 +632,11 @@ function twitchapi_addlisteners ()
 // ============================================================================
 function twitchapi_removelisteners ()
 {
-    if (localConfig.userData != "")
+    if (localConfig.userId != "")
     {
         for (let i = 0; i < serverConfig.topicstolistento.length; i++)
         {
-            twitchapi_unlisten(serverConfig.topicstolistento[i] + localConfig.userData[0].id)
+            twitchapi_unlisten(serverConfig.topicstolistento[i] + localConfig.userId)
         }
     }
 }
@@ -698,9 +705,36 @@ function getuserdata ()
                 if (user && user.data && user.data.length > 0)
                 {
                     localConfig.userData = user.data
+                    localConfig.userId = localConfig.userData[0].id
                     twitchapi_addlisteners()
                 }
             });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getuserdata error:", err.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: setStreamTitle
+// ============================================================================
+function setStreamTitle (title)
+{
+    try
+    {
+        fetch('https://api.twitch.tv/helix/channels?broadcaster_id=' + localConfig.userId + '&title=' + title, {
+            method: 'PATCH',
+            headers: new Headers({
+                "Accept": "application/json",
+                "Client-ID": localConfig.clientId,
+                "Authorization": "Bearer " + localCredentials.twitchOAuthToken
+            })
+        })
+            .then(function (response) 
+            {
+                if (!response.ok)
+                    console.log("Error setting title", response.statusText);
+            })
     }
     catch (err)
     {

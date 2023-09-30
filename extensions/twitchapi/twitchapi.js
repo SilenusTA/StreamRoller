@@ -31,7 +31,7 @@ const localConfig = {
     host: "http://localhost",
     port: "3000",
     clientId: 's65xinp3a4orpi4qtn62pypekg5n6q',
-    scopes: 'user_read+channel:read:subscriptions+channel:read:redemptions+bits:read',
+    scopes: 'user_read+channel:read:redemptions+channel:manage:broadcast',
     nonce: null
 };
 import express from "express";
