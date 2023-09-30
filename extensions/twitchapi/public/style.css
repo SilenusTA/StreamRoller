@@ -1,0 +1,26 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font: 100%/1.4 system-ui, sans-serif;
+    color: blue;
+}
+
+textarea {
+    font-family: monospace;
+    font-size: 1rem;
+    width: 100%;
+}
+
+input {
+    font-size: 1rem;
+}
+
+.endpoints li {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}

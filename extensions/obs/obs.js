@@ -318,7 +318,6 @@ function onDataCenterMessage (server_packet)
         else if (server_packet.type === "ExtensionMessage")
         {
             let extension_packet = server_packet.data
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage ExtensionMessage", extension_packet.type);
             if (extension_packet.type === "RequestSettingsWidgetSmallCode")
                 SendSettingsWidgetSmall(extension_packet.from);
             else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
@@ -328,7 +327,8 @@ function onDataCenterMessage (server_packet)
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
                 if (extension_packet.to === serverConfig.extensionname)
-                {            // if we have enabled/disabled obs connection
+                {
+                    // if we have enabled/disabled obs connection
                     if (serverConfig.enableobs != extension_packet.data.enableobs)
                     {
                         //we are currently enabled so lets disconnect
@@ -1441,6 +1441,9 @@ function heartBeatCallback ()
     }
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
+// ============================================================================
+//                           FUNCTION: findSceneData
+// ============================================================================
 function findSceneData (sceneName)
 {
     for (const entry in localConfig.sceneList.main)
