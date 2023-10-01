@@ -31,15 +31,28 @@ html {
   height: 100%;
 }
 
+a {
+  color: #1ea0d3;
+}
+
+input {
+  background-color: rgb(189, 189, 189);
+}
+
+table {
+  height: 100%;
+}
+
+td {
+  padding: 4px;
+  height: 1px;
+}
+
 .card-title {
   font-family: "Audiowide-Regular";
   padding-top: 1px;
   padding-bottom: 1px;
   margin-bottom: 0px;
-}
-
-input {
-  background-color: rgb(189, 189, 189);
 }
 
 .form-control {
@@ -65,10 +78,6 @@ input {
 
 #TriggersPageCard {
   font-family: sans-serif;
-}
-
-a {
-  color: #1ea0d3;
 }
 
 .navbar {
