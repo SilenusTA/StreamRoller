@@ -980,7 +980,7 @@ function EditPairingButton (event, g, i)
                 tablerows += "<td>" + item + "</td>"
 
                 tablerows += "<td>"
-                tablerows += "<input id='triggerExtensionEditTriggerParameters" + item + "' name='triggerExtensionEditTriggerParameters" + item + "' type=text value='" + pairing.trigger.data[j][item] + "'></input>"
+                tablerows += "<input id='triggerExtensionEditTriggerParameters" + item + "' name='triggerExtensionEditTriggerParameters" + item + "' type=text value=\"" + pairing.trigger.data[j][item] + "\"></input>"
                 tablerows += "</td>"
                 // add the matcher object
                 tablerows += "<td>"
@@ -1038,7 +1038,7 @@ function EditPairingButton (event, g, i)
             {
                 tablerows += "<td>" + item + "</td>"
                 tablerows += "<td>"
-                tablerows += "<input id='triggerExtensionEditActionParameters" + item + "' name='triggerExtensionEditActionParameters" + item + "'  type=text value='" + pairing.action.data[j][item] + "'></input>"
+                tablerows += "<input id='triggerExtensionEditActionParameters" + item + "' name='triggerExtensionEditActionParameters" + item + "'  type=text value=\"" + pairing.action.data[j][item] + "\"></input>"
 
                 tablerows += "</td>"
                 // add the matcher object
