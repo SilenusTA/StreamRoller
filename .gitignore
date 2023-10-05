@@ -19,3 +19,4 @@ chatdata/
 msfsdata/
 debug_only_testing*
 extensions/quizbot/odgquestions.txt
+extensions/autopilot/public/images/deckicons/**
