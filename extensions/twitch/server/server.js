@@ -720,7 +720,7 @@ async function startCommercial (length)
             console.log("Commercial length invalid, must be one of 30, 60, 90, 120, 150, 180")
         else
         {
-            await localConfig.apiClient.channels.startChannelCommercial(localConfig.streamerdata.id, length)
+            await localConfig.apiClient.channels.startChannelCommercial(localConfig.streamerData.id, length)
             //TBD need to move trigger to pubsub/eventsub if we ever work out how to do that
             let trigger = findTriggerByMessageType("trigger_TwitchCommercialStarted");
             trigger.parameters.duration = length;
