@@ -1042,6 +1042,9 @@ function EditPairingButton (event, g, i)
             }
         }
     }
+    tr = table.insertRow()
+    tr.insertCell().innerHTML = "cooldown"
+    tr.insertCell().appendChild(createInputElement("triggerExtensionEditTriggerParameterscooldown", "triggerExtensionEditTriggerParameterscooldown", "text", pairing.trigger.cooldown))
 
     // start action table
     tr = table.insertRow().insertCell().outerHTML = "<Th colspan='3'><H3>Action</h3></Th>"
@@ -1185,6 +1188,9 @@ function UpdatePairingButton (event)
                 if (usertriggerslist.pairings[pairingID].trigger.data[i][field] != undefined)
                     usertriggerslist.pairings[pairingID].trigger.data[i][field] = value
             }
+            if (key.indexOf("triggerExtensionEditTriggerParameterscooldown") == 0)
+                usertriggerslist.pairings[pairingID].trigger.cooldown = value
+
         }
         // we have an action variable
         else if (key.indexOf(actionpattern) == 0)
