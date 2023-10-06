@@ -980,7 +980,7 @@ function heartBeatCallback ()
 //                           FUNCTION: processTextMessage
 //            A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
 // ============================================================================
-function processTextMessage (data, triggerresponse = false)
+function processTextMessage (data, triggerresponse = false, maxRollbackCount = 20)
 {
     try
     {
@@ -1011,10 +1011,25 @@ function processTextMessage (data, triggerresponse = false)
             // random timeout between 200 and 500ms
             var randomTimeout = (Math.random() * 300) + 200;
             if (serverConfig.DEBUG_MODE === "on")
+            {
+                console.log("maxRollbackCount", maxRollbackCount)
+                console.log("requestPending", localConfig.requestPending)
+                console.log("starttime", starttime)
+                console.log("lastrequesttime", localConfig.lastrequesttime)
+                console.log("overloadprotection", localConfig.overloadprotection)
+                console.log(starttime - localConfig.lastrequesttime < localConfig.overloadprotection)
                 console.log(" ********************** waiting for rollback timeout:", randomTimeout)
+            }
+            if (maxRollbackCount < 0)
+            {
+                localConfig.requestPending = false;
+                if (serverConfig.DEBUG_MODE === "on")
+                    console.log("Ran out of retries on the rollback")
+                return;
+            }
             setTimeout(() =>
             {
-                processTextMessage(data, triggerresponse)
+                processTextMessage(data, triggerresponse, maxRollbackCount--)
             }, randomTimeout);
             return;
         }
@@ -1096,7 +1111,7 @@ function processTextMessage (data, triggerresponse = false)
 //                    FUNCTION: processChatMessage
 // This function is called by monitoring the twitch chat output
 // ============================================================================
-function processChatMessage (data)
+function processChatMessage (data, maxRollbackCount = 20)
 {
     // debug message colors
     let brightText = "\x1b[1m";
@@ -1259,10 +1274,26 @@ function processChatMessage (data)
         // random timeout between 200 and 500ms
         var randomTimeout = (Math.random() * 300) + 200;
         if (serverConfig.DEBUG_MODE === "on")
+        {
+            console.log("maxRollbackCount", maxRollbackCount)
+            console.log("requestPending", localConfig.requestPending)
+            console.log("starttime", starttime)
+            console.log("lastrequesttime", localConfig.lastrequesttime)
+            console.log("overloadprotection", localConfig.overloadprotection)
+            console.log(starttime - localConfig.lastrequesttime < localConfig.overloadprotection)
             console.log(" ********************** waiting for rollback timeout:", randomTimeout)
+        }
+        if (maxRollbackCount < 0)
+        {
+            // if we hit this something has probably got stuck so lets unstick it for the user
+            localConfig.requestPending = false;
+            if (serverConfig.DEBUG_MODE === "on")
+                console.log("Ran out of retries on the rollback")
+            return;
+        }
         setTimeout(() =>
         {
-            processChatMessage(data)
+            processChatMessage(data, maxRollbackCount--)
         }, randomTimeout);
         return;
     }
@@ -1567,6 +1598,7 @@ async function callOpenAI (string_array, modelToUse)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 }
                 )
+            localConfig.requestPending = false;
             // min time between requests (to avoid 429 errors)
             localConfig.lastrequesttime = Date.now();
             if (!response)
