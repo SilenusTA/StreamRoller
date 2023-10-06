@@ -676,6 +676,12 @@ async function connectTwitch ()
         // get some data about the streamer (id etc)
         localConfig.streamerData = await localConfig.apiClient.users.getUserByName(serverConfig.twitchstreamername)
 
+        if (localConfig.streamerData == null)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Streamer Not found");
+            return
+        }
+
         // get the current channel info (needed so we can trigger on changes)
         let channelData = await localConfig.apiClient.channels.getChannelInfoById(localConfig.streamerData.id)
 
