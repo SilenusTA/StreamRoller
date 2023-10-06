@@ -1,0 +1,17 @@
+{
+  "name": "twitch",
+  "version": "1.0.0",
+  "description": "twitch ",
+  "main": "twitch.js",
+  "type": "module",
+  "scripts": {
+    "start": "echo This code is an extension and will be autoloaded by the backend data server. "
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "",
+  "dependencies": {
+    "@twurple/api": "^7.0.2",
+    "@twurple/auth": "^7.0.2",
+    "@twurple/eventsub-ws": "^7.0.2"
+  }
+}

@@ -95,7 +95,8 @@ function receivedTrigger (extensiontriggers)
         fulltriggerslist.triggers[extensiontriggers.extensionname] = extensiontriggers.triggers
     if (extensiontriggers.actions && extensiontriggers.actions.length > 0)
         fulltriggerslist.actions[extensiontriggers.extensionname] = extensiontriggers.actions
-
+    fulltriggerslist.triggers = sortByKey(fulltriggerslist.triggers)
+    fulltriggerslist.actions = sortByKey(fulltriggerslist.actions)
     // update the page with the new triggeroptions
     populateGroupNamesDropdown();
     addTriggerEntries();
@@ -251,6 +252,9 @@ function addActionEntries ()
 {
     let ActionExtensionChoser = document.getElementById("actionExtensionChoser")
     let actionextensionnames = ""
+    let temparray = []
+    let tempobject = {}
+
     let actions = fulltriggerslist.actions;
     if (Object.keys(actions).length > 0)
     {
@@ -1222,8 +1226,23 @@ function setMacroImageTag (name)
 //                     FUNCTION: sortByKey
 //              sorts an array of objects based on a key
 // ============================================================================
-function sortByKey (array, key)
+function sortByKey (array)
 {
+
+    const ordered = Object.keys(array).sort().reduce(
+        (obj, key) =>
+        {
+            obj[key] = array[key];
+            return obj;
+        },
+        {}
+    );
+    //console.log(array)
+    return ordered;
+}
+function old (array, key)
+{
+
     return array.sort(function (a, b)
     {
         var x = a[key]; var y = b[key];

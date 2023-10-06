@@ -455,7 +455,7 @@ function CheckTriggers (data)
 // ============================================================================
 //                           FUNCTION: ProcessReceivedTrigger
 // ============================================================================
-function ProcessReceivedTrigger (pairing, receivedtrigger)
+function ProcessReceivedTrigger (pairing, receivedTrigger)
 {
     //check if the event fields match the trigger fields we have set for this entry
 
@@ -476,30 +476,30 @@ function ProcessReceivedTrigger (pairing, receivedtrigger)
                 {
                     // get the relevent matcher for this value
                     let searchtype = param["MATCHER_" + i]
-                    if (typeof (receivedtrigger.data.parameters[i]) == "string")// && typeof param[i] === "string")
+                    if (typeof (receivedTrigger.data.parameters[i]) == "string")// && typeof param[i] === "string")
                     {
                         switch (searchtype)
                         {
                             case "2"://match anywhere
-                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
                                     match = false;
                                 break;
                             case "3"://match start of line only
-                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
+                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
                                     match = false;
                                 break;
                             case "4"://doesn't match
-                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
+                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
                                     match = false;
                                 break;
                             default:
                                 // check for exact match
-                                if (param[i] != "" && receivedtrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
                                     match = false;
                         }
                     }
                     //check non string types for not matching
-                    else if (param[i] != "" && receivedtrigger.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
+                    else if (param[i] != "" && receivedTrigger.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
                         match = false;
                 }
             }
@@ -527,14 +527,14 @@ function ProcessReceivedTrigger (pairing, receivedtrigger)
             else
                 pairing.trigger.lastrun = now
         }
-        TriggerAction(pairing.action, receivedtrigger)
+        TriggerAction(pairing.action, receivedTrigger)
     }
 
 }
 // ============================================================================
 //                           FUNCTION: TriggerAction
 // ============================================================================
-function TriggerAction (action, triggerparams)
+function TriggerAction (action, triggerParams)
 {
     if (action.paused)
         return
@@ -548,8 +548,8 @@ function TriggerAction (action, triggerparams)
     const bannedRegex = ["process", "system", "for", "while", "loop"];
 
     let params = {}
-    // store the trigger params in the actrion in case the extension has use for them
-    params.triggerparams = triggerparams.data
+    // store the trigger params in the action in case the extension has use for them
+    params.triggerparams = triggerParams.data
     // loop through each action field
     for (var i in action.data)
     {
@@ -583,13 +583,14 @@ function TriggerAction (action, triggerparams)
                         // get the position of the :
                         let stringIndex = sourceVar.indexOf(":")
                         // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
-                        // (note currenly only works with 1 digit so 0-9 words can be selected)
+                        // (note currently only works with 1 digit so 0-9 words can be selected)
                         let wordNumber = (sourceVar.substr(stringIndex + 1, 1)) - 1
                         // check if we have the *
                         if ((sourceVar.substr(stringIndex + 2) == "*"))
                         {
                             // get the trigger field (ie the named variable data)
-                            let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            let sourceData = triggerParams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            sourceData.replaceAll("%%", "")
                             const sourceArray = sourceData.split(" ");
                             // remove the first number of words the user specified
                             for (var x = 0; x < wordNumber; x++)
@@ -599,7 +600,8 @@ function TriggerAction (action, triggerparams)
                         else
                         {
                             // get the trigger field (ie the named variable data)
-                            let sourceData = triggerparams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            let sourceData = triggerParams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            sourceData.replaceAll("%%", "")
                             // split the data into an array so we can index the work the user wants
                             const sourceArray = sourceData.split(" ");
                             tempAction = sourceArray[wordNumber]
@@ -607,7 +609,10 @@ function TriggerAction (action, triggerparams)
                     }
                     else
                     {
-                        tempAction = tempAction.replace("%%" + sourceVar + "%%", triggerparams.data.parameters[sourceVar])
+                        let tmpData = triggerParams.data.parameters[sourceVar]
+                        if (typeof triggerParams.data.parameters[sourceVar] == "string")
+                            tmpData = tmpData.replaceAll("%%", "")
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", tmpData)
                     }
                 }
                 if (typeof tempAction == "string")
