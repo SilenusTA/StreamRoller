@@ -6,17 +6,12 @@ env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
 jobs:
-  minify_code:
+  remove_git:
     runs-on: ubuntu-latest
     steps:
     - name: getting node version
       run: node -v
     - uses: actions/checkout@v3
-    - name: minifying
-      uses: nizarmah/auto-minify@v2.1
-      with:
-        overwrite: true
-        js_engine : 'uglify-js'
     - name: removing git folder (to keep space down in exe)
       run: |
           ls -la
@@ -30,7 +25,6 @@ jobs:
         path: .      
   creating_exe:
     runs-on: windows-latest    
-    needs: minify_code
     steps:
     - name: importing artecfact
       uses: actions/download-artifact@v3
