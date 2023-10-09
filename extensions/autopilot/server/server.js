@@ -519,7 +519,7 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
                         }
                     }
                     //check non string types for not matching
-                    else if (param[i] != "" && receivedTrigger.data.parameters[i].toString().toLowerCase() != param[i].toLowerCase())
+                    else if (param[i] != "" && receivedTrigger.data.parameters[i] != param[i])
                         match = false;
                 }
             }
