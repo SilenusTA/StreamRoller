@@ -573,11 +573,11 @@ function populateMacroDisplay ()
             backgroundcolor = usertriggerslist.macrotriggers.triggers[i].backgroundcolor
         if (typeof (usertriggerslist.macrotriggers.triggers[i].image) != "undefined" && usertriggerslist.macrotriggers.triggers[i].image != "")
         {
-            tempstring += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + usertriggerslist.macrotriggers.triggers[i].image + "\"') title='" + usertriggerslist.macrotriggers.triggers[i].name + "'></button>"
+            tempstring += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + usertriggerslist.macrotriggers.triggers[i].image + "\"' onclick='javascript:triggerMacroButton(\"macros\",\"" + usertriggerslist.macrotriggers.triggers[i].name + "\");' ) title='" + usertriggerslist.macrotriggers.triggers[i].name + "'></button>"
         }
         else
         {
-            tempstring += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' title='" + usertriggerslist.macrotriggers.triggers[i].name + "'>" + usertriggerslist.macrotriggers.triggers[i].name + "</div>"
+            tempstring += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' title='" + usertriggerslist.macrotriggers.triggers[i].name + "' onclick='javascript:triggerMacroButton(\"macros\",\"" + usertriggerslist.macrotriggers.triggers[i].name + "\");'>" + usertriggerslist.macrotriggers.triggers[i].name + "</div>"
         }
     }
     element.innerHTML = tempstring
@@ -901,6 +901,41 @@ function unPauseGroupButton (group)
 
     updateServerPairingsList()
     //populateTriggersTable();
+}
+
+// ============================================================================
+//                     FUNCTION: triggerMacroButton
+//              button on the page for users to test the actions
+// ============================================================================
+function triggerMacroButton (group, name)
+{
+    for (var i in usertriggerslist.pairings)
+    {
+        if (usertriggerslist.pairings[i].trigger.extension == group &&
+            usertriggerslist.pairings[i].trigger.name == name)
+        {
+            let params = {}
+            for (var j in usertriggerslist.pairings[i].action.data)
+            {
+                for (const property in usertriggerslist.pairings[i].action.data[j])
+                    params[property] = usertriggerslist.pairings[i].action.data[j][property]
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        usertriggerslist.pairings[i].action.messagetype,
+                        serverConfig.extensionname,
+                        params,
+                        "",
+                        usertriggerslist.pairings[i].action.extension),
+                    "",
+                    usertriggerslist.pairings[i].action.extension
+                ),
+            );
+        }
+    }
+
 }
 // ============================================================================
 //                     FUNCTION: triggerActionButton

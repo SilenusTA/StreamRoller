@@ -63,7 +63,13 @@ const localCredentials =
     twitchOAuthState: "",
     twitchOAuthToken: ""
 }
-
+// To further expand this list check out HELIX APIS at
+// https://twurple.js.org/reference/api/classes/ApiClient.html
+// 1) select the api and functions you want on the left you want to implement/add
+// 2) add the action_ trigger and function
+// 3) check that a callback trigger_ is defined (should be in the triggers list and implemented in the eventsub.js script)
+// 5) run a test to see if the scopes need updating in twitch.js (for authorizing a user, will need to re-authorize through the admin page to update the twitch tokens)
+//
 // triggers are implemented in eventsub.js
 const triggersandactions =
 {
@@ -358,6 +364,24 @@ const triggersandactions =
                     predictions: "",
                     startDate: "",
                     title: "",
+                }
+            },
+            {
+                name: "Prediction",
+                displaytitle: "Prediction",
+                description: "A Prediction ",
+                messagetype: "trigger_TwitchPrediction",
+                parameters: {
+                    streamer: "",
+                    id: "",
+                    duration: "",
+                    title: "",
+                    status: "",
+                    outcomes: "",
+                    winner: "",
+                    winnerId: "",
+                    lockDate: "",
+                    endDate: "",
                 }
             },
             {
@@ -809,6 +833,16 @@ const triggersandactions =
                     endDate: "",
                 }
             },
+            {
+                name: "UserBlocks",
+                displaytitle: "User blocks",
+                description: "Who this user has blocked",
+                messagetype: "trigger_UserBlocks",
+                parameters: {
+                    username: "",
+                    blocked: ""
+                }
+            }
         ],
     actions:
         [
@@ -906,7 +940,7 @@ const triggersandactions =
             {
                 name: "GetPoll",
                 displaytitle: "Get Poll",
-                description: "Gets a list of poll",
+                description: "Get a poll",
                 messagetype: "action_TwitchGetPoll",
                 parameters: { id: "" }
             },
@@ -932,6 +966,95 @@ const triggersandactions =
                     display: ""
                 }
             },
+            {
+                name: "StartPrediction",
+                displaytitle: "StartPrediction",
+                description: "Start a prediction",
+                messagetype: "action_TwitchStartPrediction",
+                parameters: {
+                    title: "",
+                    choices: "",
+                    duration: ""
+                }
+            },
+            {
+                name: "CancelPrediction",
+                displaytitle: "CancelPrediction",
+                description: "Cancel a prediction",
+                messagetype: "action_TwitchCancelPrediction",
+                parameters: {
+                    id: "",
+                }
+            },
+            {
+                name: "GetPredictions",
+                displaytitle: "Get Predictions",
+                description: "Gets a list of predictions",
+                messagetype: "action_TwitchGetPredictions",
+                parameters: {
+                    state: ""
+                }
+            },
+            {
+                name: "GetPrediction",
+                displaytitle: "Get Prediction",
+                description: "Get a prediction",
+                messagetype: "action_TwitchGetPrediction",
+                parameters: { id: "" }
+            },
+            {
+                name: "LockPrediction",
+                displaytitle: "Lock Prediction",
+                description: "Lock a prediction",
+                messagetype: "action_TwitchLockPrediction",
+                parameters: { id: "" }
+            },
+            {
+                name: "RemovePrediction",
+                displaytitle: "Remove Prediction",
+                description: "Remove a prediction",
+                messagetype: "action_TwitchLRemovePrediction",
+                parameters: { id: "" }
+            },
+            {
+                name: "ResolvePrediction",
+                displaytitle: "Resolve Prediction",
+                description: "Resolve a prediction",
+                messagetype: "action_TwitchLResolvePrediction",
+                parameters: {
+                    id: "",
+                    outcomeId: ""
+                }
+            },
+            //users
+            {
+                name: "CreateUserBlock",
+                displaytitle: "Create User Block",
+                description: "Block a user",
+                messagetype: "action_TwitchCreateBlock",
+                parameters: {
+                    username: "",
+                    reason: "",
+                    context: ""
+                }
+            },
+            {
+                name: "DeleteUserBlock",
+                displaytitle: "Delete User Block",
+                description: "Unblock a user",
+                messagetype: "action_TwitchDeleteBlock",
+                parameters: {
+                    username: "",
+                }
+            },
+            {
+                name: "GetBlocks",
+                displaytitle: "Get blocked users",
+                description: "Get a list of blocked users",
+                messagetype: "action_TwitchGetBlocks",
+                parameters: {}
+            },
+
         ],
 }
 // ============================================================================
@@ -993,16 +1116,6 @@ function onDataCenterConnect (socket)
     clearTimeout(localConfig.heartBeatHandle);
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 
-
-    setTimeout(() =>
-    {
-        // createPoll({
-        //     title: "test poll #f",
-        //     duration: "300",
-        //     choices: "op1,op2, opt 3,  ooopsy",
-        //     points: "100"
-        // })
-    }, 5000);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -1233,6 +1346,8 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data.id != "")
                 getPoll(extension_packet.data.id)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a poll with no poll id");
         }
         // -----------------------------------------------------------------------------------
         //                   action_TwitchCreatePoll
@@ -1241,6 +1356,8 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data != "")
                 createPoll(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to create a poll with no poll data");
         }
         // -----------------------------------------------------------------------------------
         //                   action_TwitchEndPoll
@@ -1249,7 +1366,105 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data != "")
                 endPoll(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to end a poll with no poll data");
         }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchStartPrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchStartPrediction")
+        {
+            if (extension_packet.data != "")
+                startPrediction(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchCancelPrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchCancelPrediction")
+        {
+            if (extension_packet.data != "")
+                cancelPrediction(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to cancel a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetPrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetPrediction")
+        {
+            if (extension_packet.data != "")
+                getPrediction()
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetPredictions
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetPredictions")
+        {
+            if (extension_packet.data != "")
+                getPredictions(extension_packet.data)
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLockPrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchLockPrediction")
+        {
+            if (extension_packet.data != "")
+                lockPrediction(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to lock a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLRemovePrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchLRemovePrediction")
+        {
+            if (extension_packet.data != "")
+                removePrediction(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLResolvePrediction
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchLResolvePrediction")
+        {
+            if (extension_packet.data != "")
+                resolvePrediction(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to resolve a prediction with no prediction data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLCreateBlock
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchCreateBlock")
+        {
+            if (extension_packet.data != "")
+                createBlock(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to block a user with no data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLDeleteBlock
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchDeleteBlock")
+        {
+            if (extension_packet.data != "")
+                deleteBlock(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetBlocks
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetBlocks")
+        {
+            getBlockedUsers()
+        }
+
     }
     // -----------------------------------------------------------------------------------
     //                           UNKNOWN CHANNEL MESSAGE RECEIVED
@@ -1493,7 +1708,7 @@ async function startCommercial (length)
     {
         let lengths = ["30", "60", "90", "120", "150", "180"]
         if (!lengths.includes(length))
-            console.log("Commercial length invalid, must be one of 30, 60, 90, 120, 150, 180")
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "Commercial length invalid, must be one of 30, 60, 90, 120, 150, 180")
         else
         {
             await localConfig.apiClient.channels.startChannelCommercial(localConfig.streamerData.id, length)
@@ -1675,7 +1890,6 @@ async function followerCount ()
     try
     {
         let count = await localConfig.apiClient.channels.getChannelFollowerCount(localConfig.streamerData.id)
-        console.log("followerCount", count)
         let trigger = findTriggerByMessageType("trigger_TwitchFollowerCount");
         trigger.parameters.count = count;
         sendTrigger(trigger)
@@ -1721,15 +1935,8 @@ async function cheerEmotes ()
     try
     {
         let emotes = await localConfig.apiClient.bits.getCheermotes(localConfig.streamerData.id)
-        console.log(emotes.getPossibleNames())
         let trigger = findTriggerByMessageType("trigger_TwitchCheerEmotes");
-        // need to clear out the last run otherwise we will get repeated names in here
         trigger.parameters.emotes = emotes.getPossibleNames().join(" ")
-        // emotes.data.forEach(function (value, key)
-        // {
-        //     trigger.parameters.channels += value.getPossibleNames() + " "
-        // })
-
         sendTrigger(trigger)
     }
     catch (err)
@@ -1784,7 +1991,7 @@ async function getPolls ()
             value.choices.forEach(function (choice, index)
             {
                 if (index > 0)
-                    trigger.parameters.choices += " - "
+                    trigger.parameters.choices += " ,  "
                 trigger.parameters.choices += choice.title + " " + choice.totalVotes
             })
             trigger.parameters.duration = value.durationInSeconds
@@ -1818,7 +2025,7 @@ async function getPoll (id)
         poll.choices.forEach(function (choice, index)
         {
             if (index > 0)
-                trigger.parameters.choices += " - "
+                trigger.parameters.choices += " ,  "
             trigger.parameters.choices += choice.title + " " + choice.totalVotes
         })
         trigger.parameters.duration = poll.durationInSeconds
@@ -1865,7 +2072,6 @@ async function createPoll (data)
         }
     }
 }
-
 // ===========================================================================
 //                           FUNCTION: endPoll
 // ===========================================================================
@@ -1890,11 +2096,290 @@ async function endPoll (data)
     }
 }
 // ===========================================================================
+//                           FUNCTION: startPrediction
+// ===========================================================================
+async function startPrediction (data)
+{
+    try
+    {
+        let newPoll =
+        {
+            title: data.title,
+            outcomes: data.choices.split(","),
+            autoLockAfter: data.duration,
+        }
+        let poll = await localConfig.apiClient.predictions.createPrediction(localConfig.streamerData.id, newPoll)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startPrediction", "ERROR", "Failed to create a prediction");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startPrediction", "ERROR", "Failed to create a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: cancelPrediction
+// ===========================================================================
+async function cancelPrediction (data)
+{
+    try
+    {
+        let prediction = await localConfig.apiClient.predictions.cancelPrediction(localConfig.streamerData.id, data.id)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cancelPrediction", "ERROR", "Failed to cancel a prediction");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cancelPrediction", "ERROR", "Failed to cancel a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getPredictionss
+// ===========================================================================
+async function getPredictions (data)
+{
+    try
+    {
+        let predictions = await localConfig.apiClient.predictions.getPredictions(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchPrediction");
+        predictions.data.forEach(function (value, key)
+        {
+            if (data.state == "" || data.state == value.status)
+                getPrediction(value.id)
+        })
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPredictions", "ERROR", "Failed to get predictions list (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getPrediction
+// ===========================================================================
+async function getPrediction (data)
+{
+    try
+    {
+        let prediction = await localConfig.apiClient.predictions.getPredictionById(localConfig.streamerData.id, data.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchPrediction");
+        trigger.parameters.streamer = prediction.broadcasterDisplayName
+        trigger.parameters.id = prediction.id
+        trigger.parameters.duration = prediction.autoLockAfter
+        trigger.parameters.title = prediction.title
+        trigger.parameters.status = prediction.status
+        trigger.parameters.winner = prediction.winningOutcome
+        trigger.parameters.winnerId = prediction.winningOutcomeId
+        trigger.parameters.endDate = prediction.endDate
+        trigger.parameters.lockDate = prediction.lockDate
+
+        //  ----------- outcomes --------------
+        trigger.parameters.outcomes = ""
+        prediction.outcomes.forEach(function (outcome, index)
+        {
+            if (index > 0)
+                trigger.parameters.outcomes += " ,  "
+            trigger.parameters.outcomes += "id:" + outcome.id + " "
+            trigger.parameters.outcomes += "title:" + outcome.title + " "
+            trigger.parameters.outcomes += "color:" + outcome.color + " "
+            trigger.parameters.outcomes += "points:" + outcome.totalChannelPoints + " "
+            trigger.parameters.outcomes += "users:" + outcome.users + " "
+            trigger.parameters.outcomes += "["
+            // outcome predictors
+            outcome.topPredictors.forEach(function (topP, topPIndex)
+            {
+                if (topPIndex > 0)
+                    trigger.parameters.outcomes += " ,  "
+                trigger.parameters.outcomes += "user:" + topP.userDisplayName + " "
+                trigger.parameters.outcomes += "pointsUsed:" + topP.channelPointsUsed + " "
+                trigger.parameters.outcomes += "pointsWon:" + topP.channelPointsWon + " "
+            });
+            trigger.parameters.outcomes += "]"
+        })
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPrediction", "ERROR", "Failed to get prediction by id (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: lockPrediction
+// ===========================================================================
+async function lockPrediction (data)
+{
+    try
+    {
+        let prediction = await localConfig.apiClient.predictions.lockPrediction(localConfig.streamerData.id, data.id)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".lockPrediction", "ERROR", "Failed to lock a prediction");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".lockPrediction", "ERROR", "Failed to lock a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: removePrediction
+// ===========================================================================
+async function removePrediction (data)
+{
+    try
+    {
+        let prediction = await localConfig.apiClient.predictions.cancelPrediction(localConfig.streamerData.id, data.id)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removePrediction", "ERROR", "Failed to remove a prediction");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removePrediction", "ERROR", "Failed to remove a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: resolvePrediction
+// ===========================================================================
+async function resolvePrediction (data)
+{
+    try
+    {
+        let prediction = await localConfig.apiClient.predictions.resolvePrediction(localConfig.streamerData.id, data.id, data.outcomeId)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".resolvePrediction", "ERROR", "Failed to resolve a prediction");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".resolvePrediction", "ERROR", "Failed to resolve a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: createBlock
+// ===========================================================================
+async function createBlock (data)
+{
+    try
+    {
+        let user = await localConfig.apiClient.users.getUserByName(data.username)
+        let extraInfo = {}
+        if (data.reason != "")
+            extraInfo["reason"] = data.reason
+        if (data.reason != "")
+            extraInfo["sourceContext"] = data.context
+
+        let ret = await localConfig.apiClient.users.createBlock(localConfig.streamerData.id, user.id, extraInfo)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createBlock", "ERROR", "Failed to block user");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createBlock", "ERROR", "Failed to block user)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: deleteBlock
+// ===========================================================================
+async function deleteBlock (data)
+{
+    try
+    {
+        let user = await localConfig.apiClient.users.getUserByName(data.username)
+        await localConfig.apiClient.users.deleteBlock(localConfig.streamerData.id, user.id)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".deleteBlock", "ERROR", "Failed to unblock user");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".deleteBlock", "ERROR", "Failed to unblock user)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION:  getBlockedUsers
+// ===========================================================================
+async function getBlockedUsers ()
+{
+    try
+    {
+        let user = await localConfig.apiClient.users.getBlocks(localConfig.streamerData.id)
+
+        let trigger = findTriggerByMessageType("trigger_UserBlocks")
+        trigger.parameters.blocked = ""
+        trigger.parameters.userDisplayName = user.userDisplayName
+        user.data.forEach(function (value, key)
+        {
+            if (key > 0)
+                trigger.parameters.blocked += " "
+            trigger.parameters.blocked += value.userDisplayName
+        })
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ". getAuthenticatedUser", "ERROR", "Failed to get authenticated user");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ". getAuthenticatedUser", "ERROR", "Failed to get authenticated user)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
 //                           FUNCTION: sendTrigger
 // ===========================================================================
 function sendTrigger (trigger)
 {
-    //console.log(trigger)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             'ChannelData',

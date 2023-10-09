@@ -625,7 +625,11 @@ function createPredictionString (data)
         if (outcome.totalChannelPoints != undefined)
             chPoints = outcome.totalChannelPoints
 
-        outcomeString += outcome.title + " " + userCount + " " + chPoints + " " + outcome.color
+        outcomeString += "id:" + outcome.id + " "
+        outcomeString += "title:" + outcome.title + " "
+        outcomeString += "userCount:" + userCount + " "
+        outcomeString += "chPoints:" + chPoints + " "
+        outcomeString += "color:" + outcome.color
         if (outcome.topPredictors == [])
         {
             outcome.topPredictors.forEach(function (name, i)
@@ -662,8 +666,6 @@ function onChannelPredictionBegin (data)
         logger.err("[EXTENSIONS]twitch.eventsub.onChannelPredictionBegin", "ERROR", err.message);
     }
 }
-
-
 // ============================================================================
 //                           FUNCTION: onChannelPredictionEnd
 // ============================================================================
