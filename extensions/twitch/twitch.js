@@ -30,7 +30,7 @@ const localConfig = {
     dataCenterApp: null,
     heartBeatTimeout: 5000,
     clientId: "s65xinp3a4orpi4qtn62pypekg5n6q",
-    scopes: 'user_read+channel:read:redemptions+channel:manage:broadcast+channel:edit:commercial+channel:manage:vips+channel:manage:moderators+moderation:read',
+    scopes: 'user_read+channel:read:redemptions+channel:manage:broadcast+channel:edit:commercial+channel:read:vips+channel:manage:vips+channel:manage:moderators+moderation:read+channel:read:editors+user:read:follows+bits:read+channel:read:polls+channel:manage:polls+channel:read:goals+moderator:read:shield_mode+moderator:manage:shield_mode+channel:read:charity+channel:read:predictions+channel:manage:predictions+channel:read:hype_train+moderator:read:shoutouts+moderator:manage:shoutouts+moderator:read:followers+channel:read:subscriptions+channel:moderate'
 };
 import express from "express";
 import { dirname } from "path";

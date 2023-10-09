@@ -50,7 +50,7 @@ const localConfig =
     apiClient: null,
 }
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.2",
     extensionname: "twitch",
     channel: "TWITCH",
     twitchenabled: "off",
@@ -74,35 +74,202 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "StreamStarted",
-                displaytitle: "Stream Started",
-                description: "The Stream Started",
-                messagetype: "trigger_TwitchStreamStarted",
-                parameters: {}
-            },
-            {
-                name: "StreamEnded",
-                displaytitle: "Stream Ended",
-                description: "The Stream Ended",
-                messagetype: "trigger_TwitchStreamEnded",
-                parameters: {}
-            },
-            {
-                name: "TitleChanged",
-                displaytitle: "TitleChanged",
-                description: "The Stream title was changed",
-                messagetype: "trigger_TwitchTitleChanged",
+                name: "UserBanned",
+                displaytitle: "UserBanned",
+                description: "A user was banned",
+                messagetype: "trigger_TwitchUserBanned",
                 parameters: {
-                    title: ""
+                    streamer: "",
+                    endDate: "",
+                    isPermanent: "",
+                    moderator: "",
+                    reason: "",
+                    user: ""
                 }
             },
             {
-                name: "CommercialStarted",
-                displaytitle: "Commercial started",
-                description: "A Commercial was started",
-                messagetype: "trigger_TwitchCommercialStarted",
+                name: "CharityCampaignProgress",
+                displaytitle: "Charity Campaign Progress",
+                description: "Progress of a charity Campaign",
+                messagetype: "trigger_TwitchCharityCampaignProgress",
                 parameters: {
-                    duration: ""
+                    streamer: "",
+                    charityName: "",
+                    charityDescription: "",
+                    charityWebsite: "",
+                    charityLogo: "",
+                    currentAmount: "",
+                    targetAmount: "",
+                    id: "",
+                }
+            },
+            {
+                name: "CharityCampaignStart",
+                displaytitle: "Charity Campaign Start",
+                description: "Start of a charity campaign",
+                messagetype: "trigger_TwitchCharityCampaignStart",
+                parameters: {
+                    streamer: "",
+                    charityName: "",
+                    charityDescription: "",
+                    charityWebsite: "",
+                    charityLogo: "",
+                    currentAmount: "",
+                    targetAmount: "",
+                    id: "",
+                    startDate: ""
+                }
+            },
+            {
+                name: "CharityCampaignStop",
+                displaytitle: "Charity Campaign Stop",
+                description: "Charity campaign stopped",
+                messagetype: "trigger_TwitchCharityCampaignStop",
+                parameters: {
+                    streamer: "",
+                    charityName: "",
+                    charityDescription: "",
+                    charityWebsite: "",
+                    charityLogo: "",
+                    currentAmount: "",
+                    targetAmount: "",
+                    id: "",
+                    endDate: ""
+                }
+            },
+            {
+                name: "CharityDonation",
+                displaytitle: "Charity Donation",
+                description: "Charity Donation",
+                messagetype: "trigger_TwitchCharityDonation",
+                parameters: {
+                    streamer: "",
+                    amount: "",
+                    campaignId: "",
+                    charityName: "",
+                    charityDescription: "",
+                    charityWebsite: "",
+                    charityLogo: "",
+                    donor: ""
+                }
+            },
+            {
+                name: "Cheer",
+                displaytitle: "Cheer",
+                description: "Someone donated some bits",
+                messagetype: "trigger_TwitchCheer",
+                parameters: {
+                    streamer: "",
+                    bits: "",
+                    isAnonymous: "",
+                    message: "",
+                    user: "",
+                }
+            },
+            {
+                name: "Follow",
+                displaytitle: "Follow",
+                description: "Someone Followed",
+                messagetype: "trigger_TwitchFollow",
+                parameters: {
+                    streamer: "",
+                    user: "",
+                }
+            },
+            {
+                name: "GoalBegin",
+                displaytitle: "Goal Begin",
+                description: "A stream goal began",
+                messagetype: "trigger_TwitchGoalBegin",
+                parameters: {
+                    streamer: "",
+                    currentAmount: "",
+                    description: "",
+                    startDate: "",
+                    targetAmount: "",
+                    type: "",
+                }
+            },
+            {
+                name: "GoalEnd",
+                displaytitle: "Goal End",
+                description: "A stream goal Ended",
+                messagetype: "trigger_TwitchGoalEnd",
+                parameters: {
+                    streamer: "",
+                    currentAmount: "",
+                    description: "",
+                    startDate: "",
+                    endDate: "",
+                    targetAmount: "",
+                    type: "",
+                    isAchieved: ""
+                }
+            },
+            {
+                name: "GoalProgress",
+                displaytitle: "Goal Progress",
+                description: "A stream goal Progress",
+                messagetype: "trigger_TwitchGoalProgress",
+                parameters: {
+                    streamer: "",
+                    currentAmount: "",
+                    description: "",
+                    startDate: "",
+                    targetAmount: "",
+                    type: "",
+                }
+            },
+            {
+                name: "HypeTrainBegin",
+                displaytitle: "Hype Train Begin",
+                description: "A Hype Train Started",
+                messagetype: "trigger_TwitchHypeTrainBegin",
+                parameters: {
+                    streamer: "",
+                    expiryDate: "",
+                    goal: "",
+                    id: "",
+                    lastContribution: "",
+                    level: "",
+                    progress: "",
+                    startDate: "",
+                    topContributors: "",
+                    total: "",
+                }
+            },
+            {
+                name: "HypeTrainEnd",
+                displaytitle: "Hype Train End",
+                description: "A Hype Train Ended",
+                messagetype: "trigger_TwitchHypeTrainEnd",
+                parameters: {
+                    streamer: "",
+                    cooldownEndDate: "",
+                    endDate: "",
+                    id: "",
+                    level: "",
+                    startDate: "",
+                    topContributors: "",
+                    total: "",
+                }
+            },
+            {
+                name: "HypeTrainProgress",
+                displaytitle: "HypeTrainProgress",
+                description: "A hypeTrain is in progress",
+                messagetype: "trigger_TwitchHypeTrainProgress",
+                parameters: {
+                    streamer: "",
+                    expiryDate: "",
+                    goal: "",
+                    id: "",
+                    lastContribution: "",
+                    level: "",
+                    progress: "",
+                    startDate: "",
+                    topContributors: "",
+                    total: "",
                 }
             },
             {
@@ -124,21 +291,373 @@ const triggersandactions =
                 }
             },
             {
-                name: "VIPAdded",
-                displaytitle: "VIP Added",
-                description: "A User was added to the VIP list",
-                messagetype: "trigger_TwitchVIPAdded",
+                name: "PollBegin",
+                displaytitle: "PollBegin",
+                description: "A Poll Started",
+                messagetype: "trigger_TwitchPollBegin",
                 parameters: {
+                    streamer: "",
+                    bitsPerVote: "",
+                    channelPointsPerVote: "",
+                    choices: "",
+                    endDate: "",
+                    id: "",
+                    isBitsVotingEnabled: "",
+                    isChannelPointsVotingEnabled: "",
+                    startDate: "",
+                    title: "",
+                }
+            },
+            {
+                name: "PollEnd",
+                displaytitle: "PollEnd",
+                description: "A Poll Ended",
+                messagetype: "trigger_TwitchPollEnd",
+                parameters: {
+                    streamer: "",
+                    bitsPerVote: "",
+                    channelPointsPerVote: "",
+                    choices: "",
+                    endDate: "",
+                    id: "",
+                    isBitsVotingEnabled: "",
+                    isChannelPointsVotingEnabled: "",
+                    startDate: "",
+                    status: "",
+                    title: "",
+                }
+            },
+            {
+                name: "PollProgress",
+                displaytitle: "PollProgress",
+                description: "A Poll Progressed",
+                messagetype: "trigger_TwitchPollProgress",
+                parameters: {
+                    streamer: "",
+                    bitsPerVote: "",
+                    channelPointsPerVote: "",
+                    choices: "",
+                    endDate: "",
+                    id: "",
+                    isBitsVotingEnabled: "",
+                    isChannelPointsVotingEnabled: "",
+                    startDate: "",
+                    title: "",
+                }
+            },
+            {
+                name: "PredictionBegin",
+                displaytitle: "Prediction Begin",
+                description: "A Prediction Began",
+                messagetype: "trigger_TwitchPredictionBegin",
+                parameters: {
+                    streamer: "",
+                    id: "",
+                    lockDate: "",
+                    outcomes: "",
+                    predictions: "",
+                    startDate: "",
+                    title: "",
+                }
+            },
+            {
+                name: "PredictionEnd",
+                displaytitle: "Prediction End",
+                description: "A Prediction Ended",
+                messagetype: "trigger_TwitchPredictionEnd",
+                parameters: {
+                    streamer: "",
+                    endDate: "",
+                    id: "",
+                    outcomes: "",
+                    predictions: "",
+                    startDate: "",
+                    title: "",
+                    winningOutcome: "",
+                    winningOutcomeId: ""
+                }
+            },
+            {
+                name: "PredictionLock",
+                displaytitle: "Prediction Lock",
+                description: "A Prediction Locked",
+                messagetype: "trigger_TwitchPredictionLock",
+                parameters: {
+                    streamer: "",
+                    id: "",
+                    lockDate: "",
+                    outcomes: "",
+                    predictions: "",
+                    startDate: "",
+                    title: "",
+                }
+            },
+            {
+                name: "PredictionProgress",
+                displaytitle: "Prediction Progress",
+                description: "A Prediction Progressed",
+                messagetype: "trigger_TwitchPredictionProgress",
+                parameters: {
+                    streamer: "",
+                    id: "",
+                    lockDate: "",
+                    outcomes: "",
+                    predictions: "",
+                    startDate: "",
+                    title: "",
+                }
+            },
+            {
+                name: "RaidFrom",
+                displaytitle: "Raid From",
+                description: "Another streamer raided the channel",
+                messagetype: "trigger_TwitchRaidFrom",
+                parameters: {
+                    streamer: "",
+                    raider: "",
+                    viewers: "",
+                }
+            },
+            {
+                name: "RaidTo",
+                displaytitle: "Raid To",
+                description: "A raid was started",
+                messagetype: "trigger_TwitchRaidTo",
+                parameters: {
+                    streamer: "",
+                    raider: "",
+                    viewers: "",
+                }
+            },
+
+            {
+                name: "RedemptionAdd",
+                displaytitle: "Points Redemption Add",
+                description: "A user used channel points for a redemption",
+                messagetype: "trigger_TwitchRedemptionAdd",
+                parameters: {
+                    streamer: "",
+                    id: "",
+                    message: "",
+                    rewardId: "",
+                    cost: "",
+                    prompt: "",
+                    title: "",
+                    status: "",
                     user: ""
                 }
             },
             {
-                name: "VIPRemoved",
-                displaytitle: "VIP Removed",
-                description: "A User was removed to the VIP list",
-                messagetype: "trigger_TwitchVIPRemoved",
+                name: "RedemptionUpdate",
+                displaytitle: "Points Redemption Update",
+                description: "A user used channel points for a redemption update??",
+                messagetype: "trigger_TwitchRedemptionUpdate",
                 parameters: {
+                    streamer: "",
+                    message: "",
+                    cost: "",
+                    id: "",
+                    prompt: "",
+                    title: "",
                     user: ""
+                }
+            },
+            {
+                name: "RewardAdd",
+                displaytitle: "Reward Add",
+                description: "Reward added by streamer to channel",
+                messagetype: "trigger_TwitchRewardAdd",
+                parameters: {
+                    autoApproved: "",
+                    backgroundColor: "",
+                    broadcasterDisplayName: "",
+                    broadcasterId: "",
+                    broadcasterName: "",
+                    cooldownExpiryDate: "",
+                    cost: "",
+                    globalCooldown: "",
+                    id: "",
+                    isEnabled: "",
+                    isInStock: "",
+                    isPaused: "",
+                    maxRedemptionsPerStream: "",
+                    maxRedemptionsPerUserPerStream: "",
+                    prompt: "",
+                    redemptionsThisStream: "",
+                    title: "",
+                    userInputRequired: ""
+                }
+            },
+            {
+                name: "RewardRemove",
+                displaytitle: "Reward Remove",
+                description: "Reward removed by streamer to channel",
+                messagetype: "trigger_TwitchRewardRemove",
+                parameters: {
+                    autoApproved: "",
+                    backgroundColor: "",
+                    broadcasterDisplayName: "",
+                    broadcasterId: "",
+                    broadcasterName: "",
+                    cooldownExpiryDate: "",
+                    cost: "",
+                    globalCooldown: "",
+                    id: "",
+                    isEnabled: "",
+                    isInStock: "",
+                    isPaused: "",
+                    maxRedemptionsPerStream: "",
+                    maxRedemptionsPerUserPerStream: "",
+                    prompt: "",
+                    redemptionsThisStream: "",
+                    title: "",
+                    userInputRequired: ""
+                }
+            },
+            {
+                name: "RewardUpdate",
+                displaytitle: "Reward Update",
+                description: "Reward updated by streamer to channel",
+                messagetype: "trigger_TwitchRewardUpdate",
+                parameters: {
+                    streamer: "",
+                    autoApproved: "",
+                    bgColor: "",
+                    expiryDate: "",
+                    cost: "",
+                    cooldown: "",
+                    id: "",
+                    enabled: "",
+                    inStock: "",
+                    paused: "",
+                    maxPerStream: "",
+                    maxPerUserPerStream: "",
+                    prompt: "",
+                    redemptionsThisStream: "",
+                    title: "",
+                    inputRequired: ""
+                }
+            },
+            {
+                name: "ShieldModeBegin",
+                displaytitle: "Shield Mode Begin",
+                description: "Shield mode was started",
+                messagetype: "trigger_TwitchShieldModeBegin",
+                parameters: {
+                    streamer: "",
+                    moderator: "",
+                }
+            },
+            {
+                name: "ShieldModeEnd",
+                displaytitle: "Shield Mode End",
+                description: "Shield mode was ended",
+                messagetype: "trigger_TwitchShieldModeEnd",
+                parameters: {
+                    streamer: "",
+                    moderator: "",
+                }
+            },
+            {
+                name: "ShoutoutSent",
+                displaytitle: "Shoutout Sent",
+                description: "A shoutout was performed by the streamer",
+                messagetype: "trigger_TwitchShoutoutCreate",
+                parameters: {
+                    streamer: "",
+                    cooldownDate: "",
+                    moderator: "",
+                    targetName: "",
+                    targetCooldown: "",
+                    viewerCount: "",
+                }
+            },
+            {
+                name: "ShoutoutReceive",
+                displaytitle: "Shoutout Receive",
+                description: "A shoutout was received for the streamer",
+                messagetype: "trigger_TwitchShoutoutReceive",
+                parameters: {
+                    streamer: "",
+                    shouterName: "",
+                    viewerCount: "",
+                }
+            },
+            {
+                name: "Subscription",
+                displaytitle: "Subscription",
+                description: "Someone subscribed",
+                messagetype: "trigger_TwitchSubscription",
+                parameters: {
+                    streamer: "",
+                    isGift: "",
+                    tier: "",
+                    userDisplayName: "",
+                }
+            },
+            {
+                name: "SubscriptionEnd",
+                displaytitle: "Subscription End",
+                description: "Someone subscription ended",
+                messagetype: "trigger_TwitchSubscriptionEnd",
+                parameters: {
+                    streamer: "",
+                    isGift: "",
+                    tier: "",
+                    user: "",
+                }
+            },
+            {
+                name: "SubscriptionGift",
+                displaytitle: "Subscription Gift",
+                description: "Someone gifted a subscription",
+                messagetype: "trigger_TwitchSubscriptionGift",
+                parameters: {
+                    streamer: "",
+                    amount: "",
+                    cumulativeAmount: "",
+                    isGift: "",
+                    gifter: "",
+                    anon: "",
+                    tier: "",
+
+                }
+            },
+            {
+                name: "SubscriptionMessage",
+                displaytitle: "Subscription Message",
+                description: "Announcement of a channel subscription by the subscriber",
+                messagetype: "trigger_TwitchSubscriptionMessage",
+                parameters: {
+                    streamer: "",
+                    cumulativeMonths: "",
+                    durationMonths: "",
+                    emoteOffsets: "",
+                    message: "",
+                    streakMonths: "",
+                    tier: "",
+                    user: ""
+
+                }
+            },
+            {
+                name: "UserUnBanned",
+                displaytitle: "UserUnBanned",
+                description: "A user was unbanned",
+                messagetype: "trigger_TwitchUserUnBanned",
+                parameters: {
+                    streamer: "",
+                    moderator: "",
+                    user: ""
+                }
+            },
+            {
+                name: "TitleChanged",
+                displaytitle: "TitleChanged",
+                description: "The Stream title was changed",
+                messagetype: "trigger_TwitchTitleChanged",
+                parameters: {
+                    title: ""
                 }
             },
             {
@@ -183,22 +702,111 @@ const triggersandactions =
                 description: "The streamer name has changed",
                 messagetype: "trigger_TwitchStreamerNameChanged",
                 parameters: {
-                    name: ""
+                    user: ""
                 }
             },
             {
-                name: "Channel Redemption",
-                displaytitle: "Channel Points Redemption",
-                description: "A user used channel points for a redemption",
-                messagetype: "trigger_TwitchChannelRedemption",
+                name: "StreamStarted",
+                displaytitle: "Stream Started",
+                description: "The Stream Started",
+                messagetype: "trigger_TwitchStreamStarted",
+                parameters: {}
+            },
+            {
+                name: "StreamEnded",
+                displaytitle: "Stream Ended",
+                description: "The Stream Ended",
+                messagetype: "trigger_TwitchStreamEnded",
+                parameters: {}
+            },
+            {// triggered from here as eventsub doesn't have this event
+                name: "CommercialStarted",
+                displaytitle: "Commercial started",
+                description: "A Commercial was started",
+                messagetype: "trigger_TwitchCommercialStarted",
                 parameters: {
-                    stream: "",
-                    message: "",
-                    cost: "",
-                    id: "",
-                    prompt: "",
-                    title: "",
+                    duration: ""
+                }
+            },
+            {// triggered from here as eventsub doesn't have this event
+                name: "VIPAdded",
+                displaytitle: "VIP Added",
+                description: "A User was added to the VIP list",
+                messagetype: "trigger_TwitchVIPAdded",
+                parameters: {
                     user: ""
+                }
+            },
+            {// triggered from here as eventsub doesn't have this event
+                name: "VIPRemoved",
+                displaytitle: "VIP Removed",
+                description: "A User was removed to the VIP list",
+                messagetype: "trigger_TwitchVIPRemoved",
+                parameters: {
+                    user: ""
+                }
+            },
+            {
+                name: "Editors",
+                displaytitle: "Editors",
+                description: "A list of editors for the channel",
+                messagetype: "trigger_TwitchEditors",
+                parameters: {
+                    editors: ""
+                }
+            },
+            {
+                name: "VIPs",
+                displaytitle: "VIPs",
+                description: "A list of VIPs for the channel",
+                messagetype: "trigger_TwitchVIPs",
+                parameters: {
+                    VIPs: ""
+                }
+            },
+            {
+                name: "FollowerCount",
+                displaytitle: "Follower Count",
+                description: "Follower count",
+                messagetype: "trigger_TwitchFollowerCount",
+                parameters: { count: "" }
+            },
+            {
+                name: "FollowedChannels",
+                displaytitle: "Followed Channels",
+                description: "Followed channels",
+                messagetype: "trigger_TwitchFollowedChannels",
+                parameters: { channels: "" }
+            },
+            {
+                name: "CheerEmotes",
+                displaytitle: "Cheer Emotes",
+                description: "Cheer emotes",
+                messagetype: "trigger_TwitchCheerEmotes",
+                parameters: { emotes: "" }
+            },
+            {
+                name: "Leaderboard",
+                displaytitle: "Leaderboard",
+                description: "Bits leaderboard",
+                messagetype: "trigger_TwitchLeaderboard",
+                parameters: { leaderboard: "" }
+            },
+            {
+                name: "Poll",
+                displaytitle: "Poll",
+                description: "A poll",
+                messagetype: "trigger_TwitchPoll",
+                parameters: {
+                    id: "",
+                    title: "",
+                    status: "",
+                    choices: "",
+                    duration: "",
+                    enabled: "",
+                    pointsPerVote: "",
+                    startDate: "",
+                    endDate: "",
                 }
             },
         ],
@@ -217,6 +825,20 @@ const triggersandactions =
                 description: "Start a Commercial for (30, 60, 90, 120, 150, 180) seconds",
                 messagetype: "action_TwitchStartCommercial",
                 parameters: { duration: "" }
+            },
+            {
+                name: "GetEditors",
+                displaytitle: "GetEditors",
+                description: "Get a list of editors for the channel",
+                messagetype: "action_TwitchGetEditors",
+                parameters: {}
+            },
+            {
+                name: "GetVIPs",
+                displaytitle: "GetVIPs",
+                description: "Get a list of VIPs for the channel",
+                messagetype: "action_TwitchGetVIPs",
+                parameters: {}
             },
             {
                 name: "AddVIP",
@@ -245,6 +867,70 @@ const triggersandactions =
                 description: "Demote user from Mod",
                 messagetype: "action_TwitchRemoveMod",
                 parameters: { user: "" }
+            },
+            {
+                name: "FollowerCount",
+                displaytitle: "Follower Count",
+                description: "Get follower count",
+                messagetype: "action_TwitchFollowerCount",
+                parameters: {}
+            },
+            {
+                name: "FollowedChannels",
+                displaytitle: "Followed Channels",
+                description: "Get followed channels",
+                messagetype: "action_TwitchFollowedChannels",
+                parameters: {}
+            },
+            {
+                name: "CheerEmotes",
+                displaytitle: "Cheer Emotes",
+                description: "Get cheer emotes",
+                messagetype: "action_TwitchCheerEmotes",
+                parameters: {}
+            },
+            {
+                name: "Leaderboard",
+                displaytitle: "Leaderboard",
+                description: "Get bits leaderboard",
+                messagetype: "action_TwitchLeaderboard",
+                parameters: {}
+            },
+            {
+                name: "GetPolls",
+                displaytitle: "Get Polls",
+                description: "Gets a list of polls",
+                messagetype: "action_TwitchGetPolls",
+                parameters: {}
+            },
+            {
+                name: "GetPoll",
+                displaytitle: "Get Poll",
+                description: "Gets a list of poll",
+                messagetype: "action_TwitchGetPoll",
+                parameters: { id: "" }
+            },
+            {
+                name: "CreatePoll",
+                displaytitle: "Create Poll",
+                description: "Create a poll",
+                messagetype: "action_TwitchCreatePoll",
+                parameters: {
+                    title: "",
+                    duration: "",
+                    choices: "",//comma separated
+                    points: ""
+                }
+            },
+            {
+                name: "EndPoll",
+                displaytitle: "End Poll",
+                description: "End a poll",
+                messagetype: "action_TwitchEndPoll",
+                parameters: {
+                    id: "",
+                    display: ""
+                }
             },
         ],
 }
@@ -306,6 +992,17 @@ function onDataCenterConnect (socket)
 
     clearTimeout(localConfig.heartBeatHandle);
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+
+
+    setTimeout(() =>
+    {
+        // createPoll({
+        //     title: "test poll #f",
+        //     duration: "300",
+        //     choices: "op1,op2, opt 3,  ooopsy",
+        //     points: "100"
+        // })
+    }, 5000);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -431,7 +1128,7 @@ function onDataCenterMessage (server_packet)
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to change title with no title provided");
         }
         // -----------------------------------------------------------------------------------
-        //                   Start Commercial
+        //                   action_TwitchStartCommercial
         // -----------------------------------------------------------------------------------
         else if (extension_packet.type === "action_TwitchStartCommercial")
         {
@@ -441,7 +1138,21 @@ function onDataCenterMessage (server_packet)
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a commercial with no duration provided");
         }
         // -----------------------------------------------------------------------------------
-        //                   Add VIP
+        //                   action_TwitchGetEditors
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetEditors")
+        {
+            getChannelEditors()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetVIPs
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetVIPs")
+        {
+            getChannelVIPs()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchAddVIP
         // -----------------------------------------------------------------------------------
         else if (extension_packet.type === "action_TwitchAddVIP")
         {
@@ -451,7 +1162,7 @@ function onDataCenterMessage (server_packet)
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to VIP a user with no username provided");
         }
         // -----------------------------------------------------------------------------------
-        //                   Remove VIP
+        //                   action_TwitchRemoveVIP
         // -----------------------------------------------------------------------------------
         else if (extension_packet.type === "action_TwitchRemoveVIP")
         {
@@ -461,7 +1172,7 @@ function onDataCenterMessage (server_packet)
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove VIP from a user with no username provided");
         }
         // -----------------------------------------------------------------------------------
-        //                   Add Mod
+        //                   action_TwitchAddMod
         // -----------------------------------------------------------------------------------
         else if (extension_packet.type === "action_TwitchAddMod")
         {
@@ -471,7 +1182,7 @@ function onDataCenterMessage (server_packet)
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to Mod a user with no username provided");
         }
         // -----------------------------------------------------------------------------------
-        //                   Remove Mod
+        //                   action_TwitchRemoveMod
         // -----------------------------------------------------------------------------------
         else if (extension_packet.type === "action_TwitchRemoveMod")
         {
@@ -479,6 +1190,65 @@ function onDataCenterMessage (server_packet)
                 removeMod(extension_packet.data.user)
             else
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove Mod from a user with no username provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchFollowerCount
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchFollowerCount")
+        {
+            followerCount()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchFollowedChannels
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchFollowedChannels")
+        {
+            followedChannels()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchCheerEmotes
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchCheerEmotes")
+        {
+            cheerEmotes()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchLeaderboard
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchLeaderboard")
+        {
+            leaderboard()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetPolls
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetPolls")
+        {
+            getPolls()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetPoll
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetPoll")
+        {
+            if (extension_packet.data.id != "")
+                getPoll(extension_packet.data.id)
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchCreatePoll
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchCreatePoll")
+        {
+            if (extension_packet.data != "")
+                createPoll(extension_packet.data)
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchEndPoll
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchEndPoll")
+        {
+            if (extension_packet.data != "")
+                endPoll(extension_packet.data)
         }
     }
     // -----------------------------------------------------------------------------------
@@ -705,7 +1475,7 @@ async function connectTwitch ()
 // ===========================================================================
 function disconnectTwitch ()
 {
-    eventSubApi.stopEventSub()
+    eventSubApi.removeSubs()
 }
 // ===========================================================================
 //                           FUNCTION: setStreamTitle
@@ -745,6 +1515,52 @@ async function startCommercial (length)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "ERROR", "Failed to start commercial (try reauthorising by going to  go to http://localhost:3000/twitch/auth)");
             console.error(err._body);
         }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getChannelEditors
+// ===========================================================================
+async function getChannelEditors ()
+{
+    try
+    {
+        let editors = await localConfig.apiClient.channels.getChannelEditors(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchEditors");
+        // need to clear out the last run otherwise we will get repeated names in here
+        trigger.parameters.editors = ""
+        editors.forEach(function (value, key)
+        {
+            trigger.parameters.editors += value.userDisplayName + " "
+        })
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getChannelEditors", "ERROR", "Failed to get editors (try reauthorising by going to  go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getChannelVIPs
+// ===========================================================================
+async function getChannelVIPs ()
+{
+    try
+    {
+        let VIPs = await localConfig.apiClient.channels.getVips(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchVIPs");
+        // need to clear out the last run otherwise we will get repeated names in here
+        trigger.parameters.VIPs = ""
+        VIPs.data.forEach(function (value, key)
+        {
+            trigger.parameters.VIPs += value.displayName + " "
+        })
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getChannelVIPs", "ERROR", "Failed to get VIPs (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
     }
 }
 // ===========================================================================
@@ -852,10 +1668,233 @@ async function removeMod (username)
     }
 }
 // ===========================================================================
+//                           FUNCTION: followerCount
+// ===========================================================================
+async function followerCount ()
+{
+    try
+    {
+        let count = await localConfig.apiClient.channels.getChannelFollowerCount(localConfig.streamerData.id)
+        console.log("followerCount", count)
+        let trigger = findTriggerByMessageType("trigger_TwitchFollowerCount");
+        trigger.parameters.count = count;
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".followerCount", "ERROR", "Failed to get follower count)");
+        console.error(err);
+
+    }
+}
+// ===========================================================================
+//                           FUNCTION: followedChannels
+// ===========================================================================
+async function followedChannels ()
+{
+    // TBD need to use teh paginator to get all the channels.
+    try
+    {
+        let channels = await localConfig.apiClient.channels.getFollowedChannels(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchFollowedChannels");
+        // need to clear out the last run otherwise we will get repeated names in here
+        trigger.parameters.channels = ""
+        channels.data.forEach(function (value, key)
+        {
+            trigger.parameters.channels += value.broadcasterDisplayName + " "
+        })
+        trigger.parameters.channels = "(" + channels.total + ") " + trigger.parameters.channels + "..."
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".followedChannels", "ERROR", "Failed followed channels (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: cheerEmotes
+// ===========================================================================
+async function cheerEmotes ()
+{
+    // TBD need to use teh paginator to get all the channels.
+    try
+    {
+        let emotes = await localConfig.apiClient.bits.getCheermotes(localConfig.streamerData.id)
+        console.log(emotes.getPossibleNames())
+        let trigger = findTriggerByMessageType("trigger_TwitchCheerEmotes");
+        // need to clear out the last run otherwise we will get repeated names in here
+        trigger.parameters.emotes = emotes.getPossibleNames().join(" ")
+        // emotes.data.forEach(function (value, key)
+        // {
+        //     trigger.parameters.channels += value.getPossibleNames() + " "
+        // })
+
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        console.error(err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cheerEmotes", "ERROR", "Failed to get cheer emotes  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: leaderboard
+// ===========================================================================
+async function leaderboard ()
+{
+    // TBD need to use teh paginator to get all the channels.
+    try
+    {
+        let leaderboardlist = await localConfig.apiClient.bits.getLeaderboard(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchLeaderboard");
+        // need to clear out the last run otherwise we will get repeated names in here
+        trigger.parameters.leaderboard = ""
+        for (let i = 0; i < leaderboardlist.totalCount; i++)
+        {
+            if (i > 0)
+                trigger.parameters.leaderboard += " "
+            trigger.parameters.leaderboard += leaderboardlist.entries[i].rank + ") " + leaderboardlist.entries[i].userDisplayName + " " + leaderboardlist.entries[i].amount
+        }
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        console.error(err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".leaderboard", "ERROR", "Failed to get leaderboard data  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getPolls
+// ===========================================================================
+async function getPolls ()
+{
+    try
+    {
+        let polls = await localConfig.apiClient.polls.getPolls(localConfig.streamerData.id)
+        let trigger = findTriggerByMessageType("trigger_TwitchPoll");
+        polls.data.forEach(function (value, key)
+        {
+            trigger.parameters.id = value.id
+            trigger.parameters.title = value.title
+            trigger.parameters.status = value.status
+            trigger.parameters.choices = ""
+            value.choices.forEach(function (choice, index)
+            {
+                if (index > 0)
+                    trigger.parameters.choices += " - "
+                trigger.parameters.choices += choice.title + " " + choice.totalVotes
+            })
+            trigger.parameters.duration = value.durationInSeconds
+            trigger.parameters.enabled = value.isChannelPointsVotingEnabled
+            trigger.parameters.pointsPerVote = value.channelPointsPerVote
+            trigger.parameters.startDate = value.startDate
+            trigger.parameters.endDate = value.endDate
+            sendTrigger(trigger)
+        })
+
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPolls", "ERROR", "Failed to get polls (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getPoll
+// ===========================================================================
+async function getPoll (id)
+{
+    try
+    {
+        let poll = await localConfig.apiClient.polls.getPollById(localConfig.streamerData.id, id)
+        let trigger = findTriggerByMessageType("trigger_TwitchPoll");
+        trigger.parameters.id = poll.id
+        trigger.parameters.title = poll.title
+        trigger.parameters.status = poll.status
+        trigger.parameters.choices = ""
+        poll.choices.forEach(function (choice, index)
+        {
+            if (index > 0)
+                trigger.parameters.choices += " - "
+            trigger.parameters.choices += choice.title + " " + choice.totalVotes
+        })
+        trigger.parameters.duration = poll.durationInSeconds
+        trigger.parameters.enabled = poll.isChannelPointsVotingEnabled
+        trigger.parameters.pointsPerVote = poll.channelPointsPerVote
+        trigger.parameters.startDate = poll.startDate
+        trigger.parameters.endDate = poll.endDate
+        sendTrigger(trigger)
+
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPoll", "ERROR", "Failed to get poll by id (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.error(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: createPoll
+// ===========================================================================
+async function createPoll (data)
+{
+    try
+    {
+        let newPoll =
+        {
+            title: data.title,
+            choices: data.choices.split(","),
+            duration: data.duration,
+            channelPointsPerVote: data.points,
+        }
+        let poll = await localConfig.apiClient.polls.createPoll(localConfig.streamerData.id, newPoll)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createPoll", "ERROR", "Failed to create a poll");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createPoll", "ERROR", "Failed to create a poll (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+
+// ===========================================================================
+//                           FUNCTION: endPoll
+// ===========================================================================
+async function endPoll (data)
+{
+    try
+    {
+        let poll = await localConfig.apiClient.polls.endPoll(localConfig.streamerData.id, data.id, data.display)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".endPoll", "ERROR", "Failed to end a poll");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".endPoll", "ERROR", "Failed to end a poll (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+            console.error(err._body);
+        }
+    }
+}
+// ===========================================================================
 //                           FUNCTION: sendTrigger
 // ===========================================================================
 function sendTrigger (trigger)
 {
+    //console.log(trigger)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             'ChannelData',
@@ -878,10 +1917,11 @@ function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase().indexOf(messagetype.toLowerCase()) > -1)
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findTriggerByMessageType", "failed to find action", messagetype);
+        ".findTriggerByMessageType", "failed to find trigger", messagetype);
 }
+
 export { start }

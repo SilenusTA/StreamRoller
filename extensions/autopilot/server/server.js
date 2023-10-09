@@ -43,7 +43,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Autopilot handles triggers/actions that allow the user to perform interesting interactions betewen extensions",
-    // these are messages we can sendout that other extensions might want to use to trigger an action
+    // these are messages we can send out that other extensions might want to use to trigger an action
     version: "0.1.1",
     channel: serverConfig.channel,
     triggers:
@@ -55,7 +55,13 @@ const triggersandactions =
                 messagetype: "trigger_MacroTriggered",
                 parameters: {}
             },
-
+            {
+                name: "AllTriggers",
+                displaytitle: "AllTriggers",
+                description: "Catches all triggers (for debugging)",
+                messagetype: "trigger_AllTriggers",
+                parameters: {}
+            }
         ],
     // these are messages we can receive to perform an action
     actions:
@@ -66,6 +72,13 @@ const triggersandactions =
                 description: "Activate a macro function",
                 messagetype: "action_ActivateMacro",
                 parameters: { name: "" }
+            },
+            {
+                name: "LogToConsole",
+                displaytitle: "LogToConsole",
+                description: "Log triggers to console",
+                messagetype: "action_LogToConsole",
+                parameters: {}
             },
         ],
 }
@@ -226,6 +239,12 @@ function onDataCenterMessage (server_packet)
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
             SendSettingsWidgetSmall(extension_packet.from);
+        }
+        else if (extension_packet.type.startsWith("action_LogToConsole"))
+        {
+            console.log("--------- action_LogToConsole -------------")
+            console.log(JSON.stringify(extension_packet.data, null, 2))
+            console.log("-------------------------------------------")
         }
         // -------------------------------------------------------------------------------------------------
         //                   SETTINGS DIALOG DATA
@@ -447,7 +466,8 @@ function CheckTriggers (data)
     {
         for (const [key, value] of Object.entries(serverData.userPairings.pairings))
         {
-            if (value.trigger.messagetype == data.data.messagetype)
+            //console.log("value.trigger.messagetype", value.trigger.messagetype)
+            if (value.trigger.messagetype == data.data.messagetype || value.trigger.messagetype == "trigger_AllTriggers")
                 ProcessReceivedTrigger(value, data)
         }
     }
