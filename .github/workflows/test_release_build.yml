@@ -24,7 +24,8 @@ jobs:
         name: mini-artifacts
         path: .      
   creating_exe:
-    runs-on: windows-latest    
+    runs-on: windows-latest  
+    needs: remove_git  
     steps:
     - name: importing artecfact
       uses: actions/download-artifact@v3
