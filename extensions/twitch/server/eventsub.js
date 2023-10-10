@@ -75,10 +75,12 @@ import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 
 const localConf = {
+    apiClient: null,
     apiEventSub: null,
     eventSubs: [],
     triggersandactions: null,
-    channelData: null
+    channelData: null,
+    streamerId: null
 }
 // get functions from https://twurple.js.org/reference/api/classes/HelixChannel.html
 // get return values from https://twurple.js.org/reference/eventsub-base/classes/
@@ -146,6 +148,8 @@ async function startEventSub (streamerId, apiClient, channelData)
     try
     {
         localConf.channelData = channelData;
+        localConf.streamerId = streamerId
+        localConf.apiClient = apiClient
         //connect to the event sub listener and start it
         localConf.apiEventSub = new EventSubWsListener({ apiClient: apiClient });
         await localConf.apiEventSub.start();
@@ -1089,7 +1093,7 @@ function onChannelUnban (data)
 // ============================================================================
 //                           FUNCTION: onChannelUpdate
 // ============================================================================
-function onChannelUpdate (data)
+async function onChannelUpdate (data)
 {
     try
     {
@@ -1101,7 +1105,6 @@ function onChannelUpdate (data)
         }
         if (localConf.channelData.gameId != data.categoryId)
         {
-            localConf.channelData.gameId = data.categoryId
             let trigger = findTriggerByMessageType("trigger_TwitchGamedIdChanged");
             trigger.parameters.gameId = data.categoryId;
             sendTrigger(trigger)
@@ -1129,9 +1132,12 @@ function onChannelUpdate (data)
         {
             let trigger = findTriggerByMessageType("trigger_TwitchStreamerNameChanged");
             trigger.parameters.name = data.broadcasterName;
+            localConf.streamerId = data.getBroadcaster().id
             sendTrigger(trigger)
         }
-
+        // update our local data to the new config. Note that this callback has a different structure to 
+        // this function call so can't just assign it.
+        localConf.channelData = await localConf.apiClient.channels.getChannelInfoById(localConf.streamerId)
     }
     catch (err)
     {

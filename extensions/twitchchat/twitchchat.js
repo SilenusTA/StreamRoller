@@ -1045,7 +1045,7 @@ function SendSettingsWidgetSmall (toExtension)
                 if (value === "on")
                     modalstring = modalstring.replaceAll(key + "checked", "checked");
                 // replace text strings
-                else if (typeof (value) == "string")
+                else if (typeof (value) == "string" || typeof (value) == "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
             // send the modified modal data to the server
