@@ -837,10 +837,41 @@ const triggersandactions =
                 name: "UserBlocks",
                 displaytitle: "User blocks",
                 description: "Who this user has blocked",
-                messagetype: "trigger_UserBlocks",
+                messagetype: "trigger_TwitchUserBlocks",
                 parameters: {
                     username: "",
                     blocked: ""
+                }
+            },
+            {
+                name: "ClipCreated",
+                displaytitle: "Twitch clip created",
+                description: "A twitch clip",
+                messagetype: "trigger_TwitchClipCreated",
+                parameters: {
+                    clipName: ""
+                }
+            },
+            {
+                name: "VodClip",
+                displaytitle: "Twitch Vod clip",
+                description: "A twitch vod clip",
+                messagetype: "trigger_TwitchVodClip",
+                parameters: {
+                    streamer: "",
+                    date: "",
+                    creator: "",
+                    duration: "",
+                    embedUrl: "",
+                    gameId: "",
+                    id: "",
+                    language: "",
+                    thumbnail: "",
+                    title: "",
+                    url: "",
+                    videoId: "",
+                    views: "",
+                    vodOffset: ""
                 }
             }
         ],
@@ -1054,6 +1085,40 @@ const triggersandactions =
                 messagetype: "action_TwitchGetBlocks",
                 parameters: {}
             },
+            {
+                name: "CreateClip",
+                displaytitle: "Create clip",
+                description: "Create a twitch clip",
+                messagetype: "action_TwitchCreateClip",
+                parameters: {}
+            },
+            {
+                name: "GetClipById",
+                displaytitle: "Get Clip By Id",
+                description: "Get clip by id",
+                messagetype: "action_TwitchGetClipById",
+                parameters: { clipName: "" }
+            },
+            {
+                name: "GetClipsForBroadcaster",
+                displaytitle: "Get Clips For Broadcaster",
+                description: "Get clips for a broadcaster",
+                messagetype: "action_TwitchGetClipsForBroadcaster",
+                parameters: {
+                    name: "",
+                    count: ""
+                }
+            },
+            {
+                name: "GetClipsForGame",
+                displaytitle: "Get Clips For Game",
+                description: "Get clips for a game",
+                messagetype: "action_TwitchGetClipsForGame",
+                parameters: {
+                    game: "",
+                    count: ""
+                }
+            }
 
         ],
 }
@@ -1464,6 +1529,35 @@ function onDataCenterMessage (server_packet)
         {
             getBlockedUsers()
         }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchCreateClip
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchCreateClip")
+        {
+            createClip()
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetClipById
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetClipById")
+        {
+            getClipById(extension_packet.data)
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetClipsForBroadcaster
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetClipsForBroadcaster")
+        {
+            getClipsByBroadcaster(extension_packet.data)
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetClipsForGame
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetClipsForGame")
+        {
+            getClipsByGame(extension_packet.data)
+        }
+
 
     }
     // -----------------------------------------------------------------------------------
@@ -2350,7 +2444,7 @@ async function getBlockedUsers ()
     {
         let user = await localConfig.apiClient.users.getBlocks(localConfig.streamerData.id)
 
-        let trigger = findTriggerByMessageType("trigger_UserBlocks")
+        let trigger = findTriggerByMessageType("trigger_TwitchUserBlocks")
         trigger.parameters.blocked = ""
         trigger.parameters.userDisplayName = user.userDisplayName
         user.data.forEach(function (value, key)
@@ -2373,6 +2467,187 @@ async function getBlockedUsers ()
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ". getAuthenticatedUser", "ERROR", "Failed to get authenticated user)");
             console.error(err);
         }
+    }
+}
+// ===========================================================================
+//                           FUNCTION:  createClip
+// ===========================================================================
+async function createClip ()
+{
+    try
+    {
+        let clip = await localConfig.apiClient.clips.createClip({ channel: localConfig.streamerData.id })
+        let trigger = findTriggerByMessageType("trigger_TwitchClipCreated")
+        trigger.parameters.clipName = clip
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createClip", "ERROR", "Failed to create clip)");
+        console.error(err);
+    }
+}
+// ===========================================================================
+//                           FUNCTION:  getClipById
+// ===========================================================================
+async function getClipById (data, rollbackCount = 5)
+{
+    try
+    {
+        if (data.clipName == "")
+            return
+        let clip = await localConfig.apiClient.clips.getClipById(data.clipName)
+        if (clip == null)
+        {
+            //if we have triggered off a clip being created it might take a bit for
+            // twitch to make it available so give it a few seconds.
+            if (rollbackCount > 0)
+            {
+                setTimeout(() =>
+                {
+                    console.log("clip not found, rescheduling in case twitch is still processing it")
+                    getClipById(data, rollbackCount--)
+                }, 1000);
+            }
+            return;
+        }
+        let trigger = findTriggerByMessageType("trigger_TwitchVodClip")
+        trigger.parameters.streamer = clip.broadcasterDisplayName
+        trigger.parameters.date = clip.creationDate
+        trigger.parameters.creator = clip.creatorDisplayName
+        trigger.parameters.duration = clip.duration
+        trigger.parameters.embedUrl = clip.embedUrl
+        trigger.parameters.gameId = clip.gameId
+        trigger.parameters.id = clip.id
+        trigger.parameters.language = clip.language
+        trigger.parameters.thumbnail = clip.thumbnailUrl
+        trigger.parameters.title = clip.title
+        trigger.parameters.url = clip.url
+        trigger.parameters.videoId = clip.videoId
+        trigger.parameters.views = clip.views
+        trigger.parameters.vodOffset = clip.vodOffset
+
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
+        console.error(err);
+    }
+}
+// ===========================================================================
+//                           FUNCTION:  getClipsByBroadcaster
+// ===========================================================================
+async function getClipsByBroadcaster (data, rollbackCount = 5)
+{
+    try
+    {
+        if (data.name == "")
+            return
+
+        let paginatedFilter = {
+            // after ?: string, A cursor to get the following page of.
+            // before ?: string, A cursor to get the previous page of.
+            // endDate ?: string,The latest date to find clips for.
+            // limit ?: number, The number of results per page.
+            // startDate ?: string,The earliest date to find clips for.
+        }
+        if (data.count != "")
+            paginatedFilter.limit = Number(data.count)
+
+        let user = await localConfig.apiClient.users.getUserByName(data.name)
+        let clips = await localConfig.apiClient.clips.getClipsForBroadcaster(user.id, paginatedFilter)
+        if (clips == null)
+        {
+            //if we have triggered off a clip being created it might take a bit for
+            // twitch to make it available so give it a few seconds.
+            if (rollbackCount > 0)
+            {
+                setTimeout(() =>
+                {
+                    console.log("clip not ready found, rescheduling in case twitch is still processing it")
+                    getClipById(data, rollbackCount--)
+                }, 1000);
+            }
+            return;
+        }
+        clips.data.forEach(function (clip, index)
+        {
+            let trigger = findTriggerByMessageType("trigger_TwitchVodClip")
+            trigger.parameters.streamer = clip.broadcasterDisplayName
+            trigger.parameters.date = clip.creationDate
+            trigger.parameters.creator = clip.creatorDisplayName
+            trigger.parameters.duration = clip.duration
+            trigger.parameters.embedUrl = clip.embedUrl
+            trigger.parameters.gameId = clip.gameId
+            trigger.parameters.id = clip.id
+            trigger.parameters.language = clip.language
+            trigger.parameters.thumbnail = clip.thumbnailUrl
+            trigger.parameters.title = clip.title
+            trigger.parameters.url = clip.url
+            trigger.parameters.videoId = clip.videoId
+            trigger.parameters.views = clip.views
+            trigger.parameters.vodOffset = clip.vodOffset
+            sendTrigger(trigger)
+        });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
+        console.error(err);
+    }
+}
+// ===========================================================================
+//                           FUNCTION:  getClipsByBroadcaster
+// ===========================================================================
+async function getClipsByGame (data)
+{
+    try
+    {
+        if (data.game == "")
+            return
+
+        let paginatedFilter = {
+            // after ?: string, A cursor to get the following page of.
+            // before ?: string, A cursor to get the previous page of.
+            // endDate ?: string,The latest date to find clips for.
+            // limit ?: number, The number of results per page.
+            // startDate ?: string,The earliest date to find clips for.
+        }
+        if (data.count != "")
+            paginatedFilter.limit = Number(data.count)
+
+        let game = await localConfig.apiClient.games.getGameByName(data.game)
+        let clips = await localConfig.apiClient.clips.getClipsForGame(game.id, paginatedFilter)
+        if (clips == null)
+        {
+            console.log("No clips found for game name")
+            return;
+        }
+        clips.data.forEach(function (clip, index)
+        {
+            let trigger = findTriggerByMessageType("trigger_TwitchVodClip")
+            trigger.parameters.streamer = clip.broadcasterDisplayName
+            trigger.parameters.date = clip.creationDate
+            trigger.parameters.creator = clip.creatorDisplayName
+            trigger.parameters.duration = clip.duration
+            trigger.parameters.embedUrl = clip.embedUrl
+            trigger.parameters.gameId = clip.gameId
+            trigger.parameters.id = clip.id
+            trigger.parameters.language = clip.language
+            trigger.parameters.thumbnail = clip.thumbnailUrl
+            trigger.parameters.title = clip.title
+            trigger.parameters.url = clip.url
+            trigger.parameters.videoId = clip.videoId
+            trigger.parameters.views = clip.views
+            trigger.parameters.vodOffset = clip.vodOffset
+            sendTrigger(trigger)
+        });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
+        console.error(err);
     }
 }
 // ===========================================================================
