@@ -353,7 +353,7 @@
         let ele = document.getElementById("imagepickerlinks")
         let imagehtml = ""
         for (let i = 0; i < imagelist.length; i++)
-            imagehtml += "<img class='deckicon' src='/autopilot/images/deckicons/" + imagelist[i] + "' alt='" + imagelist[i] + "' onclick='setMacroImageTag(\"" + imagelist[i] + "\")'>"
+            imagehtml += "<img class='deckicon' src='/autopilot/images/deckicons/" + imagelist[i] + "' alt='" + imagelist[i] + "' onclick='setMacroImageTag(\"" + imagelist[i] + "\")' title='" + imagelist[i] + "''>"
         ele.innerHTML = imagehtml
     }
 </script>
