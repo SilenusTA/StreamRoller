@@ -1,0 +1,45 @@
+@font-face {
+      font-family: 'Audiowide-Regular';
+      src: url(./Audiowide-Regular.ttf);
+}
+
+.statictext_1 {
+      /* start hidden, will be shown via javascript when the user sends us data */
+      visibility: visible;
+      top: 0px;
+      left: 0px;
+      width: 500px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-content: center;
+      flex-direction: column;
+      position: absolute;
+      font-family: "Audiowide-Regular";
+      font-size: 30px;
+      text-align: center;
+      color: black;
+      text-shadow: -1px 0 rgb(250, 2, 2), 0 1px rgb(170, 244, 0), 1px 0 rgb(220, 4, 152), 0 -1px rgb(85, 247, 4);
+      overflow: hidden;
+      white-space: nowrap;
+
+      /* border animation setup */
+      --angle: 0deg;
+      border: 1vmin solid;
+      border-image: linear-gradient(var(--statictext_1angle), red, yellow, lime, aqua, blue, magenta) 1;
+      animation: 30s linear infinite rotate-static-text-overlay-border;
+}
+
+/* 'variable' for border animation */
+@property --statictext_1angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+}
+
+/* animation */
+@keyframes rotate-static-text-overlay-border {
+      to {
+            --statictext_1angle: 360deg;
+      }
+}
