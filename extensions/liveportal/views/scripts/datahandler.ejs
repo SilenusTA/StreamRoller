@@ -20,7 +20,8 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
 -->
-<script src="/streamroller-message-api.cjs" onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
+<script src="/streamroller-message-api.cjs"
+    onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
 <!-- placehold we will use for inserting widgets-->
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 
@@ -1253,11 +1254,13 @@
         */
         if (status.color)
             document.getElementById(extension + "_status").style = "color:" + status.color;
-        else if (!status.connected || status == "false")
+        else if ((!status && !status.connected) // boolean
+            || (status == "false" && !status.connected == "false"))// string
             document.getElementById(extension + "_status").style = "color:red";
-        else if (status.readonly)
+        else if (status.readonly || status.readonly == "true")
             document.getElementById(extension + "_status").style = "color:orange";
-        else if (status.connected || status == true)
+        else if (status.connected || status.connected == "true"
+            || status || status == "true")
             document.getElementById(extension + "_status").style = "color:green";
         else
             document.getElementById(extension + "_status").style = "color:red";

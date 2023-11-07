@@ -512,6 +512,19 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
                                 if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
                                     match = false;
                                 break;
+                            case "5"://match complete word only
+                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                {
+                                    match = false;
+                                }
+                                else
+                                {
+                                    let wordArray = receivedTrigger.data.parameters[i].split(" ")
+                                    match = false;
+                                    if (wordArray.includes(param[i]))
+                                        match = true;
+                                }
+                                break;
                             default:
                                 // check for exact match
                                 if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())

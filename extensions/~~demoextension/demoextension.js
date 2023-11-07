@@ -406,9 +406,9 @@ function process_stream_alert (server_packet)
  * this is done as part of the webpage request for modal message we get from 
  * extension. It is a way of getting some user feedback via submitted forms
  * from a page that supports the modal system
- * @param {String} tochannel 
+ * @param {String} toextension 
  */
-function SendSettingsWidgetSmall (tochannel)
+function SendSettingsWidgetSmall (toextension)
 {
     // read our modal file
     fs.readFile(__dirname + '/demoextensionsettingswidgetsmall.html', function (err, filedata)
@@ -451,11 +451,11 @@ function SendSettingsWidgetSmall (tochannel)
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
-                        tochannel,
+                        toextension,
                         localConfig.OUR_CHANNEL
                     ),
                     "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    toextension // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
     });

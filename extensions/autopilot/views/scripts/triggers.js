@@ -224,6 +224,7 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
             triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
             triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
+            triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option></div>";
             triggerextensionparameters += "</select>"
             triggerextensionparameters += "</div>"
             triggerextensionparameters += "<div class='w-100'></div>"
@@ -557,6 +558,9 @@ function deleteMacro (e)
 
     return false;
 }
+// ============================================================================
+//                           FUNCTION: populateMacroDisplay
+// ============================================================================
 function populateMacroDisplay ()
 {
     if (usertriggerslist.macrotriggers == undefined || usertriggerslist.macrotriggers.length == 0)
@@ -728,6 +732,9 @@ function populateTriggersTable ()
                                     break;
                                 case "4":
                                     symbol = "!"
+                                    break;
+                                case "5":
+                                    symbol = "#"
                                     break;
                                 default:
                                     symbol = "="
@@ -1065,10 +1072,12 @@ function EditPairingButton (event, g, i)
                 var selectoption_2 = createSelectOption("Anywhere", "Anywhere", 'form-control', '2', "Anywhere")
                 var selectoption_3 = createSelectOption("Start of line", "Start of line", 'form-control', '3', "Start of line")
                 var selectoption_4 = createSelectOption("Doesn't match", "Doesn't match", 'form-control', '4', "Doesn't match")
+                var selectoption_5 = createSelectOption("Specific word", "Match a specific whole word", 'form-control', '5', "Match whole word")
                 selectmatcher.appendChild(selectoption_1)
                 selectmatcher.appendChild(selectoption_2)
                 selectmatcher.appendChild(selectoption_3)
                 selectmatcher.appendChild(selectoption_4)
+                selectmatcher.appendChild(selectoption_5)
                 // set the option to the current matcher type
                 let temp = pairing.trigger.data.find((o) => typeof (o["MATCHER_" + item]) != "undefined")
                 if (temp)
@@ -1113,10 +1122,12 @@ function EditPairingButton (event, g, i)
                 selectoption_2 = createSelectOption("Anywhere", "Anywhere", 'form-control', '2', "Anywhere")
                 selectoption_3 = createSelectOption("Start of line", "Start of line", 'form-control', '3', "Start of line")
                 selectoption_4 = createSelectOption("Doesn't match", "Doesn't match", 'form-control', '4', "Doesn't match")
+                selectoption_5 = createSelectOption("Any word", "Match a specific whole word", 'form-control', '5', "Match whole word")
                 selectmatcher.appendChild(selectoption_1)
                 selectmatcher.appendChild(selectoption_2)
                 selectmatcher.appendChild(selectoption_3)
                 selectmatcher.appendChild(selectoption_4)
+                selectmatcher.appendChild(selectoption_5)
                 // set the option to the current matcher type
                 let temp = pairing.action.data.find((o) => typeof (o["MATCHER_" + item]) != "undefined")
                 if (temp)

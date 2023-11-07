@@ -50,6 +50,7 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     OpenAPIHandle: null,
+    openAPIImageHandle: null,
     // number of messages added to history so far
     chatMessageCount: 0,
     chatHistory: [],
@@ -62,6 +63,8 @@ const localConfig = {
     lastrequesttime: Date.now() - 500,
     // min time between requests (to avoid 429 errors)
     overloadprotection: 500,
+    lastAIResponse: "",
+    lastAIRequest: ""
 };
 const default_serverConfig = {
     __version__: "0.5",
@@ -78,7 +81,7 @@ const default_serverConfig = {
     questionbotenabled: "off",
     translatetoeng: "off",
     submessageenabled: "off",
-
+    gernerateimages: "on",
     chatbotignorelist: "Nightbot, SonglistBot",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
@@ -319,11 +322,18 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "OpenAIChatbotResposeReceived",
+                name: "OpenAIChatbotResponseReceived",
                 displaytitle: "Response from chatbot",
                 description: "The OpenAI chatbot returned a response",
                 messagetype: "trigger_chatbotResponse",
                 parameters: { message: "" }
+            },
+            {
+                name: "OpenAIImageResponseReceived",
+                displaytitle: "Response from AI Image generation",
+                description: "The OpenAI chatbot returned a image",
+                messagetype: "trigger_imageResponse",
+                parameters: { url: "" }
             }
         ],
     // these are messages we can receive to perform an action
@@ -339,6 +349,18 @@ const triggersandactions =
                     engine: "",
                     temperature: "",
                     maxtokens: ""
+                }
+            },
+            {
+                name: "OpenAIChatbotProcessImage",
+                displaytitle: "Process Image",
+                description: "Send some text through the chatbot to create an image",
+                messagetype: "action_ProcessImage",
+                parameters: {
+                    chatbot: "true",
+                    prompt: "",
+                    message: "",
+                    append: ""
                 }
             },
             {
@@ -466,6 +488,11 @@ function onDataCenterMessage (server_packet)
             {
                 processTextMessage(extension_packet.data, true);
             }
+        }
+        else if (extension_packet.type === "action_ProcessImage")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+                processImageMessage(extension_packet.data, true);
         }
         else if (extension_packet.type === "action_ChangeProfile")
         {
@@ -1625,8 +1652,11 @@ async function callOpenAI (string_array, modelToUse)
                 // if we ran over the buffer (openai didn't return the whole string) add a "..."
                 if (response.data.choices[0].finish_reason === "length")
                     openAIResponce = openAIResponce + " ..."
-                // delay the message depending on how long it is and out delay factor
                 openAIResponce = openAIResponce.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
+                localConfig.lastAIResponse = openAIResponce;
+                localConfig.lastAIRequest = ""
+                for (let index = 0; index < localConfig.chatHistory.length; index++)
+                    localConfig.lastAIRequest += localConfig.chatHistory[index].content + ". "
                 return openAIResponce;
             }
             else
@@ -1732,6 +1762,85 @@ function parseData (data, translation = false)
         return null;
     }
     return data
+}
+// ============================================================================
+//                           FUNCTION: processImageMessage
+//            Creates an image from a description
+// ============================================================================
+async function processImageMessage (data)
+{
+    if (serverConfig.gernerateimages != "on")
+    {
+        console.log("processImageMessage called but turned off in settings")
+        return
+    }
+    try
+    {
+        let messages = ""
+        let openAIResponce = ""
+        if (data.message == "")
+
+            if (data.chatbot == "true")
+                messages = data.prompt + " " + localConfig.lastAIResponse + " " + data.append
+            else
+                messages = data.prompt + " " + localConfig.lastAIRequest + " " + data.append
+        else
+            messages = data.prompt + " " + data.message + " " + data.append;
+        if (localConfig.openAIKey)
+        {
+            localConfig.openAPIImageHandle = new OpenAIApi(new Configuration(
+                {
+                    apiKey: localConfig.openAIKey
+                }));
+            openAIResponce = messages
+            const response = await localConfig.openAPIImageHandle.createImage({
+                prompt: openAIResponce,
+                n: 1,
+                size: "1024x1024",
+            })
+                .catch((err) => 
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                })
+            localConfig.requestPending = false;
+            // min time between requests (to avoid 429 errors)
+            let image_url = response.data.data[0].url;
+            if (!image_url)
+            {
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response")
+                return "Failed to get a response from chatbot, server might be down"
+            }
+            else
+            {
+                //console.log("###########################")
+                //console.log(image_url)
+                // console.log("###########################")
+                let msg = findtriggerByMessageType("trigger_imageResponse")
+                msg.parameters.url = image_url
+                //if this is a trigger message then send out normally on the channel
+                if (msg)
+                {
+                    // send the modal data to our channel
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket("ChannelData",
+                            serverConfig.extensionname,
+                            sr_api.ExtensionPacket(
+                                "trigger_imageResponse",
+                                serverConfig.extensionname,
+                                msg,
+                                serverConfig.channel,
+                            ),
+                            serverConfig.channel)
+                    )
+                }
+            }
+        }
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e.message, data);
+        return;
+    }
 }
 // ============================================================================
 //                           FUNCTION: postMessageToTwitch
