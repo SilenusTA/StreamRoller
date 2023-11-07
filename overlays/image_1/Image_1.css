@@ -1,0 +1,9 @@
+:root {}
+
+.image_1 {}
+
+.image_1content {
+      position: relative;
+      width: fit-content;
+      overflow: hidden;
+}
