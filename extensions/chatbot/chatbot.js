@@ -357,7 +357,7 @@ const triggersandactions =
                 description: "Send some text through the chatbot to create an image",
                 messagetype: "action_ProcessImage",
                 parameters: {
-                    chatbot: "true",
+                    usechatbot: "true",
                     prompt: "",
                     message: "",
                     append: ""
@@ -1777,13 +1777,14 @@ async function processImageMessage (data)
     try
     {
         let messages = ""
-        let openAIResponce = ""
+        let openAIImageQuery = ""
         if (data.message == "")
-
-            if (data.chatbot == "true")
+        {
+            if (data.usechatbot == "true")
                 messages = data.prompt + " " + localConfig.lastAIResponse + " " + data.append
             else
                 messages = data.prompt + " " + localConfig.lastAIRequest + " " + data.append
+        }
         else
             messages = data.prompt + " " + data.message + " " + data.append;
         if (localConfig.openAIKey)
@@ -1792,10 +1793,12 @@ async function processImageMessage (data)
                 {
                     apiKey: localConfig.openAIKey
                 }));
-            openAIResponce = messages
+            openAIImageQuery = messages
             const response = await localConfig.openAPIImageHandle.createImage({
-                prompt: openAIResponce,
+                model: "dall-e-3",
+                prompt: openAIImageQuery,
                 n: 1,
+                quality: "standard",
                 size: "1024x1024",
             })
                 .catch((err) => 
@@ -1804,6 +1807,13 @@ async function processImageMessage (data)
                 })
             localConfig.requestPending = false;
             // min time between requests (to avoid 429 errors)
+
+            console.log("======")
+            console.log("openAIImageQuery", openAIImageQuery)
+            console.log("------")
+            console.log("revised_prompt", response.data.data[0].revised_prompt)
+            console.log("======")
+
             let image_url = response.data.data[0].url;
             if (!image_url)
             {
