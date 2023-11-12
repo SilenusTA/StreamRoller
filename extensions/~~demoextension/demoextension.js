@@ -310,6 +310,11 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
             }
         }
+        else if (extension_packet.type === "action_DemoextensionDoStuff")
+        {
+            //do something with your action here
+            console.log("action_DemoextensionDoStuff called with", extension_packet.data)
+        }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 

@@ -326,7 +326,7 @@ function connectToStreamlabs (creds)
 function onStreamlabsDisconnect (reason)
 {
     localConfig.status.connected = false;
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsDisconnect", reason);
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onStreamlabsConnect
@@ -351,7 +351,6 @@ function onStreamlabsConnect ()
 // ============================================================================
 function onStreamlabsEvent (data)
 {
-    logger.info(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsEvent", "received message: ", data);
     // Send this data to the channel for this
     if (serverConfig.enabled === "on")
     {
