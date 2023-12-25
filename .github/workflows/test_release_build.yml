@@ -53,5 +53,5 @@ jobs:
     - name: uploading artifact
       uses: actions/upload-artifact@v3
       with:
-        name: StreamRoller.zip
-        path: StreamRoller.exe
+        name: StreamRoller${{ github.ref_name }}.zip
+        path: StreamRoller${{ github.ref_name }}.exe
