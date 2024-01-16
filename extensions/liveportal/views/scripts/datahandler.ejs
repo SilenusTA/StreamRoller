@@ -1987,10 +1987,10 @@
         {
             // Message we have currently handled, use this to develope handling of new messages yet to be seen
             // hard to test all messages as we can't generate them
-            var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected",
-                "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "redeem"]
+            var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected", "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "usernotice", "viewermilestone", "redeem"]
             var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
             var modactions = ["messagedeleted", "timeout", "ban", "notice"]
+
             if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System" && chatdata.data["display-name"].indexOf("(localpost)") == -1)
                 console.log("not handling these messages yet, still work in progress", chatdata.data)
 
@@ -2114,8 +2114,16 @@
                 // ######################### reward messages #########################
                 if (chatdata.data["msg-id"] || chatdata.data["custom-reward-id"])
                 {
-                    background_color = ((chatdata.data["msg-id"]) ? chatdata.data["msg-id"] : "CustomReward:") + " <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
-                    end_background_color = "</span></b>"
+                    if (chatdata.data["msg-id"] == "vierwermilestone")
+                    {
+                        background_color = " <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
+                        end_background_color = "</span></b>"
+                    }
+                    else
+                    {
+                        background_color = ((chatdata.data["msg-id"]) ? chatdata.data["msg-id"] : "CustomReward:") + " <b><span style='color: " + chatcolors.default_reward_color + "; background-color: " + chatcolors.default_reward_bgcolor + "; '>";
+                        end_background_color = "</span></b>"
+                    }
                 }
                 // ##################### username colors and icons
                 // if this is not a chat message (ie a sub etc) then set username color to yellow
@@ -2136,11 +2144,12 @@
                 // ########### create out message line
                 // set the card title (may have changed since last time around)
 
-                // if we have no nonchat or action message highlight it so we know we need to fix this
+                // if we have a nonchat or action message highlight it so we know we need to fix this
                 if (chatdata.data["message-type"] == "chat" && chatdata.data["message-type"] == "action")
                     message_field = background_color + action + message + endaction + end_background_color
-                //else if (chatdata.data["message-type"] == "resub")
-                //    message_field = background_color + action + message + endaction + end_background_color
+                else if (chatdata.data["message-type"] == "viewermilestone")
+                    message_field = background_color + action + chatdata.data["msg-param-category"] + ": " +
+                        chatdata.data["system-msg"] + ": " + message + endaction + end_background_color
                 else // unhandled message
                     message_field = background_color + action + message + endaction + end_background_color
 

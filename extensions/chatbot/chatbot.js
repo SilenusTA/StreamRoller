@@ -33,7 +33,7 @@
 // mess. Need to rewrite the code as stuff has been added and the process changed
 // but not all code follows the new trigger process nicely
 // ============================================================================
-import { Configuration, OpenAIApi } from "openai"
+import { Configuration, OpenAIApi } from "openai";
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
@@ -81,7 +81,7 @@ const default_serverConfig = {
     questionbotenabled: "off",
     translatetoeng: "off",
     submessageenabled: "off",
-    gernerateimages: "on",
+    generateimages: "on",
     chatbotignorelist: "Nightbot, SonglistBot",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI
@@ -583,7 +583,23 @@ function onDataCenterMessage (server_packet)
                 if (serverConfig.DEBUG_MODE === "on")
                 {
                     if (extension_packet.type.indexOf("trigger_") > -1)
-                        console.log("chatbot ignoring trigger message", extension_packet.type)
+                    {
+
+                        if (extension_packet.type.indexOf("trigger_ChatBanReceived") > -1
+                            || extension_packet.type.indexOf("trigger_ChatMessageDeleted") > -1
+                            || extension_packet.type.indexOf("trigger_ChatTimeout") > -1
+                            || extension_packet.type.indexOf("trigger_ChatClear") > -1
+
+                        )
+                        {
+                            console.log("chatbot:restarting chat timer and clearing history due to a ban/timeout happening")
+                            startChatbotTimer()
+                        }
+                        else
+                        {
+                            console.log("chatbot ignoring 'trigger' message on ChannelData channel (will be processed through normal chat messages)", extension_packet.type)
+                        }
+                    }
                     else if (!extension_packet.data.data)
                         console.log("chatbot ignoring as no data packet in message", extension_packet.type)
                     //console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
@@ -655,6 +671,7 @@ function handleSettingsWidgetSmallData (modalcode)
     serverConfig.questionbotenabled = "off";
     serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
+    serverConfig.generateimages = "off";
 
     for (const [key, value] of Object.entries(modalcode))
         serverConfig[key] = value;
@@ -684,7 +701,7 @@ function handleSettingsWidgetLargeData (modalcode)
     serverConfig.questionbotenabled = "off";
     serverConfig.translatetoeng = "off";
     serverConfig.submessageenabled = "off";
-
+    serverConfig.generateimages = "off";
     serverConfig.chatbotnametriggertagstartofline = "off";
     serverConfig.chatbotquerytagstartofline = "off";
 
@@ -1592,7 +1609,6 @@ function processChatMessage (data, maxRollbackCount = 20)
 
     }
 }
-
 // ============================================================================
 //                           FUNCTION: callOpenAI
 // ============================================================================
@@ -1769,7 +1785,7 @@ function parseData (data, translation = false)
 // ============================================================================
 async function processImageMessage (data)
 {
-    if (serverConfig.gernerateimages != "on")
+    if (serverConfig.generateimages != "on")
     {
         console.log("processImageMessage called but turned off in settings")
         return
@@ -1939,3 +1955,4 @@ function findtriggerByMessageType (messagetype)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

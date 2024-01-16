@@ -231,6 +231,17 @@ const triggersandactions =
                 months: ""
             }
         }, {
+            name: "TwitchChatRitualReceived",
+            displaytitle: "Ritual",
+            description: "Ritual",
+            messagetype: "trigger_ChatRitual",
+            parameters: {
+                type: "trigger_ChatRitual",
+                ritualName: "",
+                username: "",
+                message: "",
+            }
+        }, {
             name: "TwitchChatRoomstateReceived",
             displaytitle: "Roomstate message",
             description: "This message contains things like sub-only mode etc",
@@ -505,6 +516,17 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatNotice",
                 textMessage: "Notice: [message]",
+                msgid: "",
+                message: ""
+            }
+        }, {
+            name: "TwitchChatUserNotice",
+            displaytitle: "UserNotice",
+            description: "UserNotice received",
+            messagetype: "trigger_ChatUserNotice",
+            parameters: {
+                type: "trigger_ChatUserNotice",
+                textMessage: "UserNotice: [message]",
                 msgid: "",
                 message: ""
             }
@@ -1246,7 +1268,7 @@ function process_chat_data (channel, tags, chatmessage)
         data: tags
     };
     if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")
-        console.log("process_chat_data: ", tags, " : ", chatmessage)
+        console.log("twitchchat:process_chat_data: ", tags, " : ", chatmessage)
 
     if (tags == null)
     {
@@ -1516,9 +1538,9 @@ function chatLogin (account)
             if (serverConfig.DEBUG_LOG_DATA_TO_FILE === "on") 
             {
                 // raw_message gives you every type of message in the sustem. use for debugging if you think you are missing messages
-                ////////// localConfig.twitchClient[account].connection.on("raw_message", (messageCloned, message) => {                     file_log("raw_message", messageCloned, JSON.stringify(message)); });
+                localConfig.twitchClient[account].connection.on("raw_message", (messageCloned, message) => { file_log("raw_message", messageCloned, JSON.stringify(message)); });
                 // "chat" and "message" messages appear to be the same
-                ///////// localConfig.twitchClient[account].connection.on("message", (channel, userstate, message, self) => {                     file_log("message", userstate, message); });
+                //////// localConfig.twitchClient[account].connection.on("message", (channel, userstate, message, self) => {                     file_log("message", userstate, message); });
             }
 
             localConfig.twitchClient[account].connection.on("action", (channel, userstate, message, self) => 
@@ -1626,6 +1648,18 @@ function chatLogin (account)
                 triggertosend.parameters.message = message
                 triggertosend.parameters.months = months
 
+                postChatTrigger(triggertosend)
+            });
+            //('ritual', ritualName, channel, username, tags, msg);
+            localConfig.twitchClient[account].connection.on("ritual", (ritualName, channel, username, userstate, message) => 
+            {
+                file_log("ritual", userstate, message); userstate['display-name'] = localConfig.usernames.bot["name"];
+                process_chat_data(channel, userstate, ((message) ? message : ""));
+                triggertosend = findtriggerByMessageType("trigger_ChatRitual")
+                triggertosend.parameters.type = "trigger_ChatRitual"
+                triggertosend.parameters.ritualName = ritualName
+                triggertosend.parameters.username = username
+                triggertosend.parameters.message = message
                 postChatTrigger(triggertosend)
             });
             localConfig.twitchClient[account].connection.on("roomstate", (channel, state) =>
@@ -1891,6 +1925,18 @@ function chatLogin (account)
                 triggertosend.parameters.length = length
                 postChatTrigger(triggertosend);
             });
+            //('usernotice', msgid, channel, tags, msg)
+            localConfig.twitchClient[account].connection.on("usernotice", (msgid, channel, tags, message) => 
+            {
+                file_log("usernotice", msgid, message);
+                process_chat_data(channel, tags, message);
+                triggertosend = findtriggerByMessageType("trigger_ChatUserNotice")
+                triggertosend.parameters.type = "trigger_ChatUserNotice"
+                triggertosend.parameters.textMessage = "UserNotice: " + message
+                triggertosend.parameters.msgid = msgid
+                triggertosend.parameters.message = message
+                postChatTrigger(triggertosend);
+            });
 
         }
         // #################################################################################################################
@@ -1919,6 +1965,7 @@ function chatLogin (account)
             triggertosend.parameters.message = message
             postChatTrigger(triggertosend);
         });
+
 
         // Still to be tested before adding directly to the code might be single user/multiple registrations or none
         localConfig.twitchClient[account].connection.on("disconnected", (reason) =>
