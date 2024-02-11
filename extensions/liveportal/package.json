@@ -8,6 +8,5 @@
     "start": "echo This code is an extension and will be autloaded by the backend data server. "
   },
   "author": "Twitch/OldDepressedGamer",
-  "license": "",
-  "dependencies": {}
+  "license": ""
 }

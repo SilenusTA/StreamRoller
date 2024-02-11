@@ -117,7 +117,15 @@
             triggerPage: {
                 selectedGroup: ""
             }
+        },
+        softwareVersion: "",
+        latestRelease:
+        {
+            name: "",
+            exe: "",
+            zip: ""
         }
+
     }
     const chatcolors =
     {
@@ -196,6 +204,7 @@
                         {
                             livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data
                             resolve("Success");
+                            checkForNewSoftwareVersion();
                         })
                 })
                 .catch(error => console.log("LoadPages failed with error :", error))
@@ -420,7 +429,9 @@
         // -------------------------------------------------------------------------------------------------
         else if (server_packet.type === "SoftwareVersion")
         {
+            localConfig.softwareVersion = server_packet.data
             document.getElementById("softwareversion").innerHTML = server_packet.data;
+            checkForNewSoftwareVersion()
 
         }
         // -------------------------------------------------------------------------------------------------
@@ -3213,5 +3224,50 @@
         else
             rowdata += '<div id="MacroButtons_no_scense_available" class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Macros availabe</div>';
         document.getElementById("MacroButtonsRow").innerHTML = rowdata;
+    }
+    // ============================================================================
+    //                           FUNCTION: checkForNewSoftwareVersion
+    // ============================================================================
+    function checkForNewSoftwareVersion ()
+    {
+        let url = "https://api.github.com/repos/SilenusTA/StreamRoller/tags";
+        $.getJSON(url, function (allTags)
+        {
+            for (let i = 0; i < allTags.length; i++)
+            {
+                //find the first version tag
+                if (allTags[i].name.indexOf("v") == 0)
+                {
+                    let tag = allTags[i]
+                    localConfig.latestRelease =
+                    {
+                        "name": tag.name,
+                        "exe": "https://github.com/SilenusTA/StreamRoller/releases/download/" + tag.name + "/StreamRoller" + tag.name + ".exe",
+                        "zip": "https://github.com/SilenusTA/StreamRoller/releases/download/" + tag.name + "/StreamRoller" + tag.name + ".zip"
+
+                    }
+                    processLatestRelease()
+                    break;
+                }
+            }
+        });
+
+    }
+    // ============================================================================
+    //                           FUNCTION: processLatestRelease
+    // ============================================================================
+    function processLatestRelease ()
+    {
+        let swVersionHtml = ""
+        if (localConfig.softwareVersion != localConfig.latestRelease.name)
+        {
+            swVersionHtml += "<div class='text-warning'>"
+            //$("#softwareversion").append(
+            swVersionHtml += " Sofware Update Available"
+            swVersionHtml += " zip: <a href='" + localConfig.latestRelease.zip + "'>" + localConfig.latestRelease.name + "</a>"
+            swVersionHtml += " | exe: <a href='" + localConfig.latestRelease.exe + "'>" + localConfig.latestRelease.name + "</a>"
+            swVersionHtml += "</div>"
+            document.getElementById("softwareversion").innerHTML += swVersionHtml
+        }
     }
 </script>
