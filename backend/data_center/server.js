@@ -244,18 +244,25 @@ async function loadExtensions (extensionFolder)
         {
             if (module)
             {
-                localConfig.extensions[files[index]] = { initialise: module.initialise };
-                if (typeof localConfig.extensions[files[index]].initialise === "function")
-                    module.initialise(
-                        app, "http://" + config.HOST,
-                        config.PORT,
-                        // add a slight offset to the heartbeat so they don't all end up synced
-                        config.heartbeat + (Math.floor(Math.random() * 100)));
-                else
-                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an intialise function");
+                try
+                {
+                    localConfig.extensions[files[index]] = { initialise: module.initialise };
+                    if (typeof localConfig.extensions[files[index]].initialise === "function")
+                        module.initialise(
+                            app, "http://" + config.HOST,
+                            config.PORT,
+                            // add a slight offset to the heartbeat so they don't all end up synced
+                            config.heartbeat + (Math.floor(Math.random() * 100)));
+                    else
+                        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an intialise function");
+                }
+                catch (err) 
+                {
+                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on ", files[index], err.message);
+                }
             }
         })
     }
-    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err); }
+    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err, err.message); }
 }
 
