@@ -1,0 +1,250 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<!DOCTYPE html>
+<html lang="en">
+<!-- page head -->
+
+<head>
+      <meta charset="UTF-8">
+      <title>Ai_images</title>
+      <link rel="stylesheet"
+            type="text/css"
+            href="./ai_images.css">
+      <link rel="icon"
+            href="./favicon.ico"
+            type="ai_images/x-icon">
+</head>
+<!-- page body -->
+
+<body>
+      <main>
+            <div id="ai_imagescontent"
+                  class="ai_imagescontent">
+                  <div id="data"></div>
+            </div>
+      </main>
+      <!-- socket.io need to connect to StreamRoller -->
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js'
+            type='text/javascript'></script>
+      <!-- StreamRoller API -->
+      <script src="../../backend/data_center/public/streamroller-message-api.cjs"></script>
+      <!-- code to handle StreamRoller messages -->
+      <script>
+            const localConfig =
+            {
+                  extensionname: "overlay_ai_images",
+                  host: "http://localhost",
+                  port: "3000",
+                  DataCenterSocket: null,
+                  imageArray: [],
+                  settings: {
+                        enabled: "off",
+                        maxitems: "100",
+                        backgroundalpha: "0",
+                        duration: "5000",
+                        handleGalleryTimer: null
+                  }
+            }
+            // actions will be used to send data to the overlay
+            const triggersAndActions =
+            {
+                  extensionname: localConfig.extensionname,
+                  description: "Provides web page overlays to use with OBS Browser Sources. To use load the browser source from %localappdata%/StreamRoller/overlays/Ai_images/Ai_images.html",
+                  version: "0.4",
+                  channel: "",
+                  triggers: [],
+                  actions: [
+                        {
+                              name: "ai_images",
+                              displaytitle: "Image display",
+                              description: "Image display",
+                              messagetype: "action_ai_images_displayImage",
+                              channel: "",
+                              parameters: {
+                                    url: "",
+                                    requester: "",
+                                    originalPrompt: "",
+                                    revisedPrompt: "",
+                                    duration: ""
+                              }
+                        },
+                        {
+                              name: "clearImages",
+                              displaytitle: "Clear Images",
+                              description: "Clear images from gallery list",
+                              messagetype: "action_ai_images_clearimages",
+                              channel: "",
+                              parameters: {}
+                        }
+                  ],
+            }
+            ///////////////////////////////////////
+            // Connections to streamroller
+            ///////////////////////////////////////
+            // start the connection and register our callbacks
+            localConfig.DataCenterSocket = sr_api.setupConnection(
+                  onDataCenterMessage,
+                  onConnect,
+                  onDisconnect,
+                  localConfig.host,
+                  localConfig.port);
+            // --------------------------------------------------------------
+            // FUNCTION: onConnect
+            // --------------------------------------------------------------
+            function onConnect ()
+            {
+                  console.log("connected")
+            }
+            // --------------------------------------------------------------
+            // FUNCTION: onDisconnect
+            // --------------------------------------------------------------
+            function onDisconnect (response)
+            {
+                  console.log("disconnected")
+            }
+            // --------------------------------------------------------------
+            // FUNCTION: onDataCenterMessage
+            // --------------------------------------------------------------
+            function onDataCenterMessage (server_packet)
+            {
+                  // Extensions message are messages sent direct to us
+                  if (server_packet.type == "ExtensionMessage")
+                  {
+                        let extension_packet = server_packet.data;
+                        // --------------------------------------------------------------
+                        //              Send Trigger and Actions
+                        // --------------------------------------------------------------
+                        if (extension_packet.type == "SendTriggerAndActions")
+                        {
+                              // send our triggers and actions to anyone who requests them (ie autopilot page)
+                              sendTriggersAndActions(extension_packet.from);
+                        }
+                        // --------------------------------------------------------------
+                        //              received action_ai_images_displayImage
+                        // --------------------------------------------------------------
+                        else if (extension_packet.type == "action_ai_images_displayImage")
+                        {
+                              // handle an action to update the overlay text
+                              update(extension_packet)
+                        }
+                        // --------------------------------------------------------------
+                        //              received action_ai_images_displayImage
+                        // --------------------------------------------------------------
+                        else if (extension_packet.type == "action_ai_images_clearimages")
+                        {
+                              // remove all images
+                              localConfig.imageArray = []
+                              document.getElementById("data").innerHTML = ""
+                        }
+                  }
+            }
+            // ============================================================================
+            // FUNCTION: sendTriggersAndActions
+            // ============================================================================
+            function sendTriggersAndActions (to)
+            {
+                  sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket("ExtensionMessage",
+                              localConfig.extensionname,
+                              sr_api.ExtensionPacket(
+                                    "TriggerAndActions",
+                                    localConfig.extensionname,
+                                    triggersAndActions,
+                                    "",
+                                    to
+                              ),
+                              "",
+                              to
+                        )
+                  )
+            }
+            // ============================================================================
+            //                           FUNCTION: update
+            // ============================================================================
+            /*
+            update ({data:{    url: 'https://oaidalleapiprodscus.blob.core.windows.net/private/org-mPDh1eFhUkCbTRiQre4Jl3tY/user-uovy9Ts1SwLzyBAy0l1YC1vg/img-UB9vBGoJY8AXJ0RRgabsozcJ.png?st=2024-02-14T02%3A46%3A10Z&se=2024-02-14T04%3A46%3A10Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-02-13T23%3A03%3A22Z&ske=2024-02-14T23%3A03%3A22Z&sks=b&skv=2021-08-06&sig=bHApx4o%2BSb6VrGsIjx0u7WuB03hvPZDHgKT/ROh3UC0%3D',
+    short_url: 'https://1pt.co/37mtk',
+    requester: 'OldDepressedGamer',
+    temp_save_file: 'C:\\repos\\StreamRoller\\extensions\\chatbot/currentstreamimages/OldDepressedGamer_2024-01-14__03-46-11.jpg',
+    prompt: 'Create an image  twitch test card ',
+    revisedPrompt: 'Design an image of a test card that one might see on a streaming platform like Twitch. It should have a variety hues and shapes to calibrate the video quality, a greyscale bar for adjusting contrast and brightness, and a central circular pattern for focus. Include an element of playful gaming iconography such as cartoonish joystick or game controller, all this encapsulated within the standard RGB color spectrum.'
+  ,duration:5000}})
+            
+            */
+            function update (action)
+            {
+                  console.log(action)
+                  let image_data = {
+                        url: action.data.url,
+                        requester: action.data.requester,
+                        prompt: action.data.originalPrompt,
+                        revisedPrompt: action.data.revisedPrompt
+                  }
+                  // duration
+                  if (action.data.duration != "")
+                        image_data.duration = action.data.duration * 1000
+                  else
+                        image_data.duration = localConfig.settings.duration
+                  if (image_data.url)
+                  {
+                        localConfig.imageArray.push(image_data)
+                  }
+                  updateImage();
+            }
+            // ============================================================================
+            //                           FUNCTION: updateImage
+            // ============================================================================
+            function updateImage (index = 0)
+            {
+                  if (index >= localConfig.imageArray.length)
+                        index = 0;
+                  let data = localConfig.imageArray[index]
+                  clearTimeout(localConfig.settings.handleGalleryTimer)
+                  document.getElementById("ai_imagescontent").style.backgroundImage = ""
+                  console.log("data", data)
+                  if (data != undefined)
+                  {
+                        //document.getElementById("ai_imagescontent").style.width = data.width
+                        //document.getElementById("ai_imagescontent").style.height = data.height
+                        document.getElementById("ai_imagescontent").style["background-repeat"] = "no-repeat";
+                        document.getElementById("ai_imagescontent").style["background-size"] = "contain";
+                        document.getElementById("ai_imagescontent").style.backgroundImage = "url('" + data.url + "')"
+                        //document.getElementById("data").innerHTML = "url('" + data.url.replace(".jpg", ".txt") + "')"
+                        //$("#data").load(data.url.replace(".jpg", ".txt"))
+                        //document.getElementById("data").innerHTML = readTextFile(data.url.replace(".jpg", ".txt"))
+                        document.getElementById("data").innerHTML = "<span>" +
+                              "Username: " + data.requester +
+                              "<BR>Prompt: " + data.prompt +
+                              //"<BR>RevisedPrompt: " + data.revisedPrompt +
+                              "</span>"
+
+                        localConfig.settings.handleGalleryTimer = setTimeout(() =>
+                        {
+                              updateImage(index + 1)
+                        }, data.duration);
+                  }
+            }
+      </script>
+</body>
+
+</html>

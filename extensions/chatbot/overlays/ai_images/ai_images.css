@@ -1,0 +1,30 @@
+:root {}
+
+body {
+      display: block;
+      margin: 0px;
+}
+
+.ai_images {}
+
+.ai_imagescontent {
+      /*position: relative;*/
+      width: 1024px;
+      height: 1024px;
+      background-size: contain;
+      background-repeat: no-repeat;
+      overflow: hidden;
+}
+
+#data {
+      text-align: center;
+      font-size: 4rem;
+      color: white;
+
+}
+
+#data span {
+      /*color: rgb(63, 63, 63);*/
+      background-color: rgba(63, 63, 63, .8);
+
+}

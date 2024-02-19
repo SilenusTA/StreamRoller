@@ -1207,10 +1207,13 @@ function processChatMessage (data, maxRollbackCount = 20)
     let submessage = sub_messages.includes(data.data["message-type"]);
     let handledmessage = messages_handled.includes(data.data["message-type"]);
 
-    console.log("!data.message", !data.message)
-    console.log("typeof data.message !== 'string'", typeof data.message !== 'string')
-    console.log("!(data.message instanceof String)", !(data.message instanceof String))
-    console.log("!submessage", !submessage)
+    if (serverConfig.DEBUG_MODE === "on")
+    {
+        console.log("!data.message", !data.message)
+        console.log("typeof data.message !== 'string'", typeof data.message !== 'string')
+        console.log("!(data.message instanceof String)", !(data.message instanceof String))
+        console.log("!submessage", !submessage)
+    }
 
     if ((!data.message || typeof data.message !== 'string') && !submessage)
     //if (!data.message && !submessage)
@@ -1857,7 +1860,7 @@ async function createImageFromAction (data)
             let image_url = response.data.data[0].url;
             if (!image_url || image_url == "")
             {
-                logger.error(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI no responce or partial response")
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI no responce or partial response")
                 return "Failed to get a response from chatbot, server might be down"
             }
             else
@@ -1918,10 +1921,8 @@ async function createImageFromAction (data)
                     // when file has finished writing send out the notification with a short url
                     file.on('finish', () =>
                     {
-                        file.close();
-
                         // Close the file descriptor 
-                        fs.close(file, (err) =>
+                        file.close((err) =>
                         {
                             if (err)
                                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Fail to close file", err, err.message)
