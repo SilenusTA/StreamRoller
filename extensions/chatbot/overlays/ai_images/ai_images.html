@@ -47,7 +47,7 @@
       <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js'
             type='text/javascript'></script>
       <!-- StreamRoller API -->
-      <script src="../../backend/data_center/public/streamroller-message-api.cjs"></script>
+      <script src="../../../../backend/data_center/public/streamroller-message-api.cjs"></script>
       <!-- code to handle StreamRoller messages -->
       <script>
             const localConfig =
@@ -114,6 +114,7 @@
             function onConnect ()
             {
                   console.log("connected")
+                  sendTriggersAndActions("");
             }
             // --------------------------------------------------------------
             // FUNCTION: onDisconnect
