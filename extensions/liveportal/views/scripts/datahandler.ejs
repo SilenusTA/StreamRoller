@@ -2656,11 +2656,12 @@
             sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
                 sr_api.ExtensionPacket(
-                    "PostMessage",
+                    "action_DiscordPostMessage",
                     serverConfig.extensionname,
                     {
                         message: msg,
-                        channel: channel
+                        channel: channel,
+                        file: ""
                     },
                     "",
                     "discordchat"),

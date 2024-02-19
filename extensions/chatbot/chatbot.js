@@ -318,7 +318,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Chatbot sends text through OpenAPI ChatGPT and puts the response into twitch chat.",
-    version: "0.3",
+    version: "0.5",
     channel: serverConfig.channel,
     // these are messages we can send out that other extensions might want to use to trigger an action
     triggers:
@@ -337,9 +337,10 @@ const triggersandactions =
                 messagetype: "trigger_imageResponse",
                 parameters: {
                     url: "",
-                    short_url: "",
                     requester: "",
-                    temp_save_file: ""
+                    temp_save_file: "",
+                    message: "",
+                    rev_prompt: ""
                 }
             }
         ],
@@ -504,7 +505,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "action_ProcessImage")
         {
             if (extension_packet.to === serverConfig.extensionname)
-                processImageMessage(extension_packet.data, true);
+                createImageFromAction(extension_packet.data, true);
         }
         else if (extension_packet.type === "action_ChangeProfile")
         {
@@ -1186,6 +1187,8 @@ function processChatMessage (data, maxRollbackCount = 20)
     let sub_messages = "";
     let modelToUse = {}
 
+    if (serverConfig.DEBUG_MODE === "on")
+        console.log("chatbot:processChatMessage:data", data)
     // lets work out what messages we want to push through the chatbot
     if (serverConfig.DEBUG_MODE === "on")
     {
@@ -1203,7 +1206,14 @@ function processChatMessage (data, maxRollbackCount = 20)
         console.log("checking submessages for", data.data["message-type"], sub_messages.includes(data.data["message-type"]), data.data)
     let submessage = sub_messages.includes(data.data["message-type"]);
     let handledmessage = messages_handled.includes(data.data["message-type"]);
-    if (!data.message && !submessage)
+
+    console.log("!data.message", !data.message)
+    console.log("typeof data.message !== 'string'", typeof data.message !== 'string')
+    console.log("!(data.message instanceof String)", !(data.message instanceof String))
+    console.log("!submessage", !submessage)
+
+    if ((!data.message || typeof data.message !== 'string') && !submessage)
+    //if (!data.message && !submessage)
     {
         if (serverConfig.DEBUG_MODE === "on")
         {
@@ -1791,26 +1801,28 @@ function parseData (data, translation = false)
     if (data.message.includes("http"))
     {
         if (serverConfig.DEBUG_MODE === "on")
-            console.log("message contains link")
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message rejected as it contains a url");
         return null;
     }
     return data
 }
 // ============================================================================
-//                           FUNCTION: processImageMessage
+//                           FUNCTION: createImageFromAction
 //            Creates an image from a description
 // ============================================================================
-async function processImageMessage (data)
+async function createImageFromAction (data)
 {
     if (serverConfig.generateimages != "on")
     {
-        console.log("processImageMessage called but turned off in settings")
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".createImageFromAction", "Create image called but turned off in settings");
         return
     }
     try
     {
         let messages = ""
         let openAIImageQuery = ""
+
+        // Create our image prompt for OpenAI
         if (data.message == "")
         {
             if (data.usechatbot == "true")
@@ -1820,8 +1832,10 @@ async function processImageMessage (data)
         }
         else
             messages = data.prompt + " " + data.message + " " + data.append;
+
         if (localConfig.openAIKey)
         {
+            // get image URL from OpenAI
             localConfig.openAPIImageHandle = new OpenAIApi(new Configuration(
                 {
                     apiKey: localConfig.openAIKey
@@ -1832,30 +1846,24 @@ async function processImageMessage (data)
                 prompt: openAIImageQuery,
                 n: 1,
                 quality: "standard",
-                size: "1024x1024",
+                size: "1024x1024", // options are 1024x1024, 1024x1792 or 1792x1024
             })
                 .catch((err) => 
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI Failed (possibly incorrect credentials?)", err.message)
                 })
-            localConfig.requestPending = false;
 
-            console.log("======")
-            console.log("openAIImageQuery", openAIImageQuery)
-            console.log("------")
-            console.log("revised_prompt", response.data.data[0].revised_prompt)
-            console.log("======")
-
+            // get the image url from OpenAI's response
             let image_url = response.data.data[0].url;
-            if (!image_url)
+            if (!image_url || image_url == "")
             {
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response")
+                logger.error(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI no responce or partial response")
                 return "Failed to get a response from chatbot, server might be down"
             }
             else
             {
-                // save image to savedimages folder
-                let saveDir = __dirname + "/" + serverConfig.livedir + "/"
+                // save image to live dir folder
+                let saveDir = __dirname + "\\" + serverConfig.livedir + "\\"
                 // create a filenmane using a timestamp
                 let dateNow = new Date()
                 let fileTimeStamp = dateNow.getFullYear()
@@ -1868,9 +1876,9 @@ async function processImageMessage (data)
                 let imageName = "saved_image_"
                 if (data.requester && data.requester != "")
                     imageName = data.requester + "_" + fileTimeStamp
-
                 let imageFilename = saveDir + imageName + ".jpg"
-                // save image file
+
+                // save image files from the url link
                 try
                 {
                     // if the dir doesn't exist then make it
@@ -1878,71 +1886,83 @@ async function processImageMessage (data)
                     {
                         fs.mkdirSync(saveDir, { recursive: true });
                     }
-                    // create a stream and write the file to disk.
-                    const file = fs.createWriteStream(imageFilename);
 
-                    https.get(image_url, response =>
-                    {
-                        response.pipe(file);
-                        file.on('finish', () =>
-                        {
-                            file.close();
-                        });
-                    }).on('error', err =>
-                    {
-                        fs.unlink(imageName);
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Error saving AI image", err, err.message)
-                    });
-
-                    // save image file
+                    // ######### save metadata file #########
                     let content = ""
                     content = data.requester + "\n"
-                    content = content + messages
+                    content = content + messages + "\n"
+                    content = content + response.data.data[0].revised_prompt + "\n"
                     // save the image meta-data file
                     fs.writeFile(saveDir + imageName + ".txt", content, err =>
                     {
                         if (err)
                         {
-                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Error saving image.txt meta file", err, err.message)
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving image.txt meta file", err, err.message)
                         }
+
+                    });
+
+                    // ######### save the image file #########
+                    // create a stream and write the file to disk.
+                    const file = fs.createWriteStream(imageFilename);
+                    https.get(image_url, response =>
+                    {
+                        response.pipe(file);
+
+                    }).on('error', err =>
+                    {
+                        fs.unlink(imageName);
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving AI image", err, err.message)
+                    });
+
+                    // when file has finished writing send out the notification with a short url
+                    file.on('finish', () =>
+                    {
+                        file.close();
+
+                        // Close the file descriptor 
+                        fs.close(file, (err) =>
+                        {
+                            if (err)
+                                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Fail to close file", err, err.message)
+                            else
+                            {
+                                sendImageTiggerResponse(image_url, data.requester, imageFilename, messages, response.data.data[0].revised_prompt)
+                            }
+                        });
+
                     });
                 }
                 catch (err)
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Saving image failed", err, err.message)
-                }
-
-                // get short image url
-                try
-                {
-                    getShortURL(image_url, data.requester, imageFilename)
-                }
-                catch (err)
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "calling getShortURL failed", err, err.message)
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Saving image failed", err, err.message)
                 }
             }
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".createImageFromAction:", "No openAI auth key set");
         }
     }
     catch (e)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processTextMessage", "openAI datacenter message processing failed:", e, e.message, data);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".createImageFromAction:", "openAI datacenter message processing failed:", e, e.message, data);
         return;
     }
 }
 // ============================================================================
 //                           FUNCTION: sendImageTiggerResponse
 // ============================================================================
-function sendImageTiggerResponse (image_url, short_url, requester, tmp_file_name)
+function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, rev_prompt)
 {
     let msg = findtriggerByMessageType("trigger_imageResponse")
-    msg.parameters.url = image_url
-    msg.parameters.short_url = short_url;
-    msg.parameters.requester = requester;
-    msg.parameters.temp_save_file = tmp_file_name;
-    //if this is a trigger message then send out normally on the channel
     if (msg)
     {
+        msg.parameters.url = image_url;
+        msg.parameters.requester = requester;
+        msg.parameters.temp_save_file = tmp_file_name;
+        msg.parameters.message = message;
+        msg.parameters.rev_prompt = rev_prompt;
         // send the modal data to our channel
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
@@ -1956,60 +1976,23 @@ function sendImageTiggerResponse (image_url, short_url, requester, tmp_file_name
                 serverConfig.channel)
         )
     }
-}
-// ============================================================================
-//                           FUNCTION: getShortURL
-// ============================================================================
-function getShortURL (long_url, requester, tmp_file_name)
-{
-    let compound_url = '/~phthakka/1pt/addURL.php?url=' + encodeURIComponent(long_url)
-    const options = {
-        hostname: 'csclub.uwaterloo.ca',
-        path: compound_url,
-        port: '443',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
-
-    let req = https.request(options, (res) =>
+    else
     {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () =>
-        {
-            try
-            {
-                let dataparsed = JSON.parse(data)
-                let shortenend_url = dataparsed["short"]
-                sendImageTiggerResponse(long_url, "https://1pt.co/" + shortenend_url, requester, tmp_file_name)
-            }
-            catch (err)
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".getShortURL", "Error during sending imageTrigger", err, err.message);
-            }
-        });
-    }).on("error", (err) =>
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".getShortURL", "Error during getting short url", err, err.message);
-    });
-    req.write("");
-    req.end();
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".sendImageTiggerResponse:", "Failed to retrieve trigger_imageResponse tigger object");
+    }
 }
 // ============================================================================
 //                           FUNCTION: postMessageToTwitch
 // ============================================================================
-function postMessageToTwitch (msg)
+function postMessageToTwitch (message)
 {
-    msg = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + msg
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ExtensionMessage",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "action_SendChatMessage",
                 serverConfig.extensionname,
-                { account: "bot", message: msg },
+                { account: "bot", message: serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + message },
                 "",
                 "twitchchat"),
             "",
