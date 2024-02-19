@@ -86,7 +86,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Discord provides an easy way to talk over voice, video, and text. Talk, chat, hang out, and stay close with your friends and communities.",
-    version: "0.2",
+    version: "0.3",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
@@ -115,7 +115,8 @@ const triggersandactions =
                 parameters:
                 {
                     channel: "",
-                    message: ""
+                    message: "",
+                    file: ""
                 }
             }
 
@@ -283,7 +284,7 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
             }
-            else if (extension_packet.type === "PostMessage")
+            else if (extension_packet.type === "action_DiscordPostMessage")
             {
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                     ".onDataCenterMessage", "Posting Message", extension_packet.data)
@@ -291,7 +292,25 @@ function onDataCenterMessage (server_packet)
                 {
                     const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === extension_packet.data.channel);
                     if (typeof (channel) != "undefined")
-                        channel.send(extension_packet.data.message);
+                    {
+                        if (extension_packet.data.file && extension_packet.data.file != "")
+                        {
+                            channel.send(
+                                {
+                                    content: extension_packet.data.message,
+                                    files: [{
+                                        attachment: extension_packet.data.file,
+                                        name: 'AI_Image_File.jpg',
+                                        description: "AI image from stream"
+                                    }]
+                                })
+                        }
+                        else
+                        {
+                            // Send a basic text message
+                            channel.send(extension_packet.data.message);
+                        }
+                    }
                     else
                         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                             "Failed to find discord channel to send to", extension_packet.data.channel);
