@@ -24,11 +24,11 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const localConfig = {
@@ -88,7 +88,7 @@ const triggersandactions =
                 name: "quizbotIncorrectAnswer",
                 displaytitle: "IncorrectAnswer",
                 description: "Someone provided an incorrec answer",
-                messagetype: "trigger_QuizbotIncorrectAnwser",
+                messagetype: "trigger_QuizbotIncorrectAnswer",
                 parameters: { user: "", question: "", answer: "" }
             },
             {
@@ -443,10 +443,10 @@ function checkAnswer (userAnswer)
     let answer = userAnswer.answer.replace("!answer ", "").trim()
     let data = {}
     let messagetype = ""
-    if (currentAnswer.toLowerCase().indexOf(answer.toLowerCase()) > -1)
+    if (currentAnswer.toLowerCase() == answer.toLowerCase())
         messagetype = "trigger_QuizbotCorrectAnswer";
     else
-        messagetype = "trigger_QuizbotIncorrectAnwser";
+        messagetype = "trigger_QuizbotIncorrectAnswer";
     data = findtriggerByMessageType(messagetype);
     data.parameters.question = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
     data.parameters.answer = answer;
@@ -462,7 +462,7 @@ function checkAnswer (userAnswer)
             ),
             serverConfig.channel)
     )
-    if (currentAnswer.toLowerCase().indexOf(answer.toLowerCase()) > -1)
+    if (currentAnswer.toLowerCase() == answer.toLowerCase())
     {
         clearTimeout(localConfig.quizbotTimerHandle)
         startQuiz();
@@ -604,3 +604,4 @@ function heartBeatCallback ()
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

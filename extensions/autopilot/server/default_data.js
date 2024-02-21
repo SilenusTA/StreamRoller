@@ -208,7 +208,7 @@ const default_serverData = {
                     "name": "quizbotIncorrectAnswer",
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",
-                    "messagetype": "trigger_QuizbotIncorrectAnwser",
+                    "messagetype": "trigger_QuizbotIncorrectAnswer",
                     "data": [
                         {
                             "MATCHER_user": "1",
