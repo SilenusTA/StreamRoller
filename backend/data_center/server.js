@@ -46,7 +46,8 @@ let config = cm.loadConfig("datacenter");
 let localConfig =
 {
     version: cm.loadSoftwareVersion(),
-    extensions: []
+    extensions: [],
+    serverPingTimeout: 360000
 }
 
 
@@ -61,13 +62,15 @@ let defaultconfig = {
     apiVersion: sr_api.__api_version__,
     softwareversion: localConfig.version,
     overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
-    testing: 0// used to import extra extensions during testing
+    testing: 0,// used to import extra extensions during testing
+    uuid: false
 };
 
 // check we have a config. if this is a new instance the we need to create a config from the default
-if (config === "" | !config.HOST || config.HOST.startsWith("http") > 0)
+if (config === "" | !config.uuid)
 {
     config = defaultconfig;
+    config.uuid = crypto.randomUUID();
     cm.saveConfig(config.extensionname, config);
 }
 // check if we have updated the software, if so we will reload the default config
@@ -78,7 +81,7 @@ if (config.softwareversion != localConfig.version)
     cm.saveConfig(config.extensionname, config);
 }
 
-// set the local IP address to this machine
+// set the local IP address to this machine for using other devices (ie the fake stream deck macros page)
 /*
 var interfaces = os.networkInterfaces();
 var addresses = [];
@@ -109,9 +112,11 @@ import { dirname } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import express from "express";
 import http from "http";
+import https from "https";
+import crypto from "crypto";
 import * as fs from "fs/promises";
 
-// set our localion
+// set our location
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // app server start
 const app = express();
@@ -167,7 +172,6 @@ app.get("/", function (req, res)
 // #############################################################
 //config.overlayfolder = __dirname + "/../../../ODGOverlay";
 //config.overlayfolder = "/repos/ODGOverlay";
-
 import { execPHP } from "./execphp.js";
 execPHP.phpFolder = config.overlayfolder;
 var webfiles = config.overlayfolder;
@@ -184,6 +188,10 @@ app.use(express.static(webfiles));
 
 //load extensions and start the server
 loadExtensionsAndStartServer()
+
+// ping server (will be used for updates and later to allow remote login from mods etc)
+// testing server connections
+pingServer();
 
 // ############################################################
 // ################## Load/Start Extensions ###################
@@ -265,4 +273,41 @@ async function loadExtensions (extensionFolder)
     }
     catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err, err.message); }
 }
+// ####################################################
+// ################### pingServer #####################
+// ####################################################
+function pingServer ()
+{
+    try
+    {
+        https.get('https://streamroller.stream/api/telemetry.php?UUID=' + config.uuid + '&version=' + localConfig.version, res =>
+        {
+            let data = [];
 
+            res.on('data', chunk =>
+            {
+                data.push(chunk);
+            });
+
+            res.on('end', () =>
+            {
+                const result = Buffer.concat(data).toString();
+                //console.log('Telementry Status Code:', res.statusCode);
+                //console.log("result:", result)
+                // Once working we will get the latest version here to provide a check and ask the user if they wish to update
+            });
+        }).on('error', err =>
+        {
+            //console.log('Error: ', err.message);
+        });
+    }
+    catch (err)
+    {
+        //logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: pinging server ", err.message);
+    }
+    setTimeout(() =>
+    {
+        pingServer();
+    }, localConfig.serverPingTimeout
+    )
+}

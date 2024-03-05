@@ -1209,6 +1209,7 @@ function processChatMessage (data, maxRollbackCount = 20)
 
     if (serverConfig.DEBUG_MODE === "on")
     {
+        console.log("Data for checking sub messages not being processed")
         console.log("!data.message", !data.message)
         console.log("typeof data.message !== 'string'", typeof data.message !== 'string')
         console.log("!(data.message instanceof String)", !(data.message instanceof String))
@@ -1835,7 +1836,8 @@ async function createImageFromAction (data)
         }
         else
             messages = data.prompt + " " + data.message + " " + data.append;
-
+        if (serverConfig.DEBUG_MODE === "on")
+            console.log("chatbot:createImageFromAction: messages", messages)
         if (localConfig.openAIKey)
         {
             // get image URL from OpenAI
