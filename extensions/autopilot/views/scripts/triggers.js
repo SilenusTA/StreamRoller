@@ -40,7 +40,7 @@ function initTriggersAndActions (extension_list)
     if (!localStorage.getItem("selectedgroup"))
         localStorage.setItem("selectedgroup", usertriggerslist.groups[0].name)
 
-    // request triggers and actions from all the current extenssions we have
+    // request triggers and actions from all the current extensions we have
     extension_list.forEach(ext =>
     {
         sr_api.sendMessage(

@@ -74,6 +74,16 @@ const triggersandactions =
                 parameters: { name: "" }
             },
             {
+                name: "Set Group Pause State",
+                displaytitle: "Set Group Pause State",
+                description: "Pause/Unpause groups",
+                messagetype: "action_SetGroupPauseState",
+                parameters: {
+                    group: "",
+                    state: "unpaused"
+                }
+            },
+            {
                 name: "LogToConsole",
                 displaytitle: "LogToConsole",
                 description: "Log triggers to console",
@@ -245,6 +255,17 @@ function onDataCenterMessage (server_packet)
             console.log("--------- action_LogToConsole -------------")
             console.log(JSON.stringify(extension_packet.data, null, 2))
             console.log("-------------------------------------------")
+        }
+        else if (extension_packet.type.startsWith("action_ActivateMacro"))
+        {
+            if (extension_packet.to == serverConfig.extensionname)
+                triggerMacroButton(extension_packet.data.name)
+        }
+
+        else if (extension_packet.type.startsWith("action_SetGroupPauseState"))
+        {
+            if (extension_packet.to == serverConfig.extensionname)
+                actionAction_SetGroupPauseState(extension_packet.data.group, extension_packet.data.state)
         }
         // -------------------------------------------------------------------------------------------------
         //                   SETTINGS DIALOG DATA
@@ -725,7 +746,6 @@ function RequestChList ()
 // ============================================================================
 //                           FUNCTION: SendUserPairings
 // ============================================================================
-
 function SendUserPairings (to)
 {
     if (to != "")
@@ -807,6 +827,63 @@ function SendMacroImages (from)
             from
         ),
     );
+}
+// ============================================================================
+//                           FUNCTION: actionAction_SetGroupPauseState
+// ============================================================================
+function actionAction_SetGroupPauseState (group, state)
+{
+    if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
+    {
+        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
+        {
+            //console.log("value.trigger.messagetype", value.trigger.messagetype)
+            if (value.group == group)
+            {
+                if (state == "paused")
+                    value.action.paused = true;
+                else if (state == "unpaused")
+                    value.action.paused = false;
+                else
+                    logger.err(serverConfig.extensionname + ".actionAction_SetGroupPauseState", "group pause should be 'paused' or 'unpaused'. State was set to", state);
+            }
+        }
+    }
+    SaveDataToServer();
+    SendUserPairings("");
+    SendMacros()
+}
+// ============================================================================
+//                           FUNCTION: triggerMacroButton
+// ============================================================================
+function triggerMacroButton (name)
+{
+    for (var i in serverData.userPairings.pairings)
+    {
+        if (serverData.userPairings.pairings[i].trigger.name == name)
+        {
+            let params = {}
+            for (var j in serverData.userPairings.pairings[i].action.data)
+            {
+                for (const property in serverData.userPairings.pairings[i].action.data[j])
+                    params[property] = serverData.userPairings.pairings[i].action.data[j][property]
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        serverData.userPairings.pairings[i].action.messagetype,
+                        serverConfig.extensionname,
+                        params,
+                        "",
+                        serverData.userPairings.pairings[i].action.extension),
+                    "",
+                    serverData.userPairings.pairings[i].action.extension
+                ),
+            );
+        }
+    }
+
 }
 // ============================================================================
 //                           FUNCTION: heartBeat

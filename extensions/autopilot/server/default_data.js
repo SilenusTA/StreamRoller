@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// these are defult triggers so the user has something to look at during startup.
+// these are default triggers so the user has something to look at during startup.
 const default_serverData = {
     __version__: "0.2.3",
     userPairings: {
@@ -35,7 +35,8 @@ const default_serverData = {
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",
                     "messagetype": "action_QuizbotStartQuiz",
-                    "data": []
+                    "data": [],
+                    "paused": false
                 }
             },
             {
