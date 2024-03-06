@@ -47,7 +47,7 @@ let localConfig =
 {
     version: cm.loadSoftwareVersion(),
     extensions: [],
-    serverPingTimeout: 360000
+    serverPingTimeout: 3600000 //1 hour
 }
 
 
