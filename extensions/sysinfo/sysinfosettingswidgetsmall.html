@@ -1,0 +1,91 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<!--Modal HTML-->
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">SysInfo Extension Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>SysInfo Settings
+            </p>
+            <div class="form-group invisible">
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+            <!-- Extension enable -->
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="sysinfo_enabled" type="checkbox" id="sysinfo_enabled" sysinfo_enabledchecked>
+                    <label class="form-check-label" for="sysinfo_enabled">Enable/Disable SysInfo</label>
+                </div>
+            </div>
+            <HR>
+            <!-- CPU Data -->
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="sysinfo_cpu_data_enabled" type="checkbox" id="sysinfo_cpu_data_enabled" sysinfo_cpu_data_enabledchecked>
+                <label class="form-check-label" for="sysinfo_cpu_data_enabled">CPU Info</label>
+            </div>
+            <div class="form-group">
+                <label for="sysinfo_cpu_data_poll_intervel" class="col-form-label">Update interval (seconds)</label>
+                <input type="text" name="sysinfo_cpu_data_poll_intervel" class="form-control" id="sysinfo_cpu_data_poll_intervel" value="sysinfo_cpu_data_poll_interveltext">
+            </div>
+            <HR>
+            <!-- CPU Temperature -->
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="sysinfo_cpu_temperature_enabled" type="checkbox" id="sysinfo_cpu_temperature_enabled" sysinfo_cpu_temperature_enabledchecked>
+                <label class="form-check-label" for="sysinfo_cpu_temperature_enabled">CPU Temperature Info</label>
+            </div>
+            <div class="form-group">
+                <label for="sysinfo_cpu_temperature_poll_intervel" class="col-form-label">Update interval (seconds)</label>
+                <input type="text" name="sysinfo_cpu_temperature_poll_intervel" class="form-control" id="sysinfo_cpu_temperature_poll_intervel" value="sysinfo_cpu_temperature_poll_interveltext">
+            </div>
+            <HR>
+            <!-- GPU Data -->
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="sysinfo_gpu_data_enabled" type="checkbox" id="sysinfo_gpu_data_enabled" sysinfo_gpu_data_enabledchecked>
+                <label class="form-check-label" for="sysinfo_gpu_data_enabled">GPU Info</label>
+            </div>
+            <div class="form-group">
+                <label for="sysinfo_gpu_data_poll_intervel" class="col-form-label">Update interval (seconds)</label>
+                <input type="text" name="sysinfo_gpu_data_poll_intervel" class="form-control" id="sysinfo_gpu_data_poll_intervel" value="sysinfo_gpu_data_poll_interveltext">
+            </div>
+            <HR>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="sysinfo_restore_defaults" type="checkbox" id="sysinfo_restore_defaults" sysinfo_restore_defaultschecked>
+                    <label class="form-check-label" for="sysinfo_restore_defaults">Restore Defaults</label>
+                </div>
+            </div>
+        </div>
+        <HR>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+<!-- END: -->
