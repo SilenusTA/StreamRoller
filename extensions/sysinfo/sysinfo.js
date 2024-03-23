@@ -371,12 +371,15 @@ function SaveConfigToServer ()
  */
 function UpdateMonitoring ()
 {
-    if (serverConfig.sysinfo_cpu__data_enabled == "on")
-        getCPUData()
-    if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
-        getCPUTemperatureScheduler()
-    if (serverConfig.sysinfo_gpu_data_enabled == "on")
-        getGPUData()
+    if (serverConfig.sysinfo_enabled == "on")
+    {
+        if (serverConfig.sysinfo_cpu_data_enabled == "on")
+            getCPUData()
+        if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
+            getCPUTemperatureScheduler()
+        if (serverConfig.sysinfo_gpu_data_enabled == "on")
+            getGPUData()
+    }
 }
 // ============================================================================
 //                           FUNCTION: getCPUData

@@ -57,6 +57,7 @@ const localConfig = {
     pollSongQueueHandle: null,
     pollSongListHandle: null,
     songlist: [],
+    songQueue: [],
     currentsong: "",
     username: "",
     clientId: "",
@@ -66,9 +67,10 @@ const localConfig = {
     firstload: true
 };
 const default_serverConfig = {
-    __version__: 0.3,
+    __version__: 0.4,
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
+    sslURI: "https://api.streamersonglist.com",
     enablestreamersonglist: "off",
     streamersonglistname: "",
     pollSongQueueTimeout: 180000, // check for updated queue every 3 minutes in case the socket goes down
@@ -255,67 +257,8 @@ function onDataCenterMessage (server_packet)
             localConfig.clientId = server_packet.data.clientId;
             localConfig.userId = server_packet.data.userId;
             localConfig.streamerId = server_packet.data.streamerId;
-            // testing with a real songlist
-
-            // now we have our credentials lets join the server for callbacks
-            localConfig.ssl_client = io("https://api.streamersonglist.com", {
-                transports: ["websocket"],
-                reconnection: true,
-            });
-            localConfig.ssl_client.on('connect', () =>
-            {
-                // add all our handlers
-                for (const [key] of Object.entries(SSL_SOCKET_EVENTS))
-                {
-                    localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
-                    {
-                        logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
-                        if ("QUEUE_MESSAGE" == key)
-                        {
-                            if (msg.added)
-                            {
-                                let triggertosend = findtriggerByMessageType("trigger_SongAddedToQueue")
-                                triggertosend.parameters.songName = msg.title
-                                triggertosend.parameters.textMessage = "Song Added to queue: " + msg.title
-                                sr_api.sendMessage(localConfig.DataCenterSocket,
-                                    sr_api.ServerPacket("ChannelData",
-                                        serverConfig.extensionname,
-                                        sr_api.ExtensionPacket(
-                                            "trigger_SongAddedToQueue",
-                                            serverConfig.extensionname,
-                                            triggertosend,
-                                            serverConfig.channel),
-                                        serverConfig.channel
-                                    ),
-                                );
-                            }
-                            fetchSongQueue();
-
-                        }
-                        else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
-                        {
-                            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.on message", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
-                            fetchSongList();
-                            fetchSongQueue();
-                        }
-                    });
-                }
-
-                try
-                {
-                    localConfig.ssl_client.emit("join-room", localConfig.streamerId);
-                } catch (error)
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.join room", "Failed to join room");
-                }
-            });
-
-            // perform a fetch of the lists in case we get asked for them later
-            fetchSongList()
-            fetchSongQueue()
-            // start our times if we havent alreadly
-            pollSongQueueCallback();
-            pollSongListCallback();
+            if (serverConfig.enablestreamersonglist == "on")
+                joinSslServer()
         }
     }
     else if (server_packet.type === "ExtensionMessage")
@@ -339,13 +282,19 @@ function onDataCenterMessage (server_packet)
                 // if we have enabled/disabled connection
                 if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
                 {
+                    // TURNING OFF SSL
                     //we are currently enabled so lets stop polling
                     if (serverConfig.enablestreamersonglist == "on")
                     {
-                        serverConfig.enablestreamersonglist = "off";
                         localConfig.status.connected = false;
-                        clearTimeout(localConfig.pollSongQueueTimeout)
+                        localConfig.songlist = [];
+                        localConfig.songQueue = [];
+                        localConfig.currentsong = "";
+                        clearTimeout(localConfig.pollSongQueueTimeout);
+                        sendSongQueue(extension_packet.from);
+                        serverConfig.enablestreamersonglist = "off";
                     }
+                    // TURNING ON SSL
                     //currently disabled so lets start
                     else
                     {
@@ -363,6 +312,8 @@ function onDataCenterMessage (server_packet)
             }
             //update anyone who is showing our code at the moment
             SendSettingsWidgetSmall("");
+            if (serverConfig.enablestreamersonglist == "on")
+                joinSslServer()
         }
         else if (extension_packet.type === "RequestQueue")
         {
@@ -559,7 +510,77 @@ function SaveConfigToServer ()
         serverConfig.extensionname,
         serverConfig))
 }
+// ============================================================================
+//                      FUNCTION: joinSslServer
+//                        Join the Song list server for updates
+// ============================================================================
+function joinSslServer ()
+{
+    // if we already have a connection lets remove that one (so we can start a new one with any changed data/creds)
+    if (localConfig.ssl_client != null)
+    {
+        localConfig.ssl_client.disconnect();
+        localConfig.ssl_client == null;
+    }
+    localConfig.ssl_client = io(serverConfig.sslURI, {
+        transports: ["websocket"],
+        reconnection: true,
+    });
+    localConfig.ssl_client.on('connect', () =>
+    {
+        // add all our handlers
+        for (const [key] of Object.entries(SSL_SOCKET_EVENTS))
+        {
+            localConfig.ssl_client.on(SSL_SOCKET_EVENTS[key], (msg) =>
+            {
+                logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "StreamerSonglist socket callback received ", SSL_SOCKET_EVENTS[key]);
+                if ("QUEUE_MESSAGE" == key)
+                {
+                    if (msg.added)
+                    {
+                        let triggertosend = findtriggerByMessageType("trigger_SongAddedToQueue")
+                        triggertosend.parameters.songName = msg.title
+                        triggertosend.parameters.textMessage = "Song Added to queue: " + msg.title
+                        sr_api.sendMessage(localConfig.DataCenterSocket,
+                            sr_api.ServerPacket("ChannelData",
+                                serverConfig.extensionname,
+                                sr_api.ExtensionPacket(
+                                    "trigger_SongAddedToQueue",
+                                    serverConfig.extensionname,
+                                    triggertosend,
+                                    serverConfig.channel),
+                                serverConfig.channel
+                            ),
+                        );
+                    }
+                    fetchSongQueue();
 
+                }
+                else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
+                {
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.on message", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
+                    fetchSongList();
+                    fetchSongQueue();
+                }
+            });
+        }
+
+        try
+        {
+            localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+        } catch (error)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.join room", "Failed to join room");
+        }
+    });
+
+    // perform a fetch of the lists in case we get asked for them later
+    fetchSongList()
+    fetchSongQueue()
+    // start our times if we havent alreadly
+    pollSongQueueCallback();
+    pollSongListCallback();
+}
 // ============================================================================
 //                      FUNCTION: sendSongQueue
 //                        Sends to extension
@@ -612,7 +633,7 @@ function fetchSongQueue ()
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/queue`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.username}/queue`, {
             headers: { 'Client-ID': localConfig.clientId, },
         })
             .then(response =>
@@ -747,7 +768,7 @@ function fetchSongList ()
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.username}/songs`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.username}/songs`, {
             headers: { 'Client-ID': localConfig.clientId, },
         })
             .then(response =>
@@ -796,7 +817,7 @@ function addSongToQueueById (songId)
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
             method: 'POST',
             headers: {
                 "accept": "application/json",
@@ -831,7 +852,7 @@ function removeSongFromQueue (queueId)
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        const url = `https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
+        //const url = `${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
         const headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
@@ -839,7 +860,7 @@ function removeSongFromQueue (queueId)
             "origin": "StreamRoller",
             "queueId": queueId
         };
-        fetch(url, { method: 'DELETE', headers: headers })
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}`, { method: 'DELETE', headers: headers })
             .then(response =>
             {
                 if (!response.ok)
@@ -864,7 +885,7 @@ function markSongAsPlayed (queueId)
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
             method: 'POST',
             headers: {
                 "accept": "application/json",
@@ -898,7 +919,7 @@ function saveQueue (queue)
 {
     if (serverConfig.enablestreamersonglist == "on")
     {
-        fetch(`https://api.streamersonglist.com/v1/streamers/${localConfig.streamerId}/queue`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
