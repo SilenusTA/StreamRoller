@@ -63,7 +63,7 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Timers allow for actions to be triggered when a timer goes off.<BR> For Triggers just put the name of the timer in you want to trigger on.<BR> For Actions put the name and duration of the timer in you want to start.",
-    version: "0.2",
+    version: "0.3",
     channel: serverConfig.channel,
     // these are messages we can sendout that other extensions might want to use to trigger an action
     triggers:
@@ -441,7 +441,7 @@ function sendStartTimer (timedata)
     data.parameters = {}
     data.parameters.name = timedata.name
     data.parameters.timeout = timedata.timeout
-    data.parameters.duration = timedata.duration
+    data.parameters.message = timedata.message
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
