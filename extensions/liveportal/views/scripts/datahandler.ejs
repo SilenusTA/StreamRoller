@@ -769,7 +769,7 @@
                     // update the obs button timer if we are running a start countdown
                     if (extension_packet.data.parameters.name == 'StartCountdownTimer')
                     {
-                        UpdateOBSDefaultButtons();
+                        UpdateOBSCountdownTimer();
                     }
                 }
             }
@@ -1293,13 +1293,33 @@
         {
             let minutes = Math.floor(localConfig.timers.StartCountdownTimer / 60);
             let seconds = localConfig.timers.StartCountdownTimer - (minutes * 60);
-            addOBSSceneButton(element, minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'), serverConfig.obsdefaultstartscenename, localConfig.OBSSceneslist.current)
+            addOBSSceneButton(element, "Start", serverConfig.obsdefaultstartscenename, localConfig.OBSSceneslist.current, minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'))
         }
         else
             addOBSSceneButton(element, "Start", serverConfig.obsdefaultstartscenename, localConfig.OBSSceneslist.current)
         addOBSSceneButton(element, "Live", serverConfig.obsdefaultlivescenename, localConfig.OBSSceneslist.current)
         addOBSSceneButton(element, "Intermission", serverConfig.obsdefaultintermissionscenename, localConfig.OBSSceneslist.current)
         addOBSSceneButton(element, "End", serverConfig.obsdefaultendscenename, localConfig.OBSSceneslist.current)
+    }
+    // ============================================================================
+    //                           FUNCTION: UpdateOBSCountdownTimer
+    // ============================================================================
+    function UpdateOBSCountdownTimer ()
+    {
+        var element = document.getElementById("OBSDefaultButtons");
+        if (localConfig.timers.StartCountdownTimer != undefined)
+        {
+            if (localConfig.timers.StartCountdownTimer > 0)
+            {
+                let minutes = Math.floor(localConfig.timers.StartCountdownTimer / 60);
+                let seconds = localConfig.timers.StartCountdownTimer - (minutes * 60);
+                var startButton = element.querySelector("#Start")
+                startButton.value = minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+            }
+            else
+                // reset all buttons when the timer ends
+                UpdateOBSDefaultButtons()
+        }
     }
     // ============================================================================
     //                           FUNCTION: ParseOBSScenesList
@@ -1371,11 +1391,12 @@
     // ============================================================================
     //                           FUNCTION: addOBSSceneButton
     // ============================================================================
-    function addOBSSceneButton (element, displayname, scenename, current)
+    function addOBSSceneButton (element, displayname, scenename, current, alternateValue = displayname)
     {
         let button = document.createElement('input');
         button.type = 'button';
-        button.value = displayname;
+        button.id = displayname;
+        button.value = alternateValue;
         if (scenename === current)
             button.classList = "btn btn-success";
         else
