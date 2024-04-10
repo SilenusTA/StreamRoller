@@ -373,9 +373,9 @@ function CheckTimers (timername)
 {
     if (!localConfig.timers[timername])
         return;
-    Timer(timername)
     if (localConfig.timers[timername].timeout == localConfig.timers[timername].duration)
         sendStartTimer(localConfig.timers[timername])
+    Timer(timername)
 }
 // ============================================================================
 //                           FUNCTION: Timer
