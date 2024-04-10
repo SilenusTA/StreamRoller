@@ -766,7 +766,11 @@
                 if (extension_packet.type === "trigger_TimerRunning")
                 {
                     processTimers(extension_packet.data.parameters);
-                    UpdateOBSDefaultButtons();
+                    // update the obs button timer if we are running a start countdown
+                    if (extension_packet.data.parameters.name == 'StartCountdownTimer')
+                    {
+                        UpdateOBSDefaultButtons();
+                    }
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -2520,7 +2524,8 @@
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-success'>TwitchRaid: " + alertdata.parameters.username + " " + alertdata.parameters.raiders + "</div>";
                 DisplayAlertMessages(alerttext);
-                postMessageToTwitch("!so " + alertdata.parameters.username)
+                //postMessageToTwitch("!so " + alertdata.parameters.username)
+                //console.log("Removed streamlabs api raid message to twitch", alertdata)
                 break;
             case "trigger_TwitchHostReceived":
                 messagetxt += alertdata.parameters.username + " for the host with " + alertdata.parameters.viewers + " viewers."
