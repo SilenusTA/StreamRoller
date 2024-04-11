@@ -440,7 +440,7 @@ function sendStartTimer (timedata)
     let data = findtriggerByMessageType("trigger_TimerStarted")
     data.parameters = {}
     data.parameters.name = timedata.name
-    data.parameters.timeout = timedata.timeout
+    data.parameters.duration = timedata.duration
     data.parameters.message = timedata.message
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
