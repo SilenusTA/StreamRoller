@@ -1244,6 +1244,7 @@ function processChatMessage (data, maxRollbackCount = 20)
         ||
         // search for start of line
         (serverConfig.chatbotquerytagstartofline == "on" &&
+            data.message &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
     //variable check if we have a direct question to the bot from chat
