@@ -765,7 +765,7 @@ function onChannelRaidTo (data)
 {
     try
     {
-        let trigger = findTriggerByMessageType("trigger_TwitchRaidFrom");
+        let trigger = findTriggerByMessageType("trigger_TwitchRaidTo");
         trigger.parameters.streamer = data.raidingBroadcasterDisplayName;
         trigger.parameters.raiding = data.raidedBroadcasterDisplayName;
         trigger.parameters.viewers = data.viewers;
