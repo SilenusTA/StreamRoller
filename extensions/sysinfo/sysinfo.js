@@ -38,6 +38,10 @@ const localConfig = {
     MAX_CONNECTION_ATTEMPTS: 5,
     poll_handle_cpu_data: null,
     poll_handle_cpu_temperature: null,
+    poll_handle_gpu_data: null,
+    CPUDataTriggerUpdated: false,
+    GPUDataTriggerUpdated: false,
+    CPUTemperaturesTriggerUpdated: false
 };
 
 const default_serverConfig = {
@@ -46,12 +50,13 @@ const default_serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     sysinfo_enabled: "off",
+    sysinfo_console_log_enabled: "off",
     sysinfo_cpu_data_enabled: "off",
-    sysinfo_cpu_data_poll_intervel: "60",//default poll time if enabled
+    sysinfo_cpu_data_poll_interval: "60",//default poll time if enabled
     sysinfo_cpu_temperature_enabled: "off",
-    sysinfo_cpu_temperature_poll_intervel: "10",
+    sysinfo_cpu_temperature_poll_interval: "10",
     sysinfo_gpu_data_enabled: "off",
-    sysinfo_gpu_data_poll_intervel: "60",//default poll time if enabled
+    sysinfo_gpu_data_poll_interval: "60",//default poll time if enabled
 
 
     sysinfo_restore_defaults: "off",
@@ -74,26 +79,8 @@ const triggersandactions =
                 description: "Data about the CPU",
                 messagetype: "trigger_sysinfoCPUData",
                 parameters: {
-                    title: "",// this will be auto or a value passed in by an action
-                    manufacturer: '',
-                    brand: '',
-                    vendor: '',
-                    family: '',
-                    model: '',
-                    stepping: '',
-                    revision: '',
-                    voltage: '',
-                    speed: -1,
-                    speedMin: -1,
-                    speedMax: -1,
-                    governor: '',
-                    cores: -1,
-                    physicalCores: -1,
-                    processors: -1,
-                    socket: '',
-                    flags: '',
-                    virtualization: false,
-                    cache: { values: '' }
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)
                 }
             },
             {
@@ -102,12 +89,8 @@ const triggersandactions =
                 description: "CPU Temperatures if available (you may need to run StreamRoller as admin to allow windows to read this)",
                 messagetype: "trigger_sysinfoCPUTemperatures",
                 parameters: {
-                    title: "",// this will be auto or a value passed in by an action
-                    main: -1,
-                    cores: [],
-                    max: -1,
-                    socket: [],
-                    chipset: -1
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)
                 }
             },
             {
@@ -116,9 +99,8 @@ const triggersandactions =
                 description: "GPU Data",
                 messagetype: "trigger_sysInfoGPUData",
                 parameters: {
-                    title: "",// this will be auto or a value passed in by an action
-                    controllers: [],
-                    displays: [],
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)/
                 }
             }
         ],
@@ -129,21 +111,21 @@ const triggersandactions =
                 displaytitle: "Get CPU Data",
                 description: "Sends out a trigger with the CPU Data",
                 messagetype: "action_sysInfoGetCPUData",
-                parameters: { title: "" }
+                parameters: { reference: "" }
             },
             {
                 name: "sysInfoGetCPUTemperatures",
                 displaytitle: "Get CPU Temperatures",
                 description: "Sends out a trigger with the CPU Temperatures",
                 messagetype: "action_sysInfoGetCPUTemperatures",
-                parameters: { title: "" }
+                parameters: { reference: "" }
             },
             {
                 name: "sysInfoGetGPUData",
                 displaytitle: "Get GPU Data",
                 description: "Sends out a trigger with the GPU Data",
                 messagetype: "action_sysInfoGetGPUData",
-                parameters: { title: "" }
+                parameters: { reference: "" }
             }
 
         ],
@@ -153,6 +135,11 @@ const triggersandactions =
 // ============================================================================
 function initialise (app, host, port, heartbeat)
 {
+    // update our triggers with the systems fields
+    getCPUData("initialise");
+    getGPUData("initialise");
+    getCPUTemperature("initialise");
+
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
@@ -237,6 +224,10 @@ function onDataCenterMessage (server_packet)
                 else
                 {
                     serverConfig.sysinfo_enabled = "off";
+                    serverConfig.sysinfo_console_log_enabled = "off";
+                    serverConfig.sysinfo_cpu_data_enabled = "off";
+                    serverConfig.sysinfo_cpu_temperature_enabled = "off";
+                    serverConfig.sysinfo_gpu_data_enabled = "off";
                     for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
                 }
@@ -245,27 +236,28 @@ function onDataCenterMessage (server_packet)
                 UpdateMonitoring();
             }
         }
-        else if (extension_packet.type === "action_SysInfoDoStuff")
+        else if (extension_packet.type === "SendTriggerAndActions")
         {
-            console.log("action_SysInfoDoStuff called with", extension_packet.data)
+            sendTriggersAndActions(server_packet.from)
+        }
+        else if (extension_packet.type === "action_sysInfoGetCPUTemperatures")
+        {
+            console.log("action_sysInfoGetCPUTemperatures called with", extension_packet.data)
+            getCPUTemperature(extension_packet.data.reference)
+        }
+        else if (extension_packet.type === "action_sysInfoGetCPUData")
+        {
+            console.log("action_sysInfoGetCPUData called with", extension_packet.data)
+            getCPUData(extension_packet.data.reference)
+        }
+        else if (extension_packet.type === "action_sysInfoGetGPUData")
+        {
+            console.log("action_sysInfoGetGPUData called with", extension_packet.data)
+            getGPUData(extension_packet.data.reference)
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
-    }
-    else if (server_packet.type === "UnknownChannel")
-    {
-        if (server_packet.data == "STREAMLABS_ALERT" && connectionAttempts[0].STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
-        {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-            setTimeout(() =>
-            {
-                sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
-                    ));
-            }, 5000);
-        }
     }
     else if (server_packet.type === "ChannelData")
     {
@@ -274,8 +266,6 @@ function onDataCenterMessage (server_packet)
         {
             //Just ignore messages we know we don't want to handle
         }
-        else if (server_packet.dest_channel === "STREAMLABS_ALERT")
-            process_stream_alert(server_packet);
         else
         {
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
@@ -362,7 +352,30 @@ function SaveConfigToServer ()
             localConfig.EXTENSION_NAME,
             serverConfig))
 }
-
+// ============================================================================
+//                           FUNCTION: sendTriggersAndActions
+// ============================================================================
+/**
+ * Sends the triggers and actions to the extension or broadcast if extension name is ""
+ * @param {string} extension 
+ */
+function sendTriggersAndActions (extension = "")
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "TriggerAndActions",
+                serverConfig.extensionname,
+                triggersandactions,
+                "",
+                extension
+            ),
+            "",
+            extension
+        )
+    )
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -374,11 +387,23 @@ function UpdateMonitoring ()
     if (serverConfig.sysinfo_enabled == "on")
     {
         if (serverConfig.sysinfo_cpu_data_enabled == "on")
-            getCPUData()
+        {
+            // is there any reason to have a poll for this data?
+            console.log("CPUData Polling TBD");
+            //getCPUData()
+        }
+        else
+            clearTimeout(localConfig.poll_handle_cpu_data);
+
         if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
-            getCPUTemperatureScheduler()
+            getCPUTemperatureScheduler();
+        else
+            clearTimeout(localConfig.poll_handle_cpu_temperature);
+
         if (serverConfig.sysinfo_gpu_data_enabled == "on")
-            getGPUData()
+            getGPUDataScheduler();
+        else
+            clearTimeout(localConfig.poll_handle_gpu_data);
     }
 }
 // ============================================================================
@@ -386,15 +411,30 @@ function UpdateMonitoring ()
 // ============================================================================
 /**
  * Requests CPU data and sends out a trigger message to the system
+  * @param {string} reference 
  */
-function getCPUData ()
+function getCPUData (reference = "poll")
 {
     si.cpu()
         .then(data => 
         {
-            sendTrigger("trigger_sysinfoCPUData", data)
-            console.log("##### SysInfo getCPUData ######");
-            //console.log(data)
+            // get the data in a format we can use in the triggers (can't access multidimensional arrays)
+            let new_data = flattenObject(data);
+            // update our triggers if we haven't done so already
+            if (!localConfig.CPUDataTriggerUpdated)
+            {
+                updateTrigger("trigger_sysinfoCPUData", new_data);
+                localConfig.CPUDataTriggerUpdated = true;
+            }
+
+            // add the users reference or the default if not provided
+            new_data.reference = reference;
+            if (serverConfig.sysinfo_console_log_enabled == "on")
+            {
+                console.log("CPU Data:", new_data)
+            }
+            // send the trigger with the new data
+            sendTrigger("trigger_sysinfoCPUData", new_data)
         })
         .catch(error => 
         {
@@ -403,6 +443,49 @@ function getCPUData ()
         });
 }
 
+// ============================================================================
+//                           FUNCTION: getCPUTemperature
+// ============================================================================
+/**
+ * Requests CPU Temperature data and sends out a trigger message to the system
+ */
+function getCPUTemperature (reference = "poll")
+{
+    // for an action use getCPUTemperature(reference); where reference is from the users action
+    try
+    {
+        si.cpuTemperature()
+            .then(data => 
+            {
+                // get the data in a format we can use in the triggers (can't access multidimensional arrays)
+                let new_data = flattenObject(data);
+                if (!localConfig.CPUTemperaturesTriggerUpdated)
+                {
+                    updateTrigger("trigger_sysinfoCPUTemperatures", new_data)
+                    localConfig.CPUTemperaturesTriggerUpdated = true;
+                }
+
+                new_data.reference = reference;
+                if (serverConfig.sysinfo_console_log_enabled == "on")
+                {
+                    console.log("CPU Temperature:", new_data)
+                }
+                // send the trigger with the new data
+                sendTrigger("trigger_sysinfoCPUTemperatures", new_data)
+            })
+            .catch(error => 
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "failed:", error);
+            });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "callback failed:", err.message);
+    }
+    // restart timer if we are poll enabled
+    if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
+        getCPUTemperatureScheduler();
+}
 // ============================================================================
 //                           FUNCTION: getCPUTemperatureScheduler
 // ============================================================================
@@ -415,38 +498,7 @@ function getCPUTemperatureScheduler ()
     // if we have a poll timer value, setup the poll timer
     if (localConfig.poll_handle_cpu_temperature > 0)
         clearTimeout(localConfig.poll_handle_cpu_temperature);
-    localConfig.poll_handle_cpu_temperature = setTimeout(getCPUTemperature, serverConfig.sysinfo_cpu_temperature_poll_intervel * 1000)
-
-}
-// ============================================================================
-//                           FUNCTION: getCPUTemperatureScheduler
-// ============================================================================
-/**
- * Requests CPU Temperature data and sends out a trigger message to the system
- */
-function getCPUTemperature (title = "poll")
-{
-    // for an action use getCPUTemperature(title); where title is from the users action
-    try
-    {
-        si.cpuTemperature()
-            .then(data => 
-            {
-                sendTrigger("trigger_sysinfoCPUTemperatures", data)
-                data.title = title;
-                console.log("##### SysInfo getCPUTemperature ######");
-                console.log(data)
-            })
-            .catch(error => 
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "failed:", error);
-            });
-    }
-    catch (err)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "callback failed:", err.message);
-    }
-    localConfig.poll_handle_cpu_temperature = setTimeout(getCPUTemperature, serverConfig.sysinfo_cpu_temperature_poll_intervel * 1000)
+    localConfig.poll_handle_cpu_temperature = setTimeout(getCPUTemperature, serverConfig.sysinfo_cpu_temperature_poll_interval * 1000)
 }
 // ============================================================================
 //                           FUNCTION: getGPUData
@@ -454,20 +506,46 @@ function getCPUTemperature (title = "poll")
 /**
  * Requests GPU data and sends out a trigger message to the system
  */
-function getGPUData ()
+function getGPUData (reference = "poll")
 {
     si.graphics()
         .then(data => 
         {
-            sendTrigger("trigger_sysInfoGPUData", data)
-            console.log("##### SysInfo getGPUData ######");
-            //console.log(data)
+            let new_data = flattenObject(data);
+            if (!localConfig.GPUDataTriggerUpdated)
+            {
+                updateTrigger("trigger_sysInfoGPUData", new_data);
+                localConfig.GPUDataTriggerUpdated = true;
+            }
+            new_data.reference = reference;
+            if (serverConfig.sysinfo_console_log_enabled == "on")
+            {
+                console.log("GPU Data:", new_data)
+            }
+            sendTrigger("trigger_sysInfoGPUData", new_data)
         })
         .catch(error => 
         {
             console.log("##### SysInfo getGPUData Error ######");
             console.error(error)
         });
+    // restart timer if we are poll enabled
+    if (serverConfig.sysinfo_gpu_data_enabled == "on")
+        getGPUDataScheduler();
+}
+// ============================================================================
+//                           FUNCTION: getGPUDataScheduler
+// ============================================================================
+/**
+ * start the poll timer for the GPU Data
+ */
+function getGPUDataScheduler ()
+{
+    console.log("getGPUDataScheduler")
+    // if we have a poll timer value, setup the poll timer
+    if (localConfig.poll_handle_gpu_data > 0)
+        clearTimeout(localConfig.poll_handle_gpu_data);
+    localConfig.poll_handle_gpu_data = setTimeout(getGPUData, serverConfig.sysinfo_gpu_data_poll_interval * 1000)
 }
 // ============================================================================
 //                           FUNCTION: sendTrigger
@@ -477,12 +555,12 @@ function getGPUData ()
  */
 function sendTrigger (trigger_name, trigger_data)
 {
-    let trigger = findtriggerByMessageType(trigger_name);
+    let trigger = findTriggerByMessageType(trigger_name);
     if (trigger)
     {
         trigger.parameters = trigger_data;
-        console.log("#### sendTrigger sending ####")
-        console.log(JSON.stringify(trigger, null, 2))
+        //console.log("#### sendTrigger sending ####")
+        //console.log(JSON.stringify(trigger, null, 2))
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
                 serverConfig.extensionname,
@@ -497,13 +575,13 @@ function sendTrigger (trigger_name, trigger_data)
     }
     else
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".sendTrigger:", "Failed to retrieve ", trigger_name, " tigger object");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".sendTrigger:", "Failed to retrieve ", trigger_name);
     }
 }
 // ============================================================================
-//                           FUNCTION: findtriggerByMessageType
+//                           FUNCTION: findTriggerByMessageType
 // ============================================================================
-function findtriggerByMessageType (messagetype)
+function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -511,7 +589,96 @@ function findtriggerByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findtriggerByMessageType", "failed to find action", messagetype);
+        ".findTriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: flatten
+// ============================================================================
+function flatten (data = [])
+{
+    var ret = [];
+    console.log("########## flatten ##########")
+    console.log(data)
+    //check if we have an Array. if not it is probably an object
+    if (Array.isArray(data))
+    {
+        console.log("array passed")
+        for (var i = 0; i < data.length; i++)
+        {
+            if (Array.isArray(data[i]))
+            {
+                ret = ret.concat(flatten(data[i]));
+            } else
+            {
+                ret.push(data[i]);
+            }
+        }
+    }
+    else if (typeof data === 'object' &&
+        !Array.isArray(data) &&
+        data !== null
+    )
+    {
+        console.log("got an object");
+    }
+    else 
+    {
+        console.log("got a variable");
+    }
+    return ret;
+}
+// ============================================================================
+//                           FUNCTION: flatten
+// ============================================================================
+function flattenObject (ob)
+{
+    var toReturn = {};
+
+    for (var i in ob)
+    {
+        if (!ob.hasOwnProperty(i)) continue;
+
+        if ((typeof ob[i]) == 'object' && ob[i] !== null)
+        {
+            var flatObject = flattenObject(ob[i]);
+            for (var x in flatObject)
+            {
+                if (!flatObject.hasOwnProperty(x)) continue;
+                toReturn[i + '.' + x] = flatObject[x];
+            }
+        } else
+        {
+            toReturn[i] = ob[i];
+        }
+    }
+    return toReturn;
+}
+// ============================================================================
+//                           FUNCTION: updateTrigger
+// ============================================================================
+/**
+ * Updates the trigger parameter fields to what we get from the system (as these will be different on each PC)
+ * @param {string} trigger 
+ * @param {data} ob 
+ */
+function updateTrigger (trigger, ob)
+{
+    for (var triggers_i = 0; triggers_i < triggersandactions.triggers.length; triggers_i++)
+    {
+        // find this trigger
+        if (triggersandactions.triggers[triggers_i].messagetype == trigger)
+        {
+            // add the fields to the trigger
+            for (const property in ob)
+            {
+                triggersandactions.triggers[triggers_i].parameters[property] = ""
+            }
+        }
+    }
+
+    // send out the update so extensions have the new trigger fields
+    sendTriggersAndActions("");
+    localConfig.CPUDataTriggerUpdated = true
 }
 // ============================================================================
 //                                  EXPORTS

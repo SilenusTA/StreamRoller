@@ -25,66 +25,143 @@
     <div class="modal-content bg-light text-dark">
         <div class="modal-header">
             <h5 class="modal-title">SysInfo Extension Settings</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
             <p>SysInfo Settings
             </p>
             <div class="form-group invisible">
-                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
-                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
-                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
-                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+                <input type="hidden"
+                    name="extensionname"
+                    class="form-control"
+                    value="extensionnametext"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="modalcodetype"
+                    class="form-control"
+                    value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="modaldatatype"
+                    class="form-control"
+                    value="SettingsWidgetSmallData"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="channel"
+                    class="form-control"
+                    value="channeltext"
+                    tabindex="-1" />
             </div>
             <!-- Extension enable -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="sysinfo_enabled" type="checkbox" id="sysinfo_enabled" sysinfo_enabledchecked>
-                    <label class="form-check-label" for="sysinfo_enabled">Enable/Disable SysInfo</label>
+                    <input class="form-check-input"
+                        name="sysinfo_enabled"
+                        type="checkbox"
+                        id="sysinfo_enabled"
+                        sysinfo_enabledchecked>
+                    <label class="form-check-label"
+                        for="sysinfo_enabled">Enable/Disable SysInfo</label>
                 </div>
             </div>
+            <!-- Console.logging enabled -->
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input"
+                        name="sysinfo_console_log_enabled"
+                        type="checkbox"
+                        id="sysinfo_console_log_enabled"
+                        sysinfo_console_log_enabledchecked>
+                    <label class="form-check-label"
+                        for="sysinfo_console_log_enabled">Enable/Disable console log. This allows you to see the fields
+                        available on your machine (ie if you have 2 GFX cards there will be extra fields. The trigger
+                        will be updated after the first time you run it.</label>
+                </div>
+            </div>
+
             <HR>
             <!-- CPU Data -->
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="sysinfo_cpu_data_enabled" type="checkbox" id="sysinfo_cpu_data_enabled" sysinfo_cpu_data_enabledchecked>
-                <label class="form-check-label" for="sysinfo_cpu_data_enabled">CPU Info</label>
+                <input class="form-check-input"
+                    name="sysinfo_cpu_data_enabled"
+                    type="checkbox"
+                    id="sysinfo_cpu_data_enabled"
+                    sysinfo_cpu_data_enabledchecked>
+                <label class="form-check-label"
+                    for="sysinfo_cpu_data_enabled">CPU Info Polling</label>
             </div>
             <div class="form-group">
-                <label for="sysinfo_cpu_data_poll_intervel" class="col-form-label">Update interval (seconds)</label>
-                <input type="text" name="sysinfo_cpu_data_poll_intervel" class="form-control" id="sysinfo_cpu_data_poll_intervel" value="sysinfo_cpu_data_poll_interveltext">
+                <label for="sysinfo_cpu_data_poll_interval"
+                    class="col-form-label">Update interval (seconds)</label>
+                <input type="text"
+                    name="sysinfo_cpu_data_poll_interval"
+                    class="form-control"
+                    id="sysinfo_cpu_data_poll_interval"
+                    value="sysinfo_cpu_data_poll_intervaltext">
             </div>
             <HR>
             <!-- CPU Temperature -->
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="sysinfo_cpu_temperature_enabled" type="checkbox" id="sysinfo_cpu_temperature_enabled" sysinfo_cpu_temperature_enabledchecked>
-                <label class="form-check-label" for="sysinfo_cpu_temperature_enabled">CPU Temperature Info</label>
+                <input class="form-check-input"
+                    name="sysinfo_cpu_temperature_enabled"
+                    type="checkbox"
+                    id="sysinfo_cpu_temperature_enabled"
+                    sysinfo_cpu_temperature_enabledchecked>
+                <label class="form-check-label"
+                    for="sysinfo_cpu_temperature_enabled">CPU Temperature Info</label>
             </div>
             <div class="form-group">
-                <label for="sysinfo_cpu_temperature_poll_intervel" class="col-form-label">Update interval (seconds)</label>
-                <input type="text" name="sysinfo_cpu_temperature_poll_intervel" class="form-control" id="sysinfo_cpu_temperature_poll_intervel" value="sysinfo_cpu_temperature_poll_interveltext">
+                <label for="sysinfo_cpu_temperature_poll_interval"
+                    class="col-form-label">Update interval (seconds)</label>
+                <input type="text"
+                    name="sysinfo_cpu_temperature_poll_interval"
+                    class="form-control"
+                    id="sysinfo_cpu_temperature_poll_interval"
+                    value="sysinfo_cpu_temperature_poll_intervaltext">
             </div>
             <HR>
             <!-- GPU Data -->
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="sysinfo_gpu_data_enabled" type="checkbox" id="sysinfo_gpu_data_enabled" sysinfo_gpu_data_enabledchecked>
-                <label class="form-check-label" for="sysinfo_gpu_data_enabled">GPU Info</label>
+                <input class="form-check-input"
+                    name="sysinfo_gpu_data_enabled"
+                    type="checkbox"
+                    id="sysinfo_gpu_data_enabled"
+                    sysinfo_gpu_data_enabledchecked>
+                <label class="form-check-label"
+                    for="sysinfo_gpu_data_enabled">GPU Info</label>
             </div>
             <div class="form-group">
-                <label for="sysinfo_gpu_data_poll_intervel" class="col-form-label">Update interval (seconds)</label>
-                <input type="text" name="sysinfo_gpu_data_poll_intervel" class="form-control" id="sysinfo_gpu_data_poll_intervel" value="sysinfo_gpu_data_poll_interveltext">
+                <label for="sysinfo_gpu_data_poll_interval"
+                    class="col-form-label">Update interval (seconds)</label>
+                <input type="text"
+                    name="sysinfo_gpu_data_poll_interval"
+                    class="form-control"
+                    id="sysinfo_gpu_data_poll_interval"
+                    value="sysinfo_gpu_data_poll_intervaltext">
             </div>
             <HR>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="sysinfo_restore_defaults" type="checkbox" id="sysinfo_restore_defaults" sysinfo_restore_defaultschecked>
-                    <label class="form-check-label" for="sysinfo_restore_defaults">Restore Defaults</label>
+                    <input class="form-check-input"
+                        name="sysinfo_restore_defaults"
+                        type="checkbox"
+                        id="sysinfo_restore_defaults"
+                        sysinfo_restore_defaultschecked>
+                    <label class="form-check-label"
+                        for="sysinfo_restore_defaults">Restore Defaults</label>
                 </div>
             </div>
         </div>
         <HR>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+            <button type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">Cancel</button>
+            <button type="submit"
+                data-bs-dismiss="modal"
+                class="btn btn-primary">Update</button>
         </div>
     </div>
 </div>
