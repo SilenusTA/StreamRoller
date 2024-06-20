@@ -37,9 +37,11 @@ import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
+import https from "https";
+
 // how many times we have attempted to connect on failure
 let ServerConnectionAttempts = 0;
-
+let millisecondsInDay = 86400000;
 const localConfig = {
     OUR_CHANNEL: "USERS_CHANNEL",
     EXTENSION_NAME: "users",
@@ -48,11 +50,12 @@ const localConfig = {
     MaxServerConnectionAttempts: 20
 };
 const default_serverConfig = {
-    __version__: 0.2,
+    __version__: 0.3,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    demovar1: "on",  // example of a checkbox. "on" or "off"
-    demotext1: "demo text", // example of a text field
+    enableusersextension: "on",
+    // how often to update the profile data for a user (default 30 days)
+    profiletimeout: "30"
 };
 let serverConfig = structuredClone(default_serverConfig)
 const serverData = { userData: { twitch: {}, youtube: {} } }
@@ -63,8 +66,6 @@ const triggersandactions =
     description: "User interactions",
     version: "0.2",
     channel: serverConfig.channel,
-    // these are messages we can sendout that other extensions might want to use to trigger an action
-    // these are messages we can receive to perform an action
     triggers:
         [
             {
@@ -122,14 +123,14 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH_CHAT"));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH"));
 
-    );
-
-    /*    sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "STREAMLABS_ALERT")
-        );
-    */
+    // get a main list of twitch users who are bots
+    getTwitchBotStatusList()
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -153,8 +154,6 @@ function onDataCenterMessage (server_packet)
             }
             else
                 serverConfig = structuredClone(server_packet.data);
-
-
         }
     }
     else if (server_packet.type === "DataFile" && server_packet.data != "")
@@ -170,42 +169,16 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
-            // adminmodel code not yet updated
-            //SendSettingsWidgetSmall(extension_packet.from);
-
+            SendSettingsWidgetSmall(extension_packet.from);
         }
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-                serverConfig.demovar1 = "off";
+                serverConfig.enableusersextension = "off";
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
-            }
-        }
-        else if (extension_packet.type === "UpdateUserData")
-        {
-
-            if (server_packet.to === localConfig.EXTENSION_NAME)
-            {
-                let newuser = false
-                // new platform
-                if (!serverData.userData[extension_packet.data.platform])
-                    serverData.userData[extension_packet.data.platform] = [];
-                // new users
-                if (!serverData.userData[extension_packet.data.platform][extension_packet.data.name])
-                {
-                    newuser = true;
-                    serverData.userData[extension_packet.data.platform][extension_packet.data.name] = {};
-                }
-                if (newuser)
-                {
-                    serverData.userData[extension_packet.data.platform][extension_packet.data.name].firstseen = Date.now()
-                    sendNewUserTrigger(extension_packet.data)
-                }
-                serverData.userData[extension_packet.data.platform][extension_packet.data.name].lastseen = Date.now()
-                SaveDataToServer();
             }
         }
         else if (extension_packet.type === "SendTriggerAndActions")
@@ -229,14 +202,73 @@ function onDataCenterMessage (server_packet)
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
-    /*    else if (server_packet.type === "ChannelData")
+    else if (server_packet.type === "ChannelData")
     {
-        if (server_packet.dest_channel === "STREAMLABS_ALERT")
-            process_streamlabs_alert(server_packet);
+        let extension_packet = server_packet.data;
+        //serverData.userData = {};
+        if (extension_packet.type === "trigger_ChatJoin" || extension_packet.type === "trigger_ChatMessageReceived")
+        {
+
+            let platform = extension_packet.data.parameters.platform
+            let name = ""
+            if (extension_packet.type === "trigger_ChatJoin")
+                name = extension_packet.data.parameters.username.toLowerCase()
+            else
+                name = extension_packet.data.parameters.sender.toLowerCase()
+            let timeStamp = Date.now()
+            // new platform
+            if (serverData.userData[platform] == undefined)
+                serverData.userData[platform] = {};
+            // new user
+            if (serverData.userData[platform][name] == undefined)
+            {
+                getUserIDData(name)
+                serverData.userData[platform][name] = {};
+                serverData.userData[platform][name].firstseen = timeStamp;
+                setTwitchBotStatus(name)
+                sendNewUserTrigger(server_packet.data)
+            }
+            // check if we need to update the users profile data from twitch
+            else if (serverData.userData[platform][name].lastProfileUpdate == undefined ||
+                (timeStamp - serverData.userData[platform][name].lastProfileUpdate) >
+                (serverConfig.profiletimeout * millisecondsInDay))
+            {
+                getUserIDData(name)
+                setTwitchBotStatus(name)
+            }
+
+            serverData.userData[platform][name].lastseen = timeStamp;
+            if (extension_packet.type === "trigger_ChatMessageReceived" && extension_packet.data.parameters.message)
+            {
+                if (!serverData.userData[platform][name].messages)
+                    serverData.userData[platform][name].messages = [];
+                let message = extension_packet.data.parameters.message
+                let newMessage = { timeStamp, message }
+                serverData.userData[platform][name].messages.push(newMessage)
+            }
+            SaveDataToServer();
+            //console.log(JSON.stringify(serverData, null, 2))
+        }
+        else if (extension_packet.type === "trigger_TwitchUserDetails")
+        {
+            //serverData.userData = {}
+            let platform = "twitch";
+            let name = extension_packet.data.parameters.userName.toLowerCase()
+            let timeStamp = Date.now()
+
+            serverData.userData[platform][name].lastseen = timeStamp;
+            serverData.userData[platform][name].userId = extension_packet.data.parameters.userId
+            serverData.userData[platform][name].userDisplayName = extension_packet.data.parameters.userDisplayName
+            serverData.userData[platform][name].creationDate = extension_packet.data.parameters.creationDate
+            serverData.userData[platform][name].description = extension_packet.data.parameters.description
+            serverData.userData[platform][name].offlinePlaceholderUrl = extension_packet.data.parameters.offlinePlaceholderUrl
+            serverData.userData[platform][name].profilePictureUrl = extension_packet.data.parameters.profilePictureUrl
+            serverData.userData[platform][name].type = extension_packet.data.parameters.type
+            serverData.userData[platform][name].lastProfileUpdate = timeStamp
+        }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
-*/
     else if (server_packet.type === "UnknownChannel")
     {
         if (ServerConnectionAttempts++ < localConfig.MaxServerConnectionAttempts)
@@ -251,7 +283,6 @@ function onDataCenterMessage (server_packet)
             }, 5000);
         }
     }
-
     else if (server_packet.type === "InvalidMessage")
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
@@ -274,8 +305,6 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-
-
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
@@ -366,6 +395,101 @@ function SaveDataToServer ()
             "SaveData",
             localConfig.EXTENSION_NAME,
             serverData));
+}
+// ===========================================================================
+//                           FUNCTION: getTwitchBotStatusList
+// ===========================================================================
+async function getTwitchBotStatusList ()
+{
+    try
+    {
+        let url = "https://api.twitchinsights.net/v1/bots/all";
+        let queryResult = ""
+        https.get(url, response =>
+        {
+            response.on("data", (chunk) =>
+            {
+                queryResult += chunk;
+            })
+            response.on("end", () =>
+            {
+                try
+                {
+                    let BotsData = JSON.parse(queryResult);
+                    let Bots = []
+                    let i;
+                    // Bots[0] is the timestamp of this data
+                    Bots.push(Date.now())
+                    for (i in BotsData.bots)
+                        Bots.push(BotsData.bots[i][0])
+
+                    serverData.userData["twitch"].botList = Bots;
+                    SaveDataToServer()
+
+                } catch (error)
+                {
+                    console.error(error.message);
+                }
+            })
+        })
+            .on('error', err =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed http.get for bot list", err, err.message)
+            });
+
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get user");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get user)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: setTwitchBotStatus
+// ===========================================================================
+async function setTwitchBotStatus (name)
+{
+    console.log("getTwitchBotStatus checking", name)
+    if (serverData.userData["twitch"].botList.includes(name))
+    {
+        console.log("twitch.getUser:", name, " \x1b[31m Account is a bot \x1b[0m")
+        serverData.userData["twitch"][name].isBot = true;
+    }
+    else
+    {
+        console.log("twitch.getUser:", name, " \x1b[32m Not a bot \x1b[0m")
+        serverData.userData["twitch"][name].isBot = false;
+    }
+    SaveDataToServer()
+}
+// ===========================================================================
+//                           FUNCTION: getUserIDData
+// ===========================================================================
+function getUserIDData (username)
+{
+    // request user data so we can store the twitch id with the username
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "action_TwitchGetUser",
+                localConfig.EXTENSION_NAME,
+                { "username": username },
+                "",
+                "twitch"
+            ),
+            "",
+            "twitch"
+        ));
 }
 // ============================================================================
 //                                  EXPORTS

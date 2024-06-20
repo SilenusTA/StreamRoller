@@ -12,7 +12,7 @@
  *      (at your option) any later version.
  * 
  *      This program is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      but WITHOUT ANY WARR``````````ANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU Affero General Public License for more details.
  * 
@@ -91,6 +91,7 @@ const default_serverConfig = {
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enabletwitchchat: "on",
+    checkforbots: "on",
     updateUserLists: "off",
     streamername: "OldDepressedGamer",// channel we are streaming on (set from settings submits by user)
     botname: "Botname", // only used so we can put a hint in the credentials box
@@ -147,6 +148,7 @@ const triggersandactions =
                 mod: false,
                 subscriber: false,
                 vip: false,
+                platform: ""
             }
         }, {
             name: "TwitchChatActionReceived",
@@ -357,27 +359,28 @@ const triggersandactions =
                 message: ""
             }
         },
-        /*{
+        {
             name: "TwitchChatMod",
             displaytitle: "Mod?!?",
             description: "A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is",
             messagetype: "trigger_ChatMod",
-                        parameters: {
+            parameters: {
                 type: "trigger_ChatMod",
-                textMessage: "no default message",  
+                textMessage: "no default message",
                 username: ""
             }
-        }, {
-            name: "TwitchChatMods",
-            displaytitle: "Mods?!?",
-            description: "A Mods message was received, possibly a list of mods in this channel. need to log it and see",
-            messagetype: "trigger_ChatMods",
-                        parameters: {
-                type: "trigger_ChatMods",
-                textMessage: "mod list received",  
-                message: ""
-            }
-        },*/
+        },
+        /* {
+                name: "TwitchChatMods",
+                displaytitle: "Mods?!?",
+                description: "A Mods message was received, possibly a list of mods in this channel. need to log it and see",
+                messagetype: "trigger_ChatMods",
+                            parameters: {
+                    type: "trigger_ChatMods",
+                    textMessage: "mod list received",  
+                    message: ""
+                }
+            },*/
         {
             name: "TwitchChatSubGift",
             displaytitle: "A sub was gifted",
@@ -564,41 +567,45 @@ const triggersandactions =
                 port: ""
             }
         },
+        /* {
+            name: "TwitchChatConnecting",
+            displaytitle: "Connecting",
+            description: "Chat is connecting",
+            messagetype: "trigger_ChatConnecting",
+                            parameters: {
+                type: "trigger_ChatConnecting",
+                textMessage: "Connecting to [address][port]",  
+                address: "",
+                port: ""
+            }
+        },   {
+            name: "TwitchChatLogon",
+            displaytitle: "Logon",
+            description: "Logged in to chat",
+            messagetype: "trigger_ChatLogon",
+                            parameters: {
+                type: "trigger_ChatLogon",
+                textMessage: "Logon",  
+            }
+        }, 
+        */
+        {
+            name: "TwitchChatJoin",
+            displaytitle: "Chat Join",
+            description: "Someone Joined the chat",
+            messagetype: "trigger_ChatJoin",
+            parameters: {
+                type: "trigger_ChatJoin",
+                textMessage: "[username] Joined [channel]",
+                username: "",
+                channel: "",
+                platform: ""
+            }
+        },
             /* {
-                name: "TwitchChatConnecting",
-                displaytitle: "Connecting",
-                description: "Chat is connecting",
-                messagetype: "trigger_ChatConnecting",
-                                parameters: {
-                    type: "trigger_ChatConnecting",
-                    textMessage: "Connecting to [address][port]",  
-                    address: "",
-                    port: ""
-                }
-            },   {
-                name: "TwitchChatLogon",
-                displaytitle: "Logon",
-                description: "Logged in to chat",
-                messagetype: "trigger_ChatLogon",
-                                parameters: {
-                    type: "trigger_ChatLogon",
-                    textMessage: "Logon",  
-                }
-            }, {
-                name: "TwitchChatJoin",
-                displaytitle: "Chat Join",
-                description: "Somone Joined the chat",
-                messagetype: "trigger_ChatJoin",
-                                parameters: {
-                    type: "trigger_ChatJoin",
-                    textMessage: "[username] Joined [channel]",
-                    username: "",
-                    channel: ""
-                }
-            }, {
                 name: "TwitchChatPart",
                 displaytitle: "Part",
-                description: "Somone Left the chat",
+                description: "Someone Left the chat",
                 messagetype: "trigger_ChatPart",
                                 parameters: {
                     type: "trigger_ChatPart",
@@ -879,6 +886,7 @@ function onDataCenterMessage (server_packet)
                     }
                     // need to update these manually as the web page does not send unchecked box values
                     serverConfig.enabletwitchchat = "off";
+                    serverConfig.checkforbots = "off";
                     serverConfig.updateUserLists = "off";
                     serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH = "off"
                     serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
@@ -1312,11 +1320,6 @@ function process_chat_data (channel, tags, chatmessage)
     // keep the number of chat items down to the size of the buffer.
     while (serverData.chatMessageBuffer.length > serverConfig.chatMessageBufferMaxSize)
         serverData.chatMessageBuffer.shift();
-
-    //update the user data (ie last seen etc)
-    if (serverConfig.updateUserLists === "on" && tags["display-name"])
-        updateUserList({ name: tags["display-name"], platform: "twitch", message: chatmessage })
-
 }
 
 // ============================================================================
@@ -1564,7 +1567,8 @@ function chatLogin (account)
                 file_log("ban", userstate, reason);
                 userstate['display-name'] = localConfig.usernames.bot["name"];
                 userstate["message-type"] = "ban";
-                process_chat_data(channel, userstate, " Ban: (" + username + ") " + userstate['ban-duration'] + ". " + ((reason) ? reason : ""));
+                console.log("ban received:", channel, username, reason, userstate)
+                process_chat_data(channel, userstate, " Ban: (" + username + "), reason: " + ((reason) ? reason : "Not Specified"));
 
                 triggertosend = findtriggerByMessageType("trigger_ChatBanReceived")
                 triggertosend.parameters.type = "trigger_ChatBanReceived"
@@ -1588,6 +1592,7 @@ function chatLogin (account)
                 triggertosend.parameters.color = userstate.color
                 triggertosend.parameters.subscriber = userstate.subscriber
                 triggertosend.parameters.vip = userstate.vip == true
+                triggertosend.parameters.platform = "twitch"
                 postChatTrigger(triggertosend)
             });
             localConfig.twitchClient[account].connection.on("messagedeleted", (channel, username, deletedMessage, userstate) => 
@@ -1723,6 +1728,7 @@ function chatLogin (account)
             // still working on these single user ones
             localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
             {
+                console.log("automod:", channel, msgID, message)
                 file_log("automod", msgID, message);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
                 triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
@@ -1785,27 +1791,29 @@ function chatLogin (account)
                 triggertosend.parameters.message = message
                 postChatTrigger(triggertosend);
             });
-            /*  localConfig.twitchClient[account].connection.on("mod", (channel, username) => 
-              {
-                  file_log("mod", username, "");
-                  process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
-                  triggertosend = findtriggerByMessageType("trigger_ChatMod")
-                  triggertosend.parameters.type: "trigger_ChatMod"
-                  triggertosend.parameters.textMessage= "no default message"
-                  triggertosend.parameters.username= username
-                  postChatTrigger(triggertosend);
-              });
-              localConfig.twitchClient[account].connection.on("mods", (channel, tags, message, self) => 
-              {
-                  file_log("mods", tags, message);
-                  process_chat_data(channel, tags, "mods: " + message);
-                  triggertosend = findtriggerByMessageType("trigger_ChatMods")
-                  triggertosend.parameters.type= "trigger_ChatMods"
-                  triggertosend.parameters.textMessage= "mod list received"
-                  triggertosend.parameters.message= message
-                  postChatTrigger(triggertosend);
-              });
-  */
+            localConfig.twitchClient[account].connection.on("mod", (channel, username) => 
+            {
+                console.log("mod:", channel, username)
+                file_log("mod", username, "");
+                process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
+                triggertosend = findtriggerByMessageType("trigger_ChatMod")
+                triggertosend.parameters.type = "trigger_ChatMod"
+                triggertosend.parameters.textMessage = "no default message"
+                triggertosend.parameters.username = username
+                postChatTrigger(triggertosend);
+            });
+            /*
+            localConfig.twitchClient[account].connection.on("mods", (channel, tags, message, self) => 
+            {
+                file_log("mods", tags, message);
+                process_chat_data(channel, tags, "mods: " + message);
+                triggertosend = findtriggerByMessageType("trigger_ChatMods")
+                triggertosend.parameters.type= "trigger_ChatMods"
+                triggertosend.parameters.textMessage= "mod list received"
+                triggertosend.parameters.message= message
+                postChatTrigger(triggertosend);
+            });
+*/
             localConfig.twitchClient[account].connection.on("subgift", (channel, username, streakMonths, self, recipient, methods, userstate) => 
             {
                 file_log("subgift", userstate, username + ":" + streakMonths + ":" + recipient);
@@ -1928,6 +1936,7 @@ function chatLogin (account)
             //('usernotice', msgid, channel, tags, msg)
             localConfig.twitchClient[account].connection.on("usernotice", (msgid, channel, tags, message) => 
             {
+                console.log("usernotice:", msgid, channel, tags, message)
                 file_log("usernotice", msgid, message);
                 process_chat_data(channel, tags, message);
                 triggertosend = findtriggerByMessageType("trigger_ChatUserNotice")
@@ -1956,6 +1965,7 @@ function chatLogin (account)
         });
         localConfig.twitchClient[account].connection.on("notice", (channel, msgid, message) => 
         {
+            console.log("notice:", channel, msgid, message);
             file_log("notice", msgid, message);
             process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
             triggertosend = findtriggerByMessageType("trigger_ChatNotice")
@@ -2018,18 +2028,41 @@ function chatLogin (account)
             triggertosend.parameters.textMessage= "Logon "
             postChatTrigger(triggertosend);
         });
+        */
         localConfig.twitchClient[account].connection.on("join", (channel, username, self) =>
         {
-            file_log("join", channel, username);
-            updateUserList({ username: username, platform: 'twitch' }) 
-            //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel);
-            triggertosend = findtriggerByMessageType("trigger_ChatJoin")
-            triggertosend.parameters.type= "trigger_ChatJoin"
-            triggertosend.parameters.textMessage= username + " Joined " + channel
-            triggertosend.parameters.username= username
-            triggertosend.parameters.channel= channel
-            postChatTrigger(triggertosend);
+            if (serverConfig.checkforbots == "on")
+            {
+                file_log("join", channel, username);
+                //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "join: " + channel);
+                triggertosend = findtriggerByMessageType("trigger_ChatJoin")
+                triggertosend.parameters.type = "trigger_ChatJoin"
+                triggertosend.parameters.textMessage = username + " Joined " + channel
+                triggertosend.parameters.username = username
+                triggertosend.parameters.channel = channel
+                triggertosend.parameters.platform = "twitch"
+                postChatTrigger(triggertosend);
+                // request a test to see if user is a bot if not already checked
+                /*
+                                sr_api.sendMessage(localConfig.DataCenterSocket,
+                                    sr_api.ServerPacket(
+                                        "ExtensionMessage",
+                                        localConfig.EXTENSION_NAME,
+                                        sr_api.ExtensionPacket(
+                                            "action_TwitchGetUser",
+                                            localConfig.EXTENSION_NAME,
+                                            { "username": username },
+                                            "",
+                                            "twitch"
+                                        ),
+                                        "",
+                                        "twitch"
+                                    ));
+                                */
+            }
         });
+
+        /*
         localConfig.twitchClient[account].connection.on("part", (channel, username, self) =>
         {
             file_log("part", channel, username); 
@@ -2112,7 +2145,7 @@ function file_log (type, tags, message)
 // ============================================================================
 //                           FUNCTION: updateUserList
 // ============================================================================
-function updateUserList (data)
+/*function updateUserList (data)
 {
     if (serverConfig.updateUserLists == "on")
     {
@@ -2133,7 +2166,7 @@ function updateUserList (data)
             )
         )
     }
-}
+}*/
 
 // ============================================================================
 //                           FUNCTION: heartBeat
