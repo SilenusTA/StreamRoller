@@ -12,7 +12,7 @@
  *      (at your option) any later version.
  * 
  *      This program is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARR``````````ANTY; without even the implied warranty of
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU Affero General Public License for more details.
  * 
@@ -1567,7 +1567,6 @@ function chatLogin (account)
                 file_log("ban", userstate, reason);
                 userstate['display-name'] = localConfig.usernames.bot["name"];
                 userstate["message-type"] = "ban";
-                console.log("ban received:", channel, username, reason, userstate)
                 process_chat_data(channel, userstate, " Ban: (" + username + "), reason: " + ((reason) ? reason : "Not Specified"));
 
                 triggertosend = findtriggerByMessageType("trigger_ChatBanReceived")
@@ -1728,7 +1727,6 @@ function chatLogin (account)
             // still working on these single user ones
             localConfig.twitchClient[account].connection.on("automod", (channel, msgID, message) =>
             {
-                console.log("automod:", channel, msgID, message)
                 file_log("automod", msgID, message);
                 process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
                 triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
@@ -1793,7 +1791,6 @@ function chatLogin (account)
             });
             localConfig.twitchClient[account].connection.on("mod", (channel, username) => 
             {
-                console.log("mod:", channel, username)
                 file_log("mod", username, "");
                 process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
                 triggertosend = findtriggerByMessageType("trigger_ChatMod")
@@ -1936,7 +1933,6 @@ function chatLogin (account)
             //('usernotice', msgid, channel, tags, msg)
             localConfig.twitchClient[account].connection.on("usernotice", (msgid, channel, tags, message) => 
             {
-                console.log("usernotice:", msgid, channel, tags, message)
                 file_log("usernotice", msgid, message);
                 process_chat_data(channel, tags, message);
                 triggertosend = findtriggerByMessageType("trigger_ChatUserNotice")
@@ -1965,7 +1961,6 @@ function chatLogin (account)
         });
         localConfig.twitchClient[account].connection.on("notice", (channel, msgid, message) => 
         {
-            console.log("notice:", channel, msgid, message);
             file_log("notice", msgid, message);
             process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
             triggertosend = findtriggerByMessageType("trigger_ChatNotice")
