@@ -27,6 +27,7 @@ import fs from "fs";
 import { StaticAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
 
+
 // our helper files
 import * as eventSubApi from "./eventsub.js";
 
@@ -873,7 +874,23 @@ const triggersandactions =
                     views: "",
                     vodOffset: ""
                 }
-            }
+            },
+            {
+                name: "UserDetails",
+                displaytitle: "Twitch User Details",
+                description: "Twitch User Data",
+                messagetype: "trigger_TwitchUserDetails",
+                parameters: {
+                    userName: "",
+                    userId: "",
+                    userDisplayName: "",
+                    creationDate: "",
+                    description: "",
+                    offlinePlaceholderUrl: "",
+                    profilePictureUrl: "",
+                    type: ""
+                }
+            },
         ],
     actions:
         [
@@ -1076,6 +1093,16 @@ const triggersandactions =
                 messagetype: "action_TwitchDeleteBlock",
                 parameters: {
                     username: "",
+                }
+            },
+            {
+                name: "GetUser",
+                displaytitle: "Get Users Details",
+                description: "Gets a Users Details",
+                messagetype: "action_TwitchGetUser",
+                parameters: {
+                    username: "",
+                    data: null,
                 }
             },
             {
@@ -1519,6 +1546,16 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data != "")
                 deleteBlock(extension_packet.data)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetUser
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchGetUser")
+        {
+            if (extension_packet.data != "")
+                getUser(extension_packet.data.username)
             else
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
         }
@@ -2431,6 +2468,39 @@ async function deleteBlock (data)
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".deleteBlock", "ERROR", "Failed to unblock user)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getUser
+// ===========================================================================
+async function getUser (username)
+{
+    try
+    {
+        let user = await localConfig.apiClient.users.getUserByName(username)
+        let trigger = findTriggerByMessageType("trigger_TwitchUserDetails")
+        trigger.parameters.userName = user.name
+        trigger.parameters.userId = user.id
+        trigger.parameters.userDisplayName = user.displayName
+        trigger.parameters.creationDate = user.creationDate
+        trigger.parameters.description = user.description
+        trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
+        trigger.parameters.profilePictureUrl = user.profilePictureUrl
+        trigger.parameters.type = user.type
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getUser", "ERROR", "Failed to get user");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getUser", "ERROR", "Failed to get user)");
             console.error(err);
         }
     }
