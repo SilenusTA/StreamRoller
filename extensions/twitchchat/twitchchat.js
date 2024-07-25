@@ -120,6 +120,7 @@ const serverData =
 {
     chatMessageBuffer: [{
         channel: serverConfig.streamername + " (Readonly)",
+        dateStamp: "sys",
         message: "Empty chat buffer",
         data: { 'display-name': serverConfig.streamername, emotes: '' }
     }
@@ -1273,6 +1274,7 @@ function process_chat_data (channel, tags, chatmessage)
     let data = {
         channel: channel,
         message: chatmessage,
+        dateStamp: Date.now(),
         data: tags
     };
     if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")

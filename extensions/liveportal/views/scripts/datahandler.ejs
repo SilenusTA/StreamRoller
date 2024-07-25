@@ -2043,7 +2043,31 @@
 
             // setup the date field
             var today = new Date();
-            var time = today.getHours() + ":" + String(today.getMinutes()).padStart(2, '0') + ":" + String(today.getSeconds()).padStart(2, '0');
+            let datestamp = null
+            let time = null
+            // check if we have a timestamp on the chat message
+            if (chatdata.dateStamp)
+            {
+                datestamp = new Date(chatdata.dateStamp)
+                // check if we are on a new day (adds date if it was a previous days message)
+                if (
+                    datestamp.getDate() + ":" + String(datestamp.getMonth() + 1).padStart(2, '0') + ":" + String(datestamp.getFullYear()).padStart(2, '0')
+                    !=
+                    today.getDate() + ":" + String(today.getMonth() + 1).padStart(2, '0') + ":" + String(today.getFullYear()).padStart(2, '0'))
+                {
+                    // use DATE+Time as the message is not from today
+                    time = datestamp.getDate() + ":" + String(datestamp.getMonth() + 1).padStart(2, '0') + ":" + String(datestamp.getFullYear()).padStart(2, '0') + "_" + datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0')
+                }
+                else
+                {
+                    // set timestamp to just time if it is today.
+                    time = datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0');
+                }
+            }
+            else
+            {
+                time = "--:--:--"
+            }
             // make setup our fields for parts of the message
             var time_color = "<span style='color: " + chatcolors.default_timecode_color + "'>";
             var end_time_color = "</span>"
