@@ -53,6 +53,7 @@
         showallscenes: "on",
         mutescene: "MIC-B1",
         muted: false,
+        ClickHighlightTimer: null,
         // chat window settings
         modchattomodwindow: "on",
         // discord settings
@@ -218,7 +219,7 @@
     // ============================================================================
     //                           FUNCTION: scriptLoadFailed
     // ============================================================================
-    // Desription: Runs when a script failes to load (404 error)
+    // Description: Runs when a script failes to load (404 error)
     function scriptLoadFailed (scriptname)
     {
         console.log("failed to load", scriptname, "reloading page")
@@ -230,7 +231,7 @@
     // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
     // ============================================================================
-    // Desription: Connect to the data center socket
+    // Description: Connect to the data center socket
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -251,7 +252,7 @@
     // ============================================================================
     //                           FUNCTION: onDataCenterDisconnect
     // ============================================================================
-    // Desription: Received disconnect message
+    // Description: Received disconnect message
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -269,7 +270,7 @@
     // ============================================================================
     //                           FUNCTION: onDataCenterConnect
     // ============================================================================
-    // Desription: Received connect message
+    // Description: Received connect message
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -330,7 +331,7 @@
     // ============================================================================
     //                           FUNCTION: onDataCenterMessage
     // ============================================================================
-    // Desription: Received message
+    // Description: Received message
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -939,7 +940,7 @@
     // ============================================================================
     //                           FUNCTION: heartBeatCallback
     // ============================================================================
-    // Desription: started when we get a heartbeat and used to mark the extension as down if it expires
+    // Description: started when we get a heartbeat and used to mark the extension as down if it expires
     // Parameters: extension name and the state (true fals to represent status)
     // ----------------------------- notes ----------------------------------------
     // none
@@ -964,7 +965,7 @@
     // ============================================================================
     //                           FUNCTION: SaveDataToServer
     // ============================================================================
-    // Desription:save data on backend data store
+    // Description:save data on backend data store
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -980,7 +981,7 @@
     // ============================================================================
     //                           FUNCTION: loadExtensionCards
     // ============================================================================
-    // Desription: display message in allmessages card
+    // Description: display message in allmessages card
     // Parameters: list of extension names
     // ----------------------------- notes ----------------------------------------
     // There is a bug here. If the backend restarts and the page isn't 
@@ -1026,7 +1027,7 @@
     // ===========================================================================
     //                           FUNCTION: SendSettingsWidgetSmall
     // ===========================================================================
-    // Desription: Send the modal code back after setting the defaults according 
+    // Description: Send the modal code back after setting the defaults according 
     // to our server settings
     // Parameters: channel to send data to
     // ----------------------------- notes ---------------------------------------
@@ -1064,7 +1065,7 @@
     // ===========================================================================
     //                           FUNCTION: SendSettingsWidgetLarge
     // ===========================================================================
-    // Desription: Send the modal code back after setting the defaults according 
+    // Description: Send the modal code back after setting the defaults according 
     // to our server settings
     // Parameters: channel to send data to
     // ----------------------------- notes ---------------------------------------
@@ -1102,7 +1103,7 @@
     // ============================================================================
     //                           FUNCTION: addSettingsWidgetSmall
     // ============================================================================
-    // Desription: Add the modal code from the extension to the link
+    // Description: Add the modal code from the extension to the link
     // Parameters: 
     //          xname - name of extension
     //          data  - data to add
@@ -1173,7 +1174,7 @@
     // ============================================================================
     //                           FUNCTION: addSettingsWidgetLarge
     // ============================================================================
-    // Desription: Add the modal code from the extension
+    // Description: Add the modal code from the extension
     // Parameters: 
     //          xname - name of extension
     //          data  - data to add
@@ -1405,6 +1406,8 @@
     function addOBSSceneButton (element, displayname, scenename, current, alternateValue = displayname)
     {
         let button = document.createElement('input');
+        if (localConfig.ClickHighlightTimer)
+            clearTimeout(localConfig.ClickHighlightTimer);
         button.type = 'button';
         button.id = displayname;
         button.value = alternateValue;
@@ -1414,6 +1417,14 @@
             button.classList = "btn btn-secondary";
         button.addEventListener('click', function ()
         {
+            button.classList = "btn btn-warning"
+            localConfig.ClickHighlightTimer = setTimeout(() =>
+            {
+                if (scenename === current)
+                    button.classList = "btn btn-success";
+                else
+                    button.classList = "btn btn-secondary";
+            }, 1000)
             event.preventDefault();
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1516,7 +1527,7 @@
     // ============================================================================
     //                           FUNCTION: ProcessOBSStats
     // ============================================================================
-    // Desription:save config on backend data store
+    // Description:save config on backend data store
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // 
@@ -1699,7 +1710,7 @@
     // ============================================================================
     //                      FUNCTION: parseExtensionModalData
     // ============================================================================
-    // Desription: This function will retireve the data from the modal and 
+    // Description: This function will retireve the data from the modal and 
     // send the push the data out so others can update theirs to reflect the change
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
@@ -1729,7 +1740,7 @@
     // ============================================================================
     //                      FUNCTION: UpdateOwnSettingsWidgetSmallData
     // ============================================================================
-    // Desription: Update our own modal if our config has changed
+    // Description: Update our own modal if our config has changed
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // 
@@ -1758,7 +1769,7 @@
     // ============================================================================
     //                      FUNCTION: UpdateOwnSettingsWidgetLargeData
     // ============================================================================
-    // Desription: Update our own modal if our config has changed
+    // Description: Update our own modal if our config has changed
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // 
@@ -1790,7 +1801,7 @@
     // ============================================================================
     //                      FUNCTION: processOwnSettingsWidgetSmallSubmit
     // ============================================================================
-    // Desription: This function will retireve the data from the modal and 
+    // Description: This function will retireve the data from the modal and 
     // send save it in the serverConfig after we hit the submit button
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
@@ -1818,7 +1829,7 @@
     // ============================================================================
     //                      FUNCTION: processOwnSettingsWidgetLargeSubmit
     // ============================================================================
-    // Desription: This function will retireve the data from the modal and 
+    // Description: This function will retireve the data from the modal and 
     // send save it in the serverConfig after we hit the submit button
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
@@ -1927,7 +1938,7 @@
     // ============================================================================
     //                           FUNCTION: processTwitchChatBuffer
     // ============================================================================
-    // Desription: Processes a message from the data center with the previous chat buffer
+    // Description: Processes a message from the data center with the previous chat buffer
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -1949,7 +1960,7 @@
     // ============================================================================
     //                           FUNCTION: processTwitchAccountNames
     // ============================================================================
-    // Desription: Processes a message from the data center with the previous chat buffer
+    // Description: Processes a message from the data center with the previous chat buffer
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -1985,7 +1996,7 @@
     // ============================================================================
     //                           FUNCTION: userDropdownChanged
     // ============================================================================
-    // Desription: user has changed the account in the twitch chat box
+    // Description: user has changed the account in the twitch chat box
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2003,7 +2014,7 @@
     // ============================================================================
     //                           FUNCTION: processDiscordChatBuffer
     // ============================================================================
-    // Desription: Processes a message from the data center with the previous chat buffer
+    // Description: Processes a message from the data center with the previous chat buffer
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2403,7 +2414,7 @@
     // ============================================================================
     //                           FUNCTION:DisplayAlertMessages
     // ============================================================================
-    // Desription: display alerts
+    // Description: display alerts
     // Parameters: alert message
     // ----------------------------- notes ----------------------------------------
     // None
@@ -2420,7 +2431,7 @@
     // ============================================================================
     //                           FUNCTION:MessageboxAutoscroll
     // ============================================================================
-    // Desription: keeps a message box scrolled if user hasn't scrolled up
+    // Description: keeps a message box scrolled if user hasn't scrolled up
     // Parameters: e
     // ----------------------------- notes ----------------------------------------
     // None
@@ -2437,7 +2448,7 @@
     // ============================================================================
     //                           FUNCTION: RequestExtList
     // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
+    // Description: Sends a message to the data center to get the list of extensions
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2454,7 +2465,7 @@
     // ============================================================================
     //                           FUNCTION: RequestOBSScenes
     // ============================================================================
-    // Desription: Sends a message to the data center to get the list of extensions
+    // Description: Sends a message to the data center to get the list of extensions
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2476,7 +2487,7 @@
     // ============================================================================
     //                           FUNCTION: RequestChList
     // ============================================================================
-    // Desription: Sends a message to the data center to get the list of channels
+    // Description: Sends a message to the data center to get the list of channels
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2492,7 +2503,7 @@
     // ============================================================================
     //                           FUNCTION: RequestChatBuffer
     // ============================================================================
-    // Desription: Sends a message to the data center to get the previous chat buffer
+    // Description: Sends a message to the data center to get the previous chat buffer
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2533,7 +2544,7 @@
     // ============================================================================
     //                           FUNCTION: RequestTwitchAccountNames
     // ============================================================================
-    // Desription: Get our usernames from the twitch extension (so we can post as them)
+    // Description: Get our usernames from the twitch extension (so we can post as them)
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2556,7 +2567,7 @@
     // ============================================================================
     //                           FUNCTION: RequestSettingsWidgetSmallsCode
     // ============================================================================
-    // Desription: Sends a message to the extension to gets its html code
+    // Description: Sends a message to the extension to gets its html code
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
@@ -2580,7 +2591,7 @@
     // ============================================================================
     //                           FUNCTION: RequestSettingsWidgetLargeCode
     // ============================================================================
-    // Desription: Sends a message to the extension to gets its html code
+    // Description: Sends a message to the extension to gets its html code
     // Parameters: none
     // ----------------------------- notes ----------------------------------------
     // none
