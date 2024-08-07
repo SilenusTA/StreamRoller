@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: getting node version
       run: node -v
-    - uses: actions/checkout@v20
+    - uses: actions/checkout@v4
     - name: removing git folder (to keep space down in exe)
       run: |
           ls -la
