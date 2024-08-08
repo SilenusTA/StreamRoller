@@ -38,7 +38,7 @@ jobs:
         name: mini-artifacts
     - uses: actions/setup-node@v4
       with:
-        node-version: '22.6.0'
+        node-version: '20.16.0'
     - name: Create Version.txt
       run: |
           echo ${{ github.ref_name }} > SoftwareVersion.txt
