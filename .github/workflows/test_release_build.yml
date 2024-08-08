@@ -33,7 +33,7 @@ jobs:
         name: mini-artifacts
     - uses: actions/setup-node@v4
       with:
-        node-version: '22.16.0'
+        node-version: '20.16.0'
     - name: Create SoftwareVersion.txt
       run: |
           echo "TESTBUILD #${{github.run_number}}.${{ github.run_attempt }}" > SoftwareVersion.txt
