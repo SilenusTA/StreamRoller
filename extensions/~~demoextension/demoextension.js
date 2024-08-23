@@ -25,7 +25,7 @@
 // you might need.
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 06-Feb-2022
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -44,8 +44,8 @@
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
 // messaging api provides some functions to make sending messages easier.
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -133,7 +133,7 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // this funcion is required by the backend to start the extensions.
@@ -174,7 +174,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: socket 
 // ----------------------------- notes ----------------------------------------
 // When we connect to the StreamRoller server the first time (or if we reconnect)
@@ -214,7 +214,7 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-// Desription: Received message
+// Description: Received message
 // Parameters: data - data received
 // ----------------------------- notes ----------------------------------------
 // none
@@ -381,7 +381,7 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: process_stream_alert
 // ============================================================================
-// Desription: Handle stream alerts (follows,subs etc)
+// Description: Handle stream alerts (follows,subs etc)
 // Parameters: data for the alert
 // ----------------------------- notes ----------------------------------------
 // none
@@ -400,7 +400,7 @@ function process_stream_alert (server_packet)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-// Desription: Send the settings widget small code back after setting the defaults according 
+// Description: Send the settings widget small code back after setting the defaults according 
 // to our server settings
 // Parameters: channel to send data to
 // ----------------------------- notes ---------------------------------------
@@ -484,3 +484,4 @@ function SaveConfigToServer ()
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

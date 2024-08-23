@@ -24,7 +24,7 @@
 // twitch alerts channel on the back end
 // -------------------------- Creation ----------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 14-Jan-2021
 // --------------------------- functionality ----------------------------------
 // 
@@ -38,18 +38,18 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable secion
 // ----------------------------- notes ----------------------------------------
 // We have to iport two versions of socket.io due to streamlabs using an older
 // version.
 // ============================================================================
 // note this has to be socket.io-client version 2.0.3 to allow support for Streamlabs api.
-import StreamlabsIo from "socket.io-client_2.0.3";
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs"
 import * as fs from "fs";
 import { dirname } from 'path';
+import StreamlabsIo from "socket.io-client_2.0.3";
 import { fileURLToPath } from 'url';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let localConfig = {
@@ -331,7 +331,7 @@ function onStreamlabsDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onStreamlabsConnect
 // ============================================================================
-// Desription: Handles Connect message from the streamlabs api
+// Description: Handles Connect message from the streamlabs api
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
@@ -345,7 +345,7 @@ function onStreamlabsConnect ()
 // ============================================================================
 //                           FUNCTION: onStreamlabsEvent
 // ============================================================================
-// Desription: Handles messaged from the streamlabs api
+// Description: Handles messaged from the streamlabs api
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
@@ -370,7 +370,7 @@ function onStreamlabsEvent (data)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
-// Desription: Handles Disconnect message from the datacenter
+// Description: Handles Disconnect message from the datacenter
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
@@ -381,7 +381,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Handles Connect message from the datacenter
+// Description: Handles Connect message from the datacenter
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
@@ -406,7 +406,7 @@ function onDataCenterConnect ()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-// Desription: Handles messages from the datacenter
+// Description: Handles messages from the datacenter
 // Parameters: reason
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
@@ -530,7 +530,7 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ============================================================================
-// Desription: Send the modal code back after setting the defaults according 
+// Description: Send the modal code back after setting the defaults according 
 // to our server settings
 // Parameters: channel to send data to
 // ----------------------------- notes ----------------------------------------
@@ -629,7 +629,7 @@ function SendCredentialsModal (extensionname)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
-// Desription:save config on backend data store
+// Description:save config on backend data store
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
@@ -882,7 +882,8 @@ function outputTrigger (data)
 // ============================================================================
 //                           EXPORTS: start
 // ============================================================================
-// Desription: exports from this module
+// Description: exports from this module
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
 export { start };
+

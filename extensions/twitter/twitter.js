@@ -23,18 +23,18 @@
 // Allows posting and reading twitter
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 01-March-2022
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import { TwitterClient } from "twitter-api-client";
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
+import { TwitterClient } from "twitter-api-client";
 import { fileURLToPath } from "url";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     OUR_CHANNEL: "TWITTER_CHANNEL",
@@ -131,7 +131,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: socket 
 /**
  * Connection message handler
@@ -463,3 +463,4 @@ function heartBeatCallback ()
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

@@ -23,7 +23,7 @@
 // Provides random facts and information on request
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 03-April-2022
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -37,10 +37,9 @@
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
 //var http = require('http');
-import https from "https"
+import https from "https";
 // extension helper provides some functions to save you having to write them.
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
-import * as fs from "fs";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -119,7 +118,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: socket 
 // ----------------------------- notes ----------------------------------------
 // When we connect to the StreamRoller server the first time (or if we reconnect)
@@ -376,3 +375,4 @@ function findtriggerByMessageType (messagetype)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

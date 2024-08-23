@@ -23,7 +23,7 @@
 // A demo page to create a webpage serverd by the StreamRoller backend
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 05-Jul-2023
 // ============================================================================
 
@@ -39,14 +39,14 @@ const config = {
 import express from "express";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-const __dirname = dirname(fileURLToPath(import.meta.url));
 import * as logger from "../../backend/data_center/modules/logger.js";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers

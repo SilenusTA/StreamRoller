@@ -23,7 +23,7 @@
 // In progress test discord chat app.
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 05-Jan-2022
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -37,11 +37,11 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // declare our stream references
 
@@ -572,7 +572,7 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
-// Desription:save data on backend data store
+// Description:save data on backend data store
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
@@ -603,7 +603,7 @@ function SaveChatMessagesToServerScheduler ()
 // ============================================================================
 //                           IMPORTS AND GLOBALS
 // ============================================================================
-import { Client, Intents, Permissions, Guild } from "discord.js";
+import { Client, Intents } from "discord.js";
 //import { clearTimeout } from "timers";
 
 // ============================================================================
@@ -772,8 +772,9 @@ function heartBeatCallback ()
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================
-// Desription: exports from this module
+// Description: exports from this module
 // ----------------------------- notes ----------------------------------------
 // will also need additional exports in future (ie reconnect, stop, start etc)
 // ============================================================================
 export { initialise };
+

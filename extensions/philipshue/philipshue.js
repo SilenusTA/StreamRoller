@@ -23,23 +23,23 @@
 // This extension provides access to hue lights
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 08-June-2023
 // ============================================================================
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
+import * as HueAPI from "node-hue-api";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import * as HueAPI from "node-hue-api"
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 // some comment
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {

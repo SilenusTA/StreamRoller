@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# STREAMLABS_API.js ###################################
+// ############################# STREAMLABS_API.js ###################################
 // This Module/addon/extension (whatever we decide to call these :D) will
 // will handle anything streamlabs_api related
 // -------------------------- Creation ----------------------------------------
@@ -33,7 +33,7 @@
 // --------------------------- description -------------------------------------
 // ================== schema ==================================================
 // Channel name : STREAMLABS_ALERT
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // ----------------------------- notes ----------------------------------------
 // TBD. 
 // ============================================================================
@@ -41,7 +41,7 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
@@ -49,12 +49,12 @@ import { start as SL_connection_start } from "./streamlabs_api_handler.js";
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-function initialise(app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat)
 {
     SL_connection_start(host, port, heartbeat);
 }
@@ -62,7 +62,8 @@ function initialise(app, host, port, heartbeat)
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================
-// Desription: exports from this module
+// Description: exports from this module
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
 export { initialise };
+

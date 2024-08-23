@@ -24,7 +24,7 @@
 // Provides streamer songlist functionality
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 25-May-2023
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -38,10 +38,10 @@
 // logger will allow you to log messages in the same format as the system messages
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
-import fetch from 'node-fetch';
 import * as fs from "fs";
+import fetch from 'node-fetch';
 import io from 'socket.io-client';
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -198,7 +198,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: socket 
 // ----------------------------- notes ----------------------------------------
 // When we connect to the StreamRoller server the first time (or if we reconnect)

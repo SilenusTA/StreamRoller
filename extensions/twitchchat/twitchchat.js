@@ -24,7 +24,7 @@
 // in other extension
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 06-Feb-2022
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -35,17 +35,17 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // using lib: https://github.com/tmijs/docs
 // currently restricted to be configured one bot and one user.
 // only the user account is monitored for messages.
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     OUR_CHANNEL: "TWITCH_CHAT",
@@ -632,7 +632,7 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // this funcion is required by the backend to start the extensions.
@@ -659,7 +659,7 @@ function initialise (app, host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
-// Desription: Received disconnect message
+// Description: Received disconnect message
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
@@ -671,7 +671,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // When we connect to the StreamRoller server the first time (or if we reconnect)
@@ -696,7 +696,7 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-// Desription: Received message
+// Description: Received message
 // Parameters: data
 // ----------------------------- notes ----------------------------------------
 // none
@@ -1209,7 +1209,7 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
-// Desription:save data on backend data store
+// Description:save data on backend data store
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
@@ -1267,7 +1267,7 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 //                     FUNCTION: process_chat_data
 // ============================================================================
-// Desription: receives twitch chat messages
+// Description: receives twitch chat messages
 // ============================================================================
 function process_chat_data (channel, tags, chatmessage)
 {
@@ -1327,7 +1327,7 @@ function process_chat_data (channel, tags, chatmessage)
 // ============================================================================
 //                     FUNCTION: action_SendChatMessage
 // ============================================================================
-// Desription: Send message to twitch
+// Description: Send message to twitch
 // ===========================================================================
 function action_SendChatMessage (channel, data)
 {
@@ -2195,3 +2195,4 @@ function heartBeatCallback ()
 //                           EXPORTS: initialise
 // ============================================================================
 export { initialise };
+

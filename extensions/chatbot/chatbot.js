@@ -24,7 +24,7 @@
 // This is a chatbot aimed at making chat more interesting
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 10-Feb-2023
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -36,9 +36,9 @@
 import { Configuration, OpenAIApi } from "openai";
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
-import https from "https"
+import https from "https";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 // these lines are a fix so that ES6 has access to dirname etc
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -384,7 +384,7 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // this funcion is required by the backend to start the extensions.
@@ -418,7 +418,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Desription: Received connect message
+// Description: Received connect message
 // Parameters: socket 
 // ===========================================================================
 /**

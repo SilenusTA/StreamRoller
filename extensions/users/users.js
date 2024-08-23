@@ -23,21 +23,21 @@
 // This extension handles users/viewers data. ie a place to store channel points etc
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 09-Mar-2023
 // ============================================================================
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
+import * as fs from "fs";
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
-import * as fs from "fs";
 // these lines are a fix so that ES6 has access to dirname etc
+import https from "https";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-import https from "https";
 
 // how many times we have attempted to connect on failure
 let ServerConnectionAttempts = 0;
@@ -383,7 +383,7 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
-// Desription:save data on backend data store
+// Description:save data on backend data store
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // none
@@ -496,3 +496,4 @@ function getUserIDData (username)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

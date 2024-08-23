@@ -24,7 +24,7 @@
 // streaming. settings title, modding chatters, OBS controls etc
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRollerller
 // Date: 05-Jan-2022
 // --------------------------- functionality ----------------------------------
 // In Progress.
@@ -35,7 +35,7 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
@@ -49,14 +49,14 @@ const config = {
 import express from "express";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-const __dirname = dirname(fileURLToPath(import.meta.url));
 import * as logger from "../../backend/data_center/modules/logger.js";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers
@@ -92,9 +92,10 @@ function initialise (app, host, port, heartbeat)
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================
-// Desription: exports from this module
+// Description: exports from this module
 // ----------------------------- notes ----------------------------------------
 // will also need additional exports in future (ie reconnect, stop, start etc)
 // ============================================================================
 
 export { initialise };
+

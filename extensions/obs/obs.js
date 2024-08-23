@@ -24,7 +24,7 @@
 // output channel OBS_CHANNEL
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 22-Feb-2022
 // --------------------------- functionality ----------------------------------
 // Current functionality:
@@ -34,15 +34,15 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let streamlabsChannelConnectionAttempts = 0;
 // local config
@@ -1474,3 +1474,4 @@ function findtriggerByMessageType (messagetype)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

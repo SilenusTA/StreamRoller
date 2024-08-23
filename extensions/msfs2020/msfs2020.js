@@ -23,20 +23,20 @@
 // Allows data to be sent/received from Microsoft Flight Sim 2020
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 01-Jul-2023
 // ============================================================================
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
+import { MSFS_API, SystemEvents } from 'msfs-simconnect-api-wrapper';
+import { SimVars } from "msfs-simconnect-api-wrapper/simvars/index.js";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { SystemEvents, MSFS_API } from 'msfs-simconnect-api-wrapper'
-import { SimVars } from "msfs-simconnect-api-wrapper/simvars/index.js";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
@@ -1288,3 +1288,4 @@ function file_log (type, data)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
+

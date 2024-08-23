@@ -19,12 +19,12 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# testoverlay.js ##############################
+// ############################# testoverlay.js ##############################
 // overlay file for inclusion in to OBS etc for streaming
 // currently meant as an example of a standalone browser file
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 05-Jan-2022
 // --------------------------- functionality ----------------------------------
 // In Progress.
@@ -35,7 +35,7 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
@@ -50,7 +50,7 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // function initlaise called by the backend during startup
-function initialise(app, host, port)
+function initialise (app, host, port)
 {
     console.log(__dirname + '/testoverlay.html')
     app.use("/", express.static(__dirname + '/'));
@@ -65,4 +65,4 @@ function initialise(app, host, port)
         });
     });
 }
-export { initialise }
+export { initialise };
