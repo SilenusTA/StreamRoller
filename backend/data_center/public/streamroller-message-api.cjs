@@ -117,7 +117,7 @@ function sendMessage (connection, data)
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
-// Desription: Sets up the connection to the backend
+// Description: Sets up the connection to the backend
 // Parameters: 
 //  onConnect(socket) - callback for connection message
 //  onDisconnect(reason) - callback for disconnection message
@@ -149,6 +149,8 @@ function setupConnection (onMessage, onConnect, onDisconnect, host, port)
                 {
                     transports: ["websocket"],
                     maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
+                    pingTimeout: 120000,
+                    connectTimeout: 120000
                 });
         }
         else
@@ -158,6 +160,8 @@ function setupConnection (onMessage, onConnect, onDisconnect, host, port)
                 {
                     transports: ["websocket"],
                     maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
+                    pingTimeout: 120000,
+                    connectTimeout: 120000
                 });
         }
         // handlers
