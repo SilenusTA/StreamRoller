@@ -25,7 +25,7 @@
 // or off as required.
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 14-Jan-2021
 // --------------------------- functionality ----------------------------------
 // Adds console messages for logging, errors and warnings.
@@ -53,9 +53,9 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import * as fs from "fs";
+import process from 'node:process';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import process from 'node:process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const logfilename = __dirname + "/../../../streamroller.log"
@@ -367,4 +367,5 @@ function file_log (childdir, file_name, message)
 // ============================================================================
 //                           EXPORTS: 
 // ============================================================================
-export { log, err, warn, info, extra, loglevel, setLoggingLevel, getLoggingLevel, usecoloredlogs, file_log };
+export { err, extra, file_log, getLoggingLevel, info, log, loglevel, setLoggingLevel, usecoloredlogs, warn, bgColour, resetColour, dimText, brightText, logColour, infoColour, warnColour, errColour, extraColour };
+
