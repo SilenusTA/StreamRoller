@@ -24,7 +24,7 @@
 // sockets and handle messages received and sent out
 // -------------------------- Creation ----------------------------------------
 // @author Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/streamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 14-Jan-2021
 // --------------------------- functionality ----------------------------------
 // On connection the client will receive a client id. After initial connection
@@ -83,16 +83,16 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Desription: Import/Variable secion
+// Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-import * as logger from "./logger.js";
-import { Server } from "socket.io";
-import * as mh from "./message_handlers.js";
-import * as cm from "./common.js";
-import * as childprocess from "child_process"
+import * as childprocess from "child_process";
 import process from 'node:process';
+import { Server } from "socket.io";
+import * as cm from "./common.js";
+import * as logger from "./logger.js";
+import * as mh from "./message_handlers.js";
 
 const channels = [];
 let extensions = {};// all extensions
@@ -179,9 +179,9 @@ function onDisconnect (socket, reason)
     {
         clearTimeout(extensionlist_requesters_handles[ext])
         extensionlist_requesters.splice(extensionlist_requesters.indexOf(ext), 1)
+        // update anyone who has previously reqested an extension list if we have changed it
+        updateExtensionsListRequesters()
     }
-    // update anyone who has previously reqested an extension list
-    updateExtensionsListRequesters()
     logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onDisconnect", reason, socket);
 }
 // ============================================================================
