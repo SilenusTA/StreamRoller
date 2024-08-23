@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: getting node version
       run: node -v
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: removing git folder (to keep space down in exe)
       run: |
           ls -la
@@ -19,7 +19,7 @@ jobs:
           rmdir .git
           ls -la
     - name: uploading artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: mini-artifacts
         path: .      
@@ -28,12 +28,12 @@ jobs:
     needs: remove_git  
     steps:
     - name: importing artecfact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: mini-artifacts
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: '18.6.0'
+        node-version: '20.16.0'
     - name: Create SoftwareVersion.txt
       run: |
           echo "TESTBUILD #${{github.run_number}}.${{ github.run_attempt }}" > SoftwareVersion.txt
@@ -51,7 +51,7 @@ jobs:
       run: |
         7z a StreamRoller${{ github.ref_name }}.zip StreamRoller${{ github.ref_name }}.exe
     - name: uploading artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: StreamRoller${{ github.ref_name }}.zip
         path: StreamRoller${{ github.ref_name }}.exe
