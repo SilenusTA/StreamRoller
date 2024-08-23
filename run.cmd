@@ -16,10 +16,10 @@ cd %LOCALAPPDATA%\StreamRoller\
 echo waiting for file
 for /l %%x in (1, 1, 10) do (
    echo .
-   IF EXIST "node_modules\.bin\node.exe" GOTO waitfornode
+   IF EXIST "node_modules\.bin\node.cmd" GOTO waitfornode
    timeout /t 1
 )
 :waitfornode
 
-Start "Streamroller" node_modules\.bin\node.exe backend\data_center\server.js
+Start "Streamroller" node_modules\.bin\node.cmd backend\data_center\server.js
 rem start http:\\localhost:3000
