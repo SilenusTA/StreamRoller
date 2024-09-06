@@ -144,6 +144,7 @@ const triggersandactions =
                 textMessage: "[username]: [message]",
                 sender: "",
                 message: "",
+                safemessage: "",
                 color: "",
                 firstmessage: false,
                 mod: false,
@@ -1277,6 +1278,8 @@ function process_chat_data (channel, tags, chatmessage)
         dateStamp: Date.now(),
         data: tags
     };
+
+
     if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")
         console.log("twitchchat:process_chat_data: ", tags, " : ", chatmessage)
 
@@ -1582,12 +1585,20 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
             {
                 //file_log("chat", userstate, message);
+                // replace the html parts of the string with their escape chhars
+                let safemessage = sanitiseHTML(message);
+                // remove non ascii chars
+                safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
+                // remove unicode
+                safemessage = safemessage.replace(/[\u{0080}-\u{FFFF}]/gu, "");
                 process_chat_data(channel, userstate, message);
+
                 triggertosend = findtriggerByMessageType("trigger_ChatMessageReceived")
                 triggertosend.parameters.type = "trigger_ChatMessageReceived"
                 triggertosend.parameters.textMessage = userstate['display-name'] + ": " + message
                 triggertosend.parameters.sender = userstate['display-name']
                 triggertosend.parameters.message = message
+                triggertosend.parameters.safemessage = safemessage
                 triggertosend.parameters.firstmessage = userstate['first-msg']
                 triggertosend.parameters.mod = userstate.mod
                 triggertosend.parameters.color = userstate.color
@@ -2190,6 +2201,26 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+
+// sanitiser
+var entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+};
+// this will replace the strings with escape versions so it will be shown rather than parsed in html
+function sanitiseHTML (string)
+{
+    return String(string).replace(/[&<>"'`=\/]/g, function (s)
+    {
+        return entityMap[s];
+    });
 }
 // ============================================================================
 //                           EXPORTS: initialise
