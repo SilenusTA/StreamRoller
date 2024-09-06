@@ -202,8 +202,9 @@ function onMessage (socket, server_packet)
             "Version mismatch:", server_packet.version, "!=", config.apiVersion);
 
         logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
-            "!!!!!!! Message Sytem API version doesn't match: ", server_packet);
+            "!!!!!!! Message System API version doesn't match: ", server_packet);
         mh.errorMessage(socket, "Incorrect api version", server_packet);
+        //console.log("message:", JSON.stringify(server_packet, null, 2));
         return;
     }
 
@@ -334,7 +335,7 @@ function onMessage (socket, server_packet)
 // ===========================================================================
 function updateExtensionsListRequesters ()
 {
-    // update users who reqested exentsions with sockets
+    // update users who requested extensions with sockets
     for (let i = 0; i < extensionlist_requesters.length; i++)
     {
         // buffer the extensionlist messages using a timer
