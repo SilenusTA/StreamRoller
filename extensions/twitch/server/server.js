@@ -2597,15 +2597,18 @@ async function getUser (username)
         }
         else
         {
-            let user = await localConfig.apiClient.users.getUserByName(username)
-            trigger.parameters.username = user.name
-            trigger.parameters.userId = user.id
-            trigger.parameters.userDisplayName = user.displayName
-            trigger.parameters.creationDate = user.creationDate
-            trigger.parameters.description = user.description
-            trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
-            trigger.parameters.profilePictureUrl = user.profilePictureUrl
-            trigger.parameters.type = user.type
+            if (localConfig.apiClient.users)
+            {
+                let user = await localConfig.apiClient.users.getUserByName(username)
+                trigger.parameters.username = user.name
+                trigger.parameters.userId = user.id
+                trigger.parameters.userDisplayName = user.displayName
+                trigger.parameters.creationDate = user.creationDate
+                trigger.parameters.description = user.description
+                trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
+                trigger.parameters.profilePictureUrl = user.profilePictureUrl
+                trigger.parameters.type = user.type
+            }
         }
         sendTrigger(trigger)
     }

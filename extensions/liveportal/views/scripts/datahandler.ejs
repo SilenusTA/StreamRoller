@@ -83,7 +83,8 @@
         // max display size to maintain
         chatmessagebuffermaxsize: 300,
         discordmessagebuffermaxsize: 300,
-        liveportal_restore_defaults: "off"
+        liveportal_restore_defaults: "off",
+        liveportal_monitor_heap: "off"
 
     };
     let serverConfig = structuredClone(default_serverConfig);
@@ -579,6 +580,7 @@
                                 serverConfig[key] = extension_packet.data[key];
                         }
                     }
+
                     changeServerLogging(serverConfig.logginglevel)
                     // save our data to the server for next time we run
                     SaveConfigToServer();
@@ -900,7 +902,9 @@
             // -------------------------------------------------------------------------------------------------
             //                           UNHANDLED CHANNEL DATA
             // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "MSFS2020_CHANNEL")
+            else if (server_packet.dest_channel == "MSFS2020_CHANNEL"
+                || server_packet.dest_channel == "USERS_CHANNEL"
+            )
             {
                 //just igore these messages
             }
@@ -1858,6 +1862,32 @@
         }
         else
         {
+            if (fieldsAsObject.liveportal_monitor_heap != serverConfig.liveportal_monitor_heap)
+            {
+                if (fieldsAsObject.liveportal_monitor_heap == "on")
+                    serverConfig.liveportal_monitor_heap = "on"
+                else
+                    serverConfig.liveportal_monitor_heap = "off"
+                if (serverConfig.liveportal_monitor_heap == "on")
+                {
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "MonitorHeap",
+                            serverConfig.extensionname,
+                            1
+                        ));
+                }
+                else
+                {
+                    serverConfig.liveportal_monitor_heap = "off"
+                    sr_api.sendMessage(DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "MonitorHeap",
+                            serverConfig.extensionname,
+                            0
+                        ));
+                }
+            }
             if (fieldsAsObject.logginglevel != serverConfig.logginglevel)
             {
                 // change server logging level

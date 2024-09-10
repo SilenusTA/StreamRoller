@@ -93,13 +93,15 @@ import { Server } from "socket.io";
 import * as cm from "./common.js";
 import * as logger from "./logger.js";
 import * as mh from "./message_handlers.js";
+import * as v8 from 'node:v8';
 
 const channels = [];
 let extensions = {};// all extensions
 let connected_extensionlist = [];// extensions with a socket connection
 let backend_server = null;
 let server_socket = null;
-let config = {}
+let config = {};
+let monitorHeapStats = false;
 // these maintain a list of extensions that have requested an extension list
 // it only handles 'connected' extensions and will ignore extensions without 
 // a valid socket connection
@@ -326,6 +328,17 @@ function onMessage (socket, server_packet)
     }
     else if (server_packet.type === "RequestLoggingLevel")
         mh.sendLoggingLevel(socket);
+    else if (server_packet.type === "MonitorHeap")
+    {
+        // if we are turning it on then start the monitoring process
+        if (server_packet.data == 1 && !monitorHeapStats)
+        {
+            monitorHeapStats = true;
+            heapStatsScheduler()
+        }
+        else
+            monitorHeapStats = false;
+    }
     else
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
 
@@ -358,6 +371,31 @@ function updateExtensionsListRequesters ()
         }, 2000);
     }
 }
+
+// ============================================================================
+//                      heapStatsScheduler()
+// ===========================================================================
+
+
+// DEBUG monitoring heap status
+function heapStatsScheduler ()
+{
+    setTimeout(() =>
+    {
+        dumpHeapStats()
+    }
+        , 1000);
+}
+function dumpHeapStats ()
+{
+    let maxHeap = v8.getHeapStatistics().heap_size_limit;
+    let heap = v8.getHeapStatistics();
+    let used_heap_size = heap.used_heap_size
+    console.log("server Heap usage \t" + ((used_heap_size / maxHeap) * 100).toFixed(2) + "%", heap.number_of_native_contexts, heap.number_of_detached_contexts)
+    if (monitorHeapStats)
+        heapStatsScheduler()
+}
+//end Debugheap
 // ============================================================================
 //                           EXPORTS:
 // ============================================================================

@@ -37,9 +37,8 @@
 // ============================================================================
 import * as cm from "./modules/common.js";
 import * as logger from "./modules/logger.js";
-import sr_api from "./public/streamroller-message-api.cjs";
 import * as ServerSocket from "./modules/server_socket.js";
-//import * as os from "os";
+import sr_api from "./public/streamroller-message-api.cjs";
 
 // load our config settings from the config store
 let config = cm.loadConfig("datacenter");
@@ -108,13 +107,13 @@ console.log("\x1b[1m\x1b[33mNote: Only load one version of the browser as mutlip
 //                          IMPORTS/VARIABLES
 // ============================================================================
 // fix for ES6 not having the __dirname var
-import { dirname } from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import crypto from "crypto";
 import express from "express";
+import * as fs from "fs/promises";
 import http from "http";
 import https from "https";
-import crypto from "crypto";
-import * as fs from "fs/promises";
+import { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
 
 // set our location
 const __dirname = dirname(fileURLToPath(import.meta.url));
