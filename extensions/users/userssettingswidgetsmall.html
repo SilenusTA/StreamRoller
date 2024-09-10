@@ -37,6 +37,7 @@
             </div>
 
             <!-- fields for user interaction -->
+            <!-- enable/disable -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input"
@@ -47,6 +48,42 @@
                     <label class="form-check-label"
                         for="enableusersextension">Enable/Disable</label>
                 </div>
+            </div>
+
+            <!-- clear data -->
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input"
+                        name="cleardatausersextension"
+                        type="checkbox"
+                        id="cleardatausersextension"
+                        cleardatausersextensionchecked>
+                    <label class="form-check-label"
+                        for="cleardatausersextension">Enable/Disable</label>
+                </div>
+            </div>
+
+            <!-- Profile updates -->
+            <div class="form-group">
+                <label for="maxuserstokeep"
+                    class="col-form-label">Maximum number of users to log(keeping a high value will cause issues with
+                    javascript heap space running out).</label>
+                <input type="text"
+                    name="maxuserstokeep"
+                    class="form-control"
+                    id="maxuserstokeep"
+                    value="maxuserstokeeptext">
+            </div>
+
+            <!-- Profile updates -->
+            <div class="form-group">
+                <label for="maxusersmessagestokeep"
+                    class="col-form-label">Max history to keep for each user (logged chat messages)</label>
+                <input type="text"
+                    name="maxusersmessagestokeep"
+                    class="form-control"
+                    id="maxusersmessagestokeep"
+                    value="maxusersmessagestokeeptext">
             </div>
 
             <!-- Profile updates -->

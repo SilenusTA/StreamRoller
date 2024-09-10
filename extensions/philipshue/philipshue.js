@@ -187,7 +187,8 @@ function onDataCenterMessage (server_packet)
         {
             localCredentials = server_packet.data;
             if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("Received credentialsfile, initialising hub")
-            initialiseHue()
+            if (serverConfig.PhilipsHueenabled == "on")
+                initialiseHue()
         }
         else
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -291,8 +292,21 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode"
+            || extension_packet.type === "RequestSettingsWidgetSmallCode"
+        )
+        {
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+        else if (extension_packet.to == serverConfig.extensionname)
+        {
+            logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage to us", server_packet);
+        }
+
         else
-            logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        {
+            //   logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        }
 
     }
     else if (server_packet.type === "UnknownChannel")
@@ -430,6 +444,8 @@ async function initialiseHue (force_paring = false)
     processScenes();
     outputScenes();
 
+
+
 }
 
 // ============================================================================
@@ -446,7 +462,7 @@ async function connectToHub (perform_pairing = false)
     }
     if (serverConfig.PhilipsHueenabled == "off")
     {
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".gepairtHubs", "Attempting to pair when extension is turned off in settings")
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".pairtHubs", "Attempting to pair when extension is turned off in settings")
         return;
     }
     // ############################ PAIRING - If Needed or Requested ############################

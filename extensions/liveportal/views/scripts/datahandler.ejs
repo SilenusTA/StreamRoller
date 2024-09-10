@@ -470,6 +470,11 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             {
+                if (extension_packet.from == "undefined")
+                {
+                    console.log("RequestSettingsWidgetSmallCode undefined from")
+                    console.log(extension_packet)
+                }
                 SendSettingsWidgetSmall(extension_packet.from);
             }
 
@@ -3399,4 +3404,6 @@
             document.getElementById("softwareversion").innerHTML = swVersionHtml
         }
     }
+
+
 </script>

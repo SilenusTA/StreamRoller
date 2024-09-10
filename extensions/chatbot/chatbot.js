@@ -1227,6 +1227,7 @@ function processChatMessage (data, maxRollbackCount = 20)
     }
     // check ignore list
     if (serverConfig.chatbotignorelist
+        && data.data["display-name"]
         && serverConfig.chatbotignorelist.toLowerCase().indexOf(data.data["display-name"].toLowerCase()) > -1
         && !submessage)
     {
@@ -1248,14 +1249,18 @@ function processChatMessage (data, maxRollbackCount = 20)
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
     //variable check if we have a direct question to the bot from chat
-    let directChatbotTriggerTag = (
-        // search the whole line
-        (serverConfig.chatbotnametriggertagstartofline == "off" &&
-            data.message.toLowerCase().includes(serverConfig.chatbotnametriggertag.toLowerCase()))
-        ||
-        // search for start of line
-        (serverConfig.chatbotnametriggertagstartofline == "on" &&
-            data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())));
+    let directChatbotTriggerTag = false;
+    if (data.message != null)
+    {
+        directChatbotTriggerTag = (
+            // search the whole line
+            (serverConfig.chatbotnametriggertagstartofline == "off" &&
+                data.message.toLowerCase().includes(serverConfig.chatbotnametriggertag.toLowerCase()))
+            ||
+            // search for start of line
+            (serverConfig.chatbotnametriggertagstartofline == "on" &&
+                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())));
+    }
 
     if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled != "on")
     {
@@ -1264,8 +1269,12 @@ function processChatMessage (data, maxRollbackCount = 20)
         return;
     }
     // user asked for a translation
-    let translateToEnglish = (serverConfig.translatetoeng == "on"
-        && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
+    let translateToEnglish = false;
+    if (data.message)
+    {
+        translateToEnglish = (serverConfig.translatetoeng == "on"
+            && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
+    }
 
     // skip messages we don't want to use for chatbot.
     if (!handledmessage && !submessage && !directChatQuestion && !translateToEnglish && !directChatbotTriggerTag)
@@ -1320,10 +1329,10 @@ function processChatMessage (data, maxRollbackCount = 20)
     }
 
     // Is the message long enough to be considered
-    if (data.message.length < serverConfig.chatbotminmessagelength
+    if (data.message && (data.message.length < serverConfig.chatbotminmessagelength
         && !directChatQuestion
         && !submessage
-        && !directChatbotTriggerTag)
+        && !directChatbotTriggerTag))
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("message not long enough (char minimum limit in settings) " + data.message + "'", data.message.length + "<" + serverConfig.chatbotminmessagelength)
@@ -1796,7 +1805,15 @@ function parseData (data, translation = false)
         }
     }
     // remove the @ messages but keep the names (might be better to remove them though still testing)
-    data.message = data.message.replace("@", "");
+    try
+    {
+        data.message = data.message.replace("@", "");
+    }
+    catch (error)
+    {
+        // debugging why we fail here. prob message is empty but it shouldn't be
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure again", error, error.message, JSON.stringify(data, null, 2));
+    }
     //remove non ascii chars (ie ascii art, unicode etc)
     if (!translation)
         data.message = data.message.replace(/[^\x00-\x7F]/g, "");
@@ -2097,4 +2114,3 @@ function findtriggerByMessageType (messagetype)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
-

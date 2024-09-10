@@ -233,7 +233,8 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SettingsWidgetSmallCode"
             || extension_packet.type === "RequestSettingsWidgetLargeCode"
-            || extension_packet.type === "SettingsWidgetLargeCode")
+            || extension_packet.type === "SettingsWidgetLargeCode"
+            || extension_packet.type === "TriggerAndActions")
         {
             // ignore these messages
         }

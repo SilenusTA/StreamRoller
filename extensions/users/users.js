@@ -50,10 +50,13 @@ const localConfig = {
     MaxServerConnectionAttempts: 20
 };
 const default_serverConfig = {
-    __version__: 0.3,
+    __version__: 0.4,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enableusersextension: "on",
+    cleardatausersextension: "off",
+    maxuserstokeep: "50",
+    maxusersmessagestokeep: "100",
     // how often to update the profile data for a user (default 30 days)
     profiletimeout: "30"
 };
@@ -176,8 +179,15 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
                 serverConfig.enableusersextension = "off";
+                if (serverConfig.cleardatausersextension == "on")
+                {
+                    serverData.userData = { twitch: {}, youtube: {} };
+                }
+                SaveDataToServer();
+
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
+                serverConfig.cleardatausersextension == "off";
                 SaveConfigToServer();
             }
         }
@@ -208,66 +218,82 @@ function onDataCenterMessage (server_packet)
         //serverData.userData = {};
         if (extension_packet.type === "trigger_ChatJoin" || extension_packet.type === "trigger_ChatMessageReceived")
         {
-
             let platform = extension_packet.data.parameters.platform
-            let name = ""
+            let username = ""
             if (extension_packet.type === "trigger_ChatJoin")
-                name = extension_packet.data.parameters.username.toLowerCase()
+                username = extension_packet.data.parameters.username.toLowerCase()
             else
-                name = extension_packet.data.parameters.sender.toLowerCase()
+                username = extension_packet.data.parameters.sender.toLowerCase()
             let timeStamp = Date.now()
             // new platform
             if (serverData.userData[platform] == undefined)
                 serverData.userData[platform] = {};
             // new user
-            if (serverData.userData[platform][name] == undefined)
+            if (serverData.userData[platform][username] == undefined)
             {
-                getUserIDData(name)
-                serverData.userData[platform][name] = {};
-                serverData.userData[platform][name].firstseen = timeStamp;
-                setTwitchBotStatus(name)
+                getUserIDData(username)
+                serverData.userData[platform][username] = {};
+                serverData.userData[platform][username].firstseen = timeStamp;
+                serverData.userData[platform][username]
+                setTwitchBotStatus(username)
                 sendNewUserTrigger(server_packet.data)
             }
             // check if we need to update the users profile data from twitch
-            else if (serverData.userData[platform][name].lastProfileUpdate == undefined ||
-                (timeStamp - serverData.userData[platform][name].lastProfileUpdate) >
-                (serverConfig.profiletimeout * millisecondsInDay))
+            // ignore users with invalid names (chinese chars etc as twitch fails on that call)
+            else if (
+                !serverData.userData[platform][username].userNameInvalid
+                && (serverData.userData[platform][username].lastProfileUpdate == undefined
+                    ||
+                    (timeStamp - serverData.userData[platform][username].lastProfileUpdate) >
+                    (serverConfig.profiletimeout * millisecondsInDay)))
             {
-                getUserIDData(name)
-                setTwitchBotStatus(name)
+                getUserIDData(username)
+                setTwitchBotStatus(username)
             }
 
-            serverData.userData[platform][name].lastseen = timeStamp;
+            serverData.userData[platform][username].lastseen = timeStamp;
             if (extension_packet.type === "trigger_ChatMessageReceived" && extension_packet.data.parameters.message)
             {
-                if (!serverData.userData[platform][name].messages)
-                    serverData.userData[platform][name].messages = [];
                 let message = extension_packet.data.parameters.message
-                let newMessage = { timeStamp, message }
-                serverData.userData[platform][name].messages.push(newMessage)
+                if (!serverData.userData[platform][username].messages)
+                    serverData.userData[platform][username].messages = [];
+                serverData.userData[platform][username].messages[timeStamp] = message;
+
             }
+            pruneUsers(platform);
             SaveDataToServer();
             //console.log(JSON.stringify(serverData, null, 2))
         }
         else if (extension_packet.type === "trigger_TwitchUserDetails")
         {
             //serverData.userData = {}
-            let platform = "twitch";
-            let name = extension_packet.data.parameters.userName.toLowerCase()
-            let timeStamp = Date.now()
+            try
+            {
+                let platform = "twitch";
+                let username = extension_packet.data.parameters.username.toLowerCase()
+                let timeStamp = Date.now()
+                if (serverData.userData[platform][username] == undefined)
+                    serverData.userData[platform][username] = {};
 
-            serverData.userData[platform][name].lastseen = timeStamp;
-            serverData.userData[platform][name].userId = extension_packet.data.parameters.userId
-            serverData.userData[platform][name].userDisplayName = extension_packet.data.parameters.userDisplayName
-            serverData.userData[platform][name].creationDate = extension_packet.data.parameters.creationDate
-            serverData.userData[platform][name].description = extension_packet.data.parameters.description
-            serverData.userData[platform][name].offlinePlaceholderUrl = extension_packet.data.parameters.offlinePlaceholderUrl
-            serverData.userData[platform][name].profilePictureUrl = extension_packet.data.parameters.profilePictureUrl
-            serverData.userData[platform][name].type = extension_packet.data.parameters.type
-            serverData.userData[platform][name].lastProfileUpdate = timeStamp
+                for (const [key, value] of Object.entries(extension_packet.data.parameters))
+                    serverData.userData[platform][username][key] = value;
+                serverData.userData[platform][username].lastseen = timeStamp;
+                serverData.userData[platform][username].lastProfileUpdate = timeStamp
+                pruneUsers(platform);
+                SaveDataToServer();
+            }
+            catch (error)
+            {
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + " packet trigger_TwitchUserDetails", error.message);
+            }
+        }
+        else if (extension_packet.type === "HeartBeat"
+            || extension_packet.dest_channel === "TWITCH_CHAT")
+        {
+            //ignore these
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -304,6 +330,80 @@ function onDataCenterMessage (server_packet)
     else
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+function pruneUsers (platform)
+{
+
+    let count = 0
+    try
+    {
+        while (Object.keys(serverData.userData[platform]).length > serverConfig.maxuserstokeep)
+        {
+            // some surge protection. only delete upto 100 at a time
+            if (count++ > 100)
+                return;
+
+            // prunes message stored
+            let currentOldestMessage = 0;
+            let oldestMessageId = "";
+            let currentOldest = 0;
+            let oldestId = "";
+            for (const [user, userData] of Object.entries(serverData.userData[platform]))
+            {
+                //#################
+                //find oldest users
+                if (user != "botList")
+                {
+                    //#########################
+                    // check number of messages
+                    if (userData.messages)
+                    {
+                        while (Object.entries(userData.messages).length > serverConfig.maxusersmessagestokeep)
+                        {
+                            for (const [userMessageId, userMessageData] of Object.entries(userData.messages))
+                            {
+                                if (currentOldestMessage == 0)
+                                {
+                                    currentOldest = userMessageData.timeStamp;
+                                    oldestMessageId = userMessageId
+                                }
+                                if (userMessageData.timeStamp < currentOldestMessage)
+                                {
+                                    currentOldestMessage = userMessageData.timeStamp;
+                                    oldestMessageId = userMessageId
+                                }
+                            }
+                            // delete the oldest message found
+                            if (serverData.userData[platform][user].messages[oldestMessageId])
+                                delete serverData.userData[platform][user].messages[oldestMessageId];
+                        }
+                    }
+
+                    if (currentOldest == 0)
+                    {
+                        currentOldest = serverData.userData[platform][user].lastseen;
+                        oldestId = user
+                    }
+                    if (serverData.userData[platform][user].lastseen < currentOldest)
+                    {
+                        currentOldest = serverData.userData[platform][user].lastseen;
+                        oldestId = user
+                    }
+                }
+            }
+            // delete the oldest user found
+            if (serverData.userData[platform][oldestId])
+                delete serverData.userData[platform][oldestId];
+        }
+    }
+    catch (error)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".pruneUsers", platform, error.message);
+    }
 }
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
@@ -442,12 +542,12 @@ async function getTwitchBotStatusList ()
     {
         if (err._statusCode == 400)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get user");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get bot list");
             console.error(err._body);
         }
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get user)");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Error");
             console.error(err);
         }
     }
@@ -457,17 +557,11 @@ async function getTwitchBotStatusList ()
 // ===========================================================================
 async function setTwitchBotStatus (name)
 {
-    console.log("getTwitchBotStatus checking", name)
+
     if (serverData.userData["twitch"].botList.includes(name))
-    {
-        console.log("twitch.getUser:", name, " \x1b[31m Account is a bot \x1b[0m")
         serverData.userData["twitch"][name].isBot = true;
-    }
     else
-    {
-        console.log("twitch.getUser:", name, " \x1b[32m Not a bot \x1b[0m")
         serverData.userData["twitch"][name].isBot = false;
-    }
     SaveDataToServer()
 }
 // ===========================================================================

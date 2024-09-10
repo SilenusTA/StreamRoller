@@ -58,7 +58,8 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     saveDataHandle: null,
-    logRawMessages: false
+    logRawMessages: false,
+    joinChannelScheduleHandle: null
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
@@ -76,6 +77,7 @@ localConfig.twitchClient["bot"] = {
 localConfig.twitchClient["user"] = {
     connection: null,
     connecting: false,
+    channeState: [],// monitor joins
     state: {
         readonly: true,
         connected: false,
@@ -967,7 +969,9 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.data === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-        setTimeout(() =>
+
+        clearTimeout(localConfig.rejoinChannelScheduleHandle);
+        localConfig.joinChannelScheduleHandle = setTimeout(() =>
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1427,26 +1431,37 @@ function joinChatChannel (account)
 {
     let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
     let chatmessagetags = { "display-name": "System", "emotes": "" };
-    if (serverConfig.enabletwitchchat === "on")
+    if (serverConfig.enabletwitchchat === "on"
+        && localConfig.twitchClient[account].channeState[serverConfig.streamername] != "connecting")
     {
-        localConfig.twitchClient[account].connection.join(serverConfig.streamername)
-            .then(() =>
-            {
-                localConfig.twitchClient[account].state.connected = true;
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "Chat channel changed to " + serverConfig.streamername);
-                process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
-            }
-            )
-            .catch((err) =>
-            {
-                localConfig.twitchClient[account].state.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err.message, " sheduling reconnect");
-                process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
-                setTimeout(() =>
+        localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connecting";
+        try
+        {
+            localConfig.twitchClient[account].connection.join(serverConfig.streamername)
+                .then(() =>
                 {
-                    reconnectChat(account)
-                }, 5000)
-            });
+                    localConfig.twitchClient[account].state.connected = true;
+                    localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connected";
+                    process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
+                }
+                )
+                .catch((err) =>
+                {
+                    localConfig.twitchClient[account].state.connected = false;
+                    localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connect failed";
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+                    process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
+                    setTimeout(() =>
+                    {
+                        reconnectChat(account)
+                    }, 5000)
+                });
+        }
+        catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "connect failed", err
+            );
+        }
     }
 }
 // ############################# IRC Client Initial Connection  #########################################
@@ -1499,7 +1514,7 @@ function connectToTwtich (account)
 function chatLogin (account)
 {
     let triggertosend = {};
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames[account]["name"])
+    //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Connecting with OAUTH for ", localConfig.usernames[account]["name"])
     try 
     {
         try
@@ -1516,7 +1531,7 @@ function chatLogin (account)
         }
         catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Failed to get twitch client for" + account + ":", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".chatLogin", "Failed to get twitch client for", account, ":", err.message);
         }
 
         localConfig.twitchClient[account].connection.connect()
@@ -1591,6 +1606,10 @@ function chatLogin (account)
                 safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
                 // remove unicode
                 safemessage = safemessage.replace(/[\u{0080}-\u{FFFF}]/gu, "");
+
+                if (!userstate['display-name'])
+                    userstate['display-name'] = "<twitchchat.error receiving message data>"
+
                 process_chat_data(channel, userstate, message);
 
                 triggertosend = findtriggerByMessageType("trigger_ChatMessageReceived")

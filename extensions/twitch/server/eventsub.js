@@ -751,6 +751,7 @@ function onChannelRaidFrom (data)
         trigger.parameters.streamer = data.raidedBroadcasterDisplayName;
         trigger.parameters.raider = data.raidingBroadcasterDisplayName;
         trigger.parameters.viewers = data.viewers;
+        console.log("twitch.raidfrom received", data)
         sendTrigger(trigger)
     }
     catch (err)

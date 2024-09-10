@@ -359,22 +359,42 @@ function SaveConfigToServer ()
  * Sends the triggers and actions to the extension or broadcast if extension name is ""
  * @param {string} extension 
  */
-function sendTriggersAndActions (extension = "")
+function sendTriggersAndActions (extension)
 {
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("ExtensionMessage",
-            serverConfig.extensionname,
-            sr_api.ExtensionPacket(
-                "TriggerAndActions",
+    if (extension != "")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
                 serverConfig.extensionname,
-                triggersandactions,
+                sr_api.ExtensionPacket(
+                    "TriggerAndActions",
+                    serverConfig.extensionname,
+                    triggersandactions,
+                    "",
+                    extension
+                ),
                 "",
                 extension
-            ),
-            "",
-            extension
+            )
         )
-    )
+    }
+    else
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "TriggerAndActions",
+                    serverConfig.extensionname,
+                    triggersandactions,
+                    serverConfig.channel,
+                    ""
+                ),
+                serverConfig.channel,
+                ""
+            )
+        )
+    }
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer

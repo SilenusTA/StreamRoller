@@ -881,7 +881,8 @@ const triggersandactions =
                 description: "Twitch User Data",
                 messagetype: "trigger_TwitchUserDetails",
                 parameters: {
-                    userName: "",
+                    username: "",
+                    userNameInvalid: false,
                     userId: "",
                     userDisplayName: "",
                     creationDate: "",
@@ -951,6 +952,19 @@ const triggersandactions =
                 parameters: { user: "" }
             },
             {
+                name: "Ban",
+                displaytitle: "Ban a user",
+                description: "Bans a user from the stream",
+                messagetype: "action_TwitchBan",
+                parameters: { user: "", reason: "" }
+            },
+            {
+                name: "Unban",
+                displaytitle: "Unban a user",
+                description: "Unbans a user from the stream",
+                messagetype: "action_TwitchUnban",
+                parameters: { user: "", reason: "" }
+            }, {
                 name: "FollowerCount",
                 displaytitle: "Follower Count",
                 description: "Get follower count",
@@ -1207,7 +1221,6 @@ function onDataCenterConnect (socket)
 
     clearTimeout(localConfig.heartBeatHandle);
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
-
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -1395,6 +1408,28 @@ function onDataCenterMessage (server_packet)
                 removeMod(extension_packet.data.user)
             else
                 logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove Mod from a user with no username provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchBan
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchBan")
+        {
+            console.log("action_TwitchBan")
+            if (extension_packet.data.user != "")
+                banUser(extension_packet.data.user, extension_packet.data.reason)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to ban a user with no username provided");
+        }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchUnban
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_TwitchUnban")
+        {
+            console.log("action_TwitchBan")
+            if (extension_packet.data.user != "")
+                unbanUser(extension_packet.data.user, extension_packet.data.reason)
+            else
+                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unban user with no username provided");
         }
         // -----------------------------------------------------------------------------------
         //                   action_TwitchFollowerCount
@@ -1624,6 +1659,7 @@ function onDataCenterMessage (server_packet)
         || server_packet.type === "HeartBeat"
         || server_packet.type === "UnknownExtension"
         || server_packet.type === "ChannelJoined"
+        || server_packet.type === "LoggingLevel"
     )
     {
         // just a blank handler for items we are not using to avoid message from the catch all
@@ -2009,6 +2045,71 @@ async function removeMod (username)
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeMod", "ERROR", "Failed to remove Moderator)");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: banUser
+// ===========================================================================
+async function banUser (username, reason)
+{
+    try
+    {
+        console.log("banUser", username, reason)
+        console.log("banUser", localConfig.apiClient)
+        let user = await localConfig.apiClient.users.getUserByName(username)
+        console.log("banUser", user)
+        let banData = {
+            duration: 0,
+            reason: "streamrollerBan:" + reason,
+            user: user.id
+        }
+        await localConfig.apiClient.moderation.banUser(localConfig.streamerData.id, banData)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".banUser", "ERROR", "Failed to ban User?");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".banUser", "ERROR", "Failed to ban User)");
+            console.error(err);
+        }
+    }
+}
+unbanUser
+// ===========================================================================
+//                           FUNCTION: unbanUser
+// ===========================================================================
+async function unbanUser (username, reason)
+{
+    try
+    {
+        console.log("unbanUser", username, reason)
+        console.log("unbanUser", localConfig.apiClient)
+        let user = await localConfig.apiClient.users.getUserByName(username)
+        console.log("unbanUser", user)
+        let banData = {
+            duration: 0,
+            reason: "streamrollerBan:" + reason,
+            user: user.id
+        }
+        await localConfig.apiClient.moderation.unbanUser(localConfig.streamerData.id, user.id)
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser", "ERROR", "Failed to ban User?");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser", "ERROR", "Failed to ban User)");
             console.error(err);
         }
     }
@@ -2473,34 +2574,51 @@ async function deleteBlock (data)
     }
 }
 // ===========================================================================
+//                           FUNCTION: containsBadChars
+// ===========================================================================
+function containsBadChars (s)
+{
+    return /[\u3040-\uffff]/.test(s);
+}
+// ===========================================================================
 //                           FUNCTION: getUser
 // ===========================================================================
 async function getUser (username)
 {
+
+    let trigger = findTriggerByMessageType("trigger_TwitchUserDetails")
     try
     {
-        let user = await localConfig.apiClient.users.getUserByName(username)
-        let trigger = findTriggerByMessageType("trigger_TwitchUserDetails")
-        trigger.parameters.userName = user.name
-        trigger.parameters.userId = user.id
-        trigger.parameters.userDisplayName = user.displayName
-        trigger.parameters.creationDate = user.creationDate
-        trigger.parameters.description = user.description
-        trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
-        trigger.parameters.profilePictureUrl = user.profilePictureUrl
-        trigger.parameters.type = user.type
+        if (containsBadChars(username))
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "username contains invalid chars, ignoring", username);
+            trigger.parameters.username = username;
+            trigger.parameters.userNameInvalid = true;
+        }
+        else
+        {
+            let user = await localConfig.apiClient.users.getUserByName(username)
+            trigger.parameters.username = user.name
+            trigger.parameters.userId = user.id
+            trigger.parameters.userDisplayName = user.displayName
+            trigger.parameters.creationDate = user.creationDate
+            trigger.parameters.description = user.description
+            trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
+            trigger.parameters.profilePictureUrl = user.profilePictureUrl
+            trigger.parameters.type = user.type
+        }
         sendTrigger(trigger)
     }
     catch (err)
     {
         if (err._statusCode == 400)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getUser", "ERROR", "Failed to get user");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "ERROR", "400:Failed to get user", username);
             console.error(err._body);
         }
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getUser", "ERROR", "Failed to get user)");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "ERROR", "Failed to get user)", username);
             console.error(err);
         }
     }

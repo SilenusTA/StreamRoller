@@ -268,6 +268,11 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode"
+            || extension_packet.type === "TriggerAndActions")
+        {
+            // we don't handle these yet
+        }
         else
             logger.warn("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 

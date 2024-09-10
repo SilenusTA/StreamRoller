@@ -202,7 +202,7 @@ const triggersandactions =
             {
                 name: "StreamlabsTwitchSubMysteryAlert",
                 displaytitle: "SubMystery gift on Twitch",
-                description: "Someone figted some subs on your Twitch stream",
+                description: "Someone gifted some subs on your Twitch stream",
                 messagetype: "trigger_TwitchSubMysteryGiftReceived",
                 parameters: {
                     gifter: "",
@@ -432,11 +432,15 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            connectToStreamlabs(server_packet.data);
-        else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
+                serverConfig.extensionname, "Reconnecting due to credentials change");
+            connectToStreamlabs(server_packet.data);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                serverConfig.extensionname, "CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
 
     }
