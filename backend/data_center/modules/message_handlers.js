@@ -36,11 +36,17 @@
 // Description: Import/Variable section
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-import * as logger from "./logger.js";
-import * as cm from "./common.js";
+import { Buffer } from 'buffer';
 import sr_api from "../public/streamroller-message-api.cjs";
+import * as cm from "./common.js";
+import * as logger from "./logger.js";
+
 const SYSTEM_LOGGING_TAG = "DATA-CENTER";
 const EXTENSION_NAME = "datacenter";
+let monitorSocketSentData = false;
+let socketSentSize = 0;
+
+
 // ============================================================================
 //                           FUNCTION: sendConfig
 // ============================================================================
@@ -55,6 +61,8 @@ function sendConfig (client_socket, extensionname)
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendConfig",
         "Sending config file", extensionname, loadedConfig);
     let msg = sr_api.ServerPacket("ConfigFile", EXTENSION_NAME, loadedConfig, "", extensionname);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     client_socket.emit("message", msg);
 }
 // ============================================================================
@@ -83,6 +91,8 @@ function sendData (client_socket, extensionname)
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendData",
         "Sending data file", extensionname, loadedData);
     let msg = sr_api.ServerPacket("DataFile", EXTENSION_NAME, loadedData, "", extensionname);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     client_socket.emit("message", msg);
 }
 // ============================================================================
@@ -99,6 +109,8 @@ function sendSoftwareVersion (client_socket, extensionname)
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendData",
         "Sending data file", extensionname, loadedData);
     let msg = sr_api.ServerPacket("SoftwareVersion", EXTENSION_NAME, loadedData, "", extensionname);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     client_socket.emit("message", msg);
 }
 // ============================================================================
@@ -131,6 +143,8 @@ function sendExtensionList (clientsocket, extensionname, extensions)
     }
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendExtensionList", "sending ExtensionList to " + extensionname);
     let msg = sr_api.ServerPacket("ExtensionList", EXTENSION_NAME, names, "", extensionname);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     clientsocket.emit("message", msg);
 }
 // ============================================================================
@@ -146,6 +160,8 @@ function sendChannelList (socket, extensionname, channels)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendChannelList", "Sending CannelsList to " + extensionname);
     let msg = sr_api.ServerPacket("ChannelList", EXTENSION_NAME, channels, "", extensionname);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     socket.emit("message", msg)
 }
 // ============================================================================
@@ -162,13 +178,16 @@ function sendChannelList (socket, extensionname, channels)
  */
 function createChannel (server_socket, client_socket, channel_to_create, channels, extensionname)
 {
+    var msg;
     if (channels.includes(channel_to_create))
     {
         logger.info("[" + SYSTEM_LOGGING_TAG + "] message_handlers.createChannel:",
             "Channel " + channel_to_create + " exists. Joining existing channel instead " + extensionname);
         client_socket.join(channel_to_create);
-        server_socket.emit("message",
-            sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_create, "", extensionname));
+        msg = sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_create, "", extensionname);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        server_socket.emit("message", msg);
     } else
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.createChannel", "Extension:"
@@ -177,8 +196,10 @@ function createChannel (server_socket, client_socket, channel_to_create, channel
         client_socket.join(channel_to_create);
         // add channel to list
         channels.push(channel_to_create);
-        server_socket.emit("message",
-            sr_api.ServerPacket("ChannelCreated", EXTENSION_NAME, channel_to_create, "", extensionname));
+        msg = sr_api.ServerPacket("ChannelCreated", EXTENSION_NAME, channel_to_create, "", extensionname);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        server_socket.emit("message", msg);
     }
 }
 // ============================================================================
@@ -195,6 +216,7 @@ function createChannel (server_socket, client_socket, channel_to_create, channel
  */
 function joinChannel (server_socket, client_socket, channel_to_join, channels, extensionname)
 {
+    var msg;
     if (channels.includes(channel_to_join))
     {
         logger.info("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
@@ -202,14 +224,18 @@ function joinChannel (server_socket, client_socket, channel_to_join, channels, e
         // attach socket to channel
         client_socket.join(channel_to_join);
         //broadcast out that the extension doing the channel
-        server_socket.emit("message",
-            sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_join, "", extensionname));
+        msg = sr_api.ServerPacket("ChannelJoined", EXTENSION_NAME, channel_to_join, "", extensionname);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        server_socket.emit("message", msg);
     } else
     {
-        logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
-            + extensionname + " joining unknown channel " + channel_to_join);
-        client_socket.emit("message",
-            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, channel_to_join, "", extensionname));
+        logger.warn("[" + SYSTEM_LOGGING_TAG + "] message_handlers.joinChannel", "Extension:"
+            + extensionname + " joining unknown channel. extension needs to reschedule. channel:" + channel_to_join);
+        msg = sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, channel_to_join, "", extensionname);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        client_socket.emit("message", msg);
     }
 }
 // ============================================================================
@@ -252,6 +278,8 @@ function setLoggingLevel (server_socket, level)
     logger.setLoggingLevel(level);
     let msg = sr_api.ServerPacket("LoggingLevel",
         EXTENSION_NAME, logger.getLoggingLevel());
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     server_socket.emit("message", msg);
 }
 // ============================================================================
@@ -267,6 +295,8 @@ function sendLoggingLevel (client_socket)
         "setting logging to " + logger.getLoggingLevel());
     let msg = sr_api.ServerPacket("LoggingLevel",
         EXTENSION_NAME, logger.getLoggingLevel());
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
     client_socket.emit("message", msg);
 }
 // ============================================================================
@@ -282,21 +312,25 @@ function sendLoggingLevel (client_socket)
  */
 function forwardMessage (client_socket, server_packet, channels, extensions)
 {
+    var msg;
     // check if we tried to send to an invalid channel or extension name
-
     // if message provides a destination but we don't a client socket for it
     if (server_packet.to && extensions[server_packet.to] && !extensions[server_packet.to].socket)
     {
         logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "UnknownExtension:", server_packet.to, " connection doesn't exist (maybe still loading?) from " + server_packet.from);
-        client_socket.emit("message",
-            sr_api.ServerPacket("UnknownExtension", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet }));
+        msg = sr_api.ServerPacket("UnknownExtension", EXTENSION_NAME, { error: "extensions has no connection", message: server_packet });
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+        client_socket.emit("message", msg);
     }
     // send direct to client
     else if (extensions[server_packet.to] && extensions[server_packet.to].socket)
     {
         logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:extension:", server_packet.type, server_packet.to, server_packet.data);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(server_packet));
         extensions[server_packet.to].socket.emit("message", server_packet)
     }
     //if message provides a channel but we don't have that channel in our list then return an error
@@ -304,20 +338,26 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     {
         logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "UnknownChannel:", server_packet.dest_channel, "doesn't exist (is the extension running?) from " + server_packet.from);
-        client_socket.emit("message",
-            sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, server_packet.dest_channel));
+        msg = sr_api.ServerPacket("UnknownChannel", EXTENSION_NAME, server_packet.dest_channel);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+        client_socket.emit("message", msg);
     }
     // send to channel
     else if (server_packet.dest_channel && channels.includes(server_packet.dest_channel))
     {
         logger.extra("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:channel:", server_packet.type, server_packet.dest_channel);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(server_packet));
         client_socket.to(server_packet.dest_channel).emit("message", server_packet);
     }
     else
     {// broadcast (except the sender)
         logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.forwardMessage",
             "Destination:BROADCAST(Except sender):", server_packet);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(server_packet));
         client_socket.broadcast.emit("message", server_packet);
     }
 }
@@ -336,12 +376,15 @@ function RetrieveCredentials (from, extensions)
 {
 
     let loadedCredentials = cm.loadCredentials(from);
+    let msg
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
         "Sending credential file", from);
     if (loadedCredentials && loadedCredentials.ExtensionName && extensions[loadedCredentials.ExtensionName])
     {
         // create our message packet
         let msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, loadedCredentials, "", loadedCredentials.ExtensionName);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
         extensions[loadedCredentials.ExtensionName].socket.emit("message", msg);
     }
     else
@@ -349,8 +392,10 @@ function RetrieveCredentials (from, extensions)
         logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
             from + " No data Credentials available or ExtensionName not valid in credential file");
         // send an empty message back so the extension can check for missin credentials
-        extensions[from].socket.emit("message",
-            sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from));
+        msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from)
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+        extensions[from].socket.emit("message", msg);
     }
 }
 // ============================================================================
@@ -365,6 +410,8 @@ function broadcastMessage (server_socket, server_packet)
 {
     logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.broadcastMessage",
         "Destination:BROADCAST(Except sender)", server_packet.type, server_packet.from);
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(server_packet));
     server_socket.emit("message", server_packet);
 }
 // ============================================================================
@@ -380,32 +427,32 @@ function errorMessage (client_socket, error, data)
 {
     logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.errorMessage",
         error, data);
-    client_socket.emit("message",
-        sr_api.ServerPacket("InvalidMessage",
-            EXTENSION_NAME,
-            { error: error, data: data }))
+    let msg = sr_api.ServerPacket("InvalidMessage",
+        EXTENSION_NAME,
+        { error: error, data: data });
+    if (monitorSocketSentData)
+        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+    client_socket.emit("message", msg)
+}
+// ============================================================================
+//                           FUNCTION: errorMessage
+// ============================================================================
+/**
+ * Send an error message to the given socket
+ * @param {object} server_socket 
+ * @param {int} receivedSize 
+ */
+function sendDataLoad (server_socket, receivedSize)
+{
+    //server_socket.emit("message", { "Input": receivedSize, "Output": socketSentSize });
+    console.log("Input KB:\t", (receivedSize / 1024).toFixed(2), "   \tOutput KB\t", (socketSentSize / 1024).toFixed(2));
+    socketSentSize = 0;
 }
 // ============================================================================
 //                           EXPORTS: 
 // ============================================================================
 export
 {
-    sendConfig,
-    saveConfig,
-    sendData,
-    saveData,
-    sendExtensionList,
-    sendChannelList,
-    createChannel,
-    leaveChannel,
-    joinChannel,
-    setLoggingLevel,
-    sendLoggingLevel,
-    forwardMessage,
-    broadcastMessage,
-    errorMessage,
-    UpdateCredentials,
-    RetrieveCredentials,
-    sendSoftwareVersion
-}
+    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, sendDataLoad
+};
 

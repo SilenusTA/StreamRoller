@@ -516,7 +516,7 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
                 // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
                 if (i.indexOf("MATCHER_") != 0 && i != "cooldown" && i != "lastrun")
                 {
-                    // get the relevent matcher for this value
+                    // get the relevant matcher for this value
                     let searchtype = param["MATCHER_" + i]
                     if (typeof (receivedTrigger.data.parameters[i]) == "string")// && typeof param[i] === "string")
                     {

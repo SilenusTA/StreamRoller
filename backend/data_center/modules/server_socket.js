@@ -94,6 +94,7 @@ import * as cm from "./common.js";
 import * as logger from "./logger.js";
 import * as mh from "./message_handlers.js";
 import * as v8 from 'node:v8';
+import { Buffer } from 'buffer';
 
 const channels = [];
 let extensions = {};// all extensions
@@ -102,6 +103,10 @@ let backend_server = null;
 let server_socket = null;
 let config = {};
 let monitorHeapStats = false;
+//monitor data over websocket
+let monitorSocketReceivedData = false;
+let socketReceivedSize = 0;
+let monitorDataHandle = 0;
 // these maintain a list of extensions that have requested an extension list
 // it only handles 'connected' extensions and will ignore extensions without 
 // a valid socket connection
@@ -138,13 +143,24 @@ function start (app, server, exts)
             maxHttpBufferSize: 1e8,// 100MB had to increase for flight sim
         });
         logger.log("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.start", "Server is running and waiting for clients");
+        if (monitorSocketReceivedData)
+            dataMonitorScheduler();
         // wait for messages
         server_socket.on("connection", (socket) =>
         {
             // call onConnect to store the connection details
-            onConnect(socket);
-            socket.on("disconnect", (reason) => onDisconnect(socket, reason));
-            socket.on("message", (data) => onMessage(socket, data));
+            if (monitorSocketReceivedData)
+            {
+                onConnect(socket);
+                socket.on("disconnect", (reason) => onDisconnect(socket, reason));
+                socket.on("message", (data) => socketReceiveDebug(socket, data));
+            }
+            else
+            {
+                onConnect(socket);
+                socket.on("disconnect", (reason) => onDisconnect(socket, reason));
+                socket.on("message", (data) => onMessage(socket, data));
+            }
         });
     } catch (err)
     {
@@ -196,7 +212,7 @@ function onDisconnect (socket, reason)
  */
 function onMessage (socket, server_packet)
 {
-    logger.extra("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet);
+    //logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", server_packet);
     // make sure we are using the same api version
     if (server_packet.version != config.apiVersion)
     {
@@ -206,13 +222,14 @@ function onMessage (socket, server_packet)
         logger.info("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "!!!!!!! Message System API version doesn't match: ", server_packet);
         mh.errorMessage(socket, "Incorrect api version", server_packet);
-        //console.log("message:", JSON.stringify(server_packet, null, 2));
         return;
     }
 
     // check that the sender has sent a name and id
     if (!server_packet.type || !server_packet.from || !server_packet.type === "" || !server_packet.from === "")
     {
+
+        console.log(JSON.stringify(server_packet, null, 2))
         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage",
             "!!!!!!! Invalid data: ", server_packet);
         mh.errorMessage(socket, "Missing type/from field", server_packet);
@@ -315,7 +332,7 @@ function onMessage (socket, server_packet)
     else if (server_packet.type === "ChannelData")
     {
         if (server_packet.dest_channel === undefined)
-            mh.errorMessage(socket, "No Channel specified for ChannelData", server_packet);
+            mh.errorMessage(socket, "No dest_channel specified for ChannelData", server_packet);
         else
             mh.forwardMessage(socket, server_packet, channels, extensions);
     }
@@ -340,7 +357,10 @@ function onMessage (socket, server_packet)
             monitorHeapStats = false;
     }
     else
-        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message", server_packet);
+    {
+        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "Unhandled message");
+        console.log(JSON.stringify(server_packet, null, 2))
+    }
 
 }
 // ============================================================================
@@ -372,7 +392,7 @@ function updateExtensionsListRequesters ()
     }
 }
 
-// ============================================================================
+// ===========================================================================
 //                      heapStatsScheduler()
 // ===========================================================================
 
@@ -396,6 +416,29 @@ function dumpHeapStats ()
         heapStatsScheduler()
 }
 //end Debugheap
+
+// ===========================================================================
+//                      DataMonitor
+// ===========================================================================
+function socketReceiveDebug (socket, server_packet)
+{
+    socketReceivedSize = socketReceivedSize + Buffer.byteLength(JSON.stringify(server_packet))
+    onMessage(socket, server_packet)
+}
+function dataMonitorScheduler ()
+{
+    mh.sendDataLoad(server_socket, socketReceivedSize);
+    socketReceivedSize = 0;
+    if (monitorSocketReceivedData)
+    {
+
+        clearTimeout(monitorDataHandle);
+        monitorDataHandle = setTimeout(() =>
+        {
+            dataMonitorScheduler();
+        }, "1000");
+    }
+}
 // ============================================================================
 //                           EXPORTS:
 // ============================================================================
