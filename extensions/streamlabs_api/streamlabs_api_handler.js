@@ -680,8 +680,6 @@ function parseTriggers (data)
     //if (data.type === "donation" && data.for === "streamlabs")
     if (data.type === "donation")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".parseTriggers", "data: ", data);
         trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsDonationAlert")
         if (trigger)
         {

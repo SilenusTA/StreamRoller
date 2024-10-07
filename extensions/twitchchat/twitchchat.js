@@ -64,6 +64,7 @@ const localConfig = {
 localConfig.twitchClient["bot"] = {
     connection: null,
     connecting: false,
+    channelState: [],// monitor joins
     state: {
         readonly: true,
         connected: false,
@@ -77,7 +78,7 @@ localConfig.twitchClient["bot"] = {
 localConfig.twitchClient["user"] = {
     connection: null,
     connecting: false,
-    channeState: [],// monitor joins
+    channelState: [],// monitor joins
     state: {
         readonly: true,
         connected: false,
@@ -1419,7 +1420,7 @@ function reconnectChat (account)
     }
     catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed", serverConfig.streamername, err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Changing stream failed for (account,streamer,err):", account, serverConfig.streamername, err.message);
         localConfig.twitchClient[account].state.connected = false;
         localConfig.twitchClient[account].connecting = false;
     }
@@ -1432,23 +1433,23 @@ function joinChatChannel (account)
     let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
     let chatmessagetags = { "display-name": "System", "emotes": "" };
     if (serverConfig.enabletwitchchat === "on"
-        && localConfig.twitchClient[account].channeState[serverConfig.streamername] != "connecting")
+        && localConfig.twitchClient[account].channelState[serverConfig.streamername] != "connecting")
     {
-        localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connecting";
+        localConfig.twitchClient[account].channelState[serverConfig.streamername] = "connecting";
         try
         {
             localConfig.twitchClient[account].connection.join(serverConfig.streamername)
                 .then(() =>
                 {
                     localConfig.twitchClient[account].state.connected = true;
-                    localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connected";
+                    localConfig.twitchClient[account].channelState[serverConfig.streamername] = "connected";
                     process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
                 }
                 )
                 .catch((err) =>
                 {
                     localConfig.twitchClient[account].state.connected = false;
-                    localConfig.twitchClient[account].channeState[serverConfig.streamername] = "connect failed";
+                    localConfig.twitchClient[account].channelState[serverConfig.streamername] = "connect failed";
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
                     process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                     setTimeout(() =>
@@ -1599,7 +1600,7 @@ function chatLogin (account)
             });
             localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
             {
-                //file_log("chat", userstate, message);
+                file_log("chat", userstate, message);
                 // replace the html parts of the string with their escape chhars
                 let safemessage = sanitiseHTML(message);
                 // remove non ascii chars

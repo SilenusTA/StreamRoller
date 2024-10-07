@@ -2578,7 +2578,8 @@ async function deleteBlock (data)
 // ===========================================================================
 function containsBadChars (s)
 {
-    return /[\u3040-\uffff]/.test(s);
+    //return /[\u3040-\uffff]/.test(s);
+    return /[\u3100-\uffff]/.test(s);
 }
 // ===========================================================================
 //                           FUNCTION: getUser
@@ -2600,14 +2601,24 @@ async function getUser (username)
             if (localConfig.apiClient.users)
             {
                 let user = await localConfig.apiClient.users.getUserByName(username)
-                trigger.parameters.username = user.name
-                trigger.parameters.userId = user.id
-                trigger.parameters.userDisplayName = user.displayName
-                trigger.parameters.creationDate = user.creationDate
-                trigger.parameters.description = user.description
-                trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
-                trigger.parameters.profilePictureUrl = user.profilePictureUrl
-                trigger.parameters.type = user.type
+                if (user)
+                {
+                    trigger.parameters.username = user.name
+                    trigger.parameters.userId = user.id
+                    trigger.parameters.userDisplayName = user.displayName
+                    trigger.parameters.creationDate = user.creationDate
+                    trigger.parameters.description = user.description
+                    trigger.parameters.offlinePlaceholderUrl = user.offlinePlaceholderUrl
+                    trigger.parameters.profilePictureUrl = user.profilePictureUrl
+                    trigger.parameters.type = user.type
+                }
+                else
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "username not found", username);
+                    console.log(user);
+                    trigger.parameters.username = username;
+                    trigger.parameters.userNameInvalid = true;
+                }
             }
         }
         sendTrigger(trigger)
