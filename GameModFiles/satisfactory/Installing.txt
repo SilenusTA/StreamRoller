@@ -1,0 +1,46 @@
+As the mod tools have yet to be updated for V1.0 of satisfactory you will need to copy the files manually 
+to the correct directory.
+
+How to install the satisfactory extension for streamroller.
+-----------------------------------------------------------
+Install folder in satisfactory. If running from steam the usual place will be in
+    "C:\Program Files (x86)\Steam\steamapps\common"
+
+From there you need to copy the files into the 'common\Satisfactory\FactoryGame\Mods' directory
+
+There are three parts to the mod explained below. These can be found in the StreamRoller directory 
+    "%appdata%\..\local\StreamRoller\GameModFiles\satisfactory"
+
+Installing the mod files
+------------------------
+1) The mod itself. 
+Found in "%appdata%\..\local\StreamRoller\GameModFiles\satisfactory\streamroller\StreamRoller-Windows.zip" 
+Create a new folder called 'StreamRoller' in your Mods directory and extract the contents of this zip so into that directory. 
+You should end up with a folder called StreamRoller in the Mods folder
+    <install directory>\Satisfactory\FactoryGame\Mods\StreamRoller\
+This folder should contain the following
+    folder Binaries 
+    folder contents
+    folder Resources
+    file StreamRoller.uplugin
+
+2) SocketIo dependancy mod
+StreamRoller needs another mod called SocketIOClient. 
+If you don't have this mod already (ie the Mods folder doesn't include the SocketIOClient folder) then follow the same steps for 1) above for the SocketIOClient mod.
+You should end up with a folder called 
+<install directory>\Satisfactory\FactoryGame\Mods\SocketIOClient\
+
+3) SML (SatisfactoryModLoader)
+SML is the mod used to load mods into the game. Currently this is the part that all mod makers are waiting to be 
+updated to Satisfactory v1.0. Until this is updated you can use my developement vers to enable mod loading into 
+the game.
+As for 1) above install this like any other mod. ie copy the contents of the SML-Windows.zip into a folder called SML in the mods directory.
+You should end up with a folder called 
+<install directory>\Satisfactory\FactoryGame\Mods\SML\
+
+Checking it worked
+------------------------
+If all has worked correctly you should now see the StreamRoller mod in the mods options in game.
+Happy playing.
+
+
