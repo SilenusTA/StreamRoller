@@ -336,7 +336,10 @@ function sendRandomFact (delay = 1000, counter = 5)
                         sr_api.ExtensionPacket(
                             "trigger_RandomFact",
                             serverConfig.extensionname,
-                            message,
+                            {
+                                account: "bot",
+                                message: message
+                            },                            
                             serverConfig.channel,
                         ),
                         serverConfig.channel,
