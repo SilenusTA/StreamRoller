@@ -594,7 +594,10 @@ function TriggerAction (action, triggerParams)
     if (action.paused)
         return
     if (serverConfig.autopilotenabled != "on")
+    {
+        console.log("autopilot turned off, ignoring triggers")
         return;
+    }
     // regular expression to test if input is a mathmatical equasion
     // note this seems to get confused if a string has -1 in it.
     // BUG::: need a better regex
