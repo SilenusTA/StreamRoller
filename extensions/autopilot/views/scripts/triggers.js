@@ -175,12 +175,13 @@ function triggersLoadTriggers (name)
     {
         if (triggerextensiontriggers == "")
         {
-            triggerextensiontriggers += "<div class='form-group'><option data='" + selectedTrigger[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedTrigger[key].displaytitle + "</option></div>";
+            triggerextensiontriggers += "<option data='" + selectedTrigger[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedTrigger[key].displaytitle + "</option>";
             TriggerExtensionTriggers.title = selectedTrigger[key].description
         }
         else
-            triggerextensiontriggers += "<div class='form-group'><option data='" + selectedTrigger[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedTrigger[key].displaytitle + "</option></div>";
-
+        {
+            triggerextensiontriggers += "<option data='" + selectedTrigger[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedTrigger[key].displaytitle + "</option>";
+        }
     }
     TriggerExtensionTriggers.innerHTML = triggerextensiontriggers;
     triggersLoadParameters(0)
@@ -220,11 +221,11 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "<div class='col-2'>"
             // add the matcher dropdown to each variable name
             triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "'>"
-            triggerextensionparameters += "<div class='form-group'><option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
+            triggerextensionparameters += "<option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
             triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
-            triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option></div>";
-            triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option></div>";
-            triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option></div>";
+            triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option>";
+            triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option>";
+            triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option>";
             triggerextensionparameters += "</select>"
             triggerextensionparameters += "</div>"
             triggerextensionparameters += "<div class='w-100'></div>"
@@ -318,11 +319,13 @@ function actionLoadAction (name)
         {
             if (actionextensionaction == "")
             {
-                actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedAction[key].displaytitle + "</option></div>";
+                actionextensionaction += "<option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "' selected>" + selectedAction[key].displaytitle + "</option>";
                 ActionExtensionAction.title = selectedAction[key].description
             }
             else
-                actionextensionaction += "<div class='form-group'><option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedAction[key].displaytitle + "</option></div>";
+            {
+                actionextensionaction += "<option data='" + selectedAction[key].messagetype + "' class='form-control' value='" + key + "'>" + selectedAction[key].displaytitle + "</option>";
+            }
         }
     }
     ActionExtensionAction.innerHTML = actionextensionaction;
@@ -569,7 +572,9 @@ function populateMacroDisplay ()
     let tempstring = ""
     for (let i = 0; i < usertriggerslist.macrotriggers.triggers.length; i++)
     {
-        let color = "style='color:#999999'"
+        let color = "#999999"
+        let macroName = usertriggerslist.macrotriggers.triggers[i].name
+        let iconName = usertriggerslist.macrotriggers.triggers[i].image
         let backgroundcolor = "#222255"
         if (typeof (usertriggerslist.macrotriggers.triggers[i].color) != "undefined" && usertriggerslist.macrotriggers.triggers[i].color != "")
             color = usertriggerslist.macrotriggers.triggers[i].color
@@ -577,11 +582,18 @@ function populateMacroDisplay ()
             backgroundcolor = usertriggerslist.macrotriggers.triggers[i].backgroundcolor
         if (typeof (usertriggerslist.macrotriggers.triggers[i].image) != "undefined" && usertriggerslist.macrotriggers.triggers[i].image != "")
         {
-            tempstring += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + usertriggerslist.macrotriggers.triggers[i].image + "\"' onclick='javascript:triggerMacroButton(\"macros\",\"" + usertriggerslist.macrotriggers.triggers[i].name + "\");' ) title='" + usertriggerslist.macrotriggers.triggers[i].name + "'></button>"
+            tempstring += "<div class='deckiconslot'>"
+            tempstring += '<img class="deckicon" src="/autopilot/images/deckicons/' + iconName + '" alt = "' + macroName + '" onclick="triggerMacroButton(\'macros\',\'' + macroName + '\');" title="' + macroName + '">'
+            tempstring += "</div>"
+            tempstring += "</div>"
         }
         else
         {
-            tempstring += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' title='" + usertriggerslist.macrotriggers.triggers[i].name + "' onclick='javascript:triggerMacroButton(\"macros\",\"" + usertriggerslist.macrotriggers.triggers[i].name + "\");'>" + usertriggerslist.macrotriggers.triggers[i].name + "</div>"
+            tempstring += "<div class='deckiconslot' style='background-color:" + backgroundcolor + ";'>"
+            tempstring += "<div class='nodeckicon'>"
+            tempstring += "<div style='color:" + color + ";' title='" + macroName + "' onclick='triggerMacroButton(\"macros\",\"" + macroName + "\");'>" + macroName + "</div>"
+            tempstring += "</div>"
+            tempstring += "</div>"
         }
     }
     element.innerHTML = tempstring

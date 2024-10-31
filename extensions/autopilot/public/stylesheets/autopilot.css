@@ -160,26 +160,46 @@ td {
   color: #ceff00;
 }
 
+
+/* Macro buttons/page*/
+.deckiconpage {
+  position: relative;
+
+}
+
+.imagemodal {
+
+  max-width: 90% !important;
+}
+
+.deckiconslot {
+  float: left;
+  width: auto;
+  height: auto;
+  margin: 2px 2px;
+  padding: 4px 4px;
+  border: 2px solid rgb(85, 85, 85) !important;
+}
+
 .deckicon {
+  cursor: pointer;
+  display: block;
   width: 75px;
   height: 75px;
   background-repeat: no-repeat !important;
 }
 
 .nodeckicon {
-  width: 75px;
-  height: 75px;
+  display: block;
   font-size: .8rem;
-  padding: 0px !important;
-  display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.imagemodal {
-  max-width: 90% !important;
+.deckiconename {
+  position: relative;
+  bottom: 0px;
 }
-
 
 .editmodal {
   text-align: center !important;

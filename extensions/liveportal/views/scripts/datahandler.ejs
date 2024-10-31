@@ -665,19 +665,11 @@
                     ));
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED trigger and action data
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "TriggerAndActions")
-            {
-                if (extension_packet.to == serverConfig.extensionname)
-                    receivedTrigger(extension_packet.data)
-            }
-            // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
             // -------------------------------------------------------------------------------------------------
             else
             {
-                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+                // console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -717,10 +709,6 @@
                     console.log("Heartbeat Received: missing extensions for ", extension_packet.from, ", requesting again")
                     RequestExtList();
                 }
-            }
-            else if (extension_packet.type === "TriggerAndActions")
-            {
-                receivedTrigger(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED trigger and action data
@@ -897,6 +885,11 @@
                             "",
                             "twitchchat"
                         ));
+                }
+                else if (extension_packet.type === "serverError")
+                {
+                    parseTwitchChatMessage(extension_packet.data);
+                    displayChatMessages();
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -1288,15 +1281,32 @@
         5) otherwise set red
 
         */
-        if (status.color)
-            document.getElementById(extension + "_status").style = "color:" + status.color;
-        else if ((!status && !status.connected) // boolean
-            || (status == "false" && !status.connected == "false"))// string
+        //checking for old heartbeat message types. should be all fixed
+        if ((typeof (status)) != "object")
+        {
+            console.log("Extension Status not an object", typeof (status), status)
+            if (!status || status == false || status == "false")
+                document.getElementById(extension + "_status").style = "color:red";
+            else
+            {
+                console.log("Extension Status not an object and not a boolean or string")
+                document.getElementById(extension + "_visibility_settingswidgetsmall").style.display = "";
+            }
+        }
+        else if (!status)
+        {
             document.getElementById(extension + "_status").style = "color:red";
-        else if (status.readonly || status.readonly == "true")
+        }
+        else if (status.color)
+            document.getElementById(extension + "_status").style = "color:" + status.color;
+        else if (status.connected && status.connected == "false")// string
+        {
+            console.log("status.connected check failed", extension, status)
+            document.getElementById(extension + "_status").style = "color:red";
+        }
+        else if (status.readonly || status.readonly == "true")//chat connection settings
             document.getElementById(extension + "_status").style = "color:orange";
-        else if (status.connected || status.connected == "true"
-            || status || status == "true")
+        else if (status.connected || status.connected == "true")
             document.getElementById(extension + "_status").style = "color:green";
         else
             document.getElementById(extension + "_status").style = "color:red";
@@ -3321,33 +3331,19 @@
     {
         if (typeof (localConfig.macros[Id]) != "undefined")
         {
-            // we mock up an incoming message data packet and send it to 
-            // the normal check system so it appears like any other trigger
-            /*CheckTriggers(
-                sr_api.ExtensionPacket(
-                    localConfig.macros[Id].messagetype,
-                    serverConfig.extensionname,
-                    localConfig.macros[Id],
-                    "",
-                    "autopilot"),
-                "",
-                "autopilot",
-            )*/
             sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket("ChannelData",
+                sr_api.ServerPacket("ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        localConfig.macros[Id].messagetype,
+                        "action_ActivateMacro",
                         serverConfig.extensionname,
                         localConfig.macros[Id],
-                        serverConfig.channel,
-                        ""),
-                    serverConfig.channel,
-                    ""
+                        "",
+                        "autopilot"),
+                    "",
+                    "autopilot"
                 ),
             );
-
-
         }
     }
     // ============================================================================
@@ -3367,26 +3363,27 @@
         {
             for (let i = 0; i < macrolist.length; i++)
             {
-                let style = "style='"// start the style tag
-
                 if (macrolist[i].color != "")
                     color = macrolist[i].color
                 if (macrolist[i].backgroundcolor != "")
                     backgroundcolor = macrolist[i].backgroundcolor
-                // style += "' "
-                //rowdata += '<div id="MacroButtons_' + i + '" ' + style + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
                 if (typeof (macrolist[i].image) != "undefined" && macrolist[i].image != "")
                 {
-                    rowdata += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + macrolist[i].image + "\"') onclick='activateMacro(\"" + i + "\")' title='" + macrolist[i].name + "'></button>"
+                    rowdata += "<div class='deckiconslot'>"
+                    rowdata += '<img class="deckicon" src="/autopilot/images/deckicons/' + macrolist[i].image + '" alt = "' + macrolist[i].name + '" onclick="activateMacro(\'' + i + '\');" title="' + macrolist[i].name + '">'
+                    rowdata += "</div>"
                 }
                 else
                 {
-                    rowdata += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' onclick='activateMacro(\"" + i + "\")'>" + macrolist[i].name + "</div>"
+                    rowdata += "<div class='deckiconslot' style = 'background-color:" + backgroundcolor + ";' > "
+                    rowdata += "<div style='color:" + color + ";' title='" + macrolist[i].name + "' onclick='javascript:activateMacro(\"" + i + "\");' > " + macrolist[i].name + "</div> "
+                    rowdata += "</div>"
                 }
             }
         }
         else
             rowdata += '<div id="MacroButtons_no_scense_available" class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" title="Scene Name">No Macros availabe</div>';
+        rowdata += "</div>"
         document.getElementById("MacroButtonsRow").innerHTML = rowdata;
     }
     // ============================================================================

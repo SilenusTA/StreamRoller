@@ -112,28 +112,13 @@ function initialise (app, host, port, heartbeat)
  */
 function onDataCenterDisconnect (reason)
 {
-    // do something here when disconnt happens if you want to handle them
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Description: Received connect message
-// Parameters: socket 
-// ----------------------------- notes ----------------------------------------
-// When we connect to the StreamRoller server the first time (or if we reconnect)
-// we will get this function called.
-// it is also a good place to create/join channels we wish to use for data
-// monitoring/sending on.
-// ===========================================================================
-/**
- * Connection message handler
- * @param {*} socket 
- */
 function onDataCenterConnect (socket)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
-
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
     );
@@ -141,15 +126,10 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH_CHAT")
     );
-
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-/**
- * receives message from the socket
- * @param {data} server_packet 
- */
 function onDataCenterMessage (server_packet)
 {
     //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);

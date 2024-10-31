@@ -699,6 +699,7 @@ function connectToObs ()
                 localConfig.obsConnecting = false
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", "OBS Connected (v" + data.obsWebSocketVersion + ")");
+
                 return localConfig.obsConnection.call("GetCurrentProgramScene", null)
                     .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "GetCurrentProgramScene failed", err.message); });
 
@@ -730,6 +731,7 @@ function connectToObs ()
                     connectToObs();
                 }, 5000);
             })
+
     }
     else
     {
@@ -760,7 +762,6 @@ function connectToObs ()
             }
         }
     }
-
 }
 // ============================================================================
 //                           FUNCTION: disconnectObs
@@ -938,6 +939,32 @@ localConfig.obsConnection.on("SceneListChanged", data => { onScenesListChanged(d
 localConfig.obsConnection.on("InputMuteStateChanged", data => { onSourceMuteStateChanged(data) });
 localConfig.obsConnection.on("Filters", data => { onSourceMuteStateChanged(data) });
 localConfig.obsConnection.on("SourceFilterEnableStateChanged", data => { onFilterChanged(data) })
+
+/*
+{
+    code left in for example purposes. If you use this be careful of overloading 
+    the websockets with the amount of data.
+    Normally used for meters
+    To use this high volume event turn it on be using 
+    either import EventSubscription enum or use
+    2047 or ALL and or (|) it with
+    65536 for subscribing to InputVolumeMeters
+    ie eventSubscriptions: 2047 | 2047
+    
+    await obs.reidentify({
+        eventSubscriptions: EventSubscription.All | EventSubscription.InputVolumeMeters
+        });
+    
+       
+}*/
+localConfig.obsConnection.on('InputVolumeMeters', (data) =>
+{
+    let index = 1//MIC-B1 with current setup.
+    //console.log('InputVolumeMeters callback', data.inputs)
+    //console.log('InputVolumeMeters callback', data.inputs[index].inputName);
+    console.log('InputVolumeMeters callback', data.inputs[index].inputLevelsMul);
+})
+
 // debug, not sure if we want to add these yet
 /*
 localConfig.obsConnection.on("MediaInputPlaybackStarted", data => { debugtest("MediaInputPlaybackStarted", data) })

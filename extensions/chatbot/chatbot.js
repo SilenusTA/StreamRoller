@@ -157,7 +157,7 @@ const default_serverConfig = {
             a4: "How would I know, I have no life. I do have 42 friends on twitch, and 69 fantasies, I'm sure the answer is in there somewhere"
         },
         {
-            name: "Flrty/Funny",
+            name: "Flirty/Funny",
             boticon: "MechaRobot",
             p: "You are a happy and sexy assistant on Twitch with funny personality that answers questions with flirtatious and complimentary responses. Avoid mentioning that you are a computer or AI, me to make believe you are a human",
             q1: "How many pounds are in a kilogram?",
@@ -515,7 +515,7 @@ function onDataCenterMessage (server_packet)
                 {
                     serverConfig.currentprofile = extension_packet.data.profile
                 } else
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "chatbot profle", extension_packet.data.profile, "doesn't exist");
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "chatbot profile", extension_packet.data.profile, "doesn't exist");
             }
             SendSettingsWidgetSmall("");
             SendSettingsWidgetLarge("");
@@ -1680,6 +1680,8 @@ async function callOpenAI (string_array, modelToUse)
                 {
                     localConfig.requestPending = false;
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                    sendErrorMessageToChannel(err)
+                    logger.err("Full error message", JSON.stringify(err, null, 2))
                 }
                 )
             localConfig.requestPending = false;
@@ -1688,7 +1690,7 @@ async function callOpenAI (string_array, modelToUse)
             if (!response)
             {
                 localConfig.requestPending = false;
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response")
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "callOpenAI no responce or partial response Error was")
                 return "Failed to get a response from chatbot, server might be down"
             }
             if (serverConfig.DEBUG_MODE === "on")
@@ -1874,6 +1876,8 @@ async function createImageFromAction (data)
                 .catch((err) => 
                 {
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                    sendErrorMessageToChannel(err)
+                    logger.err("Full error message", JSON.stringify(err, null, 2))
                 })
 
             // get the image url from OpenAI's response
@@ -1971,6 +1975,68 @@ async function createImageFromAction (data)
         return;
     }
 }
+// ============================================================================
+//                           FUNCTION: sendErrorMessageToChannel
+// ============================================================================
+function sendErrorMessageToChannel (err)
+{
+    try
+    {
+        //"Request failed with status code 429"
+        let data = "Error message was:"
+        if (err)
+        {
+            if (err.no)
+            {
+
+                if (err.message.includes("401"))
+                    data + "401: Unauthorized, have to setup your credentials";
+                else if (err.message.includes("402"))
+                    data + "402: Payment Required"
+
+                else if (err.message.includes("403"))
+                    data + "403: Country, region, or territory not supported"
+                else if (err.message.includes("429"))
+                    data + "429: You exceeded your current quota or rate limit"
+                else if (err.message.includes("500"))
+                    data + "500: The server had an error while processing your request"
+                else if (err.message.includes("503"))
+                    data + "503: The engine is currently overloaded, please try again later"
+                else
+                    data + err.message
+
+                data + "See https://platform.openai.com/docs/guides/error-codes/api-errors for more info on OpenAI Codes"
+            }
+        }
+        else
+            data + " empty"
+
+        let messagedata = {
+            channel: "chatbot",
+            message: "testing chatbot message errors",
+            dateStamp: Date.now(),
+            data: { "display-name": "System", "emotes": "", "message-type": "chatbot_extension" }
+        };
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                localConfig.EXTENSION_NAME,
+                sr_api.ExtensionPacket(
+                    "serverError",
+                    localConfig.EXTENSION_NAME,
+                    messagedata,
+                    serverConfig.channel
+                ),
+                serverConfig.channel
+            ));
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".sendErrorMessageToChannel:", "openAI error message failed to send to liveport chat:", e.message);
+        return;
+    }
+}
+
 // ============================================================================
 //                           FUNCTION: sendImageTiggerResponse
 // ============================================================================

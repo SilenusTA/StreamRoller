@@ -352,9 +352,17 @@
     function updateMacroImageList (imagelist)
     {
         let ele = document.getElementById("imagepickerlinks")
-        let imagehtml = ""
+        let imagehtml = "<div class='deckiconpage'>"
         for (let i = 0; i < imagelist.length; i++)
-            imagehtml += "<img class='deckicon' src='/autopilot/images/deckicons/" + imagelist[i] + "' alt='" + imagelist[i] + "' onclick='setMacroImageTag(\"" + imagelist[i] + "\")' title='" + imagelist[i] + "''>"
+        {
+            imagehtml += "<div class='deckiconslot'>"
+            imagehtml += "<img class='deckicon' src='/autopilot/images/deckicons/" + imagelist[i] + "' alt='"
+            imagehtml += imagelist[i] + "' onclick='setMacroImageTag(\"" + imagelist[i]
+            imagehtml += "\")' title='" + imagelist[i] + "''>"
+            imagehtml += "<div class='deckiconename'>" + imagelist[i] + "</div>"
+            imagehtml += "</div>"
+        }
+        imagehtml += "</div>"
         ele.innerHTML = imagehtml
     }
 </script>
