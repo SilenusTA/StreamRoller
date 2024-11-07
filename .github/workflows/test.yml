@@ -1,0 +1,8 @@
+ testing_version_number:
+    runs-on: windows-latest    
+    steps:
+    - name: Create Version.txt
+      run: |
+          echo ${{ github.ref_name }} > SoftwareVersion.txt
+    - name: Printing version from file
+          cat SoftwareVersion.txt
