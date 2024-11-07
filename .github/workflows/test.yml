@@ -1,4 +1,12 @@
- testing_version_number:
+name: Test echo in windows-latest
+run-name: ${{ github.actor }} Test echo
+on:
+  workflow_dispatch:
+env:
+  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+jobs:
+  testing_version_number:
     runs-on: windows-latest    
     steps:
     - name: Create Version.txt
