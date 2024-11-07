@@ -574,6 +574,7 @@ function populateMacroDisplay ()
     {
         let color = "#999999"
         let macroName = usertriggerslist.macrotriggers.triggers[i].name
+        let macroDescription = usertriggerslist.macrotriggers.triggers[i].description
         let iconName = usertriggerslist.macrotriggers.triggers[i].image
         let backgroundcolor = "#222255"
         if (typeof (usertriggerslist.macrotriggers.triggers[i].color) != "undefined" && usertriggerslist.macrotriggers.triggers[i].color != "")
@@ -583,16 +584,13 @@ function populateMacroDisplay ()
         if (typeof (usertriggerslist.macrotriggers.triggers[i].image) != "undefined" && usertriggerslist.macrotriggers.triggers[i].image != "")
         {
             tempstring += "<div class='deckiconslot'>"
-            tempstring += '<img class="deckicon" src="/autopilot/images/deckicons/' + iconName + '" alt = "' + macroName + '" onclick="triggerMacroButton(\'macros\',\'' + macroName + '\');" title="' + macroName + '">'
-            tempstring += "</div>"
+            tempstring += "<img class='deckicon' src='/autopilot/images/deckicons/" + iconName + "' alt = '" + macroName + ": " + macroDescription + "' onclick='triggerMacroButton(\"macros\",\"" + macroName + "\");' title='" + macroName + ": " + macroDescription + "'>"
             tempstring += "</div>"
         }
         else
         {
-            tempstring += "<div class='deckiconslot' style='background-color:" + backgroundcolor + ";'>"
-            tempstring += "<div class='nodeckicon'>"
-            tempstring += "<div style='color:" + color + ";' title='" + macroName + "' onclick='triggerMacroButton(\"macros\",\"" + macroName + "\");'>" + macroName + "</div>"
-            tempstring += "</div>"
+            tempstring += "<div class='deckiconslot'>"
+            tempstring += "<div class='nodeckicon' style='color:" + color + "; background-color:" + backgroundcolor + ";' alt='" + macroName + "' onclick='javascript:triggerMacroButton(\"macros\",\"" + macroName + "\");'  title='" + macroName + ": " + macroDescription + "'>" + macroName + "</div> "
             tempstring += "</div>"
         }
     }

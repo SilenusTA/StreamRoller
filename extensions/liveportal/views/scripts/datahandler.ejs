@@ -3359,24 +3359,28 @@
         let first = true
         let color = ""
         let backgroundcolor = ""
+
         if (macrolist && macrolist.length > 0)
         {
             for (let i = 0; i < macrolist.length; i++)
             {
+                let macroName = macrolist[i].name;
+                let macroDescription = macrolist[i].description;
+                let macroImage = macrolist[i].image;
                 if (macrolist[i].color != "")
                     color = macrolist[i].color
                 if (macrolist[i].backgroundcolor != "")
                     backgroundcolor = macrolist[i].backgroundcolor
-                if (typeof (macrolist[i].image) != "undefined" && macrolist[i].image != "")
+                if (typeof (macroImage) != "undefined" && macroImage != "")
                 {
                     rowdata += "<div class='deckiconslot'>"
-                    rowdata += '<img class="deckicon" src="/autopilot/images/deckicons/' + macrolist[i].image + '" alt = "' + macrolist[i].name + '" onclick="activateMacro(\'' + i + '\');" title="' + macrolist[i].name + '">'
+                    rowdata += "<img class='deckicon' src='/autopilot/images/deckicons/" + macroImage + "' alt = '" + macroName + ": " + macroDescription + "' onclick='activateMacro(\"" + i + "\");' title='" + macroName + ": " + macroDescription + "'>"
                     rowdata += "</div>"
                 }
                 else
                 {
-                    rowdata += "<div class='deckiconslot' style = 'background-color:" + backgroundcolor + ";' > "
-                    rowdata += "<div style='color:" + color + ";' title='" + macrolist[i].name + "' onclick='javascript:activateMacro(\"" + i + "\");' > " + macrolist[i].name + "</div> "
+                    rowdata += "<div class='deckiconslot'>"
+                    rowdata += "<div class='nodeckicon' style='color:" + color + "; background-color:" + backgroundcolor + ";' alt='" + macroName + "' onclick='javascript:activateMacro(\"" + i + "\");'  title='" + macroName + ": " + macroDescription + "'>" + macroName + "</div> "
                     rowdata += "</div>"
                 }
             }

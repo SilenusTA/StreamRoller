@@ -157,17 +157,29 @@ a {
 
 .deckicon {
   cursor: pointer;
-  display: block;
+  display: flex;
   width: 75px;
   height: 75px;
   background-repeat: no-repeat !important;
 }
 
+.deckicon:hover {
+  border: 2px solid #6c5946 !important;
+}
+
 .nodeckicon {
-  display: block;
-  font-size: .8rem;
+  cursor: pointer;
+  width: 75px;
+  height: 75px;
+  display: flex;
+  background-repeat: no-repeat !important;
+  text-align: center;
   justify-content: center;
   align-items: center;
+}
+
+.nodeckicon:hover {
+  border: 2px solid #ffa852 !important;
 }
 
 .deckiconename {

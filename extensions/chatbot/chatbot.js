@@ -1816,17 +1816,24 @@ function parseData (data, translation = false)
         // debugging why we fail here. prob message is empty but it shouldn't be
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure again", error, error.message, JSON.stringify(data, null, 2));
     }
-    //remove non ascii chars (ie ascii art, unicode etc)
-    if (!translation)
-        data.message = data.message.replace(/[^\x00-\x7F]/g, "");
-    // strip all white spaces down to one
-    data.message = data.message.replace(/\s+/g, ' ').trim();
-
-    if (data.message.includes("http"))
+    try
     {
-        if (serverConfig.DEBUG_MODE === "on")
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message rejected as it contains a url");
-        return null;
+        //remove non ascii chars (ie ascii art, unicode etc)
+        if (!translation)
+            data.message = data.message.replace(/[^\x00-\x7F]/g, "");
+        // strip all white spaces down to one
+        data.message = data.message.replace(/\s+/g, ' ').trim();
+
+        if (data.message.includes("http"))
+        {
+            if (serverConfig.DEBUG_MODE === "on")
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message rejected as it contains a url");
+            return null;
+        }
+    }
+    catch (error)
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "Error while removing non asci chars", error, error.message, JSON.stringify(data, null, 2));
     }
     return data
 }
@@ -2145,22 +2152,52 @@ function moveImagefilesToFolder (from, to)
     {
         fs.readdir(from, (err, files) =>
         {
-            files.forEach(file =>
+            // sledgehammer code. Even if folders exist it will attempt to create them and ignore any that 
+            // already exist. this is only run at stream start so performance isn't an issue here.
+            createfolder(from)
+            createfolder(to)
+
+            if (files == undefined)
             {
-                fs.rename(from + "\\" + file, to + "\\" + file, err =>
+                // no images to process.
+                return;
+            }
+            else
+            {
+                files.forEach(file =>
                 {
-                    if (err)
+                    fs.rename(from + "\\" + file, to + "\\" + file, err =>
                     {
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".moveImagefilesToFolder", "Failed to move file from " + from + "\\" + file + " to " + to + "\\" + file, err, err.message);
-                    }
+                        if (err)
+                        {
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".moveImagefilesToFolder", "Failed to move file from " + from + "\\" + file + " to " + to + "\\" + file, err, err.message);
+                        }
+                    });
                 });
-            });
+            }
         });
     }
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".moveImagefilesToFolder", "Failed to move files from " + from + " to " + to, err, err.message);
     }
+}
+// ============================================================================
+//                           FUNCTION: createfolder
+// ============================================================================
+function createfolder (folder)
+{
+    // This code will ignore any folder that already exists so can be called instead of an check if needed
+    fs.mkdir(folder,
+        { recursive: true },
+        (err) =>
+        {
+            if (err)
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".moveImagefilesToFolder", "Failed to create directory " + folder, err, err.message);
+            }
+            //console.log('Directory created successfully!');
+        });
 }
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType

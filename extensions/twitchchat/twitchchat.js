@@ -133,14 +133,14 @@ const serverData =
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
+    description: "Twitch Chat.",
     version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [{
             name: "TwitchChatChatMessageReceived",
             displaytitle: "Chat Message",
-            description: "A chat message was received",
+            description: "A chat message was received. textMessage field has name and message combined",
             messagetype: "trigger_ChatMessageReceived",
             parameters: {
                 type: "trigger_ChatMessageReceived",
@@ -624,7 +624,7 @@ const triggersandactions =
         [{
             name: "TwitchChatSendChatMessage",
             displaytitle: "Post Twitch Message",
-            description: "Post a message to twitch chat",
+            description: "Post a message to twitch chat (Node user is case sensitive",
             messagetype: "action_SendChatMessage",
             parameters: {
                 account: "",

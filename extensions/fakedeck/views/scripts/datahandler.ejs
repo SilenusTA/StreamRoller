@@ -317,21 +317,27 @@
         {
             for (let i = 0; i < macrolist.length; i++)
             {
-                let style = "style='"// start the style tag
+                let macroName = macrolist[i].name;
+                let macroDescription = macrolist[i].description;
+                let macroImage = macrolist[i].image;
 
                 if (macrolist[i].color != "")
                     color = macrolist[i].color
                 if (macrolist[i].backgroundcolor != "")
                     backgroundcolor = macrolist[i].backgroundcolor
-                // style += "' "
-                //rowdata += '<div id="MacroButtons_' + i + '" ' + style + ' class="col-1 btn btn-outline-secondary mx-1 my-1" role="button" data-toggle="tooltip" onclick="activateMacro(\'' + i + '\')" title="' + macrolist[i].description + '">' + macrolist[i].name + '</div>';
                 if (typeof (macrolist[i].image) != "undefined" && macrolist[i].image != "")
                 {
-                    rowdata += "<button class='btn btn-default deckicon mx-1 my-1' style='background:url(\"/autopilot/images/deckicons/" + macrolist[i].image + "\"') onclick='activateMacro(\"" + i + "\")' title='" + macrolist[i].name + "'></button>"
+                    rowdata += "<div class='deckiconslot'>"
+                    rowdata += "<img class='deckicon' src='/autopilot/images/deckicons/" + macroImage + "' alt = '" + macroName + ": " + macroDescription + "' onclick='activateMacro(\"" + i + "\");' title='" + macroName + ": " + macroDescription + "'>"
+                    rowdata += "</div>"
+
                 }
                 else
                 {
-                    rowdata += "<div class='col-2 btn btn-outline-secondary mx-1 my-1 nodeckicon' style='color:#" + color + "; background-color:#" + backgroundcolor + ";' onclick='activateMacro(\"" + i + "\")'>" + macrolist[i].name + "</div>"
+                    rowdata += "<div class='deckiconslot'>"
+                    rowdata += "<div class='nodeckicon' style='color:" + color + "; background-color:" + backgroundcolor + ";' alt='" + macroName + "' onclick='javascript:activateMacro(\"" + i + "\");'  title='" + macroName + ": " + macroDescription + "'>" + macroName + "</div> "
+                    rowdata += "</div>"
+
                 }
             }
         }

@@ -1,0 +1,54 @@
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">Random Fact Settings</h5>
+            <button type="button"
+                class="btn-close bg-light"
+                title="Close"
+                data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group invisible">
+                <input type="hidden"
+                    name="extensionname"
+                    class="form-control"
+                    value="extensionnametext"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="modalcodetype"
+                    class="form-control"
+                    value="SettingsWidgetSmallCode"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="modaldatatype"
+                    class="form-control"
+                    value="SettingsWidgetSmallData"
+                    tabindex="-1" />
+                <input type="hidden"
+                    name="channel"
+                    class="form-control"
+                    value="channeltext"
+                    tabindex="-1" />
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input"
+                        name="randomfactenabled"
+                        type="checkbox"
+                        id="randomfactenabled"
+                        randomfactenabledchecked>
+                    <label class="form-check-label"
+                        for="randomfactenabled">randomfactenabled</label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button"
+                data-bs-dismiss="modal"
+                class="btn btn-secondary">Cancel</button>
+            <button type="submit"
+                data-bs-dismiss="modal"
+                class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>

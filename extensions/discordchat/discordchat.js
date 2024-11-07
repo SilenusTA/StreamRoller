@@ -172,7 +172,7 @@ function onDataCenterConnect ()
         sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
-    // start our heatbeat timer
+    // start our heartbeat timer
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -729,7 +729,7 @@ function sendAlertMessageReceived (message)
     );
 }
 // ============================================================================
-//                           FUNCTION: heartBeat
+//                           FUNCTION: process_chat_data
 // ============================================================================
 function process_chat_data (message)
 {

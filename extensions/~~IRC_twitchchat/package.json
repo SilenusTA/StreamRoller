@@ -1,0 +1,13 @@
+{
+  "name": "twitchchat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "twitchchat.js",
+  "type": "module",
+  "scripts": {},
+  "author": "Twitch/OldDepressedGamer",
+  "license": "",
+  "dependencies": {
+    "ws": "^8.2.0"
+  }
+}

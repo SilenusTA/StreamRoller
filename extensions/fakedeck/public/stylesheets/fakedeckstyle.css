@@ -35,18 +35,50 @@ html {
   height: 100% !important
 }
 
+.deckiconslot {
+  float: left;
+  width: auto;
+  height: auto;
+  margin: 2px 2px;
+  padding: 4px 4px;
+  border: 2px solid rgb(85, 85, 85) !important;
+}
+
 .deckicon {
+  cursor: pointer;
+  display: flex;
   width: 75px;
   height: 75px;
   background-repeat: no-repeat !important;
 }
 
-.nodeckicon {
+.deckicon:hover {
+  border: 2px solid #6c5946 !important;
+}
+
+.deckicon {
+  cursor: pointer;
+  display: flex;
   width: 75px;
   height: 75px;
-  font-size: .8rem;
-  padding: 0px !important;
+  background-repeat: no-repeat !important;
+}
+
+.deckicon:hover {
+  border: 2px solid #6c5946 !important;
+}
+
+.nodeckicon {
+  cursor: pointer;
+  width: 75px;
+  height: 75px;
   display: flex;
+  background-repeat: no-repeat !important;
+  text-align: center;
   justify-content: center;
   align-items: center;
+}
+
+.nodeckicon:hover {
+  border: 2px solid #ffa852 !important;
 }

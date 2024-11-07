@@ -41,18 +41,25 @@ import https from "https";
 // extension helper provides some functions to save you having to write them.
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 // these lines are a fix so that ES6 has access to dirname etc
+import * as fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const localConfig = {
+let localConfig = {
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
-    DataCenterSocket: null
+    DataCenterSocket: null,
+    heartBeatHandle: null,
+    status: { color: "red" }
 };
-const serverConfig = {
+const default_serverConfig = {
+    __version__: 0.1,
     extensionname: "randomfact",
-    channel: "RANDOMFACT_CHANNEL"
+    channel: "RANDOMFACT_CHANNEL",
+    randomfactenabled: "off",
 };
+
+let serverConfig = structuredClone(default_serverConfig)
 
 const triggersandactions =
 {
@@ -65,7 +72,7 @@ const triggersandactions =
         [
             {
                 name: "RandfactPoster",
-                displaytitle: "Random fact receieved",
+                displaytitle: "Random fact received",
                 description: "An interesting or amusing random fact was received",
                 messagetype: "trigger_RandomFact",
                 parameters: { randomFact: "" }
@@ -120,12 +127,14 @@ function onDataCenterDisconnect (reason)
 function onDataCenterConnect (socket)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
-    );
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH_CHAT")
-    );
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
+
+    // start our heartbeat timer
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -134,7 +143,23 @@ function onDataCenterMessage (server_packet)
 {
     //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
 
-    if (server_packet.type === "ExtensionMessage")
+    if (server_packet.type === "ConfigFile")
+    {
+        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+        // if it is empty we will use our current default and send it to the server 
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+            SaveConfigToServer();
+        }
+    }
+    else if (server_packet.type === "ExtensionMessage")
     {
         let extension_packet = server_packet.data;
         if (extension_packet.type === "action_RequestRandomFact")
@@ -158,6 +183,27 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
+        else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            // set our config values to the ones in message
+            serverConfig.randomfactenabled = "off";
+            // NOTE: this will ignore new items in the page that we don't currently have in our config
+            for (const [key] of Object.entries(serverConfig))
+            {
+                if (key in extension_packet.data)
+                    serverConfig[key] = extension_packet.data[key];
+            }
+            if (serverConfig.randomfactenabled === "off")
+                localConfig.status.color = "red"
+            else
+                localConfig.status.color = "green"
+            // save our data to the server for next time we run
+            SaveConfigToServer();
+            // broadcast our modal out so anyone showing it can update it
+            SendSettingsWidgetSmall("");
+        }
         else
         {
             //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -167,7 +213,7 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-        // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+        // channel might not exist yet, extension might still be starting up so lets reschedule the join attempt
         setTimeout(() =>
         {
             // resent the register command to see if the extension is up and running yet
@@ -178,29 +224,6 @@ function onDataCenterMessage (server_packet)
         }, 5000);
 
     }    // we have received data from a channel we are listening to
-    else if (server_packet.type === "ChannelData")
-    {
-        let extension_packet = server_packet.data;
-        // first we check which channel the message came in on
-        if (server_packet.dest_channel === "TWITCH_CHAT")
-        {
-            if (extension_packet.type === "HeartBeat")
-            {
-
-                // ignore these messages
-            }
-            else if (extension_packet.type === "ChatMessage")
-            {
-                if (extension_packet.data.message === "!randomfact")
-                    send_chat_command(extension_packet.data)
-            }
-            // do something with the data
-        }
-        else
-        {
-            //       logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
-        }
-    }
     else if (server_packet.type === "InvalidMessage")
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -222,52 +245,51 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
-// ============================================================================
-//                           FUNCTION: send_chat_command
-// ============================================================================
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
 /**
- * send the random fact message to twitch when rquested in chat
- * @param {String} server_packet 
+ * Send our SettingsWidgetSmall to whoever requested it
+ * @param {String} extensionname 
  */
-function send_chat_command (data)
+function SendSettingsWidgetSmall (extensionname)
 {
-    let Buffer = "";
-
-    var options = { host: "uselessfacts.jsph.pl", path: "/api/v2/facts/random?language=en", };
-    var req = https.get(options, function (res)
+    fs.readFile(__dirname + "/randomfactsettingswidgetsmall.html", function (err, fileData)
     {
-        var bodyChunks = [];
-        res.on("data", function (chunk)
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
+        else
         {
-            bodyChunks.push(chunk);
-        }).on("end", function ()
-        {
-
-            var body = Buffer.concat(bodyChunks);
+            let modalString = fileData.toString();
+            // first lets update our modal to the current settings
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // true values represent a checkbox so replace the "[key]checked" values with checked
+                if (value === "on")
+                {
+                    modalString = modalString.replaceAll(key + "checked", "checked");
+                }   //value is a string then we need to replace the text
+                else if (typeof (value) == "string")
+                    modalString = modalString.replaceAll(key + "text", value);
+            }
+            // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket(
-                    "ExtensionMessage",
+                sr_api.ServerPacket("ExtensionMessage",
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "action_SendChatMessage",
+                        "SettingsWidgetSmallCode",
                         serverConfig.extensionname,
-                        {
-                            account: "bot",
-                            message: JSON.parse(body).text
-                        },
+                        modalString,
                         "",
-                        "twitchchat"
+                        extensionname,
+                        serverConfig.channel
                     ),
                     "",
-                    "twitchchat"
-                ));
-
-        })
-    });
-    req.on("error", function (e)
-    {
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".send_chat_command", "Error getting quote", e.message);
+                    extensionname)
+            )
+        }
     });
 }
 // ============================================================================
@@ -279,6 +301,11 @@ function send_chat_command (data)
  */
 function sendRandomFact (delay = 1000, counter = 5)
 {
+    if (serverConfig.randomfactenabled == "off")
+    {
+        console.log("randomfactenabled is turned off in settings while attempting to request a random fact")
+        return
+    }
     var body = "";
     let Buffer = "";
     let fact = "";
@@ -295,6 +322,7 @@ function sendRandomFact (delay = 1000, counter = 5)
             {
                 body = Buffer.concat(bodyChunks);
                 fact = JSON.parse(body).text
+                //console.log(JSON.stringify(fact, null, 2))
                 if (fact == "")
                 {
                     if (counter > 0)
@@ -307,6 +335,7 @@ function sendRandomFact (delay = 1000, counter = 5)
                     }
                     return;
                 }
+                localConfig.status.color = "green"
                 let message = findtriggerByMessageType("trigger_RandomFact")
                 message.parameters.randomFact = fact
                 sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -327,6 +356,7 @@ function sendRandomFact (delay = 1000, counter = 5)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".sendRandomFact", "Error getting quote", e.message);
+            localConfig.status.color = "orange"
         });
     }
     catch (e)
@@ -335,8 +365,23 @@ function sendRandomFact (delay = 1000, counter = 5)
             ".sendRandomFact", "Error getting quote", e.message);
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".sendRandomFact", body);
+        localConfig.status.color = "orange"
     }
 
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * save our config to the server
+ */
+function SaveConfigToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveConfig",
+            serverConfig.extensionname,
+            serverConfig));
 }
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
@@ -349,6 +394,24 @@ function findtriggerByMessageType (messagetype)
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                { color: localConfig.status.color },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                                  EXPORTS
