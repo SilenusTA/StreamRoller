@@ -12,6 +12,12 @@ jobs:
     - name: Create Version.txt
       run: |
           echo ${{ github.ref_name }} > SoftwareVersion.txt
+    - name: Create Version2.txt
+      run: |
+            echo v0.2.40 > SoftwareVersion1.txt
     - name: Printing version from file
       run: |
           cat SoftwareVersion.txt
+    - name: Printing version from file1
+      run: |
+          cat SoftwareVersion1.txt
