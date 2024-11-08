@@ -3424,7 +3424,7 @@
     function processLatestRelease ()
     {
         let swVersionHtml = ""
-        if (localConfig.softwareVersion != localConfig.latestRelease.name)
+        if (!localConfig.softwareVersion.startsWith(localConfig.latestRelease.name))
         {
             swVersionHtml += "<div class='text-warning'>"
             //$("#softwareversion").append(
