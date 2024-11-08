@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest    
     steps:
     - name: Create Version.txt
-      run: | 
+      run: |
           echo ${{ github.ref_name }} > SoftwareVersion.txt
     - name: Printing version from file
       run: |
