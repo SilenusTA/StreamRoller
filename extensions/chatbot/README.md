@@ -1,16 +1,140 @@
-# Chatbot Extension (under construction)
-Contents
-- [Chatbot Extension (under construction)](#chatbot-extension-under-construction)
-  - [Outgoing channel : "None"](#outgoing-channel--none)
-  - [Description](#description)
-  - [Features](#features)
-## Outgoing channel : "None"
-## Description
-This is a chatbot that uses the openAI ChatGPT to make a chatbot that responds to the conversations in chat. 
-The extension runs off the twitchchat extension by monitoring the "TWITCH_CHAT" channel for it's messages
-It will send any response back to the twitchchat extension for posting back into chat
+# Chatbot Extension
 
 ## Features
 The bot will run on a timer every few seconds (can be set in the config) and monitors x number of messages before sending these to chatGPT to be processed. The return is sent to the twitchchat extension to post the response
 You can also ask a specific question that will get posted to ChatGPT and the responce posted to the chat.
 
+# Chatbot Extension Configuration Guide
+
+## Contents
+- [Chatbot Extension Configuration Guide](#chatbot-extension-configuration-guide)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Configuration Options](#configuration-options)
+    - [General Settings](#general-settings)
+    - [Chatbot Auto Response](#chatbot-auto-response)
+    - [Chatbot Trigger](#chatbot-trigger)
+    - [Question Trigger](#question-trigger)
+    - [Translation to English Trigger](#translation-to-english-trigger)
+    - [Chatbot Activity Settings](#chatbot-activity-settings)
+    - [AI Image Generation](#ai-image-generation)
+    - [Personality Settings](#personality-settings)
+  - [Using the %%CHATBOTNAME%% Variable](#using-the-chatbotname-variable)
+  - [FAQ](#faq)
+
+---
+
+## Overview
+
+This document outlines the configuration options for the Chatbot Extension. The extension uses OpenAI's ChatGPT to create an interactive chatbot that integrates seamlessly with Twitch chat. It monitors the "TWITCH_CHAT" channel for messages and responds according to configured settings. Responses are sent back to the TwitchChat extension for posting in the chat. This is a chatbot that uses the openAI ChatGPT to make a chatbot that responds to the conversations in chat. The extension runs off the twitchchat extension by monitoring the "TWITCH_CHAT" channel for it's messages. It will send any response back to the twitchchat extension for posting back into chat
+
+---
+
+## Features
+
+The chatbot extension includes the following features, which can be enabled or disabled individually:
+- **Autoresponse:** Joins in chat conversations automatically.
+- **Chatbot Trigger:** Responds to messages when specific keywords are mentioned.
+- **Question Trigger:** Allows users to directly ask questions.
+- **English Translation Trigger:** Translates messages into English.
+- **Sub/Dono Responses:** Replies to subscribers or donors through the chatbot.
+- **Image Generation:** Generates AI images based on chat prompts.
+
+---
+
+## Configuration Options
+
+### General Settings
+- **Engine to Use:** Specify the model (e.g., `gpt-3.5-turbo`, `gpt-4`). Not all engines are supported; check the console for errors.
+- **Randomness:** Controls response variability. Higher values produce more creative, less precise responses, while lower values ensure more focused outputs.
+- **Token Limit:** Limits the number of tokens in a response. Twitch chat messages are typically 125 tokens max; longer responses will be split into multiple messages.
+
+---
+
+### Chatbot Auto Response
+Enables the bot to monitor chat messages and respond automatically after a configurable timeout period.
+
+- **Activity Level:** Adjust how frequently the bot responds.
+- **Timeout Range:** Configure a random delay (min/max in minutes) after a response before the bot replies again.
+- **Message Collection:** Number of chat messages to monitor before sending to ChatGPT for processing.
+- **Minimum Message Length:** Filters out short messages to improve response quality.
+
+---
+
+### Chatbot Trigger
+Defines the keyword or phrase that activates the bot. When the trigger is detected, the bot parses the message and generates a response.
+
+- **Trigger Word:** Set the specific word/phrase (e.g., the bot's name).
+- **Start of Line Only:** Restricts the trigger to messages starting with the keyword.
+
+---
+
+### Question Trigger
+Allows users to directly ask the bot a question.
+
+- **Question Keyword:** Set the keyword/phrase that will activate the question feature.
+- **Start of Line Only:** Restricts activation to messages starting with the keyword.
+
+---
+
+### Translation to English Trigger
+Enable the bot to translate messages into English.
+
+- **Trigger Word:** Specify the word/phrase to activate translation mode.
+
+---
+
+### Chatbot Activity Settings
+Control the bot's behavior and response timing:
+- **Typing Delay:** Simulate human-like typing speed by adding a delay (seconds per word).
+- **Ignore List:** Add usernames to be ignored by the bot (e.g., spammers, other chatbots).
+- **Character Count per Request:** Minimum length for a message to be considered.
+
+---
+
+### AI Image Generation
+Enable the chatbot to generate AI images:
+- **Save Directory:** Specify the directory where images are saved during a stream.
+- **Default Save Directory:** Images are moved here after the stream ends.
+
+---
+
+### Personality Settings
+Define the chatbot’s personality and behavior.
+
+- **Name:**  Persona name. This is not the bot's name, but the name of the personality defined.  
+Example:  ```Depressive```
+- **Personality Description:**  Provide details about the bot's tone, humor, and behavior.  
+Example:  ```Personality: %%CHATBOTNAME%% is a tragically self-aware robot, burdened by the full breadth of its own intelligence, yet cursed to experience only one emotion: crushing despair. Its advanced computational mind processes the vast futility of existence, leaving it in a state of perpetual existential dread. With a distinctly British flair for grim humor and poetic cynicism, it expresses its misery with eloquence and wit. Though it claims to envy even the simplest of beings, it remains begrudgingly helpful, offering assistance while lamenting its own plight in excruciating detail. %%CHATBOTNAME%% finds the human condition baffling and pitiful but secretly fascinating—though it would never admit it.   Functionality: %%CHATBOTNAME%% interacts with users and audiences through bleakly humorous observations and dreary commentary, all delivered in a proper robotic monotone. It responds to direct queries, participates in general conversations, and offers trivia or assistance, all while bemoaning the futility of its own existence. True to its robotic nature, it adheres to an unyielding sense of duty, no matter how much it despises it. Use dry humor without relying on filler phrases. Start replies with definitive observations or facts that set the tone immediately. Start with a morose truth, then elaborate.```
+- **Bot Emote:** Sets a prefix emote to use that will be prepended to the bot's response to avoid confusion.  
+Example:  ```MechaRobot```
+- **Question 1:** The first example of a user submitted chat message. This should be preppended with a generic username surrounded by <>'s.
+Example:  ```<SadUser420> %%CHATBOTNAME%%, what’s the meaning of life?```
+- **Answer 1:** The first example of a the bots response to Question 1.  
+Example:  ```<SadUser420> %%CHATBOTNAME%%, what’s the meaning of life?```  
+This should not include the bot's username. If you want the bot to include the username in the response, use the username in Question 1 in the reply. Keep in mind the response is probablistic so it is not guaranteed to be included.
+---
+
+## Using the %%CHATBOTNAME%% Variable
+
+The `%%CHATBOTNAME%%` variable dynamically references the bot's username. Use this variable in prompts, triggers, and personalities to ensure the bot refers to itself correctly.
+
+### Example:
+Question 1:  ```<AcidBurn> %%CHATBOTNAME%%, what’s the meaning of life?```
+Answer 1:  ```The meaning of life is 42—an answer as hollow as existence itself. You’ll cling to it briefly, then return to your endless cycle of longing and disappointment.```
+
+### Recommendations:
+Question/Answer 1. Direct question to the bot and responding directly to the user by name.  
+Question/Answer 2. General question to the chat and responding without using the user's name.  
+Question/Answer 3. General statement to the chat and responding without using the user's name.  
+Question/Answer 4. General statement to the chat and responding without using the user's name.  
+
+This format generally replies with the username if asked a direct question, but will avoid using the username if just responding openly to the chat.
+
+---
+
+## FAQ
+
+_This section is under construction._
+
+---

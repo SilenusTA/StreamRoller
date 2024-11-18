@@ -17,7 +17,7 @@
     - [Overlay](#overlay)
   - [Feature/Datahander extensions](#featuredatahander-extensions)
     - [twitchchat](#twitchchat)
-    - [chatbot (The AI chatbot)](#chatbot-the-ai-chatbot)
+    - [Chatbot](extensions/chatbot) [README](extensions/chatbot/README.md)
     - [discordchat](#discordchat)
     - [streamlabs\_api](#streamlabs_api)
     - [twitter](#twitter)
