@@ -901,7 +901,8 @@ function SendSettingsWidgetLarge (tochannel)
                 profilecode += "<input type='text' id='chatbotprofile" + profile_id + "name' name='chatbotprofile" + profile_id + "name' class='form-control' value='" + stringParser(value.name) + "'/>"
 
                 profilecode += "<label for='chatbotprofile" + profile_id + "personality' class='col-form-label'>Personality</label>"
-                profilecode += "<input type='text' id='chatbotprofile" + profile_id + "personality' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
+                //profilecode += "<input type='text' id='chatbotprofile" + profile_id + "personality' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "' />"
+                profilecode += "<textarea id='chatbotprofile" + profile_id + "personality' name='chatbotprofile" + profile_id + "personality' class='form-control' value='" + stringParser(value.p) + "'>" + stringParser(value.p) + "</textarea>"
 
                 profilecode += "<label for='chatbotprofile" + profile_id + "icon' class='col-form-label'>Bot Emote</label>"
                 profilecode += "<input type='text' id='chatbotprofile" + profile_id + "icon' name='chatbotprofile" + profile_id + "icon' class='form-control' value='" + stringParser(value.boticon) + "' />"
@@ -915,12 +916,14 @@ function SendSettingsWidgetLarge (tochannel)
                         if (i.indexOf("q") == 0)
                         {
                             profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Question " + i.replace("q", "") + "</label>"
-                            profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "' />"
+                            //profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "' />"
+                            profilecode += "<textarea name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>" + stringParser(x) + "</textarea>"
                         }
                         else
                         {
                             profilecode += "<label for='p" + profile_id + i + "' class='col-form-label'>Answer " + i.replace("a", "") + "</label>"
-                            profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>"
+                            //profilecode += "<input type='text' name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>"
+                            profilecode += "<textarea name='p" + profile_id + i + "' class='form-control' id='p" + profile_id + i + "' value='" + stringParser(x) + "'>" + stringParser(x) + "</textarea>"
                         }
 
                     }
