@@ -353,6 +353,7 @@ const triggersandactions =
                 description: "Send some text through the chatbot (users in original message on the ignore list will not get processed)",
                 messagetype: "action_ProcessText",
                 parameters: {
+                    sender: "",
                     message: "",
                     engine: "",
                     temperature: "",
@@ -499,6 +500,13 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
+                // if there is no sender in teh packet (older version of trigger.)
+                // this check is only here to save having to update the version number
+                // next version update for this we should add streamer name in here
+                if (!extension_packet.data.sender
+                    || extension_packet.data.sender == ""
+                    || extension_packet.data.sender == undefined)
+                    extension_packet.data.sender = serverConfig.chatbotname
                 processTextMessage(extension_packet.data, true);
             }
         }
@@ -1107,7 +1115,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
         if (directChatQuestion)
             messages = [{ "role": "user", "content": messages }];
         else
-            messages = addPersonality(messages, serverConfig.currentprofile)
+            messages = addPersonality(data.sender, messages, serverConfig.currentprofile)
 
         // update the engine to the data sent if filled in
         if (data.engine && data.engine != "")
@@ -1552,7 +1560,7 @@ function processChatMessage (data, maxRollbackCount = 20)
     }
     else
     {
-        localConfig.chatHistory.push({ "role": "user", "content": chatdata.message })
+        localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
         localConfig.chatMessageCount++;
     }
 
@@ -1603,7 +1611,7 @@ function processChatMessage (data, maxRollbackCount = 20)
         // TODO Need a hitory bufffer to add ig we want to
         // do we want previous history
         //if (!directChatbotTriggerTag || (directChatbotTriggerTag && serverConfig.chatbotnametriggertagaddhistory))
-        messages = addPersonality("", serverConfig.currentprofile)
+        messages = addPersonality(data.data['display-name'], "", serverConfig.currentprofile)
 
 
         if (serverConfig.DEBUG_MODE === "on")
@@ -1751,18 +1759,18 @@ async function callOpenAI (string_array, modelToUse)
 //          if message passed retunrs that message with the profile
 //          if message == "" return localConfig.chatHistory with the profile
 // ============================================================================
-function addPersonality (message, profile)
+function addPersonality (username, message, profile)
 {
     let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
 
     let CBBehaviour = [
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a1 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a2 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q3 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q3.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a3 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4 },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a4 }
     ];
     // add behaviour messages
@@ -1776,7 +1784,7 @@ function addPersonality (message, profile)
             outputmessage.push(obj);
     }
     else
-        outputmessage.push({ "role": "user", "content": message })
+        outputmessage.push({ "role": "user", "content": username + ": " + message })
     return outputmessage;
 }
 // ============================================================================
