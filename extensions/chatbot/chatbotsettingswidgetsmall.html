@@ -153,32 +153,43 @@
             </div>
             <!-- Activity level -->
             <hr>
-            <h5 class="text-center">Activity level (how much the bot responds)</h5>
-            <p>Timeout for bot. A random time will be selected between min and max, after chatting the bot will sleep
-                for this
-                random amount of time.</p>
-            <div class="form-group py-2">
-                <div class="col-xs-1">
-                    <label for="chatbotTimerMin"
-                        class="col-lg-1">Min (minutes) : </label>
-                    <input type="text"
-                        class="col-lg-4"
-                        style="width: 40px;"
-                        name="chatbotTimerMin"
-                        id="chatbotTimerMin"
-                        value="chatbotTimerMintext">
-                </div>
-                <div class="col-xs-1">
-                    <label for="chatbotTimerMax"
-                        class="col-lg-1"> Max (minutes) : </label>
-                    <input type="text"
-                        class="col-lg-4"
-                        style="width: 40px;"
-                        name="chatbotTimerMax"
-                        id="chatbotTimerMax"
-                        value="chatbotTimerMaxtext">
-                </div>
-            </div>
+            <h5 class="text-center">Activity level (how often the bot responds)</h5>
+            <p>This setting will change how long the bot pauses in between responses.
+                <BR>low = 8-10 minutes
+                <BR>med = 5-5 minutes
+                <BR>high = 0 minutes
+                <BR>(These values can be fine tuned in the main settings page)
+            </p>
+            <style>
+                #chatbotresponsiveness input[type="radio"] {
+                    display: none;
+                }
+
+                #chatbotresponsiveness span {
+                    display: inline-block;
+                    padding: 10px;
+                    text-transform: uppercase;
+                    border: 2px solid;
+                    border-radius: 3px;
+                }
+
+                #chatbotresponsiveness input[type="radio"]:checked+span {
+                    background-color: darkgrey;
+                }
+            </style>
+
+            <p id="chatbotresponsiveness">
+                <label><input type="radio"
+                        name="chatbotresponsiveness"
+                        value="1"><span>Low</span></label>
+                <label><input type="radio"
+                        name="chatbotresponsiveness"
+                        value="2"><span>Med</span></label>
+                <label><input type="radio"
+                        name="chatbotresponsiveness"
+                        value="3"><span>High</span></label>
+            </p>
+
             <!-- message count level -->
             <HR>
             <h5 class="text-center">Message count per request</h5>

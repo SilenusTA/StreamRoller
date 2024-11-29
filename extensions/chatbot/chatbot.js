@@ -71,7 +71,7 @@ const default_serverConfig = {
     __version__: "0.6",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
-    chatbotname: "CHATBOTNAME",
+    chatbotname: "NONAMESET",
     livedir: "currentstreamimages",
     savedir: "savedimages",
 
@@ -79,6 +79,7 @@ const default_serverConfig = {
     // ChatBot Settings dialog items
     // =============================
     chatbotenabled: "off",
+    chatbotpreviousresponseinhistoryenabled: "off",
     chatbottriggerenabled: "off",
     questionbotenabled: "off",
     translatetoeng: "off",
@@ -108,8 +109,8 @@ const default_serverConfig = {
     chatbotautoresponseengine: "gpt-3.5-turbo",
     chatbotautoresponsetemperature: "1.2",
     chatbotautoresponsemaxtokenstouse: "110",
-    // #### Note CHATBOTNAME will get replaced with the bot name from twitchchat extension ####
-    chatbotnametriggertag: "CHATBOTNAME",
+    // #### Note CHATBOTTRIGGERNAME will get replaced with the bot name from twitchchat extension or user settings page ####
+    chatbotnametriggertag: "CHATBOTTRIGGERNAME",
     chatbotnametriggerengine: "gpt-3.5-turbo",
     chatbotnametriggertagstartofline: "on",
     chatbotnametriggertemperature: "1.2",
@@ -500,7 +501,7 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // if there is no sender in teh packet (older version of trigger.)
+                // if there is no sender in the packet (older version of trigger.)
                 // this check is only here to save having to update the version number
                 // next version update for this we should add streamer name in here
                 if (!extension_packet.data.sender
@@ -596,35 +597,38 @@ function onDataCenterMessage (server_packet)
         // first we check which channel the message came in on
         else if (server_packet.dest_channel === "TWITCH_CHAT")
         {
+            // we have data but no trigger type
+            // this is the Twitch specific data message and not the Streamroller trigger message type
             if (extension_packet.data.data && extension_packet.type.indexOf("trigger_") < 0)
                 // process the chat message from twitch
                 processChatMessage(extension_packet.data);
+            // StreamRoller trigger_ messages or messages without data.
             else
             {
-                if (serverConfig.DEBUG_MODE === "on")
+
+                if (extension_packet.type.indexOf("trigger_") > -1)
                 {
-                    if (extension_packet.type.indexOf("trigger_") > -1)
+                    if (extension_packet.type.indexOf("trigger_ChatBanReceived") > -1
+                        || extension_packet.type.indexOf("trigger_ChatMessageDeleted") > -1
+                        || extension_packet.type.indexOf("trigger_ChatTimeout") > -1
+                        || extension_packet.type.indexOf("trigger_ChatClear") > -1
+                    )
                     {
-
-                        if (extension_packet.type.indexOf("trigger_ChatBanReceived") > -1
-                            || extension_packet.type.indexOf("trigger_ChatMessageDeleted") > -1
-                            || extension_packet.type.indexOf("trigger_ChatTimeout") > -1
-                            || extension_packet.type.indexOf("trigger_ChatClear") > -1
-
-                        )
-                        {
+                        if (serverConfig.DEBUG_MODE === "on")
                             console.log("chatbot:restarting chat timer and clearing history due to a ban/timeout happening")
-                            startChatbotTimer()
-                        }
-                        else
-                        {
-                            console.log("chatbot ignoring 'trigger' message on ChannelData channel (will be processed through normal chat messages)", extension_packet.type)
-                        }
+                        // restart the timer to clear out any history.
+                        startChatbotTimer()
                     }
-                    else if (!extension_packet.data.data)
-                        console.log("chatbot ignoring as no data packet in message", extension_packet.type)
-                    //console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
+                    else
+                    {
+                        if (serverConfig.DEBUG_MODE === "on")
+                            console.log("chatbot ignoring 'trigger' message on ChannelData channel (will be processed through normal chat messages)", extension_packet.type)
+                    }
                 }
+                // received an empty message with no trigger_ type
+                else if (!extension_packet.data.data)
+                    console.log("chatbot ignoring as no data packet in message", extension_packet.type)
+                //console.log("chatbot ignoring as no data packet in message", extension_packet.type, extension_packet.data)
             }
         }
         else if (extension_packet.type === "trigger_StreamStarted")
@@ -632,7 +636,6 @@ function onDataCenterMessage (server_packet)
             // backup last streams images
             moveImagefilesToFolder(__dirname + "\\" + serverConfig.livedir, __dirname + "\\" + serverConfig.savedir)
         }
-        //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
     }
     else if (server_packet.type === "CredentialsFile")
     {
@@ -702,6 +705,24 @@ function handleSettingsWidgetSmallData (modalcode)
     for (const [key, value] of Object.entries(modalcode))
         serverConfig[key] = value;
 
+    if (modalcode.chatbotresponsiveness)
+    {
+        switch (modalcode.chatbotresponsiveness)
+        {
+            case "1":
+                serverConfig.chatbotTimerMin = "8"
+                serverConfig.chatbotTimerMax = "10"
+                break;
+            case "2":
+                serverConfig.chatbotTimerMin = "4"
+                serverConfig.chatbotTimerMax = "5"
+                break;
+            case "3":
+                serverConfig.chatbotTimerMin = "0"
+                serverConfig.chatbotTimerMax = "0"
+                break;
+        }
+    }
     // set our current profile value
     serverConfig.currentprofile = modalcode.chatbotprofilepicker;
 }
@@ -723,6 +744,7 @@ function handleSettingsWidgetLargeData (modalcode)
         return;
     }
     serverConfig.chatbotenabled = "off";
+    serverConfig.chatbotpreviousresponseinhistoryenabled = "off"
     serverConfig.chatbottriggerenabled = "off";
     serverConfig.questionbotenabled = "off";
     serverConfig.translatetoeng = "off";
@@ -1727,6 +1749,8 @@ async function callOpenAI (string_array, modelToUse)
                 localConfig.lastAIRequest = ""
                 for (let index = 0; index < localConfig.chatHistory.length; index++)
                     localConfig.lastAIRequest += localConfig.chatHistory[index].content + ". "
+                openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotname + ":", "");
+                openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotnametriggertag + ":", "");
                 return openAIResponce;
             }
             else
@@ -1759,7 +1783,7 @@ async function callOpenAI (string_array, modelToUse)
 }
 // ============================================================================
 //                           FUNCTION: addPersonality
-//          if message passed retunrs that message with the profile
+//          if message passed return that message with the profile
 //          if message == "" return localConfig.chatHistory with the profile
 // ============================================================================
 function addPersonality (username, message, profile)
@@ -1767,13 +1791,13 @@ function addPersonality (username, message, profile)
     let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
 
     let CBBehaviour = [
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a1 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a2 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q3.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q3.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a3 },
-        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4.replace("%%CHATBOTNAME%%", serverConfig.chatbotnametriggertag) },
+        { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a4 }
     ];
     // add behaviour messages
@@ -1782,6 +1806,8 @@ function addPersonality (username, message, profile)
 
     if (message == "")
     {
+        if (localConfig.lastAIResponse != "" && serverConfig.chatbotpreviousresponseinhistoryenabled == "on")
+            outputmessage.push({ "role": "user", "content": serverConfig.chatbotnametriggertag + ": " + localConfig.lastAIResponse })
         //add chat messages
         for (const obj of localConfig.chatHistory)
             outputmessage.push(obj);
@@ -2150,9 +2176,9 @@ function startProcessing ()
 // ============================================================================
 function changeBotName ()
 {
-    serverConfig.chatbotnametriggertag = serverConfig.chatbotnametriggertag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
-    serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
-    serverConfig.translatetoeng = serverConfig.translatetoeng.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    serverConfig.chatbotnametriggertag = serverConfig.chatbotnametriggertag.replaceAll(/TWITCHCHATBOTNAME/g, serverConfig.chatbotname);
+    //serverConfig.chatbotquerytag = serverConfig.chatbotquerytag.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
+    //serverConfig.translatetoeng = serverConfig.translatetoeng.replaceAll(/CHATBOTNAME/g, serverConfig.chatbotname);
 }
 // ============================================================================
 //                           FUNCTION: moveImagefilesToFolder
