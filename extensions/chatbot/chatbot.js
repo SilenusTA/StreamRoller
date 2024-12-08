@@ -1285,14 +1285,41 @@ function processChatMessage (data, maxRollbackCount = 20)
     let directChatbotTriggerTag = false;
     if (data.message != null)
     {
-        directChatbotTriggerTag = (
-            // search the whole line
-            (serverConfig.chatbotnametriggertagstartofline == "off" &&
-                data.message.toLowerCase().includes(serverConfig.chatbotnametriggertag.toLowerCase()))
-            ||
-            // search for start of line
-            (serverConfig.chatbotnametriggertagstartofline == "on" &&
-                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())));
+        // check for the name at the start of line only
+        if (serverConfig.chatbotnametriggertagstartofline == "on")
+        {
+            directChatbotTriggerTag =
+                // check for trigger
+                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                // check for botname
+                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase() + " ")
+        }
+        else
+        {
+            directChatbotTriggerTag =
+                // check for start of string
+                // check for trigger
+                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                // check for botname
+                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase() + " ")
+
+                // check for middle of string
+                // check for trigger
+                || data.message.toLowerCase().includes(" " + serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                // check for botname
+                || data.message.toLowerCase().includes(" " + serverConfig.chatbotname.toLowerCase() + " ")
+
+                // check for end of string
+                // check for trigger
+                || data.message.toLowerCase().endsWith(" " + serverConfig.chatbotnametriggertag.toLowerCase())
+                // check for botname
+                || data.message.toLowerCase().endsWith(" " + serverConfig.chatbotname.toLowerCase())
+
+
+
+
+        }
+
     }
 
     if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled != "on")
