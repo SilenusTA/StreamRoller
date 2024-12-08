@@ -32,6 +32,7 @@ function updatePage ()
     {
         window.location.href = 'https://id.twitch.tv/oauth2/authorize' +
             '?response_type=token' +
+            '&force_verify=true' +
             '&client_id=' + tempStorage.clientId +
             '&redirect_uri=' + 'http://localhost:3000/twitch/auth' +
             '&state=' + tempStorage.twitchOAuthState +
