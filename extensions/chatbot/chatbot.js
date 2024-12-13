@@ -1299,15 +1299,15 @@ function processChatMessage (data, maxRollbackCount = 20)
             directChatbotTriggerTag =
                 // check for start of string
                 // check for trigger
-                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())
                 // check for botname
-                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase() + " ")
+                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase())
 
                 // check for middle of string
                 // check for trigger
-                || data.message.toLowerCase().includes(" " + serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                || data.message.toLowerCase().includes(" " + serverConfig.chatbotnametriggertag.toLowerCase())
                 // check for botname
-                || data.message.toLowerCase().includes(" " + serverConfig.chatbotname.toLowerCase() + " ")
+                || data.message.toLowerCase().includes(" " + serverConfig.chatbotname.toLowerCase())
 
                 // check for end of string
                 // check for trigger
@@ -1873,7 +1873,10 @@ function parseData (data, translation = false)
     // remove the @ messages but keep the names (might be better to remove them though still testing)
     try
     {
-        data.message = data.message.replace("@", "");
+        if (data.message)
+            data.message = data.message.replace("@", "");
+        else
+            console.log("sub message empty", data)
     }
     catch (error)
     {
