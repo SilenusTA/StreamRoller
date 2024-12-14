@@ -36,7 +36,8 @@
         </header>
 
         <div class="tab-content mt-2 px-2 row content">
-            <div class="tab-pane fade show active" id="LivePage">
+            <div class="tab-pane fade show active"
+                id="LivePage">
                 <!-- start container -->
                 <h5 id="liveportaltitle">Live Streaming Portal</h5>
                 <!--Row with two equal columns-->
@@ -60,51 +61,18 @@
                 <!-- end container -->
             </div>
 
-            <div class="tab-pane fade" id="SettingsPage">
+            <div class="tab-pane fade"
+                id="SettingsPage">
                 <%- include('../cards/SettingsPageCard'); %>
             </div>
-            <div class="tab-pane fade" id="tab3">
+            <div class="tab-pane fade"
+                id="tab3">
                 <h2>Help</h2>
-                <p>I need some :D I will eventually get round to writing this page.
-                    <BR>You are always free to ask questions when I'm on twitch (link below)
-                    <BR>Or on discord at <a href="https://discord.gg/EyJy8brZ6R">Discord link</a>
-                </p>
-
-                <div id="twitch-embed" title="Testing out using twitch embed for live portal chat and video"></div>
-                <script src="https://embed.twitch.tv/embed/v1.js"></script>
-                <script type="text/javascript">
-                    window.addEventListener("load", function loadTwtichEmbed ()
-                    {
-                        const embed = new Twitch.Embed("twitch-embed", {
-                            width: 655,
-                            height: 600,
-                            channel: "olddepressedgamer",
-                            parent: [localConfig.host.replace("http://", "")],
-                            quality: "160p",
-                            muted: true
-                        });
-                        embed.addEventListener(Twitch.Embed.VIDEO_READY, () =>
-                        {
-                            localConfig.player = embed.getPlayer();
-                            localConfig.player.setMuted(true);
-                            localConfig.player.setQuality("160p")
-                        });
-                        embed.addEventListener(Twitch.Embed.ONLINE, () =>
-                        {
-                            localConfig.player = embed.getPlayer();
-                            localConfig.player.setMuted(true);
-                            let qualities = localConfig.player.getQualities()
-                            localConfig.player.setQuality(qualities[qualities.length - 1].name)
-                        })
-
-                    })
-                </script>
-                <p>While you wait why not check out these streamers</p>
-                <a href="https://www.twitch.tv/resurrectionfern">Resurrectionfern</a><br>
+                <p>For help please checkout my <a href="https://discord.gg/EyJy8brZ6R">Discord</a> or catch me on stream
+                    <a href="https://twitch.tv/olddepressedgamer">OldDepressedGamer</a>
+                <p>Other Streamers you might be interested in</p>
                 <a href="https://www.twitch.tv/y3ssydo">y3ssydo</a><br>
-                <a href="https://www.twitch.tv/sabilewsounds">sabilewsounds</a><br>
                 <a href="https://www.twitch.tv/kittyarmistead">kittyarmistead</a><br>
-                <a href="https://www.twitch.tv/originunknown">originunknown</a><br>
             </div>
         </div>
 
