@@ -1285,43 +1285,39 @@ function processChatMessage (data, maxRollbackCount = 20)
     let directChatbotTriggerTag = false;
     if (data.message != null)
     {
-        // check for the name at the start of line only
+        // check for the name at the start of line only (remove any @ symbols from his name as well.@for)
+        let directChatbotTriggerTagTestMessage = data.message.replace("@", "").toLowerCase();
         if (serverConfig.chatbotnametriggertagstartofline == "on")
         {
             directChatbotTriggerTag =
                 // check for trigger
-                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase() + " ")
+                directChatbotTriggerTagTestMessage.startsWith(serverConfig.chatbotnametriggertag.toLowerCase() + " ")
                 // check for botname
-                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase() + " ")
+                || directChatbotTriggerTagTestMessage.startsWith(serverConfig.chatbotname.toLowerCase() + " ")
         }
         else
         {
+
             directChatbotTriggerTag =
                 // check for start of string
                 // check for trigger
-                data.message.toLowerCase().startsWith(serverConfig.chatbotnametriggertag.toLowerCase())
+                directChatbotTriggerTagTestMessage.startsWith(serverConfig.chatbotnametriggertag.toLowerCase())
                 // check for botname
-                || data.message.toLowerCase().startsWith(serverConfig.chatbotname.toLowerCase())
+                || directChatbotTriggerTagTestMessage.startsWith(serverConfig.chatbotname.toLowerCase())
 
                 // check for middle of string
                 // check for trigger
-                || data.message.toLowerCase().includes(" " + serverConfig.chatbotnametriggertag.toLowerCase())
+                || directChatbotTriggerTagTestMessage.includes(" " + serverConfig.chatbotnametriggertag.toLowerCase())
                 // check for botname
-                || data.message.toLowerCase().includes(" " + serverConfig.chatbotname.toLowerCase())
+                || directChatbotTriggerTagTestMessage.includes(" " + serverConfig.chatbotname.toLowerCase())
 
                 // check for end of string
                 // check for trigger
-                || data.message.toLowerCase().endsWith(" " + serverConfig.chatbotnametriggertag.toLowerCase())
+                || directChatbotTriggerTagTestMessage.endsWith(" " + serverConfig.chatbotnametriggertag.toLowerCase())
                 // check for botname
-                || data.message.toLowerCase().endsWith(" " + serverConfig.chatbotname.toLowerCase())
-
-
-
-
+                || directChatbotTriggerTagTestMessage.endsWith(" " + serverConfig.chatbotname.toLowerCase())
         }
-
     }
-
     if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled != "on")
     {
         if (serverConfig.DEBUG_MODE === "on")
