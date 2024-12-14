@@ -126,7 +126,9 @@
             name: "",
             exe: "",
             zip: ""
-        }
+        },
+        bTTVEmotes: null,
+        bTTVNames: []
 
     }
     const chatcolors =
@@ -151,7 +153,6 @@
     // will hold the data center socket needed to send receive data
     // after refactoring the code this should hopefully not be needed anymore
     let DataCenterSocket = null;
-
 
     // truncates long log messages for easier reading. 
     const LOGGING_MAX_MESSAGE_LENGTH = 200
@@ -218,9 +219,35 @@
 
     });
     // ============================================================================
+    //                           FUNCTION: Load BTTV Emotes
+    // ============================================================================
+    const LoadBTTVEmotes = new Promise((resolve, reject) =>
+    {
+        try
+        {
+            fetch("https://api.betterttv.net/3/cached/emotes/global")
+                .then(response => response.text())
+                .then(data => 
+                {
+                    let dataJson = JSON.parse(data)
+                    localConfig.bTTVEmotes = dataJson
+                    for (var key of Object.keys(dataJson))
+                    {
+                        localConfig.bTTVNames.push(dataJson[key].code)
+                    }
+                })
+                .catch(error => console.log("LoadBTTVEmotes failed with error :", error))
+        }
+        catch (error)
+        {
+            reject(error)
+        }
+
+    });
+    // ============================================================================
     //                           FUNCTION: scriptLoadFailed
     // ============================================================================
-    // Description: Runs when a script failes to load (404 error)
+    // Description: Runs when a script fails to load (404 error)
     function scriptLoadFailed (scriptname)
     {
         console.log("failed to load", scriptname, "reloading page")
@@ -2185,6 +2212,10 @@
             //      add any twitch emotes
             //  ##################################
             message = addTwitchEmotes(message, chatdata.data.emotes);
+            //  ##################################
+            //      add BTTV emotes
+            //  ##################################
+            message = addBTTVEmotes(message);
 
             //  ##################################
             //     Mod Actions
@@ -2455,7 +2486,28 @@
         );
         return messageHTML.replaceAll("\n", " ");;
     }
-
+    // ============================================================================
+    //                           FUNCTION: addBTTVEmotes
+    // ============================================================================
+    function addBTTVEmotes (message)
+    {
+        //console.log("addBTTVEmotes emotenames", localConfig.bTTVNames)
+        //console.log("addBTTVEmotes message", message)
+        for (var key of Object.keys(localConfig.bTTVEmotes))
+        {
+            //console.log(localConfig.bTTVEmotes[key].code)
+            //console.log(message.includes(localConfig.bTTVEmotes[key].code))
+            if (message.includes(localConfig.bTTVEmotes[key].code))
+            {
+                //console.log("found", localConfig.bTTVEmotes[key].code)
+                //console.log("message", message)
+                message = message.replaceAll(localConfig.bTTVEmotes[key].code, "<img src='https://cdn.betterttv.net/emote/" + localConfig.bTTVEmotes[key].id + "/1x.webp'>")
+                //console.log("message", message)
+                //localConfig.bTTVNames.push(localConfig.bTTVEmotes[key].code)
+            }
+        }
+        return message
+    }
     // ============================================================================
     //                           FUNCTION:DisplayAlertMessages
     // ============================================================================
