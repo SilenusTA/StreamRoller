@@ -1864,7 +1864,29 @@
         {
             if (key === "randomfactstimeout")
                 serverConfig[key] = fieldsAsObject[key] * 60000
-            else if (value === "on" && !fieldsAsObject[key])
+            // need to explicity check for checkboxes we have that are turned off (no data returned)
+            // portal areas to show
+            else if (key === "streamersonglistdisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "discordmodchatdisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "obsdisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "philipshuedisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "macrobuttonsdisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "slalertsdisplay" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            //OBS buttons to show
+            else if (key === "showprimaryscenes" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "showsecondaryscenes" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "showallscenes" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            //random facts
+            else if (key === "randomfactsenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
             else if (key in fieldsAsObject)
                 serverConfig[key] = fieldsAsObject[key];
