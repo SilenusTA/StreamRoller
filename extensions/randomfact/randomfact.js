@@ -101,6 +101,7 @@ const triggersandactions =
  */
 function initialise (app, host, port, heartbeat)
 {
+    localConfig.heartBeatTimeout = heartbeat;
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
