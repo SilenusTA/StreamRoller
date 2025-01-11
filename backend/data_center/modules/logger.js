@@ -289,18 +289,25 @@ function extra (source, ...args)
  */
 function output (col, func, tag, message)
 {
-    if (typeof (message) == "object")
-        message = JSON.stringify(message);
-    if (message.length > cap_message_length)
-        message = message.substring(0, cap_message_length) + "...";
-    if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended-line")
-        console.log(col, message, tag, func, tag);
-    else if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended")
-        console.log(col, tag, func, tag, "\n", message);
-    else if (process.env.STREAMTOOL_DEBUG_FORMAT != "off")
-        console.log(col, tag, func, message);
-    else
-        console.log(col, tag, func, message);
+    try
+    {
+        if (typeof (message) == "object")
+            message = JSON.stringify(message);
+        if (message.length > cap_message_length)
+            message = message.substring(0, cap_message_length) + "...";
+        if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended-line")
+            console.log(col, message, tag, func, tag);
+        else if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended")
+            console.log(col, tag, func, tag, "\n", message);
+        else if (process.env.STREAMTOOL_DEBUG_FORMAT != "off")
+            console.log(col, tag, func, message);
+        else
+            console.log(col, tag, func, message);
+    }
+    catch (err)
+    {
+        console.log(brightText + bgColour + errColour + "%s" + resetColour, "!!! LOGGING ERROR !!!", message)
+    }
 }
 // ============================================================================
 //                           FUNCTION: output
