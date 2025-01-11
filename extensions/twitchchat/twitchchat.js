@@ -644,7 +644,7 @@ const triggersandactions =
 // ============================================================================
 function initialise (app, host, port, heartbeat)
 {
-    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "hoheartbeatst", heartbeat);
+    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeatst", heartbeat);
     if (typeof (heartbeat) != "undefined")
         localConfig.heartBeatTimeout = heartbeat;
     else
