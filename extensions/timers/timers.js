@@ -269,7 +269,8 @@ function onDataCenterMessage (server_packet)
             )
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode"
-            || extension_packet.type === "TriggerAndActions")
+            || extension_packet.type === "TriggerAndActions"
+            || extension_packet.type === "RequestCredentialsModalsCode")
         {
             // we don't handle these yet
         }

@@ -294,6 +294,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode"
             || extension_packet.type === "RequestSettingsWidgetSmallCode"
+            || extension_packet.type === "RequestCredentialsModalsCode"
         )
         {
             // just a blank handler for items we are not using to avoid message from the catchall
