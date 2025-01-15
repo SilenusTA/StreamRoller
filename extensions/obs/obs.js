@@ -342,7 +342,6 @@ function onDataCenterMessage (server_packet)
                         else
                         {
                             serverConfig.enableobs = "on";
-                            localConfig.obsConnecting = true
                             connectToObs();
                         }
                     }
@@ -397,7 +396,6 @@ function onDataCenterMessage (server_packet)
                             else
                             {
                                 serverConfig.enableobs = "on";
-                                localConfig.obsConnecting = true
                                 connectToObs();
                             }
                         }
@@ -688,6 +686,7 @@ localConfig.obsConnection = new OBSWebSocket();
  */
 function connectToObs ()
 {
+    // check we have connection details.
     if (localCredentials.cred1value != "" && localCredentials.cred2value != "" && localCredentials.cred3value != "" && localCredentials.cred1value != null && localCredentials.cred2value != null && localCredentials.cred3value != null &&
         serverConfig.enableobs == "on" && localConfig.status.connected == false)
     {
@@ -695,7 +694,7 @@ function connectToObs ()
         localConfig.obsConnection.connect("ws://" + localCredentials.cred1value + ":" + localCredentials.cred2value, localCredentials.cred3value)
             .then(data =>
             {
-                // we are now connected so stop any furthur scheduling
+                // we are now connected so stop any further scheduling
                 localConfig.obsConnecting = false
                 localConfig.status.connected = true;
                 logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs", "OBS Connected (v" + data.obsWebSocketVersion + ")");
@@ -723,13 +722,16 @@ function connectToObs ()
             {
                 localConfig.status.connected = false;
                 //Need to setup a reschedule if we have a connection failure
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", err.message);
-                localConfig.obsConnecting = true
-                clearTimeout(localConfig.obsTimeoutHandle)
-                localConfig.obsTimeoutHandle = setTimeout(() =>
+                if (serverConfig.enableobs == "on")
                 {
-                    connectToObs();
-                }, 5000);
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", err.message);
+                    localConfig.obsConnecting = true
+                    clearTimeout(localConfig.obsTimeoutHandle)
+                    localConfig.obsTimeoutHandle = setTimeout(() =>
+                    {
+                        connectToObs();
+                    }, 5000);
+                }
             })
 
     }
@@ -1409,7 +1411,6 @@ function heartBeatCallback ()
         {
             if (localConfig.obsConnecting == false)
             {
-                localConfig.obsConnecting = true;
                 connectToObs(localCredentials.cred1value, localCredentials.cred2value, localCredentials.cred3value);
             }
         }

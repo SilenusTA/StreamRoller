@@ -139,7 +139,7 @@ const triggersandactions =
     triggers:
         [{
             name: "TwitchChatChatMessageReceived",
-            displaytitle: "Chat Message",
+            displaytitle: "Twitch Chat Message",
             description: "A chat message was received. textMessage field has name and message combined",
             messagetype: "trigger_ChatMessageReceived",
             parameters: {
@@ -153,7 +153,7 @@ const triggersandactions =
                 mod: false,
                 subscriber: false,
                 vip: false,
-                platform: ""
+                platform: "Twitch"
             }
         }, {
             name: "TwitchChatActionReceived",
@@ -1238,7 +1238,8 @@ function SaveChatMessagesToServerScheduler ()
     clearTimeout(localConfig.saveDataHandle)
     localConfig.saveDataHandle = setTimeout(SaveChatMessagesToServerScheduler, serverConfig.chatMessageBackupTimer * 1000)
 
-}// ============================================================================
+}
+// ============================================================================
 //                     FUNCTION: postChatTrigger
 // ============================================================================
 function postChatTrigger (data)

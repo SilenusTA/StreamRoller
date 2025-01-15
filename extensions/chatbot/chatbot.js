@@ -690,9 +690,7 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
-// due to the dropdown selector we have used we need special code to handle the 
-// return from the modal.
-// =========================================================================== 
+
 function handleSettingsWidgetSmallData (modalcode)
 {
     serverConfig.chatbotenabled = "off";
