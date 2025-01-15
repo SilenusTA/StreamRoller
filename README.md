@@ -1,4 +1,17 @@
-# Streamroller (current dev. stage: Alpha)
+# StreamRoller (current dev. stage: Alpha)
+
+**StreamRoller** is a versatile streaming backend system designed to integrate and manage various tools essential for live streaming. By consolidating functionalities such as chat management, alerts, and OBS control into a single interface, StreamRoller enhances the streaming experience for both creators and their audiences.
+
+## Key Features
+
+- **Unified Control Interface**: Access and manage all your streaming tools from a centralized web portal, reducing the need to switch between multiple applications.
+- **Extensible Architecture**: Utilize a variety of extensions to add functionalities like Twitch chat integration, AI-driven chatbots, Discord notifications, and more.
+- **OBS Integration**: Seamlessly control OBS directly from StreamRoller, allowing for scene switching, streaming status monitoring, and other essential broadcasting functions.
+- **Event Handling System**: Set up triggers and actions to automate responses to events such as donations or chat commands, enhancing interactivity and engagement during streams.
+- **Open Source and Customizable**: As an open-source project, StreamRoller encourages community contributions, enabling users to develop custom extensions tailored to their specific streaming needs.
+
+StreamRoller is currently in its alpha stage of development, and we welcome feedback and contributions from the community to help shape its future.
+
 ## Table of Contents
 
 - [Streamroller (current dev. stage: Alpha)](#streamroller-current-dev-stage-alpha)
