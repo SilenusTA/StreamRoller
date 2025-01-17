@@ -1175,13 +1175,21 @@ function SendCredentialsModal (extensionname)
             {
                 // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
-                {
                     modalstring = modalstring.replaceAll(key + "checked", "checked");
-                }   //value is a string then we need to replace the text
+                // note oauth are stored in localConfig so we don't store them in plain text on the users machine
+                // so we need to add edge cases for the values of these (stored in cred2value and cred4value)
+                // add oauth to the user auth field
+                else if (typeof (value) == "string" && key == "cred1value")
+                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.name);
+                else if (typeof (value) == "string" && key == "cred2value")
+                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.oauth);
+                else if (typeof (value) == "string" && key == "cred3value")
+                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.name);
+                // add oauth to the user bot field
+                else if (typeof (value) == "string" && key == "cred4value")
+                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.oauth);
                 else if (typeof (value) == "string")
-                {
                     modalstring = modalstring.replaceAll(key + "text", value);
-                }
             }
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
