@@ -1869,7 +1869,7 @@ function parseData (data, translation = false)
     {
         if (data.message)
             data.message = data.message.replace("@", "");
-        else
+        else if (!data.data['emote-only'])
             console.log("sub message empty", data)
     }
     catch (error)
