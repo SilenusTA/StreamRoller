@@ -145,17 +145,17 @@ Follow the steps below to setup the correct project details
 - Create a new project (you can use any name you like here) or select an existing one.
     <a href="https://console.cloud.google.com">Google account page</a>
 
-![googleAuthSelectproject](.\public\images\googleAuthSelectproject.png)
+![googleAuthSelectproject](public/images/googleAuthSelectproject.png)
 
 - Once you have your project setup and selected (as I have in the above image for the project named streamroller) click the "API and services" button in the quick access area or click <a href="https://console.cloud.google.com/apis/dashboard">Here</a>
 
-![APIsAndServices](public\images\googleAuthAPIsAndServices.png)
+![APIsAndServices](public/images/googleAuthAPIsAndServices.png)
 
 - Set up OAuth 2.0 credentials:
 - - On the click "Credentials." page
 - - Create a new OAuth 2.0 Client ID set of credentials (check you are on your correct project name, 1 in the image below)
 
-![iAPIcreateCredentials](public\images\googleAPIcreateCredentials.png)
+![iAPIcreateCredentials](public/images/googleAPIcreateCredentials.png)
 
 - Set the Application Type to "Desktop App" or "Web Application."
 - For "Web Application," add http://localhost:3000 (or your server's port) as an authorized
@@ -163,7 +163,7 @@ Follow the steps below to setup the correct project details
 - Enable the <b><i>"YouTube Data API v3"</i></b> for your project on the scopes page (second
             page during setup or editing)
 
-![gYouTubeV3Scope](public\images\googleAuthYouTubeV3Scope.png)
+![gYouTubeV3Scope](public/images/googleAuthYouTubeV3Scope.png)
 
 - The rest of the settings can be left defaulted
 
@@ -179,4 +179,4 @@ follow the following steps.
 - Image note 3. Click the 'copy' button for your Client ID and past it in the Client ID box below
 - Image note 4. Click the 'copy' button for your Client Secret and past it in the Client Secret box below
 - Click the update button on this page to save the data in StreamRollers encrypted file storage. You can now click the authorize link to connect streamroller to youtube
-![googleAuthScreen](public\images\googleAuthScreen.png)
+![googleAuthScreen](public/images/googleAuthScreen.png)
