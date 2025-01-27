@@ -145,7 +145,7 @@ Follow the steps below to setup the correct project details
 - Create a new project (you can use any name you like here) or select an existing one.
     <a href="https://console.cloud.google.com">Google account page</a>
 
-![googleAuthSelectproject](public\images\googleAuthSelectproject.png)
+![googleAuthSelectproject](.\public\images\googleAuthSelectproject.png)
 
 - Once you have your project setup and selected (as I have in the above image for the project named streamroller) click the "API and services" button in the quick access area or click <a href="https://console.cloud.google.com/apis/dashboard">Here</a>
 
