@@ -132,11 +132,17 @@ These are extension that use the data provided by the above extensions to do som
 ## Ideas for extensions
 The current focus in on twitch streaming (although the streamlabs api currently supports other platforms as is). Other platforms will be integrated in time (Youtube etc)
 Some things I still need to get sorted are
-- Twitch pub/sub: to allow twitch control (setting title, category, bannign users etc)
 - moderator chatbot: one bot that will work with all the chat extension to provide a single moderator bot for all chat channels (discord/twitch/youtube/facebook etc)
 - NDI stream extension to allow easy integration of external video feeds for duel streaming
 - chat auto language conversion.
 - TextToSpeech for chat. So us streamers don't have to focus on chat all the time :P
+- Autoclip/video creation from current stream.
+- - This would be an extension to create a clip from the current live obs stream (most likely post stream) and post to twitter/twitch/discord/yourtube shorts all automatically from 1 action (could be set to a macro button or twitch chat mod message etc)
+  - example workflow follows
+  - on "action_clip" setup an internal trigger on obs.stopstreaming action with start/stop time relating to time action was received (assuming we can tell obs to save a second clip of hte current stream, would need recording on for the whole stream)
+  - on stopstreaming, find recording from obs and use FFMPEG to create a clip at that time
+  - possibly add standard intro/exit clip to the clip
+  - possibly upload to twitch/youtube shorts if clips appear to be working reliably enough
 
 # For the Dev's/Coders out there
 If you would like to extend the functionality of StreamRoller feel free. All the code currently is in javascript and runs on websockets. This means it should be fairly simple for anyone with web page coding skills to add features, link things together etc.
