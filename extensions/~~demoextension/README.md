@@ -1,10 +1,18 @@
 # Demo Extension
 Contents
 - [Demo Extension](#demo-extension)
-  - [Outgoing channel : "DEMOEXT_CHANNEL"](#outgoing-channel--demoext_channel)
+  - [Outgoing channel : "DEMOEXT\_CHANNEL"](#outgoing-channel--demoext_channel)
   - [Description](#description)
   - [Features](#features)
-    - [Standard Features](#standard-features)
+    - [Autopilot triggers and actions](#autopilot-triggers-and-actions)
+      - ["trigger\_DemoextensionSomethingHappened"](#trigger_demoextensionsomethinghappened)
+        - [param1: description](#param1-description)
+        - [param2: description](#param2-description)
+      - ["action\_DemoextensionDoStuff"](#action_demoextensiondostuff)
+        - [parameters:](#parameters)
+        - [param1: description](#param1-description-1)
+        - [param2: description](#param2-description-1)
+    - [Usage (for coders)](#usage-for-coders)
     - [Extended features (working with adminpage extension)](#extended-features-working-with-adminpage-extension)
 ## Outgoing channel : "DEMOEXT_CHANNEL"
 ## Description
@@ -14,7 +22,22 @@ The idea is to save the ammount of time/code needed to get up and running with y
 
 ## Features
 The demo has the following features implemented in it
-### Standard Features
+### Autopilot triggers and actions
+
+#### "trigger_DemoextensionSomethingHappened"
+sent when the extension wants to inform other extensions of some information (ie we sent a message, changed config, received some data ...)
+parameters:
+##### param1: description
+##### param2: description
+ actions
+#### "action_DemoextensionDoStuff"
+a trigger that can be sent to the extension to get it to perform an action (ie end message "some message", get some data..)
+##### parameters:
+##### param1: description
+##### param2: description
+
+
+### Usage (for coders)
 - Connect to server and consume messages
 - Saving/Loading config settings from the server for persistance for the next run.
 - Logging commands to show the preferred way of logging messages (log,info,warn,err)

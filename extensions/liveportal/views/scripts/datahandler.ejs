@@ -22,7 +22,7 @@
 -->
 <script src="/streamroller-message-api.cjs"
     onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
-<!-- placehold we will use for inserting widgets-->
+<!-- placeholder we will use for inserting widgets-->
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 
 
@@ -72,7 +72,11 @@
         donations: "off",
         chatAsUsername: "user",
 
-        // random facts / twitter settings
+        // ##### settings widget variables
+        // TTS settings
+        TTSvoice: "select a windows voice",
+        TTSvoiceIndex: 0,
+        // random facts twitter settings
         randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
 
@@ -99,7 +103,10 @@
         OBSSceneslist: {},
         obslive: false, // set on a heartbeat from obs messages
         heartBeatTimeout: "6000",
-        currentchatchannel: "",
+        twitchchatchannel: "",
+        twitchplatformavailable: false,
+        youtubeplatformavailable: false,
+        youtubechatchannel: "",
         chatMessageBuffer: [],
         modMessageBuffer: [],
         mouseDown: 0,
@@ -178,6 +185,7 @@
                 {
                     ConnectToDataCenter(localConfig.host, localConfig.port);
                     heartBeatCallback();
+                    LoadVoiceTimer()
                 })
                 .catch((error) =>
                 {
@@ -729,7 +737,28 @@
 
                     // set the on screen status for this extension
                     setExtensionStatus(extension_packet.from, extension_packet.data)
+                    // set the available chat message options (ie youtube/twitch)
+                    if (extension_packet.from == "twitchchat")
+                    {
+                        // check if we are able to use the platform
+                        let connected = extension_packet.data.connected && !extension_packet.data.readonly
+                        // check if we need to do an update or not
+                        if (localConfig.twitchplatformavailable != connected)
+                        {
+                            localConfig.twitchplatformavailable = connected
+                            updateChatPlatforms();
+                        }
+                    }
+                    else if (extension_packet.from == "youtube")
+                    {
+                        // check if we are able to use the platform
+                        if (extension_packet.data.connected != localConfig.youtubeplatformavailable)
+                        {
+                            localConfig.youtubeplatformavailable = extension_packet.data.connected
+                            updateChatPlatforms();
+                        }
 
+                    }
                 }
                 else
                 {
@@ -766,6 +795,19 @@
                 if (extension_packet.type === "ChatMessage")
                 {
                     parseTwitchChatMessage(extension_packet.data);
+                    displayChatMessages();
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           YOUTUBE
+            // -------------------------------------------------------------------------------------------------
+            else if (server_packet.dest_channel == "YOUTUBE")
+            {
+                //console.log("YOUTUBE", JSON.stringify(server_packet, null, 2))
+                if (extension_packet.type === "trigger_ChatMessageReceived")
+                {
+                    TTSSpeak(extension_packet.data.parameters.message)
+                    parseYoutubeChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
                 }
             }
@@ -1808,7 +1850,6 @@
         }
         livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
-
         addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
 
     }
@@ -2054,11 +2095,6 @@
     // ============================================================================
     //                           FUNCTION: processTwitchAccountNames
     // ============================================================================
-    // Description: Processes a message from the data center with the previous chat buffer
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
     async function processTwitchAccountNames (extension_packet)
     {
         // as we have received a bufer lets delete the old data
@@ -2085,16 +2121,29 @@
             newchatternames += "<li><a id='" + value + "_user_select' class='dropdown-item' href='#' value=" + value + " onClick='userDropdownChanged( this )'>" + value + "</a></li>"
         }
         twitchnamedropdowns.innerHTML = newchatternames
+    }
+    // ============================================================================
+    //                           FUNCTION: updateChatPlatforms
+    // ============================================================================
+    function updateChatPlatforms ()
+    {
+        let twitchnamedropdowns = ""
+        let value = "none"
+        // if we have a username set in our config and that is in the current list of names lets use that one
+        if (localConfig.twitchplatformavailable)
+            twitchnamedropdowns += "<li><a id='twitch_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )'>twitch</a></li>"
 
+        if (localConfig.youtubeplatformavailable)
+            twitchnamedropdowns += "<li><a id='youtube_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )' value='youtube'>youtube</a></li>"
+        if (localConfig.twitchplatformavailable && localConfig.youtubeplatformavailable)
+            twitchnamedropdowns += "<li><a id='youtubetwitch_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )' value='youtubetwitch'>youtube and twitch</a></li>"
+
+        if (twitchnamedropdowns != "")
+            document.getElementById("chatplatformname").innerHTML = twitchnamedropdowns
     }
     // ============================================================================
     //                           FUNCTION: userDropdownChanged
     // ============================================================================
-    // Description: user has changed the account in the twitch chat box
-    // Parameters: none
-    // ----------------------------- notes ----------------------------------------
-    // none
-    // ===========================================================================
     function userDropdownChanged (e)
     {
         document.getElementById("chatuserselect").innerHTML = e.innerHTML;
@@ -2103,6 +2152,91 @@
         {
             serverConfig.chatAsUsername = e.innerHTML;
             SaveConfigToServer()
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: LoadVoiceTimer
+    // ===========================================================================
+    function LoadVoiceTimer ()
+    {
+        //update TTS voices
+        // need to do this after the page has loaded
+        data = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
+        let voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0)
+        {
+            let newVoices = "";
+            voices.forEach((voice, index) =>
+            {
+                if (index == serverConfig.TTSvoiceIndex)
+                    data = data.replace("TTSCurrentSelectedVoice", serverConfig.TTSvoice)
+                newVoices += "<li><a id='" + index + "_voice_select' class='dropdown-item' href = '#' value = " + index + "  onClick = 'voiceDropdownChanged( this," + index + " )' > " + voice.name + "</a ></li > "
+            });
+            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", newVoices);
+            livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data
+            UpdateOwnSettingsWidgetSmallData()
+        }
+        else
+        {
+            setTimeout(() =>
+            {
+                LoadVoiceTimer()
+            }, 1000);
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: voiceDropdownChanged
+    // ============================================================================
+    function voiceDropdownChanged (e, index)
+    {
+        document.getElementById("ttsvoiceselect").innerHTML = e.innerHTML;
+        // if we have changed users update the config to remember it
+        if (serverConfig.TTSvoice != e.innerHTML)
+        {
+            serverConfig.TTSvoice = e.innerHTML;
+            serverConfig.TTSvoiceIndex = index;
+            SaveConfigToServer()
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: TTSSpeak
+    // ============================================================================
+    function TTSSpeak (text)
+    {
+        const selectedVoiceIndex = serverConfig.TTSvoiceIndex;
+        const voices = window.speechSynthesis.getVoices();
+        if ('speechSynthesis' in window && voices.length > 0)
+        {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.voice = voices[selectedVoiceIndex];
+            utterance.lang = voices[selectedVoiceIndex].lang;
+            // Speak the text
+            window.speechSynthesis.speak(utterance);
+        } else
+        {
+            console.log("Your browser does not support Text-to-Speech.");
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: platformDropdownChanged
+    // ============================================================================
+    function platformDropdownChanged (e)
+    {
+        let iconsize = "style='width: 20px';"
+        if (e.innerHTML == "twitch")
+        {
+            document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/twitch_icon.png' " + iconsize + ">";
+            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'twitch');
+        }
+        else if (e.innerHTML == "youtube")
+        {
+            document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/youtube_icon.png' " + iconsize + ">";
+            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'youtube');
+        }
+        else if (e.innerHTML == "youtube and twitch")
+        {
+            document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/twitch_icon.png' " + iconsize + "><img src='/liveportal/images/youtube_icon.png' " + iconsize + ">";
+            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'youtubetwitch');
         }
     }
     // ============================================================================
@@ -2129,10 +2263,7 @@
     }
     // ============================================================================
     //                           FUNCTION: parseTwitchChatMessage
-    //      this will take a chat message and parse it for colouring, 
-    //      sending to chatbot etc
     // ============================================================================
-    // updates the buffer with the messages
     function parseTwitchChatMessage (chatdata)
     {
         try
@@ -2146,7 +2277,7 @@
             if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System" && chatdata.data["display-name"].indexOf("(localpost)") == -1)
                 console.log("not handling these messages yet, still work in progress", chatdata.data)
 
-            // setup the date field
+            // setup the time fields
             var today = new Date();
             let datestamp = null
             let time = null
@@ -2183,6 +2314,7 @@
             var user_icons = "";
             var action = "";
             var endaction = "";
+            let icons = "<img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>"
             var mod_badge = "<img src='liveportal/images/badge_mod.png'>";
             var greyout_line = "false";
 
@@ -2201,7 +2333,8 @@
             sanitiser.innerText = chatdata.message
             var message = sanitiser.innerHTML
             // set the window title (might have updated)
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + chatdata.channel
+            localConfig.twitchchatchannel = chatdata.channel
+            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + localConfig.twitchchatchannel + ":" + localConfig.youtubechatchannel
 
             //  #################################
             //   check for an action messge '/me'
@@ -2244,24 +2377,24 @@
             //  ##################################
             if ((modactions.includes(chatdata.data["message-type"])))
             {
-                user_color = mod_badge;
+                icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_mod_action + "'>"
                 name_field = chatdata.data['display-name'] + "> ";
                 message_field = message;
                 // set the card data
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
             }
             // ########################################## 
             //  Our Bot messages (ie chatbot)
             // ##########################################
             else if (localConfig.usernamelist && chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
             {
-                user_color = mod_badge;
+                icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
                 name_field = chatdata.data['display-name'] + "> ";
                 message_field = message;
                 // set the card data
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
             }
 
             // ##################### 
@@ -2273,7 +2406,7 @@
                 line_field = "<BR><span style='color: " + chatcolors.default_system_color + "'>"
                 name_field = chatdata.data['display-name'] + "> ";
                 message_field = message;
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
                 //localConfig.chatMessageBuffer.push("<BR><span style='color: " + default_system_color + "'>" + time + "::: " + chatdata.data['display-name'] + " " + message + "</span>");
             }
             // ##################### 
@@ -2284,7 +2417,7 @@
                 line_field = "<BR><span style='color: " + chatcolors.default_sub_color + "'>"
                 name_field = "<b>" + chatdata.data['display-name'] + "> ";
                 message_field = chatdata.data['system-msg'] + ((message) ? ": " + message : "") + "</b>";
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + end_line_field);
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
             }
             // ##################### 
             //   chat messages 
@@ -2311,7 +2444,10 @@
                     user_color = "<span style='color: yellow'>";
                 // if the user is a mod then add the mod badge
                 else if (chatdata.data.mod)
-                    user_color = "<img src='liveportal/images/badge_mod.png'><span style='color:" + chatdata.data.color + "'>";
+                {
+                    icons = icons + mod_badge;
+                    user_color = "<span style='color:" + chatdata.data.color + "'>";
+                }
                 // if we don't have a user color then lets use that instead
                 else if (chatdata.data.color === null)
                     user_color = "<span style='color: " + chatcolors.default_username_color + "'>";
@@ -2321,7 +2457,7 @@
 
                 name_field = user_color + chatdata.data['display-name'] + "&gt</span> ";
 
-                // ########### create out message line
+                // ########### create our message line
                 // set the card title (may have changed since last time around)
 
                 // if we have a nonchat or action message highlight it so we know we need to fix this
@@ -2333,7 +2469,7 @@
                 else // unhandled message
                     message_field = background_color + action + message + endaction + end_background_color
 
-                localConfig.chatMessageBuffer.push(line_field + time_field + name_field + message_field + "<" + chatdata.data["message-type"] + ">" + end_line_field);
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + "<" + chatdata.data["message-type"] + ">" + end_line_field);
 
                 // add mod messages to mod card if we have this option selected in the liveportal settings page
                 if (serverConfig.modchattomodwindow === "on" && chatdata.data.mod)
@@ -2345,6 +2481,98 @@
         catch (error)
         {
             console.log("ERROR:parseTwitchChatMessage:", error)
+        }
+    }
+
+    // ============================================================================
+    //                           FUNCTION: parseYoutubeChatMessage
+    // ============================================================================
+    function parseYoutubeChatMessage (chatdata)
+    {
+        try
+        {
+            var today = new Date();
+            let datestamp = new Date(today)
+            let icons = "<img style='width: 20px;' alt='Youtube' title='Youtube' src='/liveportal/images/youtube_icon.png'>"
+
+            let time = datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0');
+
+            // make setup our fields for parts of the message
+            var time_color = "<span style='color: " + chatcolors.default_timecode_color + "'>";
+            var end_time_color = "</span>"
+            var user_color = "";
+            var end_user_color = "";
+            var background_color = "";
+            var end_background_color = "";
+            var user_icons = "";
+            var action = "";
+            var endaction = "";
+            var mod_badge = "<img src='liveportal/images/badge_mod.png'>";
+            var greyout_line = "false";
+
+            // three main parts of a message are built up into these tags
+            // linefield + time_field + name_field + message_field + endline_field
+            var time_field = time_color + time + ":" + end_time_color;
+            var name_field = "";
+            var message_field = "";
+            var line_field = "<BR><span>";
+            var end_line_field = "</span>";
+
+            // lets sanitise the message before we add the emotes
+            // we do this by pushing it into an html div and then pulling it out again
+            // kind of a hack but it works :D
+            var sanitiser = document.createElement('div');
+            sanitiser.innerText = chatdata.message
+            var message = sanitiser.innerHTML
+            // set the window title (might have updated)
+            localConfig.youtubechatchannel = chatdata.channel
+            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + localConfig.twitchchatchannel + ":" + localConfig.youtubechatchannel
+
+            //  ##################################
+            //  check if someone @'d us
+            //  ##################################
+            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            {
+                var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
+            }
+
+            //  ##################################
+            //      add BTTV emotes
+            //  ##################################
+            message = addBTTVEmotes(message);
+            // ########################################## 
+            //  Our Bot messages (ie chatbot)
+            // ##########################################
+            if (localConfig.usernamelist && chatdata.sender === localConfig.usernamelist.bot)
+            {
+                icons = icons + mod_badge;
+                line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
+                name_field = chatdata.sender + "> ";
+                message_field = message;
+                // set the card data
+                localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
+            }
+
+            // ##################### username colors and icons
+            // if this is not a chat message (ie a sub etc) then set username color to yellow
+            if (chatdata.color === null)
+                user_color = "<span style='color: " + chatcolors.default_username_color + "'>";
+            // use standard color if no coler is available
+            else
+                user_color = "<span style='color: " + chatdata.color + "'>";
+
+            name_field = user_color + chatdata.sender + "&gt</span> ";
+
+            // ########### create out message line
+            message_field = background_color + message + end_background_color
+
+            localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + "<youtubechat>" + end_line_field);
+
+        }
+        catch (error)
+        {
+            console.log("ERROR:parseYoutubeChatMessage:", error)
         }
     }
     // ============================================================================
@@ -2400,7 +2628,7 @@
         }
         catch (error)
         {
-            console.log("ERROR:parseTwitchChatMessage:", error)
+            console.log("ERROR:parseTwitchRedemption:", error)
         }
     }
     // ============================================================================
@@ -2976,6 +3204,28 @@
                 "twitchchat"
             ));
     }
+
+    // ============================================================================
+    //                           FUNCTION: postMessageToYoutube
+    // ============================================================================
+    function postMessageToYoutube (msg)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "action_youtubePostLiveChatMessage",
+                    serverConfig.extensionname,
+                    // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                    {
+                        message: msg,
+                    },
+                    "",
+                    "youtube"),
+                "",
+                "youtube"
+            ));
+    }
     // ============================================================================
     //                           FUNCTION: changeDiscordListeningChannel
     // ============================================================================
@@ -2999,8 +3249,13 @@
     // ============================================================================
     function chatInput (event)
     {
+        let platforms = document.getElementById("ChatPlatformMessageDropdown").getAttribute("data-value");
         event.preventDefault();
-        postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.chatAsUsername)
+        if (platforms.includes("twitch"))
+            postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.chatAsUsername)
+        if (platforms.includes("youtube"))
+            postMessageToYoutube(document.getElementById("chatInputText").value)
+
         document.getElementById("chatInputText").value = ""
     }
     // ============================================================================
@@ -3509,6 +3764,4 @@
             document.getElementById("softwareversion").innerHTML = swVersionHtml
         }
     }
-
-
 </script>

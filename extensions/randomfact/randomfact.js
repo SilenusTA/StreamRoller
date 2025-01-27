@@ -304,8 +304,10 @@ function sendRandomFact (delay = 1000, counter = 5)
 {
     if (serverConfig.randomfactenabled == "off")
     {
-        console.log("randomfactenabled is turned off in settings while attempting to request a random fact")
-        return
+
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".SendSettingsWidgetSmall", "randomfact extension is turned off in settings while attempting to request a random fact");
+        return;
     }
     var body = "";
     let Buffer = "";

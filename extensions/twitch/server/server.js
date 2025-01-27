@@ -1890,12 +1890,12 @@ async function startCommercial (length)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "ERROR", "Failed to start commercial, is streamer live?");
-            console.error(err._body);
+            console.error(err, err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "ERROR", "Failed to start commercial (try reauthorising by going to  go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.error(err, err._body);
         }
     }
 }
@@ -2598,7 +2598,7 @@ async function getUser (username)
         }
         else
         {
-            if (localConfig.apiClient.users)
+            if (localConfig.apiClient && localConfig.apiClient.users)
             {
                 let user = await localConfig.apiClient.users.getUserByName(username)
                 if (user)

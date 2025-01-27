@@ -50,7 +50,7 @@ const localConfig = {
     MaxServerConnectionAttempts: 20
 };
 const default_serverConfig = {
-    __version__: 0.4,
+    __version__: 0.1,
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     enableusersextension: "on",
@@ -178,17 +178,17 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
-                serverConfig.enableusersextension = "off";
+
                 if (serverConfig.cleardatausersextension == "on")
-                {
                     serverData.userData = { twitch: {}, youtube: {} };
-                }
                 SaveDataToServer();
 
+                serverConfig.enableusersextension = "off";
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
-                serverConfig.cleardatausersextension == "off";
+                serverConfig.cleardatausersextension = "off";
                 SaveConfigToServer();
+                SendSettingsWidgetSmall("");
             }
         }
         else if (extension_packet.type === "SendTriggerAndActions")
@@ -332,7 +332,7 @@ function onDataCenterMessage (server_packet)
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
-//                           FUNCTION: SendSettingsWidgetSmall
+//                           FUNCTION: pruneUsers
 // ===========================================================================
 function pruneUsers (platform)
 {
@@ -558,7 +558,7 @@ async function getTwitchBotStatusList ()
 async function setTwitchBotStatus (name)
 {
 
-    if (serverData.userData["twitch"].botList.includes(name))
+    if (serverData.userData["twitch"].botList && serverData.userData["twitch"].botList.includes(name))
         serverData.userData["twitch"][name].isBot = true;
     else
         serverData.userData["twitch"][name].isBot = false;

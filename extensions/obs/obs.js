@@ -1427,9 +1427,11 @@ function heartBeatCallback ()
             })
                 .catch(err =>
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
                     if (err.message === "Not connected")
                         localConfig.status.connected = false;
+                    else
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
+
                 });
 
             localConfig.obsConnection.call("GetOutputStatus", { outputName: "adv_stream" }).then(data =>
