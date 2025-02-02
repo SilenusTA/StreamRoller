@@ -218,7 +218,7 @@ function onDataCenterMessage (server_packet)
             serverCredentials = { ...serverCredentials, ...server_packet.data }
             // update the redirectURI just in case the user is running on a different port/ip
             serverCredentials.redirectURI = serverConfig.host + ":" + serverConfig.port + "/ytoauth";
-
+            localConfig.ServerCredentialsLoaded = true;
             // missing or changed id/secret?
             if (
                 !serverCredentials.clientId
@@ -252,7 +252,6 @@ function onDataCenterMessage (server_packet)
                 clearTimeout(localConfig.delaySetupAuthenticatePage);
                 localConfig.delaySetupAuthenticatePage = delayStartFunction(setupAuthenticatePage, 5000, localConfig.delaySetupAuthenticatePage);
 
-                localConfig.ServerCredentialsLoaded = true;
                 // use the delay function here as a save of the credential file will cause multiple
                 // callbacks here, one per line. Need to fix the backend to handle this better.
                 stopYoutubeMonitor();
@@ -497,8 +496,16 @@ function saveCredentialsToServer (credentials)
 function heartBeatCallback ()
 {
     let connected = false;
+    let color = "red";
+
     if (serverConfig.youtubeenabled === "on")
+    {
         connected = true;
+        if (localConfig.liveChatId)
+            color = "green"
+        else
+            color = "orange"
+    }
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
@@ -506,7 +513,8 @@ function heartBeatCallback ()
                 "HeartBeat",
                 serverConfig.extensionname,
                 {
-                    connected: connected
+                    connected: connected,
+                    color: color
                 },
                 serverConfig.channel),
             serverConfig.channel
@@ -551,22 +559,28 @@ function postTrigger (data)
 // ============================================================================
 function checkCredentialsValid ()
 {
-    if (!serverCredentials.access_token || serverCredentials.access_token == "" ||
-        !serverCredentials.refresh_token || serverCredentials.refresh_token == "" ||
-        !serverCredentials.scope || serverCredentials.scope == "" ||
-        !serverCredentials.token_type || serverCredentials.token_type == "" ||
-        !serverCredentials.expiry_date || serverCredentials.expiry_date == ""
-    )
+    if (localConfig.ServerCredentialsLoaded)
     {
-        console.log("checkCredentialsValid():Invalid credentials")
-        return false;
+        if (!serverCredentials.access_token || serverCredentials.access_token == "" ||
+            !serverCredentials.refresh_token || serverCredentials.refresh_token == "" ||
+            !serverCredentials.scope || serverCredentials.scope == "" ||
+            !serverCredentials.token_type || serverCredentials.token_type == "" ||
+            !serverCredentials.expiry_date || serverCredentials.expiry_date == ""
+        )
+        {
+            console.log("checkCredentialsValid():Invalid credentials")
+            return false;
+        }
+        if (!localConfig.oauth2Client)
+        {
+            console.log("checkCredentialsValid():oauth client error:")
+            return false;
+        }
+        return true;
     }
-    if (!localConfig.oauth2Client)
-    {
-        console.log("checkCredentialsValid():oauth client error:")
-        return false;
-    }
-    return true;
+    else
+        console.log("checkCredentialsValid localConfig.ServerCredentialsLoaded is false", localConfig.ServerCredentialsLoaded)
+    return false;
 }
 // ============================================================================
 //                     FUNCTION: startYoutubeMonitor
@@ -574,13 +588,15 @@ function checkCredentialsValid ()
 function startYoutubeMonitor ()
 {
     stopYoutubeMonitor();
-    // stop the previous monitor (if there was one running)
-
-    if (!checkCredentialsValid())
-        return;
     // Set interval to fetch messages every x seconds
     localConfig.messagePollingHandle = setInterval(async () =>
     {
+        // don't try and attach to Youtube until we have loaded our credentials from the server
+        if (!localConfig.ServerCredentialsLoaded || !checkCredentialsValid())
+        {
+            console.log("startYoutubeMonitor: credentials not yet loaded")
+            return;
+        }
         // check for updated credentials here as we want to make sure we keep our refresh token uptodate
         if (localConfig.oauth2Client.credentials.access_token != serverCredentials.access_token)
         {
@@ -599,10 +615,7 @@ function startYoutubeMonitor ()
                 await getLiveChatId();
             // check again to see if we managed to open it.
             if (!localConfig.liveChatId)
-            {
-                console.log('Live chat ID not found. Is stream live? Exiting...');
                 return;
-            }
             else
             {
                 getLiveChatMessages()
@@ -669,10 +682,8 @@ async function getLiveChatMessages ()
 
                 // mark that we have parsed the backlog
                 if (localConfig.skippedBacklog == false && res.data.items.length > 0)
-                {
                     localConfig.lastProcessedMessageId = res.data.items[res.data.items.length - 1].id;
-                    localConfig.skippedBacklog = true;
-                }
+
                 for (const message of res.data.items)
                 {
                     // skip processing any messages we have already seen.
@@ -706,14 +717,14 @@ async function getLiveChatMessages ()
                     });
                     localConfig.lastProcessedMessageId = message.id;
                 }
+                localConfig.skippedBacklog = true;
                 return newMessages;
             })
             .catch(err =>
             {
-                console.log("err", JSON.stringify(err, null, 2))
                 if (err.status == "403")
                 {
-                    console.log("403 returned", err.errors.reason)
+                    console.log("getLiveChatMessages 403 returned", JSON.stringify(err, null, 2))
                     localConfig.liveChatId = null;
                 }
             })
@@ -729,27 +740,45 @@ async function postLiveChatMessages (message)
 {
     if (!localConfig.liveChatId)
     {
+        console.log("postLiveChatMessages():getting live chat id", !localConfig.liveChatId, localConfig.liveChatId);
         if (!getLiveChatId())
         {
             console.log("postLiveChatMessages returning, Can't find liveChatId to use")
             return;
         }
+        console.log("postLiveChatMessages():getting live chat id 2", !localConfig.liveChatId, localConfig.liveChatId);
     }
     try
     {
-        const response = await localConfig.youtubeAPI.liveChatMessages.insert({
-            auth: localConfig.oauth2Client,
-            part: 'snippet',
-            requestBody: {
-                snippet: {
-                    liveChatId: localConfig.liveChatId,
-                    type: 'textMessageEvent',
-                    textMessageDetails: {
-                        messageText: message.message,
+        if (localConfig.liveChatId)
+        {
+            localConfig.youtubeAPI.liveChatMessages.insert({
+                auth: localConfig.oauth2Client,
+                part: 'snippet',
+                requestBody: {
+                    snippet: {
+                        liveChatId: localConfig.liveChatId,
+                        type: 'textMessageEvent',
+                        textMessageDetails: {
+                            messageText: message.message,
+                        },
                     },
                 },
-            },
-        });
+            })
+                .then(res =>
+                {
+                    //
+                })
+                .catch(err =>
+                {
+                    console.log("postLiveChatMessages():message sent error", JSON.stringify(err, null, 2));
+                })
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".getLiveChatId", "Couldn't send message to Youtube as we don't have a valid live id yet id=", localConfig.liveChatId)
+        }
     } catch (error)
     {
         console.log('Error sending message:', error.response ? error.response.data : error.message);
@@ -768,7 +797,7 @@ async function getLiveChatId ()
             localConfig.youtubeAPI = google.youtube({ version: 'v3', auth: localConfig.oauth2Client })
         }
         if (!checkCredentialsValid())
-            return;
+            return null;
         localConfig.youtubeAPI.liveBroadcasts.list({
             part: 'snippet,status',
             broadcastStatus: "active"
@@ -777,33 +806,22 @@ async function getLiveChatId ()
             {
                 for (let i = 0; i < response.data.items.length; i++)
                 {
-                    let id = null;
                     let liveBroadcast = response.data.items[i];
-                    if (liveBroadcast
-                        && liveBroadcast.status
-                        && liveBroadcast.status.lifeCycleStatus == "live")
+                    if (liveBroadcast && liveBroadcast.status && liveBroadcast.status.lifeCycleStatus == "live")
                     {
                         localConfig.liveChatId = liveBroadcast.snippet.liveChatId;
+                        return localConfig.liveChatId;
                     } else
                     {
                         localConfig.liveChatId = null;
-                        console.log('No live broadcast found.');
+                        console.log('Live Broadcast not found. Is stream live?');
                     }
                 }
                 return localConfig.liveChatId;
             })
             .catch(error =>
             {
-                //console.log(JSON.stringify(localConfig.youtubeAPI, null, 2))
-                //console.log(JSON.stringify(localConfig.oauth2Client, null, 2))
-                if (error.status == 403)
-                    console.log("status:", error.status, "code:", error.code, "errors", error.errors);
-                else
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                        ".getLiveChatId", "Error from liveBroadcasts.list")
-                    console.log("status:", error.status, "code:", error.code, "errors", error.errors);
-                }
+                handleGaxiosErrors(error)
                 localConfig.liveChatId = null;
                 return null;
             });
@@ -817,6 +835,68 @@ async function getLiveChatId ()
     }
     localConfig.liveChatId = null;
     return null;
+}
+// ###########################################################################
+// ######################### handleGaxiosErrors ##########################
+// ###########################################################################
+function handleGaxiosErrors (error)
+{
+    console.log("handleGaxiosErrors called")
+    if (error.response)
+    {
+        if (error.response.data.error_description == 'Token has been expired or revoked.')
+        {
+            console.log("Received error", error.response.data)
+            refreshAccessToken();
+            return;
+        }
+        // The request was made and the server responded with a status code
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', error.response.data);
+        console.error('Error headers:', error.response.headers);
+    } else if (error.request)
+    {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+    } else
+    {
+        // Something happened in setting up the request
+        console.error('Error:', error.message);
+    }
+}
+// ###########################################################################
+// ######################### refreshAccessToken ##########################
+// ###########################################################################
+async function refreshAccessToken ()
+{
+    console.log("refreshAccessToken ()")
+    // Initialize the OAuth2Client
+    //const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET);
+    localConfig.oauth2Client = new OAuth2Client(serverCredentials.clientId, serverCredentials.clientSecret);
+    // Set the refresh token
+    //oAuth2Client.setCredentials({        refresh_token: REFRESH_TOKEN,    });
+    localConfig.oauth2Client.setCredentials({
+        refresh_token: serverCredentials.refresh_token,
+    })
+
+    try
+    {
+        // Get a new access token
+        //const { credentials } = await oAuth2Client.refreshAccessToken(); // Deprecated but still works
+        //console.log('New access token:', credentials.access_token);
+
+        // Alternatively, you can use the getAccessToken() method (non-deprecated)
+        const accessTokenInfo = await localConfig.oauth2Client.getAccessToken();
+        console.log('Access token info:', accessTokenInfo.token);
+        //serverCredentials.access_token = credentials.access_token;
+
+        //return credentials.access_token;
+    } catch (error)
+    {
+        //handleGaxiosErrors(error)
+        console.error('refreshAccessToken() Erro :', error);
+        //throw error;
+    }
 }
 // ###########################################################################
 // ######################### setupAuthenticatePage ##########################
