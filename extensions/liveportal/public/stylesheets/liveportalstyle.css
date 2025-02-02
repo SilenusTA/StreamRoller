@@ -117,6 +117,9 @@ a {
 
 .dropdown-menu {
   border: 1px solid grey;
+  max-height: 200px;
+  overflow-y: scroll;
+
 }
 
 .box {

@@ -14,7 +14,8 @@ StreamRoller is currently in its alpha stage of development, and we welcome feed
 
 ## Table of Contents
 
-- [Streamroller (current dev. stage: Alpha)](#streamroller-current-dev-stage-alpha)
+- [StreamRoller (current dev. stage: Alpha)](#streamroller-current-dev-stage-alpha)
+  - [Key Features](#key-features)
   - [Table of Contents](#table-of-contents)
 - [Contacts: (For questions, suggestions etc.)](#contacts-for-questions-suggestions-etc)
 - [Download/Installing](#downloadinstalling)

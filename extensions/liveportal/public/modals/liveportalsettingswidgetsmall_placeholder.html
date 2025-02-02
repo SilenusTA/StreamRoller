@@ -150,22 +150,29 @@
                     <label class="form-check-label"
                         for="winttsenabled">Enable TTS</label>
                 </div>
-                <div id="TTSSelectionGroup"
-                    class="input-group">
-                    <div id="TTSSelectionDropdown"
-                        class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle"
-                            type="button"
-                            id="ttsvoiceselect"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false">TTSCurrentSelectedVoice</button>
-                        <ul id="ttsvoicewinvoice"
-                            class="dropdown-menu"
-                            aria-labelledby="ttsvoiceselect">
-                            TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData
-                        </ul>
-                    </div>
-                </div>
+                <select class="selectpicker btn-secondary"
+                    data-style="btn-danger"
+                    data-width="150px"
+                    title="box one"
+                    id="TTSVoiceSelectionDropdown"
+                    value="0"
+                    name="TTSVoiceSelectionDropdown"
+                    required=""
+                    onchange='voiceDropdownChanged( this )'>
+                    TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData
+                </select>
+
+                <input id="TTSTestVoice"
+                    class="form-control card bg-light text-dark border-secondary"
+                    type="text"
+                    placeholder="Say something smart to chat">
+                <span class="input-group-btn">
+                    <button class="btn btn-secondary"
+                        for="TTSTestVoice"
+                        type="submit"
+                        onclick="liveportalTestVoice(event)">Speak:
+                    </button>
+                </span>
             </div>
             <HR>
             <h4 class="modal-title">Random Facts</h4>

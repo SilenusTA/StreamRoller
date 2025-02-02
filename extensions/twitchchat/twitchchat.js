@@ -756,7 +756,7 @@ function onDataCenterMessage (server_packet)
                         if (localConfig.twitchClient[key].state.connected)
                             reconnectChat(key);
                         else
-                            connectToTwtich(key);
+                            connectToTwitch(key);
                     }
                 }
                 else
@@ -764,7 +764,7 @@ function onDataCenterMessage (server_packet)
                     /* Readonly connection */
                     localConfig.usernames.user = [];
                     localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                    connectToTwtich("user");
+                    connectToTwitch("user");
                     process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
                 }
             }
@@ -780,14 +780,14 @@ function onDataCenterMessage (server_packet)
                         if (localConfig.twitchClient[key].state.connected)
                             reconnectChat(key);
                         else
-                            connectToTwtich(key);
+                            connectToTwitch(key);
                     }
                 }
                 else // connect readonly if no credentials available
                 {
                     localConfig.usernames.user = [];
                     localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                    connectToTwtich("user");
+                    connectToTwitch("user");
                     process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
                 }
             }
@@ -847,7 +847,7 @@ function onDataCenterMessage (server_packet)
                     if (localConfig.twitchClient[key].state.connected)
                         reconnectChat(key);
                     else
-                        connectToTwtich(key);
+                        connectToTwitch(key);
                 }
                 SaveConfigToServer();
                 // restart the scheduler in case we changed it
@@ -908,7 +908,7 @@ function onDataCenterMessage (server_packet)
                         if (localConfig.twitchClient[key].state.connected)
                             reconnectChat(key);
                         else
-                            connectToTwtich(key);
+                            connectToTwitch(key);
                     }
                     SaveConfigToServer();
                     // restart the scheduler in case we changed it
@@ -1478,21 +1478,21 @@ function joinChatChannel (account)
 // ############################# Initial connection is readonly #########################################
 import * as tmi from "tmi.js";
 
-function connectToTwtich (account)
+function connectToTwitch (account)
 {
     // check for readonly user account login (bot doesn't get logged in if no credentials set)
     if (account === "user" && serverConfig.enabletwitchchat == "on" &&
         (typeof localConfig.usernames.user["name"] === "undefined" || typeof localConfig.usernames.user["oauth"] === "undefined" ||
             localConfig.usernames.user["name"] === "" || localConfig.usernames.user["oauth"] === ""))
     {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Connecting readonly")
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitch", "Connecting readonly")
         localConfig.twitchClient[account].connection = new tmi.Client({ channels: [serverConfig.streamername] });
         localConfig.twitchClient[account].connection.connect()
             .then(() =>
             {
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = true;
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat client connected readonly");
+                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitch", "Twitch chat client connected readonly");
                 process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Chat connected readonly: " + serverConfig.streamername);
             }
             )
@@ -1500,7 +1500,7 @@ function connectToTwtich (account)
             {
                 localConfig.twitchClient[account].state.readonly = true;
                 localConfig.twitchClient[account].state.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitch", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
                 process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Failed to join " + serverConfig.streamername)
             }
             )
@@ -1516,7 +1516,7 @@ function connectToTwtich (account)
         chatLogin(account);
     }
     else
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwtich", "twitch chat currently set to off")
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitch", "twitch chat currently set to off")
 }
 // ============================================================================
 //                           FUNCTION: chatLogin
@@ -1610,7 +1610,7 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
             {
                 file_log("chat", userstate, message);
-                // replace the html parts of the string with their escape chhars
+                // replace the html parts of the string with their escape chars
                 let safemessage = sanitiseHTML(message);
                 // remove non ascii chars
                 safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");

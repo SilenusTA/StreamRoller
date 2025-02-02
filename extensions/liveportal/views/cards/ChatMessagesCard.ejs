@@ -35,36 +35,30 @@
                 style="overflow-y: scroll; max-height: 35vh;"></div>
             <div id="ChatMessageGroup"
                 class="input-group">
-                <div id="ChatMessageDropdown"
-                    class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle"
-                        type="button"
-                        id="chatuserselect"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        No Users
-                    </button>
-                    <ul id="chatuserchattername"
-                        class="dropdown-menu"
-                        aria-labelledby="chatuserselect">
-
-                    </ul>
-                </div>
-                <div id="ChatPlatformMessageDropdown"
-                    class="dropdown"
-                    data-value="empty">
-                    <button class="btn btn-secondary dropdown-toggle"
-                        type="button"
-                        id="chatplatformselect"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Empty
-                    </button>
-                    <ul id="chatplatformname"
-                        class="dropdown-menu"
-                        aria-labelledby="chatplatformselect">
-                    </ul>
-                </div>
+                <select class="selectpicker btn-secondary"
+                    data-style="btn-danger"
+                    data-width="150px"
+                    title="box one"
+                    id="ChatMessageDropdown"
+                    value="5"
+                    name="ChatMessageDropdown"
+                    required=""
+                    onchange='userDropdownChanged( this )'>
+                    <option value="bot"
+                        selected>Select a user to chat as</option>
+                </select>
+                <select class="selectpicker btn-secondary"
+                    data-style="btn-danger"
+                    data-width="150px"
+                    title="box one"
+                    id="ChatPlatformMessageDropdown"
+                    value="5"
+                    name="ChatPlatformMessageDropdown"
+                    required=""
+                    onchange='platformDropdownChanged( this )'>
+                    <option value="None"
+                        selected>Connecting ...</option>
+                </select>
                 <input id="chatInputText"
                     class="form-control card bg-light text-dark border-secondary"
                     type="text"
@@ -73,7 +67,9 @@
                     <button class="btn btn-secondary"
                         for="chatInputText"
                         type="submit"
-                        onclick="chatInput(event)">Chat:</button></span>
+                        onclick="chatInput(event)">Chat:
+                    </button>
+                </span>
             </div>
         </form>
     </div>

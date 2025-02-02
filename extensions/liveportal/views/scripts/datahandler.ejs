@@ -30,7 +30,9 @@
     window.name = '_StreamRoller'
     //"use strict"
     const default_serverConfig = {
-        __version__: "0.1.2",
+        // version number only needs updating if changing or deleting a variable.
+        // new variables do not need the version updated.        
+        __version__: "0.1",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -74,8 +76,10 @@
 
         // ##### settings widget variables
         // TTS settings
-        TTSvoice: "select a windows voice",
+        winttsenabled: "off",
+        TTSvoiceName: "select a windows voice",
         TTSvoiceIndex: 0,
+
         // random facts twitter settings
         randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
@@ -135,7 +139,8 @@
             zip: ""
         },
         bTTVEmotes: null,
-        bTTVNames: []
+        bTTVNames: [],
+        TTSVoiceList: null
 
     }
     const chatcolors =
@@ -379,22 +384,41 @@
         // -------------------------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-
+            let ConfigSubVersions = serverConfig.__version__.split('.')
+            let defaultSubVersions = default_serverConfig.__version__.split('.')
             // check it is our config
-            if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.data && server_packet.data.extensionname
+                && server_packet.data.extensionname === serverConfig.extensionname)
             {
-                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                if (server_packet.data == "")
                 {
+                    // server data is empty, possibly the first run of the code so just default it
                     serverConfig = structuredClone(default_serverConfig);
+                    SaveConfigToServer();
+                }
+                else if (ConfigSubVersions[0] != defaultSubVersions[0])
+                {
+                    // Major version number change. Replace config with defaults
+                    // perform a deep clone overwriting our server config.
+                    serverConfig = structuredClone(default_serverConfig);
+                    // notify the user their config has been updated.
                     console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                    SaveConfigToServer();
+                }
+                else if (ConfigSubVersions[1] != defaultSubVersions[1])
+                {
+                    // Minor version number change. Overwrite config with defaults
+                    // perform a merge replacing any values we currently have and keeping the new variables
+                    serverConfig = { ...default_serverConfig, ...server_packet.data };
+                    // update the version number to the current default number
+                    serverConfig.__version__ = default_serverConfig.__version__;
+                    console.log(serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__);
+                    SaveConfigToServer();
                 }
                 else
                 {
-                    // update our config
-                    if (server_packet.data != "")
-                    {
-                        serverConfig = structuredClone(server_packet.data)
-                    }
+                    // no version number changed so we can just use the saved file
+                    serverConfig = structuredClone(default_serverConfig);
                 }
                 setCardsVisibility();
                 // update our modal to match the new data
@@ -403,9 +427,6 @@
 
                 ParseOBSScenesList(localConfig.OBSSceneslist);
                 updatePhilipsHueDisplay();
-                // update server log, mainly here if we have added new default options when a user
-                // updates their version of streamroller
-                SaveConfigToServer();
             }
         }
         else if (server_packet.type === "DataFile")
@@ -1929,6 +1950,8 @@
             //random facts
             else if (key === "randomfactsenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
+            else if (key === "winttsenabled" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
             else if (key in fieldsAsObject)
                 serverConfig[key] = fieldsAsObject[key];
         }
@@ -2100,27 +2123,20 @@
         // as we have received a bufer lets delete the old data
         let newchatternames = ""
         let twitchnamedropdowns = ""
+        let optioncode = ""
         localConfig.usernamelist = extension_packet.data;
         // if we have a username set in our config and that is in the current list of names lets use that one
-        if (serverConfig.chatAsUsername && Object.values(extension_packet.data).indexOf(serverConfig.chatAsUsername) > -1)
+        let ele = document.getElementById("ChatMessageDropdown");
+        ele.innerHTML = ""
+        for (const [profile_id, value] of Object.entries(extension_packet.data))
         {
-            document.getElementById("chatuserselect").innerHTML = serverConfig.chatAsUsername;
+            if (serverConfig.chatAsUsername && serverConfig.chatAsUsername == value)
+                optioncode += "<option value='" + profile_id + "' selected>" + value + "</option>"
+            //hide the current profile on the modal box
+            else
+                optioncode += "<option value='" + profile_id + "'>" + value + "</option>"
         }
-        else if (extension_packet.data && extension_packet.data[0])
-        {
-            // if we don't have a valid username then use the first one in the list passed in
-            document.getElementById("chatuserselect").innerHTML = extension_packet.data[0];
-            serverConfig.chatAsUsername = extension_packet.data[0];
-        }
-        else
-            document.getElementById("chatuserselect").innerHTML = "Select a User to chat as";
-
-        twitchnamedropdowns = document.getElementById("chatuserchattername");
-        for (const [key, value] of Object.entries(extension_packet.data)) 
-        {
-            newchatternames += "<li><a id='" + value + "_user_select' class='dropdown-item' href='#' value=" + value + " onClick='userDropdownChanged( this )'>" + value + "</a></li>"
-        }
-        twitchnamedropdowns.innerHTML = newchatternames
+        ele.innerHTML = optioncode
     }
     // ============================================================================
     //                           FUNCTION: updateChatPlatforms
@@ -2129,28 +2145,52 @@
     {
         let twitchnamedropdowns = ""
         let value = "none"
-        // if we have a username set in our config and that is in the current list of names lets use that one
+        let ele = document.getElementById("ChatPlatformMessageDropdown");
+        let firstitem = true;
+        let optioncode = "";
+        ele.innerHTML = "Connecting ..."
         if (localConfig.twitchplatformavailable)
-            twitchnamedropdowns += "<li><a id='twitch_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )'>twitch</a></li>"
-
+        {
+            if (firstitem)
+            {
+                firstitem = false
+                optioncode += "<option value='twitch_platform_select' selected>Twitch</option>"
+            }
+            else
+                optioncode += "<option value='twitch_platform_select'>Twitch</option>"
+        }
         if (localConfig.youtubeplatformavailable)
-            twitchnamedropdowns += "<li><a id='youtube_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )' value='youtube'>youtube</a></li>"
+        {
+            if (firstitem)
+            {
+                firstitem = false
+                optioncode += "<option value='youtube_platform_select' selected>YouTube</option>"
+            }
+            else
+                optioncode += "<option value='youtube_platform_select'>YouTube</option>"
+        }
         if (localConfig.twitchplatformavailable && localConfig.youtubeplatformavailable)
-            twitchnamedropdowns += "<li><a id='youtubetwitch_platform_select' class='dropdown-item' href='#' onClick='platformDropdownChanged( this )' value='youtubetwitch'>youtube and twitch</a></li>"
-
-        if (twitchnamedropdowns != "")
-            document.getElementById("chatplatformname").innerHTML = twitchnamedropdowns
+        {
+            if (firstitem)
+            {
+                firstitem = false
+                optioncode += "<option value='youtubetwitch_platform_select' selected>YouTube and Twitch</option>"
+            }
+            else
+                optioncode += "<option value='youtubetwitch_platform_select'>YouTube and Twitch</option>"
+        }
+        ele.innerHTML = optioncode
     }
     // ============================================================================
     //                           FUNCTION: userDropdownChanged
     // ============================================================================
     function userDropdownChanged (e)
     {
-        document.getElementById("chatuserselect").innerHTML = e.innerHTML;
         // if we have changed users update the config to remember it
-        if (serverConfig.chatAsUsername != e.innerHTML)
+        if (serverConfig.chatAsUsername != localConfig.usernamelist[e.value])
         {
-            serverConfig.chatAsUsername = e.innerHTML;
+            document.getElementById("ChatMessageDropdown").value = e.value
+            serverConfig.chatAsUsername = localConfig.usernamelist[e.value];
             SaveConfigToServer()
         }
     }
@@ -2159,25 +2199,28 @@
     // ===========================================================================
     function LoadVoiceTimer ()
     {
-        //update TTS voices
+        //update TTS voices 
         // need to do this after the page has loaded
+        let noVoicesOption = '<option value=" Microsoft George - English (United Kingdom)" selected>Loading ...</option>'
         data = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
-        let voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0)
+        localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
+        if (localConfig.TTSVoiceList.length > 0)
         {
-            let newVoices = "";
-            voices.forEach((voice, index) =>
+            let optioncode = "";
+            localConfig.TTSVoiceList.forEach((voice, index) =>
             {
                 if (index == serverConfig.TTSvoiceIndex)
-                    data = data.replace("TTSCurrentSelectedVoice", serverConfig.TTSvoice)
-                newVoices += "<li><a id='" + index + "_voice_select' class='dropdown-item' href = '#' value = " + index + "  onClick = 'voiceDropdownChanged( this," + index + " )' > " + voice.name + "</a ></li > "
+                    optioncode += "<option value='" + index + "' selected>" + voice.name + "</option>"
+                else
+                    optioncode += "<option value='" + index + "'>" + voice.name + "</option>"
             });
-            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", newVoices);
+            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", optioncode);
             livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data
             UpdateOwnSettingsWidgetSmallData()
         }
         else
         {
+            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
             setTimeout(() =>
             {
                 LoadVoiceTimer()
@@ -2187,34 +2230,46 @@
     // ============================================================================
     //                           FUNCTION: voiceDropdownChanged
     // ============================================================================
-    function voiceDropdownChanged (e, index)
+    function voiceDropdownChanged (e)
     {
-        document.getElementById("ttsvoiceselect").innerHTML = e.innerHTML;
-        // if we have changed users update the config to remember it
-        if (serverConfig.TTSvoice != e.innerHTML)
+        if (serverConfig.TTSvoiceIndex != e.value)
         {
-            serverConfig.TTSvoice = e.innerHTML;
-            serverConfig.TTSvoiceIndex = index;
+            document.getElementById("TTSVoiceSelectionDropdown").value = e.value
+            serverConfig.TTSvoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.TTSvoiceIndex = e.value;
             SaveConfigToServer()
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: TTSTestVoice
+    // ============================================================================
+    function liveportalTestVoice (event)
+    {
+        // test voice from liveportal settings widget
+        event.preventDefault();
+        let text = document.getElementById("TTSTestVoice").value;
+        TTSSpeak(text)
     }
     // ============================================================================
     //                           FUNCTION: TTSSpeak
     // ============================================================================
     function TTSSpeak (text)
     {
-        const selectedVoiceIndex = serverConfig.TTSvoiceIndex;
-        const voices = window.speechSynthesis.getVoices();
-        if ('speechSynthesis' in window && voices.length > 0)
+        if (serverConfig.winttsenabled == "on")
         {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.voice = voices[selectedVoiceIndex];
-            utterance.lang = voices[selectedVoiceIndex].lang;
-            // Speak the text
-            window.speechSynthesis.speak(utterance);
-        } else
-        {
-            console.log("Your browser does not support Text-to-Speech.");
+            const selectedVoiceIndex = serverConfig.TTSvoiceIndex;
+            localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
+            if ('speechSynthesis' in window && localConfig.TTSVoiceList.length > 0)
+            {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = localConfig.TTSVoiceList[selectedVoiceIndex];
+                utterance.lang = localConfig.TTSVoiceList[selectedVoiceIndex].lang;
+                // Speak the text
+                window.speechSynthesis.speak(utterance);
+            } else
+            {
+                console.log("Your browser does not support Text-to-Speech.");
+            }
         }
     }
     // ============================================================================
@@ -2734,7 +2789,7 @@
             },
             message
         );
-        return messageHTML.replaceAll("\n", " ");;
+        return messageHTML.replaceAll("\n", "<BR>");;
     }
     // ============================================================================
     //                           FUNCTION: addBTTVEmotes
@@ -3249,13 +3304,12 @@
     // ============================================================================
     function chatInput (event)
     {
-        let platforms = document.getElementById("ChatPlatformMessageDropdown").getAttribute("data-value");
+        let platform = document.getElementById("ChatPlatformMessageDropdown").value;
         event.preventDefault();
-        if (platforms.includes("twitch"))
+        if (platform.includes("twitch"))
             postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.chatAsUsername)
-        if (platforms.includes("youtube"))
+        if (platform.includes("youtube"))
             postMessageToYoutube(document.getElementById("chatInputText").value)
-
         document.getElementById("chatInputText").value = ""
     }
     // ============================================================================
