@@ -129,7 +129,7 @@ A lot of funtionality at this point is either non existant or in progress. If yo
 For development of existing functionality I'd expect people to focus on one extension rather than try and understand the whole system backend. i.e. a moderator extension that can be used by all chat extensions, such that if it needs to ban a user it will just send a message to the twitch/youtube API for that extension rather than connect to the IRC chat itself.
 
 ## Some of the current extensions
-See the [Extension List](docs/EXTENSION_LIST.md) for the full list
+See the [Extension List](docs/developement/EXTENSION_LIST.md) for the full list
 ## Logic/Controller/Display style extensions
 ### [adminpage](extensions/adminpage/README.md)
 
@@ -179,18 +179,18 @@ note: suggestions welcome for this list
 # Links
 
 ## General links
-- [Getting Started](docs/GETTING_STARTED.md) 
+- [Getting Started](docs/developement/GETTING_STARTED.md) 
   
   How to install/start/use the system
-- [Extension List](docs/EXTENSION_LIST.md)
+- [Extension List](docs/developement/EXTENSION_LIST.md)
   
   List of current extensions with links to additional documentation
 ## Extension links
   These can be found by following the Extension list above and clicking the extension name you are interested in.
 ## Dev links
-- [Getting start with extensions](docs/EXTENSIONS_GETTING_STARTED.md)
+- [Getting start with extensions](docs/developement/EXTENSIONS_GETTING_STARTED.md)
 
   Getting started with developing extensions
-- [Messages](docs/MESSAGES_DOC.md)
+- [Messages](docs/developement/MESSAGES_DOC.md)
   
   A description of how to use the message system to send/receive data
