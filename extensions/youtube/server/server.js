@@ -45,6 +45,7 @@ const localConfig = {
     ServerCredentialsLoaded: false,
     delayStartYoutubeMonitorHandle: null,
     delaySetupAuthenticatePage: null,
+    liveChatId: null,
 };
 
 const default_serverConfig = {
@@ -594,7 +595,6 @@ function startYoutubeMonitor ()
         // don't try and attach to Youtube until we have loaded our credentials from the server
         if (!localConfig.ServerCredentialsLoaded || !checkCredentialsValid())
         {
-            console.log("startYoutubeMonitor: credentials not yet loaded")
             return;
         }
         // check for updated credentials here as we want to make sure we keep our refresh token uptodate
@@ -644,6 +644,15 @@ function startYoutubeMonitor ()
                                 });
                             }
                         }
+                        else
+                            console.log("no messages received")
+                    })
+                    .catch(err =>
+                    {
+
+                        console.log("startYoutubeMonitor", JSON.stringify(err, null, 2))
+                        handleGaxiosErrors(err);
+                        localConfig.liveChatId = null;
                     });
             }
         }
@@ -663,8 +672,9 @@ async function getLiveChatMessages ()
 {
     try
     {
+        let newMessages = [];
         if (!localConfig.liveChatId)
-            return;
+            return newMessages;
         const params = {
             liveChatId: localConfig.liveChatId,
             part: 'snippet,authorDetails',
@@ -673,7 +683,15 @@ async function getLiveChatMessages ()
         return localConfig.youtubeAPI.liveChatMessages.list(params)
             .then(res =>
             {
-                const newMessages = [];
+                // stream has ended
+                if (res.data.offlineAt)
+                {
+                    localConfig.liveChatId = null;
+                    localConfig.youtubeAPI = null;
+                    localConfig.lastProcessedMessageId = null;
+                    localConfig.skippedBacklog = false;
+                    return newMessages;
+                }
                 let foundLastProcessedMessage = false;
                 // Process the messages and filter out the ones already processed
                 // check if we have over a page of comments as our stored id will no longer appear
@@ -681,13 +699,12 @@ async function getLiveChatMessages ()
                     localConfig.lastProcessedMessageId = null;
 
                 // mark that we have parsed the backlog
-                if (localConfig.skippedBacklog == false && res.data.items.length > 0)
+                if (!localConfig.skippedBacklog && res.data.items.length > 0)
                     localConfig.lastProcessedMessageId = res.data.items[res.data.items.length - 1].id;
-
                 for (const message of res.data.items)
                 {
                     // skip processing any messages we have already seen.
-                    if (!foundLastProcessedMessage)
+                    if (!foundLastProcessedMessage && localConfig.lastProcessedMessageId)
                     {
                         //check if this is the last Processed message 
                         if (message.id === localConfig.lastProcessedMessageId)
@@ -695,7 +712,6 @@ async function getLiveChatMessages ()
                         // Already processed this message
                         continue;
                     }
-
                     newMessages.push({
                         //message data
                         id: message.id, // Track message ID to avoid re-processing
@@ -722,16 +738,16 @@ async function getLiveChatMessages ()
             })
             .catch(err =>
             {
-                if (err.status == "403")
-                {
-                    console.log("getLiveChatMessages 403 returned", JSON.stringify(err, null, 2))
-                    localConfig.liveChatId = null;
-                }
+
+                handleGaxiosErrors(err);
+                localConfig.liveChatId = null;
+
             })
     } catch (error)
     {
         console.error('Error fetching live chat messages:', error);
     }
+    return [];
 }
 //##########################################################################
 //###################### postLiveChatMessages ##############################
@@ -740,13 +756,10 @@ async function postLiveChatMessages (message)
 {
     if (!localConfig.liveChatId)
     {
-        console.log("postLiveChatMessages():getting live chat id", !localConfig.liveChatId, localConfig.liveChatId);
         if (!getLiveChatId())
         {
-            console.log("postLiveChatMessages returning, Can't find liveChatId to use")
             return;
         }
-        console.log("postLiveChatMessages():getting live chat id 2", !localConfig.liveChatId, localConfig.liveChatId);
     }
     try
     {
@@ -788,7 +801,7 @@ async function postLiveChatMessages (message)
 // ============================================================================
 //                     FUNCTION: getLiveChatId
 // ============================================================================
-async function getLiveChatId ()
+function getLiveChatId ()
 {
     try
     {
@@ -811,30 +824,28 @@ async function getLiveChatId ()
                     {
                         localConfig.liveChatId = liveBroadcast.snippet.liveChatId;
                         return localConfig.liveChatId;
-                    } else
+                    }
+                    else
                     {
                         localConfig.liveChatId = null;
-                        console.log('Live Broadcast not found. Is stream live?');
+                        return localConfig.liveChatId;
                     }
                 }
                 return localConfig.liveChatId;
             })
             .catch(error =>
             {
+                console.log('getLiveChatId():error?', error);
                 handleGaxiosErrors(error)
                 localConfig.liveChatId = null;
                 return null;
             });
-
-
     } catch (err)
     {
         console.log("getLiveChatId ERROR:", err, err.message);
         localConfig.liveChatId = null;
         return null;
     }
-    localConfig.liveChatId = null;
-    return null;
 }
 // ###########################################################################
 // ######################### handleGaxiosErrors ##########################
