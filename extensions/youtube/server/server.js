@@ -644,8 +644,7 @@ function startYoutubeMonitor ()
                                 });
                             }
                         }
-                        else
-                            console.log("no messages received")
+
                     })
                     .catch(err =>
                     {
