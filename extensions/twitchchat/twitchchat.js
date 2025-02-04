@@ -819,35 +819,43 @@ function onDataCenterMessage (server_packet)
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // need to indicate we have changed user in header even if we are turned off.
-                if (serverConfig.enabletwitchchat == "off")
+                if (extension_packet.data.twitchchatresetdefaults == "on")
                 {
-                    if (serverConfig.streamername != extension_packet.data.streamername)
-                    {
-                        // we have turned off twitch chat and are changing channel. need to update the users screen.
-                        serverConfig.enabletwitchchat = "on";
-                        let name = serverConfig.streamername
-                        serverConfig.streamername = extension_packet.data.streamername
-                        process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "channel: " + extension_packet.data.streamername);
-                        serverConfig.enabletwitchchat = "off";
-                        serverConfig.streamername = name;
-                    }
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Config defaults loaded.", "Source: User request \x1b[0m");
                 }
-
-                // need to update these manually as the web page does not send unchecked box values
-                serverConfig.enabletwitchchat = "off";
-
-                for (const [key, value] of Object.entries(serverConfig))
-                    if (key in extension_packet.data)
-                    {
-                        serverConfig[key] = extension_packet.data[key];
-                    }
-                for (const [key, value] of Object.entries(localConfig.usernames))
+                else
                 {
-                    if (localConfig.twitchClient[key].state.connected)
-                        reconnectChat(key);
-                    else
-                        connectToTwitch(key);
+                    // need to indicate we have changed user in header even if we are turned off.
+                    if (serverConfig.enabletwitchchat == "off")
+                    {
+                        if (serverConfig.streamername != extension_packet.data.streamername)
+                        {
+                            // we have turned off twitch chat and are changing channel. need to update the users screen.
+                            serverConfig.enabletwitchchat = "on";
+                            let name = serverConfig.streamername
+                            serverConfig.streamername = extension_packet.data.streamername
+                            process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "channel: " + extension_packet.data.streamername);
+                            serverConfig.enabletwitchchat = "off";
+                            serverConfig.streamername = name;
+                        }
+                    }
+
+                    // need to update these manually as the web page does not send unchecked box values
+                    serverConfig.enabletwitchchat = "off";
+
+                    for (const [key, value] of Object.entries(serverConfig))
+                        if (key in extension_packet.data)
+                        {
+                            serverConfig[key] = extension_packet.data[key];
+                        }
+                    for (const [key, value] of Object.entries(localConfig.usernames))
+                    {
+                        if (localConfig.twitchClient[key].state.connected)
+                            reconnectChat(key);
+                        else
+                            connectToTwitch(key);
+                    }
                 }
                 SaveConfigToServer();
                 // restart the scheduler in case we changed it
@@ -969,9 +977,9 @@ function onDataCenterMessage (server_packet)
     // ------------------------------------------------ error message received -----------------------------------------------
     else if (server_packet.data === "UnknownChannel")
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
 
-        clearTimeout(localConfig.rejoinChannelScheduleHandle);
+        clearTimeout(localConfig.joinChannelScheduleHandle);
         localConfig.joinChannelScheduleHandle = setTimeout(() =>
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -991,8 +999,8 @@ function onDataCenterMessage (server_packet)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".onDataCenterMessage", "Unhandled message type", server_packet);
 }
 // ===========================================================================
 //                           FUNCTION: sendChatBuffer
@@ -1062,7 +1070,7 @@ function sendAccountNames (toExtension)
  * Send our SettingsWidgetSmall to the extension
  * @param {String} toExtension 
  */
-function SendSettingsWidgetSmall (toExtension)
+function SendSettingsWidgetSmall (toExtension = "")
 {
 
     // read our modal file
@@ -1071,7 +1079,6 @@ function SendSettingsWidgetSmall (toExtension)
         if (err)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
-        //throw err;
         else
         {
             //get the file as a string
@@ -1480,6 +1487,7 @@ import * as tmi from "tmi.js";
 
 function connectToTwitch (account)
 {
+
     // check for readonly user account login (bot doesn't get logged in if no credentials set)
     if (account === "user" && serverConfig.enabletwitchchat == "on" &&
         (typeof localConfig.usernames.user["name"] === "undefined" || typeof localConfig.usernames.user["oauth"] === "undefined" ||
@@ -2232,20 +2240,22 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 
-// sanitiser
-var entityMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-    '/': '&#x2F;',
-    '`': '&#x60;',
-    '=': '&#x3D;'
-};
+// ============================================================================
+//                           FUNCTION: sanitiseHTML
+// ============================================================================
 // this will replace the strings with escape versions so it will be shown rather than parsed in html
 function sanitiseHTML (string)
 {
+    var entityMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+    };
     return String(string).replace(/[&<>"'`=\/]/g, function (s)
     {
         return entityMap[s];
