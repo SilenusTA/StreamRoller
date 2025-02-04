@@ -75,7 +75,7 @@ if (server_packet.type === "ConfigFile")
         else
         {
             // no version number changed so we can just saved file
-            serverConfig = structuredClone(default_serverConfig);
+            serverConfig = structuredClone(server_packet.data);
         }
         ...
     }
