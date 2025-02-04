@@ -418,7 +418,7 @@
                 else
                 {
                     // no version number changed so we can just use the saved file
-                    serverConfig = structuredClone(default_serverConfig);
+                    serverConfig = structuredClone(server_packet.data);
                 }
                 setCardsVisibility();
                 // update our modal to match the new data

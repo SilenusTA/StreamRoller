@@ -361,6 +361,21 @@ const triggersandactions =
                     maxtokens: ""
                 }
             },
+            /*{
+                name: "OpenAIChatbotDirectQuestion",
+                displaytitle: "Answer a chat direct question",
+                description: "Answer a chat direct question",
+                messagetype: "action_ChatBotDirectQuestion",
+                parameters: {
+                    //filter name for sender to detect this is their response
+                    identifier: "",
+                    chatUserName: "",
+                    message: "",
+                    engine: "",
+                    temperature: "",
+                    maxtokens: ""
+                }
+            },*/
             {
                 name: "OpenAIChatbotProcessImage",
                 displaytitle: "Process Image",

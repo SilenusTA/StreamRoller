@@ -40,7 +40,7 @@ const localConfig =
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     status: {
-        connected: false, // are we connected to obs
+        connected: false,
         color: "red"
     },
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
@@ -1227,446 +1227,524 @@ function onDataCenterConnect (socket)
 // ============================================================================
 function onDataCenterMessage (server_packet)
 {
-    // -----------------------------------------------------------------------------------
-    //                  RECEIVED CONFIG
-    // -----------------------------------------------------------------------------------
-    if (server_packet.type === "ConfigFile")
+    try
     {
-        // check it is our config
-        if (server_packet.to === serverConfig.extensionname)
+        // -----------------------------------------------------------------------------------
+        //                  RECEIVED CONFIG
+        // -----------------------------------------------------------------------------------
+        if (server_packet.type === "ConfigFile")
         {
-            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            // check it is our config
+            if (server_packet.to === serverConfig.extensionname)
             {
-                serverConfig = structuredClone(default_serverConfig);
-                console.log("\x1b[31m" + serverConfig.extensionname
-                    + " ConfigFile Updated", "The config file has been Updated to the latest version v"
-                    + default_serverConfig.__version__ + ". Your settings may have changed " + "\x1b[0m");
-            }
-            else
-            {
-                // update our config
-                if (server_packet.data != "")
-                    serverConfig = structuredClone(server_packet.data)
-            }
-            SaveConfigToServer();
-        }
-    }
-    // -----------------------------------------------------------------------------------
-    //                  RECEIVED CREDENTIALS
-    // -----------------------------------------------------------------------------------
-    else if (server_packet.type === "CredentialsFile")
-    {
-        if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != ""
-            && server_packet.data.twitchOAuthState != "" && server_packet.data.twitchOAuthToken != "")
-        {
-            localCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
-            localCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
-            localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
-            if (serverConfig.twitchenabled == "on")
-            {
-                setTimeout(() =>
-                {
-                    disconnectTwitch();
-                    connectTwitch();
-                }, 1000);
-            }
-        }
-    }
-    // -----------------------------------------------------------------------------------
-    //                      ### EXTENSION MESSAGE ###
-    // -----------------------------------------------------------------------------------
-    else if (server_packet.type === "ExtensionMessage")
-    {
-        let extension_packet = server_packet.data;
-        // -----------------------------------------------------------------------------------
-        //                   REQUEST FOR SETTINGS DIALOG
-        // -----------------------------------------------------------------------------------
-        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
-        {
-            SendSettingsWidgetSmall(extension_packet.from);
-        }
-        // -----------------------------------------------------------------------------------
-        //                   REQUEST FOR CREDENTIALS DIALOG
-        // -----------------------------------------------------------------------------------
-
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
-        // -----------------------------------------------------------------------------------
-        //                   SETTINGS DIALOG DATA
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "SettingsWidgetSmallData")
-        {
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                if (extension_packet.data.twitchresetdefaults == "on")
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
                 {
                     serverConfig = structuredClone(default_serverConfig);
-                    console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
-                    SaveConfigToServer();
+                    console.log("\x1b[31m" + serverConfig.extensionname
+                        + " ConfigFile Updated", "The config file has been Updated to the latest version v"
+                        + default_serverConfig.__version__ + ". Your settings may have changed " + "\x1b[0m");
                 }
                 else
                 {
-                    handleSettingsWidgetSmallData(extension_packet.data);
-                    SaveConfigToServer();
-
-                    if (localConfig.status.connected)
+                    // update our config
+                    if (server_packet.data != "")
+                        serverConfig = structuredClone(server_packet.data)
+                }
+                SaveConfigToServer();
+            }
+        }
+        // -----------------------------------------------------------------------------------
+        //                  RECEIVED CREDENTIALS
+        // -----------------------------------------------------------------------------------
+        else if (server_packet.type === "CredentialsFile")
+        {
+            if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != ""
+                && server_packet.data.twitchOAuthState != "" && server_packet.data.twitchOAuthToken != "")
+            {
+                localCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
+                localCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
+                localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
+                if (serverConfig.twitchenabled == "on")
+                {
+                    setTimeout(() =>
+                    {
                         disconnectTwitch();
-                    connectTwitch()
+                        connectTwitch();
+                    }, 1000);
                 }
             }
         }
         // -----------------------------------------------------------------------------------
-        //                   REQUEST FOR USER TRIGGERS
+        //                      ### EXTENSION MESSAGE ###
         // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "SendTriggerAndActions")
+        else if (server_packet.type === "ExtensionMessage")
         {
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "TriggerAndActions",
-                        serverConfig.extensionname,
-                        triggersandactions,
-                        "",
-                        server_packet.from
-                    ),
-                    "",
-                    server_packet.from
-                )
-            )
-        }
-        // -----------------------------------------------------------------------------------
-        //                   Change title
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchChangeTitle")
-        {
-            if (extension_packet.data.title != "")
-                setStreamTitle(extension_packet.data.title)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to change title with no title provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchStartCommercial
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchStartCommercial")
-        {
-            if (extension_packet.data.duration != "")
-                startCommercial(extension_packet.data.duration)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a commercial with no duration provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetEditors
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetEditors")
-        {
-            getChannelEditors()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetVIPs
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetVIPs")
-        {
-            getChannelVIPs()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchAddVIP
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchAddVIP")
-        {
-            if (extension_packet.data.user != "")
-                addVIP(extension_packet.data.user)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to VIP a user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchRemoveVIP
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchRemoveVIP")
-        {
-            if (extension_packet.data.user != "")
-                removeVIP(extension_packet.data.user)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove VIP from a user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchAddMod
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchAddMod")
-        {
-            if (extension_packet.data.user != "")
-                addMod(extension_packet.data.user)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to Mod a user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchRemoveMod
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchRemoveMod")
-        {
-            if (extension_packet.data.user != "")
-                removeMod(extension_packet.data.user)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove Mod from a user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchBan
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchBan")
-        {
-            console.log("action_TwitchBan")
-            if (extension_packet.data.user != "")
-                banUser(extension_packet.data.user, extension_packet.data.reason)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to ban a user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchUnban
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchUnban")
-        {
-            console.log("action_TwitchBan")
-            if (extension_packet.data.user != "")
-                unbanUser(extension_packet.data.user, extension_packet.data.reason)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unban user with no username provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchFollowerCount
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchFollowerCount")
-        {
-            followerCount()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchFollowedChannels
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchFollowedChannels")
-        {
-            followedChannels()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchCheerEmotes
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchCheerEmotes")
-        {
-            cheerEmotes()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLeaderboard
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchLeaderboard")
-        {
-            leaderboard()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetPolls
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetPolls")
-        {
-            getPolls()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetPoll
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetPoll")
-        {
-            if (extension_packet.data.id != "")
-                getPoll(extension_packet.data.id)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a poll with no poll id");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchCreatePoll
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchCreatePoll")
-        {
-            if (extension_packet.data != "")
-                createPoll(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to create a poll with no poll data");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchEndPoll
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchEndPoll")
-        {
-            if (extension_packet.data != "")
-                endPoll(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to end a poll with no poll data");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchStartPrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchStartPrediction")
-        {
-            if (extension_packet.data != "")
-                startPrediction(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchCancelPrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchCancelPrediction")
-        {
-            if (extension_packet.data != "")
-                cancelPrediction(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to cancel a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetPrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetPrediction")
-        {
-            if (extension_packet.data != "")
-                getPrediction()
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetPredictions
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetPredictions")
-        {
-            if (extension_packet.data != "")
-                getPredictions(extension_packet.data)
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLockPrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchLockPrediction")
-        {
-            if (extension_packet.data != "")
-                lockPrediction(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to lock a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLRemovePrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchLRemovePrediction")
-        {
-            if (extension_packet.data != "")
-                removePrediction(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLResolvePrediction
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchLResolvePrediction")
-        {
-            if (extension_packet.data != "")
-                resolvePrediction(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to resolve a prediction with no prediction data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLCreateBlock
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchCreateBlock")
-        {
-            if (extension_packet.data != "")
-                createBlock(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to block a user with no data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchLDeleteBlock
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchDeleteBlock")
-        {
-            if (extension_packet.data != "")
-                deleteBlock(extension_packet.data)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetUser
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetUser")
-        {
-            if (extension_packet.data != "")
-                getUser(extension_packet.data.username)
-            else
-                logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetBlocks
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetBlocks")
-        {
-            getBlockedUsers()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchCreateClip
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchCreateClip")
-        {
-            createClip()
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetClipById
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetClipById")
-        {
-            getClipById(extension_packet.data)
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetClipsForBroadcaster
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetClipsForBroadcaster")
-        {
-            getClipsByBroadcaster(extension_packet.data)
-        }
-        // -----------------------------------------------------------------------------------
-        //                   action_TwitchGetClipsForGame
-        // -----------------------------------------------------------------------------------
-        else if (extension_packet.type === "action_TwitchGetClipsForGame")
-        {
-            getClipsByGame(extension_packet.data)
-        }
+            let extension_packet = server_packet.data;
+            // -----------------------------------------------------------------------------------
+            //                   REQUEST FOR SETTINGS DIALOG
+            // -----------------------------------------------------------------------------------
+            if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            {
+                SendSettingsWidgetSmall(extension_packet.from);
+            }
+            // -----------------------------------------------------------------------------------
+            //                   REQUEST FOR CREDENTIALS DIALOG
+            // -----------------------------------------------------------------------------------
 
+            else if (extension_packet.type === "RequestCredentialsModalsCode")
+                SendCredentialsModal(extension_packet.from);
+            // -----------------------------------------------------------------------------------
+            //                   SETTINGS DIALOG DATA
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "SettingsWidgetSmallData")
+            {
+                if (extension_packet.to === serverConfig.extensionname)
+                {
+                    if (extension_packet.data.twitchresetdefaults == "on")
+                    {
+                        serverConfig = structuredClone(default_serverConfig);
+                        console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
+                        SaveConfigToServer();
+                    }
+                    else
+                    {
+                        handleSettingsWidgetSmallData(extension_packet.data);
+                        SaveConfigToServer();
 
-    }
-    // -----------------------------------------------------------------------------------
-    //                           UNKNOWN CHANNEL MESSAGE RECEIVED
-    // -----------------------------------------------------------------------------------
-    else if (server_packet.type === "UnknownChannel")
-    {
-        // channel might not exist yet, extension might still be starting up so lets 
-        // reschedule the join attempt need to add some sort of flood control here 
-        // so we are only attempting to join one at a time
-        if (server_packet.data != "" && server_packet.channel != undefined)
-        {
-            setTimeout(() =>
+                        if (localConfig.status.connected)
+                            disconnectTwitch();
+                        connectTwitch()
+                    }
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   REQUEST FOR USER TRIGGERS
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "SendTriggerAndActions")
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
-                    sr_api.ServerPacket(
-                        "JoinChannel",
+                    sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
-                        server_packet.data
-                    ));
-            }, 5000);
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            serverConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+                )
+            }
+            // -----------------------------------------------------------------------------------
+            //                   Change title
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchChangeTitle")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.title != "")
+                        setStreamTitle(extension_packet.data.title)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to change title with no title provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchStartCommercial
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchStartCommercial")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.duration != "")
+                        startCommercial(extension_packet.data.duration)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a commercial with no duration provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetEditors
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetEditors")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getChannelEditors()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetVIPs
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetVIPs")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getChannelVIPs()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchAddVIP
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchAddVIP")
+            {
+
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.user != "")
+                        addVIP(extension_packet.data.user)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to VIP a user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchRemoveVIP
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchRemoveVIP")
+            {
+                if (serverConfig.twitchenabled == "on") 
+                {
+                    if (extension_packet.data.user != "")
+                        removeVIP(extension_packet.data.user)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove VIP from a user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchAddMod
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchAddMod")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.user != "")
+                        addMod(extension_packet.data.user)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to Mod a user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchRemoveMod
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchRemoveMod")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.user != "")
+                        removeMod(extension_packet.data.user)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove Mod from a user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchBan
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchBan")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.user != "")
+                        banUser(extension_packet.data.user, extension_packet.data.reason)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to ban a user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchUnban
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchUnban")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.user != "")
+                        unbanUser(extension_packet.data.user, extension_packet.data.reason)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unban user with no username provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchFollowerCount
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchFollowerCount")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    followerCount()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchFollowedChannels
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchFollowedChannels")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    followedChannels()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchCheerEmotes
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchCheerEmotes")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    cheerEmotes()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLeaderboard
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchLeaderboard")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    leaderboard()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetPolls
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetPolls")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getPolls()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetPoll
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetPoll")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data.id != "")
+                        getPoll(extension_packet.data.id)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a poll with no poll id");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchCreatePoll
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchCreatePoll")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        createPoll(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to create a poll with no poll data");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchEndPoll
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchEndPoll")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        endPoll(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to end a poll with no poll data");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchStartPrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchStartPrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        startPrediction(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to start a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchCancelPrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchCancelPrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        cancelPrediction(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to cancel a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetPrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetPrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        getPrediction()
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to get a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetPredictions
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetPredictions")
+            {
+                if (extension_packet.data != "")
+                    if (serverConfig.twitchenabled == "on")
+                        getPredictions(extension_packet.data)
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLockPrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchLockPrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        lockPrediction(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to lock a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLRemovePrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchLRemovePrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        removePrediction(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to remove a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLResolvePrediction
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchLResolvePrediction")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        resolvePrediction(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to resolve a prediction with no prediction data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLCreateBlock
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchCreateBlock")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        createBlock(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to block a user with no data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchLDeleteBlock
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchDeleteBlock")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        deleteBlock(extension_packet.data)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetUser
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetUser")
+            {
+                if (serverConfig.twitchenabled == "on")
+                {
+                    if (extension_packet.data != "")
+                        getUser(extension_packet.data.username)
+                    else
+                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unblock a user with no data provided");
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetBlocks
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetBlocks")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getBlockedUsers()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchCreateClip
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchCreateClip")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    createClip()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetClipById
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetClipById")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getClipById(extension_packet.data)
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetClipsForBroadcaster
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetClipsForBroadcaster")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getClipsByBroadcaster(extension_packet.data)
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGetClipsForGame
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGetClipsForGame")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    getClipsByGame(extension_packet.data)
+            }
         }
+        // -----------------------------------------------------------------------------------
+        //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+        // -----------------------------------------------------------------------------------
+        else if (server_packet.type === "UnknownChannel")
+        {
+            // channel might not exist yet, extension might still be starting up so lets 
+            // reschedule the join attempt need to add some sort of flood control here 
+            // so we are only attempting to join one at a time
+            if (server_packet.data != "" && server_packet.channel != undefined)
+            {
+                setTimeout(() =>
+                {
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            server_packet.data
+                        ));
+                }, 5000);
+            }
+        }
+        else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+            || server_packet.type === "HeartBeat"
+            || server_packet.type === "UnknownExtension"
+            || server_packet.type === "ChannelJoined"
+            || server_packet.type === "LoggingLevel"
+        )
+        {
+            // just a blank handler for items we are not using to avoid message from the catch all
+        }
+        // ------------------------ unknown message type received ----------------------------------
+        else
+            logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled message type:", server_packet);
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "HeartBeat"
-        || server_packet.type === "UnknownExtension"
-        || server_packet.type === "ChannelJoined"
-        || server_packet.type === "LoggingLevel"
-    )
+    catch (error)
     {
-        // just a blank handler for items we are not using to avoid message from the catch all
+
+        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled exception:", error);
     }
-    // ------------------------ unknown message type received ----------------------------------
-    else
-        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled message type:", server_packet);
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
@@ -1878,11 +1956,22 @@ async function startCommercial (length)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "Commercial length invalid, must be one of 30, 60, 90, 120, 150, 180")
         else
         {
-            await localConfig.apiClient.channels.startChannelCommercial(localConfig.streamerData.id, length)
-            //TBD need to move trigger to pubsub/eventsub if we ever work out how to do that
-            let trigger = findTriggerByMessageType("trigger_TwitchCommercialStarted");
-            trigger.parameters.duration = length;
-            sendTrigger(trigger)
+            try
+            {
+                localConfig.apiClient.channels.startChannelCommercial(localConfig.streamerData.id, length)
+                    .then(ret =>
+                    {
+                        //TBD need to move trigger to pubsub/eventsub callback, if we ever have time to work out how to do that
+                        let trigger = findTriggerByMessageType("trigger_TwitchCommercialStarted");
+                        trigger.parameters.duration = length;
+                        sendTrigger(trigger)
+                    })
+                    .catch(err => logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message))
+            }
+            catch (err)
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.stringify(err, null, 2));
+            }
         }
     }
     catch (err)
@@ -1890,12 +1979,12 @@ async function startCommercial (length)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "ERROR", "Failed to start commercial, is streamer live?");
-            console.error(err, err._body);
+            console.log(err, err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial", "ERROR", "Failed to start commercial (try reauthorising by going to  go to http://localhost:3000/twitch/auth)");
-            console.error(err, err._body);
+            console.log(err, err._body);
         }
     }
 }
