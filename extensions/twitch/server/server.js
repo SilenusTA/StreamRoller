@@ -18,6 +18,7 @@
 //                           IMPORTS/VARIABLES
 // ============================================================================
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import ex_helper from "../../extension_helpers/public/streamroller-html-functions.cjs";
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -49,6 +50,9 @@ const localConfig =
     streamerData: "",
     authProvider: "",
     apiClient: null,
+    gameCategories: [],
+    twitchCategoriesDropdownId: "twitchGameCategory",
+    currentTwitchGameCategory: "",
 }
 const default_serverConfig = {
     __version__: "0.2",
@@ -56,7 +60,8 @@ const default_serverConfig = {
     channel: "TWITCH",
     twitchenabled: "off",
     twitchresetdefaults: "off",
-    twitchstreamername: ""
+    twitchstreamername: "",
+    twitchCategorieshistory: [],
 }
 let serverConfig = structuredClone(default_serverConfig);
 const localCredentials =
@@ -892,6 +897,16 @@ const triggersandactions =
                     type: ""
                 }
             },
+            {
+                name: "GameCategories",
+                displaytitle: "List of games",
+                description: "Updated list of games",
+                messagetype: "trigger_TwitchGameCategories",
+                parameters: {
+                    id: 0,
+                    games: []
+                }
+            },
         ],
     actions:
         [
@@ -1159,7 +1174,17 @@ const triggersandactions =
                     game: "",
                     count: ""
                 }
-            }
+            },
+            {
+                name: "TwitchGameCategories",
+                displaytitle: "Get a list of games",
+                description: "Get the list of games",
+                messagetype: "action_GetTwitchGameCategories",
+                parameters: {
+                    id: 0,
+                    games: []
+                }
+            },
 
         ],
 }
@@ -1629,6 +1654,13 @@ function onDataCenterMessage (server_packet)
         {
             getClipsByGame(extension_packet.data)
         }
+        // -----------------------------------------------------------------------------------
+        //                   action_TwitchGetClipsForGame
+        // -----------------------------------------------------------------------------------
+        else if (extension_packet.type === "action_GetTwitchGameCategories")
+        {
+            getAllGameCategories(extension_packet.data)
+        }
 
 
     }
@@ -1704,6 +1736,7 @@ function SendSettingsWidgetSmall (toChannel)
                 else if (typeof (value) === "string" || typeof (value) === "number")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
+            modalstring = modalstring.replace("twitchGameCategorySelector", updateGameCagogories("twitchGameCategorySelector"));
 
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1841,7 +1874,8 @@ async function connectTwitch ()
         eventSubApi.init(localConfig, serverConfig, triggersandactions)
         eventSubApi.startEventSub(localConfig.streamerData.id, localConfig.apiClient, channelData)
 
-        //console.log("getCurrentScopesForUser", await localConfig.authProvider.getCurrentScopesForUser())
+        // get the game categories for twitch
+        getAllGameCategories();
 
         // set us to connected at this time
         localConfig.status.connected = true;
@@ -1852,6 +1886,30 @@ async function connectTwitch ()
         localConfig.status.connected = false;
     }
 }
+// ===========================================================================
+//                           FUNCTION: getAllGameCategories
+// ===========================================================================
+async function getAllGameCategories (id = "twitch")
+{
+    try
+    {
+        // Fetch paginated results for top games
+        const gamePaginator = localConfig.apiClient.games.getTopGamesPaginated();
+
+        // Asynchronously iterate through all pages
+        for await (const game of gamePaginator)
+        {
+            localConfig.gameCategories.push(game.name)
+            //console.log(`Game: ${game.name}, ID: ${game.id}`);
+        }
+        sendGameCategoriesTrigger(id)
+        console.log('Finished fetching all categories.');
+    } catch (error)
+    {
+        console.error('Error fetching categories:', error);
+    }
+}
+
 // ===========================================================================
 //                           FUNCTION: disconnectTwitch
 // ===========================================================================
@@ -2851,6 +2909,25 @@ async function getClipsByGame (data)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
         console.error(err);
     }
+}
+// ============================================================================
+//                           FUNCTION: updateGameCagogories
+// ============================================================================
+function updateGameCagogories ()
+{
+    return ex_helper.createDropdownWithHistoryString(localConfig.twitchCategoriesDropdownId, localConfig.gameCategories, serverConfig.twitchCategorieshistory, localConfig.currentTwitchGameCategory);
+    //, categories)
+}
+// ===========================================================================
+//                           FUNCTION: sendGameCategoriesTrigger
+// ===========================================================================
+function sendGameCategoriesTrigger (id)
+{
+    console.log("getGamesCategories(data)", id)
+    let trigger = findTriggerByMessageType("trigger_TwitchGameCategories");
+    trigger.parameters.id = id;
+    trigger.parameters.games = localConfig.gameCategories;
+    sendTrigger(trigger)
 }
 // ===========================================================================
 //                           FUNCTION: sendTrigger
