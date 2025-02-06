@@ -303,10 +303,16 @@
         // remove all the other extensions but ours (lost datacenter means we only have ourselves to play with now)
         for (const key in livePortalVolatileData.extensions)
         {
+            // hide any open models as they break the focus if not hidden
+            $('#' + key + "_settingswidgetsmallmodal").modal("hide")
             if (key != serverConfig.extensionname)
                 delete livePortalVolatileData.extensions[key];
         }
         livePortalVolatileData.channellist = {};
+        // clear out and reload the extensions list to make it obvious we have lost connetion
+        loadExtensionCards([])
+        document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = "<div style='color:red'>Server Disconnected<BR>Waiting for connection ...</div>";
+
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterConnect
@@ -384,7 +390,7 @@
         // -------------------------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-            let ConfigSubVersions = serverConfig.__version__.split('.')
+            let configSubVersions = server_packet.data.__version__.split('.')
             let defaultSubVersions = default_serverConfig.__version__.split('.')
             // check it is our config
             if (server_packet.data && server_packet.data.extensionname
@@ -396,7 +402,7 @@
                     serverConfig = structuredClone(default_serverConfig);
                     SaveConfigToServer();
                 }
-                else if (ConfigSubVersions[0] != defaultSubVersions[0])
+                else if (configSubVersions[0] != defaultSubVersions[0])
                 {
                     // Major version number change. Replace config with defaults
                     // perform a deep clone overwriting our server config.
@@ -405,7 +411,7 @@
                     console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
                     SaveConfigToServer();
                 }
-                else if (ConfigSubVersions[1] != defaultSubVersions[1])
+                else if (configSubVersions[1] != defaultSubVersions[1])
                 {
                     // Minor version number change. Overwrite config with defaults
                     // perform a merge replacing any values we currently have and keeping the new variables
@@ -824,7 +830,6 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "YOUTUBE")
             {
-                //console.log("YOUTUBE", JSON.stringify(server_packet, null, 2))
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
                     TTSSpeak(extension_packet.data.parameters.message)
@@ -1098,6 +1103,7 @@
                 RequestSettingsWidgetLargeCode(extensions[i]);
 
             }
+
             html += "<div id='" + extensions[i] + "_visibility_settingswidgetsmall' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
             html += " <span id='" + extensions[i] + "_settingslinkname'>" + extensions[i] + "</span></div>";
 
@@ -1207,6 +1213,12 @@
         // only update modals if we have received the extension name from the server
         if (livePortalVolatileData.extensions[xname])
         {
+            let wasVisible = false;
+            // hide the modal before replacing it (in case it is currently visable).
+            if ($('#' + xname + "_settingswidgetsmallmodal").hasClass('show'))
+                wasVisible = true
+            $('#' + xname + "_settingswidgetsmallmodal").modal("hide")
+
             let data = livePortalVolatileData.extensions[xname].settingswidgetsmall
             // grab the placeholder code we user to save us from writing all the code from scratch :P
             let modalbox = document.getElementById("LivePortalSettingsWidgetsSmallPlaceholder").children[0];
@@ -1257,6 +1269,9 @@
                 return false;
             });
             document.getElementById(xname + "_visibility_settingswidgetsmall").style.display = "block"
+            // if this modal was open when we got the update then reopen it for the user
+            if (wasVisible)
+                $('#' + xname + "_settingswidgetsmallmodal").modal("show")
 
         }
         // need to update the mode in case we have received a light mode 
@@ -1391,7 +1406,6 @@
             document.getElementById(extension + "_status").style = "color:" + status.color;
         else if (status.connected && status.connected == "false")// string
         {
-            console.log("status.connected check failed", extension, status)
             document.getElementById(extension + "_status").style = "color:red";
         }
         else if (status.readonly || status.readonly == "true")//chat connection settings
@@ -2796,19 +2810,11 @@
     // ============================================================================
     function addBTTVEmotes (message)
     {
-        //console.log("addBTTVEmotes emotenames", localConfig.bTTVNames)
-        //console.log("addBTTVEmotes message", message)
         for (var key of Object.keys(localConfig.bTTVEmotes))
         {
-            //console.log(localConfig.bTTVEmotes[key].code)
-            //console.log(message.includes(localConfig.bTTVEmotes[key].code))
             if (message.includes(localConfig.bTTVEmotes[key].code))
             {
-                //console.log("found", localConfig.bTTVEmotes[key].code)
-                //console.log("message", message)
                 message = message.replaceAll(localConfig.bTTVEmotes[key].code, "<img src='https://cdn.betterttv.net/emote/" + localConfig.bTTVEmotes[key].id + "/1x.webp'>")
-                //console.log("message", message)
-                //localConfig.bTTVNames.push(localConfig.bTTVEmotes[key].code)
             }
         }
         return message

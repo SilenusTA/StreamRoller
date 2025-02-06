@@ -17,16 +17,15 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
-import ex_helper from "../../extension_helpers/public/streamroller-html-functions.cjs";
-import * as logger from "../../../backend/data_center/modules/logger.js";
+import fs from "fs";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-import fs from "fs";
 //twurple imports
-import { StaticAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
+import { StaticAuthProvider } from '@twurple/auth';
 
 
 // our helper files
@@ -51,17 +50,18 @@ const localConfig =
     authProvider: "",
     apiClient: null,
     gameCategories: [],
-    twitchCategoriesDropdownId: "twitchGameCategory",
-    currentTwitchGameCategory: "",
+    twitchCategoriesDropdownId: "twitchGameCategoryDropdownSelector",
 }
 const default_serverConfig = {
-    __version__: "0.2",
+    __version__: "0.3",
     extensionname: "twitch",
     channel: "TWITCH",
     twitchenabled: "off",
     twitchresetdefaults: "off",
     twitchstreamername: "",
-    twitchCategorieshistory: [],
+    twitchCategoriesHistory: [],
+    twitchGameCategory_clearHistory: "off",
+    currentTwitchGameCategoryId: "",
 }
 let serverConfig = structuredClone(default_serverConfig);
 const localCredentials =
@@ -1258,23 +1258,42 @@ function onDataCenterMessage (server_packet)
         // -----------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
+            // breakdown the version number to major/minor numbers
+            let configSubVersions = server_packet.data.__version__.split('.')
+            let defaultSubVersions = default_serverConfig.__version__.split('.')
             // check it is our config
-            if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.data
+                && server_packet.data.extensionname
+                && server_packet.data.extensionname === serverConfig.extensionname)
             {
-                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                if (server_packet.data == "")
                 {
+                    // server data is empty, possibly the first run of the code so just default it
                     serverConfig = structuredClone(default_serverConfig);
-                    console.log("\x1b[31m" + serverConfig.extensionname
-                        + " ConfigFile Updated", "The config file has been Updated to the latest version v"
-                        + default_serverConfig.__version__ + ". Your settings may have changed " + "\x1b[0m");
+                    SaveConfigToServer();
+                }
+                else if (configSubVersions[0] != defaultSubVersions[0])
+                {
+                    // Major version number change. Replace config with defaults
+                    // perform a deep clone overwriting our server config.
+                    serverConfig = structuredClone(default_serverConfig);
+                    // notify the user their config has been updated.
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                    SaveConfigToServer();
+                }
+                else if (configSubVersions[1] != defaultSubVersions[1])
+                {
+                    // Minor version number change. Overwrite config with defaults
+                    // perform a merge replacing any values we currently have and keeping the new variables
+                    serverConfig = { ...default_serverConfig, ...server_packet.data };
+                    // update the version number to the current default number
+                    serverConfig.__version__ = default_serverConfig.__version__;
+                    console.log(serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__);
+                    SaveConfigToServer();
                 }
                 else
-                {
-                    // update our config
-                    if (server_packet.data != "")
-                        serverConfig = structuredClone(server_packet.data)
-                }
-                SaveConfigToServer();
+                    // no version number changed so we can just saved file
+                    serverConfig = structuredClone(server_packet.data);
             }
         }
         // -----------------------------------------------------------------------------------
@@ -1324,13 +1343,22 @@ function onDataCenterMessage (server_packet)
             {
                 if (extension_packet.to === serverConfig.extensionname)
                 {
+                    // check if we have asked to reset to defaults
                     if (extension_packet.data.twitchresetdefaults == "on")
                     {
                         serverConfig = structuredClone(default_serverConfig);
                         console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
                         SaveConfigToServer();
                     }
-                    else
+                    // check if we have changed category name
+                    else if (extension_packet.data[localConfig.twitchCategoriesDropdownId] != serverConfig.currentTwitchGameCategoryId)
+                    {
+                        serverConfig.currentTwitchGameCategoryId = extension_packet.data[localConfig.twitchCategoriesDropdownId]
+                        handleSettingsWidgetSmallData(extension_packet.data);
+                        SaveConfigToServer();
+                    }
+                    // check if we have changed streamer name
+                    else if (extension_packet.data.twitchstreamername != serverConfig.twitchstreamername)
                     {
                         handleSettingsWidgetSmallData(extension_packet.data);
                         SaveConfigToServer();
@@ -1339,6 +1367,17 @@ function onDataCenterMessage (server_packet)
                             disconnectTwitch();
                         connectTwitch()
                     }
+                    else
+                    {
+                        // something else changed in the dialog so just restart it all
+                        handleSettingsWidgetSmallData(extension_packet.data);
+                        SaveConfigToServer();
+
+                        if (localConfig.status.connected)
+                            disconnectTwitch();
+                        connectTwitch()
+                    }
+                    SendSettingsWidgetSmall("");
                 }
             }
             // -----------------------------------------------------------------------------------
@@ -1796,18 +1835,38 @@ function SendSettingsWidgetSmall (toChannel)
         }
         else
         {
-            let modalstring = filedata.toString();
+            let modalString = filedata.toString();
+            let statusHtml = ""
+            if (serverConfig.twitchenabled == "off")
+                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Extension turned off</div>`
+            else if (!localConfig.status.connected)
+                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Twitch not connected</div>`
 
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // checkboxes
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalString = modalString.replace(key + "checked", "checked");
                 else if (typeof (value) === "string" || typeof (value) === "number")
-                    modalstring = modalstring.replaceAll(key + "text", value);
+                    modalString = modalString.replaceAll(key + "text", value);
             }
-            modalstring = modalstring.replace("twitchGameCategorySelector", updateGameCategories("twitchGameCategorySelector"));
 
+            if (serverConfig.twitchenabled == "off" || !localConfig.status.connected)
+            {
+                modalString = modalString.replace("twitchStreamTitleSelector", statusHtml);
+                modalString = modalString.replace("twitchGameCategorySelector", statusHtml);
+            }
+            else
+            {
+                modalString = modalString.replace("twitchStreamTitleSelector", `<BR><div style = "color:red">TBD</div>`);
+                // add our searchable dropdown category selector
+                modalString = modalString.replace("twitchGameCategorySelector",
+                    createDropdownWithSearchableHistory(
+                        localConfig.twitchCategoriesDropdownId,
+                        localConfig.gameCategories,
+                        serverConfig.twitchCategoriesHistory,
+                        serverConfig.currentTwitchGameCategoryId));
+            }
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
@@ -1815,7 +1874,7 @@ function SendSettingsWidgetSmall (toChannel)
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode",
                         serverConfig.extensionname,
-                        modalstring,
+                        modalString,
                         "",
                         toChannel,
                         serverConfig.channel
@@ -1843,14 +1902,13 @@ function SendCredentialsModal (extensionname)
         //throw err;
         else
         {
-            let modalstring = filedata.toString();
-
+            let modalString = filedata.toString();
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
+                    modalString = modalString.replaceAll(key + "checked", "checked");
                 else if (typeof (value) == "string" || typeof (value) == "number")
-                    modalstring = modalstring.replaceAll(key + "text", value);
+                    modalString = modalString.replaceAll(key + "text", value);
             }
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
@@ -1858,7 +1916,7 @@ function SendCredentialsModal (extensionname)
                     sr_api.ExtensionPacket(
                         "CredentialsModalCode",
                         serverConfig.extensionname,
-                        modalstring,
+                        modalString,
                         "",
                         extensionname,
                         serverConfig.channel
@@ -1874,10 +1932,46 @@ function SendCredentialsModal (extensionname)
 // ===========================================================================
 function handleSettingsWidgetSmallData (modalCode)
 {
-    serverConfig.twitchenabled = "off";
-    serverConfig.twitchresetdefaults = "off";
-    for (const [key, value] of Object.entries(modalCode))
-        serverConfig[key] = value;
+    try
+    {
+        serverConfig.twitchenabled = "off";
+        serverConfig.twitchresetdefaults = "off";
+        let modalObjects = Object.entries(modalCode);
+        for (const [key, value] of modalObjects)
+        {
+            // this checkbox will only appear if clicked "on"
+            // we don't save this value so skip setting the serverConfig for it
+            if (key == localConfig.twitchCategoriesDropdownId + "_clearHistory" && value == "on")
+                serverConfig.twitchCategoriesHistory = [];
+
+            //else if (key == "twitchGameCategory")
+            else if (key == localConfig.twitchCategoriesDropdownId)
+            {
+                let game = {}
+                // find the game id in the list 
+                const i = localConfig.gameCategories.findIndex(e => e.id === value);
+                if (i > -1)
+                {
+                    game = localConfig.gameCategories[i]
+                    const hi = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+                    if (hi == -1)
+                        serverConfig.twitchCategoriesHistory.push(game)
+
+                    serverConfig.currentTwitchGameCategoryId = game;
+                    if (localConfig.status.connected)
+                        setStreamGame(game.id)
+                }
+                else
+                    console.log("game selected is not in the category list", key, value)
+            }
+            else
+                serverConfig[key] = value;
+        }
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData", "Error", err, err.message);
+    }
 }
 // ============================================================================
 //                           FUNCTION: heartBeat
@@ -1944,11 +2038,12 @@ async function connectTwitch ()
         eventSubApi.init(localConfig, serverConfig, triggersandactions)
         eventSubApi.startEventSub(localConfig.streamerData.id, localConfig.apiClient, channelData)
 
+        // set us to connected at this time
+        localConfig.status.connected = true;
+
         // get the game categories for twitch
         getAllGameCategories();
 
-        // set us to connected at this time
-        localConfig.status.connected = true;
     }
     catch (err)
     {
@@ -1968,15 +2063,11 @@ async function getAllGameCategories (id = "twitch")
 
         // Asynchronously iterate through all pages
         for await (const game of gamePaginator)
-        {
-            localConfig.gameCategories.push(game.name)
-            //console.log(`Game: ${game.name}, ID: ${game.id}`);
-        }
+            localConfig.gameCategories.push({ id: game.id, name: game.name })
         sendGameCategoriesTrigger(id)
-        console.log('Finished fetching all categories.');
-    } catch (error)
+    } catch (err)
     {
-        console.error('Error fetching categories:', error);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGameCategories", "Error fetching categories:", err, err.message);
     }
 }
 
@@ -1992,7 +2083,18 @@ function disconnectTwitch ()
 // ===========================================================================
 async function setStreamTitle (title)
 {
-    await localConfig.apiClient.channels.updateChannelInfo(localConfig.streamerData.id, { title: title })
+    localConfig.apiClient.channels.updateChannelInfo(localConfig.streamerData.id, { title: title })
+}
+// ===========================================================================
+//                           FUNCTION: setStreamGame
+// ===========================================================================
+async function setStreamGame (gameId)
+{
+    if (gameId)
+        localConfig.apiClient.channels.updateChannelInfo(localConfig.streamerData.id, { gameId: gameId })
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".setStreamGame", "No game category id passed");
+
 }
 // ===========================================================================
 //                           FUNCTION: startCommercial
@@ -2991,23 +3093,16 @@ async function getClipsByGame (data)
         console.error(err);
     }
 }
-// ============================================================================
-//                           FUNCTION: updateGameCategories
-// ============================================================================
-function updateGameCategories ()
-{
-    return ex_helper.createDropdownWithHistoryString(localConfig.twitchCategoriesDropdownId, localConfig.gameCategories, serverConfig.twitchCategorieshistory, localConfig.currentTwitchGameCategory);
-    //, categories)
-}
 // ===========================================================================
 //                           FUNCTION: sendGameCategoriesTrigger
 // ===========================================================================
 function sendGameCategoriesTrigger (id)
 {
-    console.log("getGamesCategories(data)", id)
     let trigger = findTriggerByMessageType("trigger_TwitchGameCategories");
     trigger.parameters.id = id;
     trigger.parameters.games = localConfig.gameCategories;
+    // we also send our settings out in case the categories have change
+    SendSettingsWidgetSmall("")
     sendTrigger(trigger)
 }
 // ===========================================================================
@@ -3031,6 +3126,54 @@ function sendTrigger (trigger)
     );
 }
 // ============================================================================
+//                           FUNCTION: createDropdownWithSearchableHistory
+// ============================================================================
+function createDropdownWithSearchableHistory (id, categories = [], history = [], currentSelectedId = -1)
+{
+    let dropdownHtml = ""
+    dropdownHtml += '<div class="d-flex-align w-100">';
+
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Game Category' id="` + id + `" value='-1' name="` + id + `" required="">`
+    // add history section if we have one
+    if (history.length)
+    {
+        // add history separator
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--HISTORY--</option>'
+        // Append history options first
+        history.forEach(item =>
+        {
+            if (item.id == currentSelectedId.id)
+                dropdownHtml += "<option value=\"" + item.id + "\" selected >" + item.name + "</option>";
+            else
+                dropdownHtml += "<option value=\"" + item.id + "\">" + item.name + "</option>";
+        });
+
+        // add history separator
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--END HISTORY--</option>';
+    }
+    else
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--Select an option--</option>'
+    // check if we have loaded the categories yet
+    if (serverConfig.twitchenabled == "off")
+        dropdownHtml += '<option value="separator" disabled style="color:red;font-weight: bold">Extension turned off ...</option>';
+    else if (!categories.length)
+        dropdownHtml += '<option value="separator" disabled style="color:red;font-weight: bold">LOADING...</option>';
+    // append categories
+    categories.forEach(option =>
+    {
+        // only include if it isn't already in the history list
+        if (!history.some(e => e.id === option.id))
+            dropdownHtml += '<option value="' + option.id + '">' + option.name + '</option>';
+    });
+    dropdownHtml += '</select>';
+    // add clear history checkbox
+    dropdownHtml += `&nbsp<div class="form-check form-check-inline">
+        <input class="form-check-input" name="${id}_clearHistory" type="checkbox" id="${id}_clearHistory" ${id}_clearHistorychecked>
+        <label class="form-check-label" for="${id}_clearHistory">Clear History</label>
+      </div>`
+    return dropdownHtml;
+}
+// ============================================================================
 //                           FUNCTION: findTriggerByMessageType
 // ============================================================================
 function findTriggerByMessageType (messagetype)
@@ -3044,4 +3187,4 @@ function findTriggerByMessageType (messagetype)
         ".findTriggerByMessageType", "failed to find trigger", messagetype);
 }
 
-export { start }
+export { start };

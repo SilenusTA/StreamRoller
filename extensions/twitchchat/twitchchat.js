@@ -2217,11 +2217,22 @@ function file_log (type, tags, message)
 // ============================================================================
 function heartBeatCallback ()
 {
-    let connected = localConfig.twitchClient["user"].state.connected && localConfig.twitchClient["bot"].state.connected
-    let readonly = localConfig.twitchClient["user"].state.readonly && localConfig.twitchClient["bot"].state.readonly
+    let userconnected = localConfig.twitchClient["user"].state.connected
+    let botconnected = localConfig.twitchClient["bot"].state.connected
+    let userreadonly = localConfig.twitchClient["user"].state.readonly
+    let botreadonly = localConfig.twitchClient["bot"].state.readonly
+    let colour = 'red'
 
-    if (serverConfig.enabletwitchchat === "off")
-        connected = false;
+    //is everything conencted and running
+    if (serverConfig.enabletwitchchat === "on" && userconnected && botconnected && !userreadonly && !botreadonly)
+    {
+        colour = 'green'
+    }
+    else if (serverConfig.enabletwitchchat === "off")
+        colour = "red"
+    else    // we are turned on but not everything is connected correctly
+        colour = "orange"
+
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
@@ -2229,8 +2240,7 @@ function heartBeatCallback ()
                 "HeartBeat",
                 serverConfig.extensionname,
                 {
-                    readonly: readonly,
-                    connected: connected
+                    color: colour
                 },
                 serverConfig.channel),
             serverConfig.channel

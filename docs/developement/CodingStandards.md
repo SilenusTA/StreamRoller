@@ -40,7 +40,7 @@ When loading a saved config from the server, you should always check the version
 if (server_packet.type === "ConfigFile")
 {
     // breakdown the version number to major/minor numbers
-    let ConfigSubVersions = serverConfig.__version__.split('.')
+    let ConfigSubVersions = server_packet.data.__version__.split('.')
     let defaultSubVersions = default_serverConfig.__version__.split('.')
     
     // check it is our config

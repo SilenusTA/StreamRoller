@@ -40,6 +40,12 @@ import * as logger from "./modules/logger.js";
 import * as ServerSocket from "./modules/server_socket.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 
+// testing startup time
+let DEBUG_TIMING = false;
+let debugStartTime = performance.now()
+let debugEndTime = performance.now()
+// END testing startup time
+
 // load our config settings from the config store
 let config = cm.loadConfig("datacenter");
 let localConfig =
@@ -48,7 +54,6 @@ let localConfig =
     extensions: [],
     serverPingTimeout: 3600000 //1 hour
 }
-
 
 let defaultconfig = {
     name: "StreamRoller",
@@ -120,8 +125,20 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // app server start
 const app = express();
 const server = http.createServer(app);
-
+if (DEBUG_TIMING)
+{
+    debugEndTime = performance.now()
+    console.log("start to http.createServer(app) took:", Math.round(debugEndTime - debugStartTime), "ms");
+    debugStartTime = debugEndTime
+}
 server.listen(config.PORT);
+if (DEBUG_TIMING)
+{
+    debugEndTime = performance.now()
+    console.log("server.listen:", Math.round(debugEndTime - debugStartTime), "ms");
+    debugStartTime = debugEndTime
+}
+
 server.on('error', (e) =>
 {
     if (e.code === 'EADDRINUSE')
@@ -136,8 +153,9 @@ server.on('error', (e) =>
 });
 server.on('listening', (e) =>
 {
-    console.log("Server Listening");
+    console.log("StreamRoller Started");
 })
+console.log("Loading Extensions ...");
 // ============================================================================
 //                          EXPRESS
 // ============================================================================
@@ -149,11 +167,17 @@ app.use(express.static(__dirname + "/public"));
 // set th e default page
 app.get("/", function (req, res)
 {
+    let debugWebPageLoadStartTime = performance.now()
     res.render(__dirname + "/../../extensions/liveportal/views/pages/index", {
         host: "http://" + config.HOST,
         port: config.PORT,
         heartbeat: config.heartbeat
     });
+    if (DEBUG_TIMING)
+    {
+        let debugWebPageLoadEndTime = performance.now()
+        console.log("app.get('/' took:", debugWebPageLoadEndTime - debugWebPageLoadStartTime, "ms");
+    }
 });
 // serve our overlay. Overlay currently needs updating and moving into the extensions
 // as this is where I suspect it should live. or maybe we need a separate overlays folder?
@@ -184,14 +208,29 @@ app.use("*.php", function (request, response, next)
     });
 });
 app.use(express.static(webfiles));
-
+if (DEBUG_TIMING)
+{
+    debugEndTime = performance.now()
+    console.log("Phpload:", Math.round(debugEndTime - debugStartTime), "ms");
+    debugStartTime = debugEndTime
+}
 //load extensions and start the server
 loadExtensionsAndStartServer()
-
+if (DEBUG_TIMING)
+{
+    debugEndTime = performance.now()
+    console.log("loadExtensionsAndStartServer:", Math.round(debugEndTime - debugStartTime), "ms");
+    debugStartTime = debugEndTime
+}
 // ping server (will be used for updates and later to allow remote login from mods etc)
 // testing server connections
 pingServer();
-
+if (DEBUG_TIMING)
+{
+    debugEndTime = performance.now()
+    console.log("pingServer:", Math.round(debugEndTime - debugStartTime), "ms");
+    debugStartTime = debugEndTime
+}
 // ############################################################
 // ################## Load/Start Extensions ###################
 // ############################################################
@@ -216,6 +255,7 @@ async function loadExtensionsAndStartServer ()
         ServerSocket.start(app, server, Object.keys(localConfig.extensions))
     }
 }
+
 // ########################################################
 // ################### loadExtensions #####################
 // ########################################################
@@ -223,19 +263,44 @@ async function loadExtensions (extensionFolder)
 {
     let files = null;
     let modules = []
-
+    if (DEBUG_TIMING)
+    {
+        debugStartTime = debugEndTime
+    }
     // get a list of extension filenames
     try { files = await fs.readdir(extensionFolder) }
     catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: loading extension filenames", err); }
-
+    if (DEBUG_TIMING)
+    {
+        debugEndTime = performance.now()
+        console.log("fs.readdir(" + extensionFolder + "):", Math.round(debugEndTime - debugStartTime), "ms");
+        debugStartTime = debugEndTime
+    }
     // load each of the extensions modules
     try
     {
+        let debugStartTimeArray = []
         modules = await Promise.all(
             Array.from(files).map((value) =>
             {
                 if (!value.startsWith("~~") && !value.startsWith("datahandlers"))
-                    return import(pathToFileURL(extensionFolder + "/" + value + "/" + value + ".js").href)
+                {
+                    debugStartTimeArray[value] = performance.now()
+                    let x = import(pathToFileURL(extensionFolder + "/" + value + "/" + value + ".js").href)
+                        .then((x) =>
+                        {
+                            if (DEBUG_TIMING)
+                            {
+                                debugEndTime = performance.now()
+                                console.log("loaded:", value, "in", Math.round(debugEndTime - debugStartTimeArray[value]), "ms");
+                                debugStartTimeArray[value] = debugEndTime
+                            }
+                            console.log("loaded:", value, "initialising extension..."
+                            );
+                            return x;
+                        })
+                    return x;
+                }
                 else
                     return null
             }
@@ -247,12 +312,14 @@ async function loadExtensions (extensionFolder)
     // for each extension call it's initialise function
     try
     {
+        debugStartTime = []
         modules.forEach((module, index) => 
         {
             if (module)
             {
                 try
                 {
+                    debugStartTime[files[index]] = performance.now()
                     localConfig.extensions[files[index]] = { initialise: module.initialise };
                     if (typeof localConfig.extensions[files[index]].initialise === "function")
                         module.initialise(
@@ -261,7 +328,10 @@ async function loadExtensions (extensionFolder)
                             // add a slight offset to the heartbeat so they don't all end up synced
                             config.heartbeat + (Math.floor(Math.random() * 100)));
                     else
-                        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an intialise function");
+                        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an initialise function");
+                    if (DEBUG_TIMING)
+                        console.log("extension", files[index], " loaded:", Math.round(performance.now() - debugStartTime[files[index]]), "ms");
+                    console.log("extension", files[index], "started");
                 }
                 catch (err) 
                 {
