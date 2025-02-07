@@ -51,9 +51,11 @@ const localConfig =
     apiClient: null,
     gameCategories: [],
     twitchCategoriesDropdownId: "twitchGameCategoryDropdownSelector",
+    twitchTitleDropdownId: "twitchTitleDropdownSelector",
+    twitchTitlesTextElementId: "twitchTitleTextElement"
 }
 const default_serverConfig = {
-    __version__: "0.3",
+    __version__: "0.4",
     extensionname: "twitch",
     channel: "TWITCH",
     twitchenabled: "off",
@@ -61,7 +63,9 @@ const default_serverConfig = {
     twitchstreamername: "",
     twitchCategoriesHistory: [],
     twitchGameCategory_clearHistory: "off",
-    currentTwitchGameCategoryId: "",
+    lastSelectedTwitchGameCategoryId: -1,
+    twitchTitlesHistory: [],
+    lastSelectedTwitchTitleId: -1
 }
 let serverConfig = structuredClone(default_serverConfig);
 const localCredentials =
@@ -1350,32 +1354,18 @@ function onDataCenterMessage (server_packet)
                         console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
                         SaveConfigToServer();
                     }
-                    // check if we have changed category name
-                    else if (extension_packet.data[localConfig.twitchCategoriesDropdownId] != serverConfig.currentTwitchGameCategoryId)
-                    {
-                        serverConfig.currentTwitchGameCategoryId = extension_packet.data[localConfig.twitchCategoriesDropdownId]
-                        handleSettingsWidgetSmallData(extension_packet.data);
-                        SaveConfigToServer();
-                    }
-                    // check if we have changed streamer name
-                    else if (extension_packet.data.twitchstreamername != serverConfig.twitchstreamername)
-                    {
-                        handleSettingsWidgetSmallData(extension_packet.data);
-                        SaveConfigToServer();
 
-                        if (localConfig.status.connected)
-                            disconnectTwitch();
-                        connectTwitch()
-                    }
                     else
                     {
-                        // something else changed in the dialog so just restart it all
-                        handleSettingsWidgetSmallData(extension_packet.data);
+                        let restart = handleSettingsWidgetSmallData(extension_packet.data);
                         SaveConfigToServer();
 
-                        if (localConfig.status.connected)
-                            disconnectTwitch();
-                        connectTwitch()
+                        if (restart)
+                        {
+                            if (localConfig.status.connected)
+                                disconnectTwitch();
+                            connectTwitch()
+                        }
                     }
                     SendSettingsWidgetSmall("");
                 }
@@ -1858,14 +1848,19 @@ function SendSettingsWidgetSmall (toChannel)
             }
             else
             {
-                modalString = modalString.replace("twitchStreamTitleSelector", `<BR><div style = "color:red">TBD</div>`);
+                modalString = modalString.replace("twitchStreamTitleSelector", getTextboxWithHistoryHTML(
+                    localConfig.twitchTitleDropdownId,
+                    localConfig.twitchTitlesTextElementId,
+                    serverConfig.twitchTitlesHistory,
+                    serverConfig.lastSelectedTwitchTitleId
+                ));
                 // add our searchable dropdown category selector
                 modalString = modalString.replace("twitchGameCategorySelector",
                     createDropdownWithSearchableHistory(
                         localConfig.twitchCategoriesDropdownId,
                         localConfig.gameCategories,
                         serverConfig.twitchCategoriesHistory,
-                        serverConfig.currentTwitchGameCategoryId));
+                        serverConfig.lastSelectedTwitchGameCategoryId));
             }
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1934,39 +1929,70 @@ function handleSettingsWidgetSmallData (modalCode)
 {
     try
     {
-        serverConfig.twitchenabled = "off";
-        serverConfig.twitchresetdefaults = "off";
-        let modalObjects = Object.entries(modalCode);
-        for (const [key, value] of modalObjects)
+        let restartConnection = false;
+        if (serverConfig.twitchenabled != modalCode.twitchenabled)
         {
-            // this checkbox will only appear if clicked "on"
-            // we don't save this value so skip setting the serverConfig for it
-            if (key == localConfig.twitchCategoriesDropdownId + "_clearHistory" && value == "on")
-                serverConfig.twitchCategoriesHistory = [];
-
-            //else if (key == "twitchGameCategory")
-            else if (key == localConfig.twitchCategoriesDropdownId)
-            {
-                let game = {}
-                // find the game id in the list 
-                const i = localConfig.gameCategories.findIndex(e => e.id === value);
-                if (i > -1)
-                {
-                    game = localConfig.gameCategories[i]
-                    const hi = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
-                    if (hi == -1)
-                        serverConfig.twitchCategoriesHistory.push(game)
-
-                    serverConfig.currentTwitchGameCategoryId = game;
-                    if (localConfig.status.connected)
-                        setStreamGame(game.id)
-                }
-                else
-                    console.log("game selected is not in the category list", key, value)
-            }
+            restartConnection = true;
+            if (modalCode.twitchenabled)
+                serverConfig.twitchenabled = "on"
             else
-                serverConfig[key] = value;
+                serverConfig.twitchenabled = "off"
         }
+
+        if (modalCode.twitchstreamername != serverConfig.twitchstreamername)
+        {
+            restartConnection = true;
+            serverConfig.twitchstreamername = modalCode["twitchstreamername"]
+        }
+
+        /* Process Twitch Categories */
+        let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"]
+        let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"]
+
+        if (clearTwitchTitles || clearTwitchCategories)
+        {
+            if (clearTwitchCategories)
+            {
+                serverConfig.twitchCategoriesHistory = [];
+                serverConfig.lastSelectedTwitchGameCategoryId = -1
+            }
+            if (clearTwitchTitles)
+            {
+                serverConfig.twitchTitlesHistory = [];
+                serverConfig.lastSelectedTwitchTitleId = -1
+            }
+            return false;
+        }
+        /* Process Twitch Categories */
+        const categoryIndex = localConfig.gameCategories.findIndex(e => e.id === modalCode[localConfig.twitchCategoriesDropdownId]);
+        if (categoryIndex > -1)
+        {
+            // get the game
+            let game = localConfig.gameCategories[categoryIndex]
+            // check if it already exists in the history array
+            const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+            if (inHistory == -1)
+                serverConfig.twitchCategoriesHistory.push(game)
+
+            serverConfig.lastSelectedTwitchGameCategoryId = game.id;
+            if (localConfig.status.connected && serverConfig.lastSelectedTwitchGameCategoryId)
+                setStreamGame(serverConfig.lastSelectedTwitchGameCategoryId)
+        }
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", serverConfig.lastSelectedTwitchGameCategoryId);
+        /* Process Twitch Title */
+        if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
+        {
+            let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
+            if (titleIndex > -1)
+                serverConfig.lastSelectedTwitchTitleId = titleIndex;
+            else
+                serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(modalCode[localConfig.twitchTitlesTextElementId]) - 1
+
+            setStreamTitle(serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId])
+        }
+        return restartConnection
     }
     catch (err)
     {
@@ -3171,7 +3197,47 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
         <input class="form-check-input" name="${id}_clearHistory" type="checkbox" id="${id}_clearHistory" ${id}_clearHistorychecked>
         <label class="form-check-label" for="${id}_clearHistory">Clear History</label>
       </div>`
+    dropdownHtml += '</div>';
     return dropdownHtml;
+}
+// ============================================================================
+//                           FUNCTION: getTextboxWithHistoryHTML
+// ============================================================================
+function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSelectedId)
+{
+    let dropdownHtml = "";
+    dropdownHtml += '<div class="d-flex-align w-100">';
+    if (history[currentSelectedId])
+        dropdownHtml += `<input type="text" class="form-control" id="` + TextEleId + `" name="` + TextEleId + `" value = "` + history[currentSelectedId] + `" placeholder="` + history[currentSelectedId] + `">`
+    else
+        dropdownHtml += `<input type="text" class="form-control" id="` + TextEleId + `" name="` + TextEleId + `" placeholder="Please Enter a new Title or select one from the history">`
+
+
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Title' id="` + SelectEleId + `" value='-1' name="` + SelectEleId + `" onchange="document.getElementById('` + TextEleId + `').value = this.options[this.selectedIndex].text">`
+
+    if (history.length)
+    {
+        history.forEach((item, i) => 
+        {
+            if (i == currentSelectedId)
+                dropdownHtml += `<option value="` + i + `" selected >` + item + `</option>`;
+
+            else
+                dropdownHtml += `<option value="` + i + `">` + item + `</option>`;
+        });
+
+    }
+    else
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--No History Available--</option>'
+    dropdownHtml += '</select>';
+    dropdownHtml += `&nbsp<div class="form-check form-check-inline">
+        <input class="form-check-input" name="${SelectEleId}_clearHistory" type="checkbox" id="${SelectEleId}_clearHistory" ${SelectEleId}_clearHistorychecked>
+        <label class="form-check-label" for="${SelectEleId}_clearHistory">Clear History</label>
+      </div>`
+
+    dropdownHtml += "</div>"
+
+    return dropdownHtml
 }
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType

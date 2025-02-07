@@ -176,11 +176,11 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            // start discord connection
+            // start twitter connection
             connectToTwitter(server_packet.data);
         else
         {
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
 
@@ -286,8 +286,13 @@ function connectToTwitter (creds)
             apiSecret: creds.twitterAPISecret,
             accessToken: creds.twitterAccessToken,
             accessTokenSecret: creds.TwitterAccessTokenSecret
-        });
+        })
+
         localConfig.status.connected = true;
+        /*
+            localConfig.status.connected = false;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToTwitter", "twitter connection failed:", err, err.message);*/
+
     }
     catch (e)
     {
@@ -428,7 +433,7 @@ function tweetmessage (message)
             {
                 localConfig.status.connected = false;
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                    ".tweetmessage", "Failed ... ", err.name, err.message);
+                    ".tweetmessage", "Failed to tweet message ... ", err.name, err.message);
             })
 
     }

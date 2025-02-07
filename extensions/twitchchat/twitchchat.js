@@ -2222,15 +2222,21 @@ function heartBeatCallback ()
     let userreadonly = localConfig.twitchClient["user"].state.readonly
     let botreadonly = localConfig.twitchClient["bot"].state.readonly
     let colour = 'red'
+    let connected = (userconnected || botconnected) && (!userreadonly || !botreadonly)
 
     //is everything conencted and running
     if (serverConfig.enabletwitchchat === "on" && userconnected && botconnected && !userreadonly && !botreadonly)
     {
         colour = 'green'
+        connected = true;
     }
     else if (serverConfig.enabletwitchchat === "off")
+    {
         colour = "red"
-    else    // we are turned on but not everything is connected correctly
+        connected = false;
+    }
+    else
+        // we are turned on but not everything is connected correctly
         colour = "orange"
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -2240,7 +2246,8 @@ function heartBeatCallback ()
                 "HeartBeat",
                 serverConfig.extensionname,
                 {
-                    color: colour
+                    color: colour,
+                    connected: connected
                 },
                 serverConfig.channel),
             serverConfig.channel
