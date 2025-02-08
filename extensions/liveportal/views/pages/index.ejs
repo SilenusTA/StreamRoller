@@ -39,7 +39,11 @@
             <div class="tab-pane fade show active"
                 id="LivePage">
                 <!-- start container -->
-                <h5 id="liveportaltitle">Live Streaming Portal</h5>
+
+                <h5 id="liveportaltitle">Live Streaming Portal
+                    <span id="liveportaltitleTwitchCategoryImage">
+                    </span>
+                </h5>
                 <!--Row with two equal columns-->
                 <div class="row border bg-light">
 
@@ -90,6 +94,15 @@
         {
             $('#MainPortalTabs a').click(function (e)
             {
+                // Sometimes we reload the page with this modal still being active. Lets hide any still shown
+                var divsToHide = document.getElementsByClassName("modal-backdrop"); //divsToHide is an array
+                for (var i = 0; i < divsToHide.length; i++)
+                {
+                    if (divsToHide[i].style.visibility)
+                        console.log("hiding ", i, divsToHide[i]);
+                    divsToHide[i].style.visibility = "hidden"; // or
+                    //divsToHide[i].style.display = "none"; // depending on what you're doing
+                }
                 e.preventDefault();
                 $(this).tab('show');
             });

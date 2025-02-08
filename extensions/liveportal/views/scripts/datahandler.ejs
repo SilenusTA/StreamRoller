@@ -364,6 +364,7 @@
                         RquestPhilipsHueData();
                         RequestChatBuffer("discordchat");
                         RequestMacros();
+                        RequestTwitchStats()
                         if (serverConfig.randomfactsenabled === "on" && serverConfig.randomfactstimeout > 0)
                             twitchFactOfTheDay();
                     }, 1000);
@@ -555,7 +556,7 @@
             {
                 // we process our own submits so don't do anything with the updates we send out if they come 
                 // back to us
-                if (extension_packet.from != serverConfig.extensionname)
+                if (extension_packet.from != serverConfig.extensionname && livePortalVolatileData.extensions[extension_packet.from])
                 {
                     livePortalVolatileData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
                     addSettingsWidgetSmall(extension_packet.from);
@@ -846,6 +847,12 @@
                 {
                     parseTwitchRedemption(extension_packet.data);
                     displayChatMessages();
+                }
+                else if (extension_packet.type === "trigger_TwitchGamedChanged")
+                {
+                    let ele = document.getElementById("liveportaltitleTwitchCategoryImage")
+                    let imagecode = extension_packet.data.parameters.imageURL.replace("{width}", 30).replace("{height}", 30)
+                    ele.innerHTML = "<img style='border: 5px solid #6441a5; border-radius:50%' src='" + imagecode + "'>"
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -2947,6 +2954,25 @@
                     "autopilot"),
                 "",
                 "autopilot"
+            ));
+    }
+    // ============================================================================
+    //                           FUNCTION: RequestMacros
+    // ============================================================================
+    function RequestTwitchStats ()
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "action_GetTwitchStats",
+                    serverConfig.extensionname,
+                    {
+                        ActionId: "liveportalRequest"
+                    },
+                ),
+                "",
+                "twitch"
             ));
     }
     // ============================================================================

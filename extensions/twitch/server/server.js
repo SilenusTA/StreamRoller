@@ -31,6 +31,7 @@ import { StaticAuthProvider } from '@twurple/auth';
 // our helper files
 import * as eventSubApi from "./eventsub.js";
 
+
 // local config for volatile data
 const localConfig =
 {
@@ -43,6 +44,7 @@ const localConfig =
         connected: false,
         color: "red"
     },
+    twitchReconnectTimer: 5000,
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
 
     clientId: "",
@@ -50,12 +52,17 @@ const localConfig =
     authProvider: "",
     apiClient: null,
     gameCategories: [],
+    // variables from the Settings widget
     twitchCategoriesDropdownId: "twitchGameCategoryDropdownSelector",
     twitchTitleDropdownId: "twitchTitleDropdownSelector",
-    twitchTitlesTextElementId: "twitchTitleTextElement"
+    twitchTitlesTextElementId: "twitchTitleTextElement",
+    // use these fields to send errors in searching back to the user
+    twitchCategoryErrorsText: "",
+    twitchCategoryErrorsShowCounter: 0,
+    currentTwitchGameCategoryId: -1, // as reported by twitch
 }
 const default_serverConfig = {
-    __version__: "0.4",
+    __version__: "0.5",
     extensionname: "twitch",
     channel: "TWITCH",
     twitchenabled: "off",
@@ -63,7 +70,6 @@ const default_serverConfig = {
     twitchstreamername: "",
     twitchCategoriesHistory: [],
     twitchGameCategory_clearHistory: "off",
-    lastSelectedTwitchGameCategoryId: -1,
     twitchTitlesHistory: [],
     lastSelectedTwitchTitleId: -1
 }
@@ -695,21 +701,15 @@ const triggersandactions =
                 }
             },
             {
-                name: "GamedIdChanged",
-                displaytitle: "Gamed Id Changed",
-                description: "The Game Id was changed",
-                messagetype: "trigger_TwitchGamedIdChanged",
+                name: "GamedChanged",
+                displaytitle: "Gamed Changed",
+                description: "The Game was changed",
+                messagetype: "trigger_TwitchGamedChanged",
                 parameters: {
-                    gameId: ""
-                }
-            },
-            {
-                name: "GamedNameChanged",
-                displaytitle: "Gamed Name Changed",
-                description: "The Game Name was changed",
-                messagetype: "trigger_TwitchGamedNameChanged",
-                parameters: {
-                    name: ""
+                    triggerId: "",
+                    gameId: "",
+                    name: "",
+                    imageURL: ""
                 }
             },
             {
@@ -1188,6 +1188,15 @@ const triggersandactions =
                     id: 0,
                 }
             },
+            {
+                name: "TwitchGetStats",
+                displaytitle: "Get the Current Twitch Stats",
+                description: "Return will be a set of triggers for current game etc",
+                messagetype: "action_GetTwitchStats",
+                parameters: {
+                    actionID: "",
+                }
+            },
 
         ],
 }
@@ -1367,7 +1376,7 @@ function onDataCenterMessage (server_packet)
                             connectTwitch()
                         }
                     }
-                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetSmall();
                 }
             }
             // -----------------------------------------------------------------------------------
@@ -1756,6 +1765,20 @@ function onDataCenterMessage (server_packet)
                 if (serverConfig.twitchenabled == "on")
                     getClipsByGame(extension_packet.data)
             }
+            // -----------------------------------------------------------------------------------
+            //                   action_GetTwitchGameCategories
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_GetTwitchGameCategories")
+            {
+                sendGameCategoriesTrigger(extension_packet.data.parameters.actionID)
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_GetTwitchStats
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_GetTwitchStats")
+            {
+                sendCurrentGameData(extension_packet.data.actionID)
+            }
         }
         // -----------------------------------------------------------------------------------
         //                           UNKNOWN CHANNEL MESSAGE RECEIVED
@@ -1795,7 +1818,6 @@ function onDataCenterMessage (server_packet)
     }
     catch (error)
     {
-
         logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled exception:", error);
     }
 }
@@ -1814,7 +1836,7 @@ function SaveConfigToServer ()
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-function SendSettingsWidgetSmall (toChannel)
+function SendSettingsWidgetSmall (toChannel = "")
 {
     fs.readFile(__dirname + "/twitchsettingswidgetsmall.html", function (err, filedata)
     {
@@ -1830,7 +1852,7 @@ function SendSettingsWidgetSmall (toChannel)
             if (serverConfig.twitchenabled == "off")
                 statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Extension turned off</div>`
             else if (!localConfig.status.connected)
-                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Twitch not connected</div>`
+                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Waiting for extension to get data from twitch</div>`
 
             for (const [key, value] of Object.entries(serverConfig))
             {
@@ -1841,10 +1863,12 @@ function SendSettingsWidgetSmall (toChannel)
                     modalString = modalString.replaceAll(key + "text", value);
             }
 
+            // This code could be hardcoded but we only want to show it when the twitch extensions is up and running
             if (serverConfig.twitchenabled == "off" || !localConfig.status.connected)
             {
                 modalString = modalString.replace("twitchStreamTitleSelector", statusHtml);
                 modalString = modalString.replace("twitchGameCategorySelector", statusHtml);
+                modalString = modalString.replace("twitchTwitchSearchForGame", statusHtml);
             }
             else
             {
@@ -1860,8 +1884,18 @@ function SendSettingsWidgetSmall (toChannel)
                         localConfig.twitchCategoriesDropdownId,
                         localConfig.gameCategories,
                         serverConfig.twitchCategoriesHistory,
-                        serverConfig.lastSelectedTwitchGameCategoryId));
+                        localConfig.currentTwitchGameCategoryId));
+                modalString = modalString.replace("twitchTwitchSearchForGame", `<input type="text" class="form-control" id="twitchSearchForTwitchGameElementId" name="twitchSearchForTwitchGameElementId" placeholder="Enter Game name to search for (added to history when found)">`);
             }
+            if (localConfig.twitchCategoryErrorsShowCounter > 0)
+            {
+                localConfig.twitchCategoryErrorsShowCounter--;
+                modalString = modalString.replace("twitchGameCategorySearchErrors",
+                    "<div>" + localConfig.twitchCategoryErrorsText + "</div>"
+                )
+            }
+            else
+                modalString = modalString.replace("twitchGameCategorySearchErrors", "")
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
@@ -1929,6 +1963,7 @@ function handleSettingsWidgetSmallData (modalCode)
 {
     try
     {
+        /* enable disable checkbox */
         let restartConnection = false;
         if (serverConfig.twitchenabled != modalCode.twitchenabled)
         {
@@ -1938,61 +1973,71 @@ function handleSettingsWidgetSmallData (modalCode)
             else
                 serverConfig.twitchenabled = "off"
         }
-
+        /* streamername */
         if (modalCode.twitchstreamername != serverConfig.twitchstreamername)
         {
             restartConnection = true;
             serverConfig.twitchstreamername = modalCode["twitchstreamername"]
         }
 
-        /* Process Twitch Categories */
+        /* Clear History */
         let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"]
         let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"]
 
         if (clearTwitchTitles || clearTwitchCategories)
         {
             if (clearTwitchCategories)
-            {
                 serverConfig.twitchCategoriesHistory = [];
-                serverConfig.lastSelectedTwitchGameCategoryId = -1
-            }
             if (clearTwitchTitles)
             {
                 serverConfig.twitchTitlesHistory = [];
-                serverConfig.lastSelectedTwitchTitleId = -1
+                localConfig.currentTwitchGameCategoryId = -1
             }
             return false;
         }
-        /* Process Twitch Categories */
-        const categoryIndex = localConfig.gameCategories.findIndex(e => e.id === modalCode[localConfig.twitchCategoriesDropdownId]);
-        if (categoryIndex > -1)
+        // search for game on twitch
+        if (modalCode["twitchSearchForTwitchGameElementId"] && modalCode["twitchSearchForTwitchGameElementId"] != "")
         {
-            // get the game
-            let game = localConfig.gameCategories[categoryIndex]
-            // check if it already exists in the history array
-            const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
-            if (inHistory == -1)
-                serverConfig.twitchCategoriesHistory.push(game)
-
-            serverConfig.lastSelectedTwitchGameCategoryId = game.id;
-            if (localConfig.status.connected && serverConfig.lastSelectedTwitchGameCategoryId)
-                setStreamGame(serverConfig.lastSelectedTwitchGameCategoryId)
+            let gameName = modalCode["twitchSearchForTwitchGameElementId"];
+            // Add game name to history list (true)
+            addGameToHistoryFromGameName(gameName)
+            // return now as we only want to process the search on this submit
+            return false;
         }
-        else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", serverConfig.lastSelectedTwitchGameCategoryId);
-        /* Process Twitch Title */
-        if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
-        {
-            let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
-            if (titleIndex > -1)
-                serverConfig.lastSelectedTwitchTitleId = titleIndex;
-            else
-                serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(modalCode[localConfig.twitchTitlesTextElementId]) - 1
+        /* Process Twitch Category */
+        const userSelectedCategoryId = modalCode[localConfig.twitchCategoriesDropdownId]
+        getGameFromId(userSelectedCategoryId)
+            .then((game) =>
+            {
+                if (game)
+                {
+                    const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+                    if (inHistory == -1)
+                        serverConfig.twitchCategoriesHistory.push(game)
+                    if (localConfig.status.connected && localConfig.currentTwitchGameCategoryId != game.id)
+                        setStreamGame(game.id)
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                        ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", userSelectedCategoryId);
 
-            setStreamTitle(serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId])
-        }
-        return restartConnection
+                /* Process Twitch Title */
+                if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
+                {
+                    let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
+                    if (titleIndex > -1)
+                        serverConfig.lastSelectedTwitchTitleId = titleIndex;
+                    else
+                        serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(modalCode[localConfig.twitchTitlesTextElementId]) - 1
+
+                    setStreamTitle(serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId])
+                }
+                return restartConnection
+            })
+            .catch((err) =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData getGameFromId", "Error", err, err.message);
+            })
     }
     catch (err)
     {
@@ -2058,23 +2103,59 @@ async function connectTwitch ()
         }
 
         // get the current channel info (needed so we can trigger on changes)
-        let channelData = await localConfig.apiClient.channels.getChannelInfoById(localConfig.streamerData.id)
+        //let channelData = await localConfig.apiClient.channels.getChannelInfoById(localConfig.streamerData.id)
+        localConfig.apiClient.channels.getChannelInfoById(localConfig.streamerData.id)
+            .then((channelData) =>
+            {
+                /*console.log("---------GameDataForChannel-------------")
+                console.log("contentClassificationLabels", channelData.contentClassificationLabels);
+                console.log("delay", channelData.delay);
+                console.log("displayName", channelData.displayName);
+                console.log("gameId", channelData.gameId);
+                console.log("gameName", channelData.gameName);
+                console.log("id", channelData.id);
+                console.log("isBrandedContent", channelData.isBrandedContent);
+                console.log("language", channelData.language);
+                console.log("name", channelData.name);
+                console.log("tags", channelData.tags);
+                console.log("title", channelData.title);*/
 
-        // Connect to the pub sub event listener
-        eventSubApi.init(localConfig, serverConfig, triggersandactions)
-        eventSubApi.startEventSub(localConfig.streamerData.id, localConfig.apiClient, channelData)
 
-        // set us to connected at this time
-        localConfig.status.connected = true;
+                // set our current game id and add it to the history
+                localConfig.currentTwitchGameCategoryId = channelData.gameId;
+                // need to do this here as we don't have the game image in the current data.
+                addGameToHistoryFromGameName(channelData.gameName)
+                // Connect to the pub sub event listener
+                eventSubApi.init(localConfig, serverConfig, triggersandactions, pubSubTriggerCallback)
+                eventSubApi.startEventSub(localConfig.streamerData.id, localConfig.apiClient, channelData)
 
-        // get the game categories for twitch
-        getAllGameCategories();
+                // set us to connected at this time
+                localConfig.status.connected = true;
 
+                // get the game categories for twitch
+                getAllGameCategories();
+
+                // send out the game changed trigger (as we have only just connected) but give chance for extensions
+                //to start up (if we have just started the server)
+                setTimeout(() =>
+                {
+                    sendCurrentGameData()
+                }, 5000);
+
+            })
+            .catch((err) =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch:", "ERROR", err, err.message);
+            });
     }
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "ERROR", err.message);
         localConfig.status.connected = false;
+        setTimeout(() =>
+        {
+            connectTwitch()
+        }, localConfig.twitchReconnectTimer);
     }
 }
 // ===========================================================================
@@ -2089,14 +2170,93 @@ async function getAllGameCategories (id = "twitch")
 
         // Asynchronously iterate through all pages
         for await (const game of gamePaginator)
-            localConfig.gameCategories.push({ id: game.id, name: game.name })
+            localConfig.gameCategories.push({ id: game.id, name: game.name, imageURL: game.boxArtUrl })
         sendGameCategoriesTrigger(id)
     } catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGameCategories", "Error fetching categories:", err, err.message);
     }
 }
+// ===========================================================================
+//                           FUNCTION: addGameToHistoryFromGameName
+// ===========================================================================
+async function addGameToHistoryFromGameName (gameName)
+{
+    try
+    {
+        // get the game index if we already have the data
+        const categoryIndex = localConfig.gameCategories.findIndex(e => e.name === gameName);
+        if (categoryIndex == -1)
+        {
+            // Fetch the game date if we don't have it already
+            localConfig.apiClient.games.getGameByName(gameName)
+                .then((game) =>
+                {
+                    if (game)
+                    {
+                        const gameObject = { id: game.id, name: game.name, imageURL: game.boxArtUrl }
+                        serverConfig.twitchCategoriesHistory.push(gameObject);
+                        localConfig.twitchCategoryErrorsShowCounter = 0
+                        SendSettingsWidgetSmall()
+                    }
+                    else
+                    {
+                        localConfig.twitchCategoryErrorsText = "Couldn't Find Game '" + gameName + "' on twitch"
+                        // how many reloads to keep displaying the error 
+                        // due to the chance of another update going out too quickly
+                        localConfig.twitchCategoryErrorsShowCounter = 3;
+                        SendSettingsWidgetSmall()
+                    }
 
+                })
+                .catch((err) =>
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGameCategories getGameByName failed to fetch Id", "Error fetching categories:", err, err.message);
+                })
+
+        }
+        else
+        {
+            serverConfig.twitchCategoriesHistory.push(localConfig.gameCategories[categoryIndex]);
+            localConfig.twitchCategoryErrorsShowCounter = 0
+        }
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getAllGameCategories", "Error fetching categories:", err, err.message);
+        return null
+    }
+}
+// ===========================================================================
+//                           FUNCTION: getGameFromId
+// ===========================================================================
+async function getGameFromId (gameId)
+{
+
+    try
+    {
+        // check if we have this game in our list from twitch
+        const categoryIndex = localConfig.gameCategories.findIndex(e => e.id === gameId);
+        if (categoryIndex == -1)
+        {
+            // wd don't have this game so lets go get it.
+            localConfig.apiClient.games.getGameById(gameId)
+                .then((game) => 
+                {
+                    if (game)
+                        return { id: game.id, name: game.name, imageURL: game.boxArtUrl }
+                    else
+                        return null
+                })
+        }
+        else
+            return (localConfig.gameCategories[categoryIndex])
+
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getGameFromId", "Error fetching funding game:" + gameId, err, err.message);
+        return null
+    }
+}
 // ===========================================================================
 //                           FUNCTION: disconnectTwitch
 // ===========================================================================
@@ -3128,8 +3288,41 @@ function sendGameCategoriesTrigger (id)
     trigger.parameters.id = id;
     trigger.parameters.games = localConfig.gameCategories;
     // we also send our settings out in case the categories have change
-    SendSettingsWidgetSmall("")
+    SendSettingsWidgetSmall()
     sendTrigger(trigger)
+}
+// ===========================================================================
+//                           FUNCTION: sendCurrentGameData
+// ===========================================================================
+function sendCurrentGameData (id)
+{
+    let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
+    const game = serverConfig.twitchCategoriesHistory.find(e => e.id === localConfig.currentTwitchGameCategoryId);
+    if (game)
+    {
+        trigger.parameters = { triggerId: "InitialTwitchConnection", id: game.id, name: game.name, imageURL: game.imageURL }
+        sendTrigger(trigger)
+    }
+}
+// ===========================================================================
+//                           FUNCTION: pubSubTriggerCallback
+// ===========================================================================
+function pubSubTriggerCallback (trigger)
+{
+    //This gets called whenever the pubsub modules gets a callback from twitch
+    // we've had a twitch game change callback
+    if (trigger.messagetype == "trigger_TwitchGamedChanged")
+    {
+        // change our setup so it matches the data from twitch
+        localConfig.currentTwitchGameCategoryId = trigger.parameters.id;
+        addGameToHistoryFromGameName(trigger.parameters.name)
+        //update any of our modals
+        SendSettingsWidgetSmall()
+        //save the serverConfig so we remember the changes
+        SaveConfigToServer()
+    }
+    else
+        console.log("pubSubTriggerCallback()", trigger)
 }
 // ===========================================================================
 //                           FUNCTION: sendTrigger
@@ -3168,8 +3361,8 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
         // Append history options first
         history.forEach(item =>
         {
-            if (item.id == currentSelectedId.id)
-                dropdownHtml += "<option value=\"" + item.id + "\" selected >" + item.name + "</option>";
+            if (item.id == currentSelectedId)
+                dropdownHtml += "<option value=\"" + item.id + "\" selected>" + item.name + "</option>";
             else
                 dropdownHtml += "<option value=\"" + item.id + "\">" + item.name + "</option>";
         });
@@ -3189,7 +3382,12 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
     {
         // only include if it isn't already in the history list
         if (!history.some(e => e.id === option.id))
-            dropdownHtml += '<option value="' + option.id + '">' + option.name + '</option>';
+        {
+            if (option.id == currentSelectedId)
+                dropdownHtml += '<option value="' + option.id + '" selected>' + option.name + '</option>';
+            else
+                dropdownHtml += '<option value="' + option.id + '">' + option.name + '</option>';
+        }
     });
     dropdownHtml += '</select>';
     // add clear history checkbox

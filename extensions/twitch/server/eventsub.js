@@ -80,7 +80,8 @@ const localConf = {
     eventSubs: [],
     triggersandactions: null,
     channelData: null,
-    streamerId: null
+    streamerId: null,
+    triggerCAllback: null
 }
 // get functions from https://twurple.js.org/reference/api/classes/HelixChannel.html
 // get return values from https://twurple.js.org/reference/eventsub-base/classes/
@@ -134,11 +135,12 @@ let parentServerConfig = null
 // ============================================================================
 //                           FUNCTION: Init
 // ============================================================================
-function init (LocalConfig, ServerConfig, tAndAs)
+function init (LocalConfig, ServerConfig, tAndAs, triggerCAllback)
 {
     parentLocalConfig = LocalConfig;
     parentServerConfig = ServerConfig;
     localConf.triggersandactions = tAndAs
+    localConf.triggerCAllback = triggerCAllback
 }
 // ============================================================================
 //                           FUNCTION: startEventSub
@@ -162,7 +164,7 @@ async function startEventSub (streamerId, apiClient, channelData)
     }
 }
 // ============================================================================
-//                           FUNCTION: stopEventSub
+//                           FUNCTION: registerSubs
 // ============================================================================
 function registerSubs (streamerId)
 {
@@ -184,7 +186,7 @@ function registerSubs (streamerId)
     }
 }
 // ============================================================================
-//                           FUNCTION: stopEventSub
+//                           FUNCTION: removeSubs
 // ============================================================================
 function removeSubs ()
 {
@@ -1106,15 +1108,18 @@ async function onChannelUpdate (data)
         }
         if (localConf.channelData.gameId != data.categoryId)
         {
-            let trigger = findTriggerByMessageType("trigger_TwitchGamedIdChanged");
-            trigger.parameters.gameId = data.categoryId;
-            sendTrigger(trigger)
-        }
-        if (localConf.channelData.gameName != data.categoryName)
-        {
-            let trigger = findTriggerByMessageType("trigger_TwitchGamedNameChanged");
-            trigger.parameters.name = data.categoryName;
-            sendTrigger(trigger)
+            let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
+            data.getGame().then((game) =>
+            {
+                let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
+                trigger.parameters = {
+                    triggerId: "twitchUpdate",
+                    gameId: game.id,
+                    name: game.name,
+                    imageURL: game.boxArtUrl
+                }
+                sendTrigger(trigger)
+            })
         }
         if (localConf.channelData.id != data.broadcasterId)
         {
@@ -1192,6 +1197,8 @@ function sendTrigger (trigger)
             ''
         )
     );
+    if (localConf.triggerCAllback)
+        localConf.triggerCAllback(trigger)
 }
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType

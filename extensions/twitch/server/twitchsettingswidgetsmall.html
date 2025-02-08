@@ -48,8 +48,8 @@
                 </div>
             </div>
             <BR>
-            <h4>Stream Details</h4>
-
+            <h4>Streamer Name</h4>
+            Note this field should only be your own account due to access rights needed for this extension
             <!-- Stream To Join-->
             <div id="twitchstredamername"
                 class="form-group">
@@ -62,7 +62,9 @@
                     value="twitchstreamernametext">
             </div>
             <!-- Twitch Stream Title-->
-
+            <HR>
+            <h4>Title</h4>
+            Set the stream title.
             <div id="twitchtitleformgroup"
                 class="form-group">
                 <label for="twitchtitleformgroup"
@@ -70,14 +72,26 @@
                 twitchStreamTitleSelector
             </div>
             <!-- Twitch Stream Game/Category-->
-
+            <HR>
+            <h4>Game/Category</h4>
+            Select your game/category to stream in
             <div id="twitchcategoryformgroup"
                 class="form-group">
                 <label for="twitchcategoryformgroup"
-                    class="col-form-label">Twitch Category To Stream In</label>
+                    class="col-form-label">Twitch (Top Viewed) Games Categories To Stream In</label>
                 twitchGameCategorySelector
             </div>
-
+            <BR>
+            <div id="twitchsearchforgamegroup"
+                class="form-group">
+                <label for="twitchsearchforgamegroup"
+                    class="col-form-label">Search games not in the top viewed list above (adds to history list if
+                    found)</label>
+                twitchTwitchSearchForGame
+            </div>
+            <div style="color:chocolate">
+                twitchGameCategorySearchErrors
+            </div>
             <!-- reset to defaults-->
             <BR>
             <div class="form-group">
