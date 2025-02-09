@@ -32,7 +32,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.1",
+        __version__: "0.2",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -77,11 +77,11 @@
         // ##### settings widget variables
         // TTS settings
         winttstwitchenabled: "off",
-        twitchTTSvoiceName: "Please select a windows voice",
-        twitchTTSvoiceIndex: -1,
+        twitchTTSVoiceName: "Please select a windows voice",
+        twitchTTSVoiceIndex: -1,
         winttsyoutubeenabled: "off",
-        YouTubeTTSvoiceName: "Please select a windows voice",
-        YouTubeTTSvoiceIndex: -1,
+        YouTubeTTSVoiceName: "Please select a windows voice",
+        YouTubeTTSVoiceIndex: -1,
 
         // random facts twitter settings
         randomfactsenabled: "on",
@@ -826,7 +826,7 @@
                 if (extension_packet.type === "ChatMessage")
                 {
                     if (serverConfig.winttstwitchenabled == "on")
-                        TTSSpeak(serverConfig.twitchTTSvoiceIndex, extension_packet.data.parameters.message)
+                        TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.parameters.message)
                     parseTwitchChatMessage(extension_packet.data);
                     displayChatMessages();
                 }
@@ -839,7 +839,7 @@
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
                     if (serverConfig.winttsyoutubeenabled == "on")
-                        TTSSpeak(serverConfig.YouTubeTTSvoiceIndex, extension_packet.data.parameters.message)
+                        TTSSpeak(serverConfig.YouTubeTTSVoiceIndex, extension_packet.data.parameters.message)
                     parseYoutubeChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
                 }
@@ -1899,21 +1899,21 @@
             let ytoptioncode = "";
             let testoptioncode = "";
             // check if we have anything selected, if not set a default option
-            if (serverConfig.twitchTTSvoiceIndex != -1)
+            if (serverConfig.twitchTTSVoiceIndex != -1)
                 twitchoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
-            if (serverConfig.youtubeTTSvoiceIndex != -1)
+            if (serverConfig.YouTubeTTSVoiceIndex != -1)
                 ytoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
             testoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
 
             // make up the list for each dropdown
             localConfig.TTSVoiceList.forEach((voice, index) =>
             {
-                if (index == serverConfig.twitchTTSvoiceIndex)
+                if (index == serverConfig.twitchTTSVoiceIndex)
                     twitchoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
                 else
                     twitchoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
 
-                if (index == serverConfig.youtubeTTSvoiceIndex)
+                if (index == serverConfig.YouTubeTTSVoiceIndex)
                     ytoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
                 else
                     ytoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
@@ -2024,7 +2024,6 @@
                 serverConfig[key] = "off";
             else if (key === "showallscenes" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
-            //random facts
             else if (key === "randomfactsenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
             else if (key === "winttstwitchenabled" && !fieldsAsObject[key])
@@ -2300,11 +2299,11 @@
     // ============================================================================
     function twitchVoiceDropdownChanged (e)
     {
-        if (serverConfig.twitchTTSvoiceIndex != e.value)
+        if (serverConfig.twitchTTSVoiceIndex != e.value)
         {
             document.getElementById("twitchTTSVoiceSelectionDropdown").value = e.value
-            serverConfig.twitchTTSvoiceName = localConfig.TTSVoiceList[e.value].name
-            serverConfig.twitchTTSvoiceIndex = e.value;
+            serverConfig.twitchTTSVoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.twitchTTSVoiceIndex = e.value;
             SaveConfigToServer()
         }
     }
@@ -2313,11 +2312,11 @@
     // ============================================================================
     function youtubeVoiceDropdownChanged (e)
     {
-        if (serverConfig.youtubeTTSvoiceIndex != e.value)
+        if (serverConfig.YouTubeTTSVoiceIndex != e.value)
         {
             document.getElementById("youtubeTTSVoiceSelectionDropdown").value = e.value
-            serverConfig.youtubeTTSvoiceName = localConfig.TTSVoiceList[e.value].name
-            serverConfig.youtubeTTSvoiceIndex = e.value;
+            serverConfig.YouTubeTTSVoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.YouTubeTTSVoiceIndex = e.value;
             SaveConfigToServer()
         }
     }
