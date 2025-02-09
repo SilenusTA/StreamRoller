@@ -138,42 +138,126 @@
                         for="showallscenes">Show All Scenes</label>
                 </div>
             </div>
+
+            <!-- Text To Speech Section-->
             <HR>
             <h4 class="modal-title">Windows Text To Speech</h4>
+            <!-- Twitch Voices-->
             <div class="form-group">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="winttsenabled"
-                        type="checkbox"
-                        id="winttsenabled"
-                        winttsenabledchecked>
-                    <label class="form-check-label"
-                        for="winttsenabled">Enable TTS</label>
-                </div>
-                <select class="selectpicker btn-secondary"
-                    data-style="btn-danger"
-                    data-width="150px"
-                    title="box one"
-                    id="TTSVoiceSelectionDropdown"
-                    value="0"
-                    name="TTSVoiceSelectionDropdown"
-                    required=""
-                    onchange='voiceDropdownChanged( this )'>
-                    TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData
-                </select>
+                <BR>
+                <img src="/liveportal/images/twitch_icon.png"
+                    width="30px"
+                    height="30px"> Twitch Chat TTS Settings
+                <BR>
 
-                <input id="TTSTestVoice"
-                    class="form-control card bg-light text-dark border-secondary"
-                    type="text"
-                    placeholder="Say something smart to chat">
-                <span class="input-group-btn">
-                    <button class="btn btn-secondary"
-                        for="TTSTestVoice"
-                        type="submit"
-                        onclick="liveportalTestVoice(event)">Speak:
-                    </button>
-                </span>
+                <!-- enable twitch check box-->
+                <div class="input-group">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input"
+                            name="winttstwitchenabled"
+                            type="checkbox"
+                            id="winttstwitchenabled"
+                            winttstwitchenabledchecked>
+                        <label class="form-check-label"
+                            for="winttstwitchenabled">Enable TTS</label>
+                    </div>
+                </div>
+
+                <!-- voice select -->
+                <div class="input-group3">
+                    <select class="selectpicker btn-secondary"
+                        style="max-width: 100%;"
+                        data-style="btn-danger"
+                        data-width="150px"
+                        title="box one"
+                        id="twitchTTSVoiceSelectionDropdown"
+                        value="0"
+                        name="twitchTTSVoiceSelectionDropdown"
+                        required=""
+                        onchange='twitchVoiceDropdownChanged( this )'>
+                        TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
+                    </select>
+                    <label class="form-check-label"
+                        for="twitchTTSVoiceSelectionDropdown">Voice</label>
+                </div>
             </div>
+            <HR>
+            <!-- YouTube Voices-->
+            <div class="form-group">
+                <BR>
+                <img src="/liveportal/images/youtube_icon.png"
+                    width="30px"
+                    height="30px"> YouTube Chat TTS Settings
+                <BR>
+
+                <!-- enable YouTube check box-->
+                <div class="input-group">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input"
+                            name="winttsyoutubeenabled"
+                            type="checkbox"
+                            id="winttsyoutubeenabled"
+                            winttsyoutubeenabledchecked>
+                        <label class="form-check-label"
+                            for="winttsyoutubeenabled">Enable TTS</label>
+                    </div>
+                </div>
+
+                <!-- voice select -->
+                <div class="input-group3">
+                    <select class="selectpicker btn-secondary"
+                        style="max-width: 100%;"
+                        data-style="btn-danger"
+                        data-width="150px"
+                        title="box one"
+                        id="youtubeTTSVoiceSelectionDropdown"
+                        value="0"
+                        name="youtubeTTSVoiceSelectionDropdown"
+                        required=""
+                        onchange='youtubeVoiceDropdownChanged( this )'>
+                        YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
+                    </select>
+                    <label class="form-check-label"
+                        for="youtubeTTSVoiceSelectionDropdown">Voice</label>
+                </div>
+            </div>
+            <!-- Text To Speech Section-->
+            <HR>
+            <h4 class="modal-title"> Test Voices</h4>
+            <div class="form-group">
+                <!-- voice select -->
+                <div class="input-group3">
+                    <select class="selectpicker btn-secondary"
+                        style="max-width: 100%;"
+                        data-style="btn-danger"
+                        data-width="150px"
+                        title="box one"
+                        id="TestVoiceTTSVoiceSelectionDropdown"
+                        value="0"
+                        name="TestVoiceTTSVoiceSelectionDropdown"
+                        required="">
+                        TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
+                    </select>
+                    <label class="form-check-label"
+                        for="TestVoiceTTSVoiceSelectionDropdown">Test Voice</label>
+                </div>
+                <!-- tests voice  -->
+                <div class="input-group">
+                    <input id="TTSTestVoice"
+                        type="text"
+                        class="form-control card bg-light text-dark border-secondary"
+                        placeholder="Say something smart to chat"
+                        aria-label="Recipient's username"
+                        aria-describedby="button-addon2">
+                    <button class="btn btn-secondary"
+                        type="button"
+                        id="TTSTestVoiceButton"
+                        onclick="liveportalTestVoice()">
+                        Speak:
+                    </button>
+                </div>
+            </div>
+            <!-- Random Facts settings-->
             <HR>
             <h4 class="modal-title">Random Facts</h4>
             <div class="form-group">

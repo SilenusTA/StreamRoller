@@ -76,9 +76,12 @@
 
         // ##### settings widget variables
         // TTS settings
-        winttsenabled: "off",
-        TTSvoiceName: "select a windows voice",
-        TTSvoiceIndex: 0,
+        winttstwitchenabled: "off",
+        twitchTTSvoiceName: "Please select a windows voice",
+        twitchTTSvoiceIndex: -1,
+        winttsyoutubeenabled: "off",
+        YouTubeTTSvoiceName: "Please select a windows voice",
+        YouTubeTTSvoiceIndex: -1,
 
         // random facts twitter settings
         randomfactsenabled: "on",
@@ -140,7 +143,7 @@
         },
         bTTVEmotes: null,
         bTTVNames: [],
-        TTSVoiceList: null
+        TTSVoiceList: []
 
     }
     const chatcolors =
@@ -190,7 +193,7 @@
                 {
                     ConnectToDataCenter(localConfig.host, localConfig.port);
                     heartBeatCallback();
-                    LoadVoiceTimer()
+                    LoadVoices()
                 })
                 .catch((error) =>
                 {
@@ -822,6 +825,8 @@
             {
                 if (extension_packet.type === "ChatMessage")
                 {
+                    if (serverConfig.winttstwitchenabled == "on")
+                        TTSSpeak(serverConfig.twitchTTSvoiceIndex, extension_packet.data.parameters.message)
                     parseTwitchChatMessage(extension_packet.data);
                     displayChatMessages();
                 }
@@ -833,7 +838,8 @@
             {
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
-                    TTSSpeak(extension_packet.data.parameters.message)
+                    if (serverConfig.winttsyoutubeenabled == "on")
+                        TTSSpeak(serverConfig.YouTubeTTSvoiceIndex, extension_packet.data.parameters.message)
                     parseYoutubeChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
                 }
@@ -1879,6 +1885,54 @@
     {
         //get our widget and use string replace to update the values
         let modalstring = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
+
+
+        // voice list updates
+        //update voices if we don't have any yet
+        if (!localConfig.TTSVoiceList.length)
+            LoadVoices();
+
+        //update twitch section
+        if (localConfig.TTSVoiceList.length)
+        {
+            let twitchoptioncode = "";
+            let ytoptioncode = "";
+            let testoptioncode = "";
+            // check if we have anything selected, if not set a default option
+            if (serverConfig.twitchTTSvoiceIndex != -1)
+                twitchoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
+            if (serverConfig.youtubeTTSvoiceIndex != -1)
+                ytoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
+            testoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
+
+            // make up the list for each dropdown
+            localConfig.TTSVoiceList.forEach((voice, index) =>
+            {
+                if (index == serverConfig.twitchTTSvoiceIndex)
+                    twitchoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
+                else
+                    twitchoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
+
+                if (index == serverConfig.youtubeTTSvoiceIndex)
+                    ytoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
+                else
+                    ytoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
+                testoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
+            });
+            //update the modal boxes for each platform and the test button
+            modalstring = modalstring.replaceAll("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", twitchoptioncode);
+            modalstring = modalstring.replaceAll("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", ytoptioncode);
+            modalstring = modalstring.replaceAll("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", testoptioncode);
+        }
+        else
+        {
+            let noVoicesOption = '<option value="Microsoft George - English (United Kingdom)" selected>Loading ...</option>'
+            modalstring = modalstring.replaceAll("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+            modalstring = modalstring.replaceAll("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+            modalstring = modalstring.replaceAll("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+        }
+
+        // other data update
         for (const [key, value] of Object.entries(serverConfig))
         {
             // checkboxes
@@ -1890,6 +1944,8 @@
             else if (typeof (value) == "string" || typeof (value) == "number")
                 modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
         }
+
+
         livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
         addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
@@ -1971,7 +2027,9 @@
             //random facts
             else if (key === "randomfactsenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
-            else if (key === "winttsenabled" && !fieldsAsObject[key])
+            else if (key === "winttstwitchenabled" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "winttsyoutubeenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
             else if (key in fieldsAsObject)
                 serverConfig[key] = fieldsAsObject[key];
@@ -2216,81 +2274,89 @@
         }
     }
     // ============================================================================
-    //                           FUNCTION: LoadVoiceTimer
+    //                           FUNCTION: LoadVoices
     // ===========================================================================
-    function LoadVoiceTimer ()
+    function LoadVoices ()
     {
-        //update TTS voices 
-        // need to do this after the page has loaded
-        let noVoicesOption = '<option value=" Microsoft George - English (United Kingdom)" selected>Loading ...</option>'
-        data = livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder
-        localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
-        if (localConfig.TTSVoiceList.length > 0)
+        //update TTS voices if we don't have any yet
+        if (!localConfig.TTSVoiceList.length)
+            localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
+
+        //if we got voices then update out settings
+        if (localConfig.TTSVoiceList.length)
         {
-            let optioncode = "";
-            localConfig.TTSVoiceList.forEach((voice, index) =>
-            {
-                if (index == serverConfig.TTSvoiceIndex)
-                    optioncode += "<option value='" + index + "' selected>" + voice.name + "</option>"
-                else
-                    optioncode += "<option value='" + index + "'>" + voice.name + "</option>"
-            });
-            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", optioncode);
-            livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall_placeholder = data
             UpdateOwnSettingsWidgetSmallData()
         }
         else
         {
-            data = data.replace("TTSVoicesReplaceInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
             setTimeout(() =>
             {
-                LoadVoiceTimer()
+                LoadVoices()
             }, 1000);
         }
     }
     // ============================================================================
-    //                           FUNCTION: voiceDropdownChanged
+    //                           FUNCTION: twitchVoiceDropdownChanged
     // ============================================================================
-    function voiceDropdownChanged (e)
+    function twitchVoiceDropdownChanged (e)
     {
-        if (serverConfig.TTSvoiceIndex != e.value)
+        if (serverConfig.twitchTTSvoiceIndex != e.value)
         {
-            document.getElementById("TTSVoiceSelectionDropdown").value = e.value
-            serverConfig.TTSvoiceName = localConfig.TTSVoiceList[e.value].name
-            serverConfig.TTSvoiceIndex = e.value;
+            document.getElementById("twitchTTSVoiceSelectionDropdown").value = e.value
+            serverConfig.twitchTTSvoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.twitchTTSvoiceIndex = e.value;
+            SaveConfigToServer()
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: youtubeVoiceDropdownChanged
+    // ============================================================================
+    function youtubeVoiceDropdownChanged (e)
+    {
+        if (serverConfig.youtubeTTSvoiceIndex != e.value)
+        {
+            document.getElementById("youtubeTTSVoiceSelectionDropdown").value = e.value
+            serverConfig.youtubeTTSvoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.youtubeTTSvoiceIndex = e.value;
             SaveConfigToServer()
         }
     }
     // ============================================================================
     //                           FUNCTION: TTSTestVoice
     // ============================================================================
-    function liveportalTestVoice (event)
+    function liveportalTestVoice ()
     {
         // test voice from liveportal settings widget
+        // if we have voice disabled we still want to be able to speak
         event.preventDefault();
+        //document.getElementById("TestVoiceTTSVoiceSelectionDropdown").value = e.value
         let text = document.getElementById("TTSTestVoice").value;
-        TTSSpeak(text)
+        let voiceIndex = document.getElementById("TestVoiceTTSVoiceSelectionDropdown").value;
+        TTSSpeak(voiceIndex, text)
     }
     // ============================================================================
     //                           FUNCTION: TTSSpeak
     // ============================================================================
-    function TTSSpeak (text)
+    function TTSSpeak (voiceIndex, text)
     {
-        if (serverConfig.winttsenabled == "on")
+        let voiceId = voiceIndex;
+        let message = text
+        // if no voice selected just go with the first
+        if (voiceIndex == undefined || voiceIndex < 0)
+            voiceId = 0;
+        if (!localConfig.TTSVoiceList.length)
+            LoadVoices()
+        if ('speechSynthesis' in window && localConfig.TTSVoiceList.length > 0)
         {
-            const selectedVoiceIndex = serverConfig.TTSvoiceIndex;
-            localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
-            if ('speechSynthesis' in window && localConfig.TTSVoiceList.length > 0)
-            {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.voice = localConfig.TTSVoiceList[selectedVoiceIndex];
-                utterance.lang = localConfig.TTSVoiceList[selectedVoiceIndex].lang;
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.voice = localConfig.TTSVoiceList[voiceId];
+            utterance.lang = localConfig.TTSVoiceList[voiceId].lang;
+            utterance.
                 // Speak the text
                 window.speechSynthesis.speak(utterance);
-            } else
-            {
-                console.log("Your browser does not support Text-to-Speech.");
-            }
+        } else
+        {
+            console.log("Your browser does not support Text-to-Speech.");
         }
     }
     // ============================================================================
