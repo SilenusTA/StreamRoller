@@ -215,12 +215,12 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "</div>"
             // variable data to match text box
             triggerextensionparameters += "</div>"
-            triggerextensionparameters += "<div class='col-8'>"
+            triggerextensionparameters += "<div class='col-7'>"
             triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
             triggerextensionparameters += "</div>"
-            triggerextensionparameters += "<div class='col-2'>"
+            triggerextensionparameters += "<div class='col-3'>"
             // add the matcher dropdown to each variable name
-            triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "'>"
+            triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
             triggerextensionparameters += "<option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
             triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
             triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option>";
@@ -228,18 +228,21 @@ function triggersLoadParameters (id)
             triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option>";
             triggerextensionparameters += "</select>"
             triggerextensionparameters += "</div>"
-            triggerextensionparameters += "<div class='w-100'></div>"
             triggerextensionparameters += "</div>"
         }
         // cooldown timer
         triggerextensionparameters += "<div class='row'>"
+
         triggerextensionparameters += "<div class='col-2'>"
         triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
         triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_cooldown>cooldown</label>"
         triggerextensionparameters += "</div>"
         triggerextensionparameters += "</div>"
-        triggerextensionparameters += "<div class='col-10'>"
-        triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_cooldown' id='" + triggername + "__cooldown' placeholder='cooldown' value='0'>"
+
+        triggerextensionparameters += "<div class='col-3'>"
+        triggerextensionparameters += "<div class='input-group'>"
+        triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_cooldown' id='" + triggername + "__cooldown' placeholder='cooldown' value='0'>seconds"
+        triggerextensionparameters += "</div>"
         triggerextensionparameters += "</div>"
 
         TriggerExtensionTriggerParameters.innerHTML = triggerextensionparameters;
