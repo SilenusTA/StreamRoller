@@ -40,7 +40,8 @@
     {
         heartBeatTimeout: "6000",
         connected: true,
-        DataCenterSocket: null
+        DataCenterSocket: null,
+        extensionList: null
     }
 
     var host = '<%= host %>';
@@ -150,7 +151,16 @@
             // call the triggers code to request the triggers/actions from each extension in the list
             try
             {
-                initTriggersAndActions(server_packet.data);
+                // due to issues with the liveportal page being put to sleep when not in focus on some browsers.
+                // this causes the websocket to reset, liveportal will then try to reconnect and this
+                // causes the server to detect a new connection and send out a new extension list.
+                // To avoid constant and annoying reloads of the autopilot page when this happens
+                // we only want to request triggers and actions when we get a change in extensions.
+                if (JSON.stringify(server_packet.data) !== JSON.stringify(localConfig.extensionList))
+                {
+                    localConfig.extensionList = server_packet.data;
+                    initTriggersAndActions(server_packet.data);
+                }
             }
             catch
             {
