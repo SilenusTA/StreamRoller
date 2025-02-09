@@ -2351,9 +2351,7 @@
             const utterance = new SpeechSynthesisUtterance(message);
             utterance.voice = localConfig.TTSVoiceList[voiceId];
             utterance.lang = localConfig.TTSVoiceList[voiceId].lang;
-            utterance.
-                // Speak the text
-                window.speechSynthesis.speak(utterance);
+            window.speechSynthesis.speak(utterance);
         } else
         {
             console.log("Your browser does not support Text-to-Speech.");
