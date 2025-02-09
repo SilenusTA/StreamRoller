@@ -2236,6 +2236,11 @@ async function getGameFromId (gameId)
     {
         // check if we have this game in our list from twitch
         const categoryIndex = localConfig.gameCategories.findIndex(e => e.id === gameId);
+        if (!localConfig.apiClient.games)
+        {
+            console.log("localConfig.apiClient.games not available yet.")
+            return null;
+        }
         if (categoryIndex == -1)
         {
             // wd don't have this game so lets go get it.
@@ -2253,7 +2258,7 @@ async function getGameFromId (gameId)
 
     } catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getGameFromId", "Error fetching funding game:" + gameId, err, err.message);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getGameFromId", "Error fetching/finding game:" + gameId, err, err.message);
         return null
     }
 }
