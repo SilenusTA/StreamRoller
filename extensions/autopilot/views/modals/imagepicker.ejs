@@ -1,30 +1,44 @@
 <!-- <div id="imagepicker" class="d-none"> -->
 <div id="imagepickersection">
     <!-- START of configurable section, this needs to be updated dynamically for each element that is placed -->
-    <div id="imagepickername" class="card bg-light text-dark px-2 ">
+    <div id="imagepickername"
+        class="card bg-light text-dark px-2 ">
         <!-- href (to Trigger Modal) -->
-        <a href="#imagepicker" class="ext-modal-link" style="text-decoration:none"
+        <a href="#imagepicker"
+            class="ext-modal-link"
+            style="text-decoration:none"
             data-bs-toggle="modal">ImagePicker</a>
-        <div class="modal fade" id="imagepicker" tabindex="-1" role="dialog" aria-labelledby="imagepickerLabel"
-            aria-hidden="true">
-            <div class="modal-dialog bg-light text-dark imagemodal" role="document">
+        <div class="modal fade"
+            id="imagepicker"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="imagepickerLabel">
+            <div class="modal-dialog bg-light text-dark imagemodal"
+                role="document">
                 <div class="modal-content bg-light text-dark">
                     <div class="modal-header">
-                        <h2 class="modal-title" id="imagepickerLabel">Image Selector</h2>
+                        <h2 class="modal-title"
+                            id="imagepickerLabel">Image Selector</h2>
                         <div>There are only a small set with the default StreamRoller. If you want to add more then add
                             .png files to the
                             <BR>"C:\Users\<font color='#ff5a5a'>&ltusername&gt</font>
                             \AppData\Local\StreamRoller\extensions\autopilot\public\images\deckicons" folder
                         </div>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
+                        <button type="button"
+                            class="close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close">
+                            <span>&times;</span>
                         </button>
                     </div>
-                    <div id="imagepickerlinks" class="modal-body">
+                    <div id="imagepickerlinks"
+                        class="modal-body">
                         ...
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>

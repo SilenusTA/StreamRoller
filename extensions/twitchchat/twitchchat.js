@@ -1299,8 +1299,6 @@ function process_chat_data (channel, tags, chatmessage)
         dateStamp: Date.now(),
         data: tags
     };
-
-
     if (serverConfig.DEBUG_EXTRA_CHAT_MESSAGE === "on")
         console.log("twitchchat:process_chat_data: ", tags, " : ", chatmessage)
 

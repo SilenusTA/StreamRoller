@@ -826,7 +826,7 @@
                 if (extension_packet.type === "ChatMessage")
                 {
                     if (serverConfig.winttstwitchenabled == "on")
-                        TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.parameters.message)
+                        TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message)
                     parseTwitchChatMessage(extension_packet.data);
                     displayChatMessages();
                 }
