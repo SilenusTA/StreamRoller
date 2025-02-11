@@ -32,7 +32,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.2",
+        __version__: "0.3",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -77,9 +77,13 @@
         // ##### settings widget variables
         // TTS settings
         winttstwitchenabled: "off",
+        twitchTTSVolume: "1",
+        twitchBlackList: "",
         twitchTTSVoiceName: "Please select a windows voice",
         twitchTTSVoiceIndex: -1,
         winttsyoutubeenabled: "off",
+        youtubeTTSVolume: "1",
+        youtubeBlackList: "",
         YouTubeTTSVoiceName: "Please select a windows voice",
         YouTubeTTSVoiceIndex: -1,
 
@@ -731,6 +735,39 @@
                     ));
             }
             // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED AutopilotServerData
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "ServerConfigForDownload")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    // This file will only be received on user request to save the data so we can 
+                    // call the save function directly here
+                    try
+                    {   // should only be called via a users request to download the server file after
+                        // we have received the file from the server
+                        let fileToDownload = JSON.stringify(extension_packet.data, null, 2);
+                        var a = document.createElement("a");
+                        var file = new Blob([fileToDownload], { type: "application/json" });
+                        a.href = URL.createObjectURL(file);
+                        a.download = "StreamRoller_" + extension_packet.from + "_Backup_" + getFileNameDateString() + ".json";
+                        a.click();
+                    }
+                    catch (err)
+                    {
+                        console.log("downloadServerDataFileReceived Error:", err, err.message)
+                    }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED AutopilotServerDataUseSaveResponse
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "UserSaveServerDataResponse")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    // This file will only be received on user request to save the data so we can 
+                    // call the save function directly here
+                    alert(extension_packet.data.response);
+            }
+            // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
             // -------------------------------------------------------------------------------------------------
             else
@@ -826,7 +863,10 @@
                 if (extension_packet.type === "ChatMessage")
                 {
                     if (serverConfig.winttstwitchenabled == "on")
-                        TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message)
+                    {
+                        if (serverConfig.twitchBlackList.toLowerCase().indexOf(extension_packet.data.data.username.toLowerCase()) == -1)
+                            TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message, serverConfig.twitchTTSVolume)
+                    }
                     parseTwitchChatMessage(extension_packet.data);
                     displayChatMessages();
                 }
@@ -839,7 +879,10 @@
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
                     if (serverConfig.winttsyoutubeenabled == "on")
-                        TTSSpeak(serverConfig.YouTubeTTSVoiceIndex, extension_packet.data.parameters.message)
+                    {
+                        if (serverConfig.youtubeBlackList.toLowerCase().indexOf(extension_packet.data.parameters.sender.toLowerCase()) == -1)
+                            TTSSpeak(serverConfig.YouTubeTTSVoiceIndex, extension_packet.data.parameters.message, serverConfig.youtubeTTSVolume)
+                    }
                     parseYoutubeChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
                 }
@@ -1366,6 +1409,26 @@
                         return false;
                     });
 
+                    // Extract and execute script tags
+                    let modalElement = document.getElementById(xname + "_settingswidgetlargecontent")
+                    const scripts = modalElement.querySelectorAll('script');
+                    scripts.forEach((script) =>
+                    {
+                        const newScript = document.createElement('script');
+
+                        if (script.src)
+                        {
+                            // External script
+                            newScript.src = script.src;
+                            document.body.appendChild(newScript);
+                        } else
+                        {
+                            // Inline script
+                            newScript.textContent = script.textContent;
+                            document.body.appendChild(newScript);
+                            document.body.removeChild(newScript); // Clean up
+                        }
+                    });
                 }, 200);
             }
         });
@@ -1935,6 +1998,7 @@
         // other data update
         for (const [key, value] of Object.entries(serverConfig))
         {
+            console.log("checking", key, value)
             // checkboxes
             if (value === "on")
                 modalstring = modalstring.replaceAll(' ' + key + 'checked', 'checked');
@@ -1942,7 +2006,10 @@
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
             else if (typeof (value) == "string" || typeof (value) == "number")
+            {
+                console.log("setting modeal value")
                 modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
+            }
         }
 
 
@@ -2336,7 +2403,7 @@
     // ============================================================================
     //                           FUNCTION: TTSSpeak
     // ============================================================================
-    function TTSSpeak (voiceIndex, text)
+    function TTSSpeak (voiceIndex, text, volume)
     {
         let voiceId = voiceIndex;
         let message = text
@@ -2350,6 +2417,7 @@
             const utterance = new SpeechSynthesisUtterance(message);
             utterance.voice = localConfig.TTSVoiceList[voiceId];
             utterance.lang = localConfig.TTSVoiceList[voiceId].lang;
+            utterance.volume = volume;
             window.speechSynthesis.speak(utterance);
         } else
         {
@@ -3912,5 +3980,20 @@
             swVersionHtml += "</div>"
             document.getElementById("softwareversion").innerHTML = swVersionHtml
         }
+    }
+    // ============================================================================
+    //                     FUNCTION: getFileNameDateString
+    // ============================================================================
+    function getFileNameDateString ()
+    {
+        // returns a suitable date string for appending to a filename
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, '0');
+        const day = `${date.getDate()}`.padStart(2, '0');
+        const hours = `${date.getHours()}`.padStart(2, '0');
+        const minutes = `${date.getMinutes()}`.padStart(2, '0');
+        const seconds = `${date.getSeconds()}`.padStart(2, '0');
+        return `${year}_${month}_${day}-${hours}_${minutes}_${seconds}`
     }
 </script>

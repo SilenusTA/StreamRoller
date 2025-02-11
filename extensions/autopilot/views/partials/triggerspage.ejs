@@ -44,12 +44,9 @@
       <li>&ltresult&gt some new game to try out</li>
     </ul>
     </p>
-
     <!--
-    
-                      CREATE MACRO FORM
-    
-     -->
+      CREATE MACRO FORM
+    -->
     <HR class="hrbold">
     <h4>Macro's</h4>
     <p>A Macro is a user defined trigger for use on buttons etc (ie on the live portal page) used to invoke an action.
@@ -146,7 +143,58 @@
         </div>
       </div>
     </div>
+
     <!--
+         Load Save autopilot config files
+    -->
+    <HR class="hrbold">
+    <div class="container-fluid">
+      <H3>Save/Load Autopilot Config Files</H3>
+      These files contain all your saved triggers/actions.
+      <BR>Please note that when loading older files they may fail
+      due to outdated version numbers.
+      <BR>
+      <h5>Manually Editing the files</H5>
+      You can manually edit these files if you wish to match the new trigger/actions fields (also update the version
+      for that section to match the latest one when done.)
+      Version number should only change when the fields have changed, this could cause crashes if you just update the
+      versions numbers without checking the fields/field names.
+      <HR>
+
+      <div class="row">
+        <div class="col-6 px-3">
+          <div class="form-group">
+            <!--<h5>Download the autopilot Server Data File</h5>-->
+            <label class="form-label"
+              for="uploadAutopilotFileButton">Download the autopilot Server Data File</label>
+            <form id="uploadAutopilotFileButton"
+              class="form-inline"><button type="button"
+                class="btn btn-secondary"
+                onclick="return downloadServerDataClicked()">Download</button>
+            </form>
+          </div>
+        </div>
+        <div class="col-6 px-3">
+          <div class="form-group">
+            <!-- <h5>Upload a Server Data File</h5>-->
+            <label class="form-label"
+              for="AutoPilotDatFileUploadElement">Upload an autopilot Server Data File</label>
+            <form class="form-inline">
+              <input type="file"
+                name=""
+                class="form-control"
+                id="AutoPilotDatFileUploadElement">
+              <BR>
+              <button type="button"
+                id="Upload"
+                class="btn btn-secondary"
+                onclick="uploadServerDataClicked()">Upload AutoPilot data file</button>
+              <div id="AutoPilotDatFileUploadMessage"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div><!--
             
                               ADD TRIGGER/ACTION FORM
             

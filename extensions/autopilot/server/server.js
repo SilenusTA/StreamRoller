@@ -347,6 +347,45 @@ function onDataCenterMessage (server_packet)
                 SendMacros()
         }
         // -------------------------------------------------------------------------------------------------
+        //                   REQUEST SERVER DATA FILE
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestServerDataFile")
+        {
+            //This is used on the front end so users can save off a full data file of the server prior to updating
+
+            if (server_packet.to === serverConfig.extensionname && server_packet.from === "autopilot_frontend")
+            {
+
+                sr_api.sendMessage(
+                    localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "AutopilotServerData",
+                            serverConfig.extensionname,
+                            serverData,
+                            "",
+                            "autopilot_frontend"
+                        ),
+                        "",
+                        "autopilot_frontend"
+                    ));
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST SERVER DATA FILE
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "userRequestSaveDataFile")
+        {
+            //This is used on the front end so users can save off a full data file of the server prior to updating
+
+            if (server_packet.to === serverConfig.extensionname && server_packet.from === "autopilot_frontend")
+            {
+                parseUserRequestSaveDataFile(extension_packet.data)
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
         //                   RECEIVED Unhandled extension message
         // -------------------------------------------------------------------------------------------------
         else
@@ -888,6 +927,47 @@ function triggerMacroButton (name)
         }
     }
 
+}
+// ============================================================================
+//                           FUNCTION: triggerMacroButton
+// ============================================================================
+function parseUserRequestSaveDataFile (data)
+{
+    //do something with the file. ie check version etc.
+    let response = "No Response from Server, please try again.";
+    try
+    {
+        if (data.__version__ === default_serverData.__version__)
+        {
+            // overwrite our data and save it to the server.
+            serverData = structuredClone(data);
+            SaveDataToServer()//we have the same version of the file so we should save it over our current one.
+            response = "Data saved."
+        }
+        else
+
+            response = "received file version doesn't match current version: " + data.__version__ + " == " + default_serverData.__version__
+    }
+    catch (err)
+    {
+        logger.err(serverConfig.extensionname + ".parseUserRequestSaveDataFile", "Error saving data to server.Error:", err, err.message);
+        response = "Error saving data to server.Error:", err, err.message;
+    }
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "AutopilotUserSaveServerDataResponse",
+                serverConfig.extensionname,
+                { response: response },
+                "",
+                "autopilot_frontend"
+            ),
+            "",
+            "autopilot_frontend"
+        ));
 }
 // ============================================================================
 //                           FUNCTION: heartBeat

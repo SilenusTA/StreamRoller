@@ -155,7 +155,6 @@
                     width="30px"
                     height="30px"> Twitch Chat TTS Settings
                 <BR>
-
                 <!-- enable twitch check box-->
                 <div class="input-group">
                     <div class="form-check form-check-inline">
@@ -168,6 +167,25 @@
                             for="winttstwitchenabled">Enable TTS</label>
                     </div>
                 </div>
+                <!-- twitch volume -->
+
+                <label for="twitchTTSVolume"
+                    class="">Volume </label>
+                <input type="text"
+                    style="width: 40px;"
+                    name="twitchTTSVolume"
+                    id="twitchTTSVolume"
+                    value="twitchTTSVolumetext">
+                <BR>
+
+                <!-- twitch user blacklist-->
+                <label for="twitchBlackList"
+                    class="col-form-label">Comma separated names of users to ignore</label>
+                <input type="text"
+                    name="twitchBlackList"
+                    class="form-control"
+                    id="twitchBlackList"
+                    value="twitchBlackListtext">
 
                 <!-- voice select -->
                 <div class="input-group3">
@@ -209,6 +227,22 @@
                     </div>
                 </div>
 
+                <label for="youtubeTTSVolume"
+                    class="">Volume </label>
+                <input type="text"
+                    style="width: 40px;"
+                    name="youtubeTTSVolume"
+                    id="youtubeTTSVolume"
+                    value="youtubeTTSVolumetext">
+                <BR>
+                <!-- youtube user blacklist-->
+                <label for="youtubeBlackList"
+                    class="col-form-label">Comma separated names of users to ignore</label>
+                <input type="text"
+                    name="youtubeBlackList"
+                    class="form-control"
+                    id="youtubeBlackList"
+                    value="youtubeBlackListtext">
                 <!-- voice select -->
                 <div class="input-group3">
                     <select class="selectpicker btn-secondary"

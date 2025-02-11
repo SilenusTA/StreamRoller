@@ -2188,6 +2188,11 @@ async function addGameToHistoryFromGameName (gameName)
         const categoryIndex = localConfig.gameCategories.findIndex(e => e.name === gameName);
         if (categoryIndex == -1)
         {
+            if (!localConfig.apiClient.games)
+            {
+                console.log("localConfig.apiClient.games not available yet.")
+                return null;
+            }
             // Fetch the game date if we don't have it already
             localConfig.apiClient.games.getGameByName(gameName)
                 .then((game) =>

@@ -200,12 +200,32 @@
                     receivedUserPairings(extension_packet.data)
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED GetMacroImages
+            //                   RECEIVED MacroImages
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "MacroImages")
             {
                 if (extension_packet.to == serverConfig.extensionname)
                     updateMacroImageList(extension_packet.data);
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED AutopilotServerData
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "AutopilotServerData")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    // This file will only be received on user request to save the data so we can 
+                    // call the save function directly here
+                    downloadServerDataFileReceived(extension_packet.data);
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED AutopilotServerDataUseSaveResponse
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "AutopilotUserSaveServerDataResponse")
+            {
+                if (extension_packet.to == serverConfig.extensionname)
+                    // This file will only be received on user request to save the data so we can 
+                    // call the save function directly here
+                    downloadServerDataFileReceivedResponse(extension_packet.data);
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Unhandled extension message
@@ -375,4 +395,5 @@
         imagehtml += "</div>"
         ele.innerHTML = imagehtml
     }
+
 </script>

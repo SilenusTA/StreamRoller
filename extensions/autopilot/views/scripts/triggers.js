@@ -2,8 +2,10 @@
 /*
 global 
 SaveConfigToServer
-sr_api, serverConfig, localConfig, refreshDarkMode ,$, livePortalVolatileData, serverData, SaveDataToServer,updateMacroButtonsDisplay
+sr_api, serverConfig, localConfig, refreshDarkMode ,$, livePortalVolatileData, updateMacroButtonsDisplay
 */
+let processingTextAnimation_handle = [];
+
 // data from extensions
 let fulltriggerslist = {
     triggers: [],
@@ -459,7 +461,6 @@ function createTriggerAction (e)
             alert("group doesn't exist", groupname)
         else
             usertriggerslist.pairings.push(SingleEvent)
-        //serverData.AllTriggersAndActions[groupname].list.push(SingleEvent);
     }
     updateServerPairingsList()
     //populateTriggersTable();
@@ -625,32 +626,56 @@ function populateTriggersTable ()
 {
     let table = document.getElementById("TriggersAndActionsTable")
     table.innerHTML = "";
-    //let tablerows = ""
+    // create hide all groups button
+    let AllGroupsHidden = localStorage.getItem("AllGroupsHidden") == "true"
+
+    var group_actions = document.createElement("div")
+    group_actions.id = "AllGroupsHiddenButtons"
+    if (AllGroupsHidden)
+    {
+        btn = createAnchorButton('btn btn-secondary', "javascript:ToggleAllGroups();", 'Show/Hide All Groups', '/autopilot/images/show.png')
+        group_actions.innerHTML = "Show all groups"
+    }
+    else
+    {
+        btn = createAnchorButton('btn btn-secondary', "javascript:ToggleAllGroups();", 'Show/Hide All Groups', '/autopilot/images/hide.png')
+        group_actions.innerHTML = "Hide all groups"
+    }
+    btn.id = "AllGroupsHiddenButtonImage"
+
+    group_actions.appendChild(btn)
+    group_actions.appendChild(document.createElement("hr"))
+
+    table.appendChild(group_actions)
+
+
     for (let g in usertriggerslist.groups)
     {
         let group = usertriggerslist.groups[g].name
         var group_div = document.createElement("div")
+        let group_id = group + "_" + g
         let span = document.createElement("span")
         group_div.appendChild(span)
         span.classList = 'fs-4'
         span.innerHTML = "Group(" + itemCounter(usertriggerslist.pairings, "group", group) + "): " + group
 
         // delete group button
-        var btn = createAnchorButton('btn btn-secondary', "javascript:DeleteTriggerGroup('" + group + "');", 'Delete Group', '/autopilot/images/trash.png')
+        var btn = createAnchorButton('btn btn-secondary', "javascript:DeleteTriggerGroup('" + group + "');", 'Delete ' + group_id + '_Group', '/autopilot/images/trash.png')
         group_div.appendChild(btn)
         // play button
-        btn = createAnchorButton('btn btn-secondary', "javascript:unPauseGroupButton('" + group + "');", 'Unpause group', '/autopilot/images/play.png')
+        btn = createAnchorButton('btn btn-secondary', "javascript:unPauseGroupButton('" + group + "');", 'Unpause  ' + group_id + '_Group', '/autopilot/images/play.png')
         group_div.appendChild(btn)
         // pause button
-        btn = createAnchorButton('btn btn-secondary', "javascript:pauseGroupButton('" + group + "');", 'Pause group', '/autopilot/images/pause.png')
+        btn = createAnchorButton('btn btn-secondary', "javascript:pauseGroupButton('" + group + "');", 'Pause  ' + group_id + '_Group', '/autopilot/images/pause.png')
         group_div.appendChild(btn)
         // show hide button
-        if (localStorage.getItem(group + "visible") == "false")
-            btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide Group', '/autopilot/images/show.png')
+        if (AllGroupsHidden || localStorage.getItem(group + "visible") == "false")
+            btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide ' + group_id + '_Group', '/autopilot/images/show.png')
         else
-            btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide Group', '/autopilot/images/hide.png')
+            btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide ' + group_id + '_Group', '/autopilot/images/hide.png')
         group_div.appendChild(btn)
         table.appendChild(group_div)
+
         // group body
         let tbody = document.createElement("tbody")
         tbody.id = group + "_TriggerGroupDisplay"
@@ -658,7 +683,7 @@ function populateTriggersTable ()
 
         table.appendChild(tbody)
 
-        if (localStorage.getItem(group + "visible") == "false")
+        if (AllGroupsHidden || localStorage.getItem(group + "visible") == "false")
             tbody.style.display = "none"
         else
             tbody.style.display = "table"
@@ -778,15 +803,15 @@ function populateTriggersTable ()
                 }
                 td = actiondatacellrow.insertCell()
                 if (usertriggerslist.pairings[i].action.paused)
-                    td.appendChild(createAnchorButton('btn btn-secondary', "javascript:pauseActionButton('" + i + "');", 'Unpause action', '/autopilot/images/play.png', "20px"))
+                    td.appendChild(createAnchorButton('btn btn-secondary', "javascript:pauseActionButton('" + i + "');", 'Unpause' + i + ' action', '/autopilot/images/play.png', "20px"))
                 else
-                    td.appendChild(createAnchorButton('btn btn-secondary', "javascript:pauseActionButton('" + i + "');", 'Pause action', '/autopilot/images/pause.png', "20px"))
+                    td.appendChild(createAnchorButton('btn btn-secondary', "javascript:pauseActionButton('" + i + "');", 'Pause' + i + ' action', '/autopilot/images/pause.png', "20px"))
                 // edit button
                 td = actiondatacellrow.insertCell()
-                td.appendChild(createAnchorButton('btn btn-secondary', "javascript:EditPairingButton(this,'" + group + "','" + i + "');", 'Edit', '/autopilot/images/edit.png', "20px"))
+                td.appendChild(createAnchorButton('btn btn-secondary', "javascript:EditPairingButton(this,'" + group + "','" + i + "');", 'Edit ' + i, '/autopilot/images/edit.png', "20px"))
                 // run button
                 td = actiondatacellrow.insertCell()
-                td.appendChild(createAnchorButton('btn btn-secondary', "javascript:triggerActionButton('" + group + "','" + i + "');", 'Run action', '/autopilot/images/run.png', "20px"))
+                td.appendChild(createAnchorButton('btn btn-secondary', "javascript:triggerActionButton('" + group + "','" + i + "');", 'Run ' + i + 'action', '/autopilot/images/run.png', "20px"))
             }
         }
     }
@@ -812,6 +837,20 @@ function ShowHideTriggerGroup (name)
         group.style.display = "block"
     }
 
+    populateTriggersTable()
+}
+
+// ============================================================================
+//                          FUNCTION: ToggleAllGroups
+//                          callback for all groups button
+// ============================================================================
+function ToggleAllGroups ()
+{
+    // invert the value (toggle button)
+    if (localStorage.getItem("AllGroupsHidden") == "true")
+        localStorage.setItem("AllGroupsHidden", "false")
+    else
+        localStorage.setItem("AllGroupsHidden", "true")
     populateTriggersTable()
 }
 // ============================================================================
@@ -1214,7 +1253,10 @@ function createAnchorButton (classList, href, title, image, width = "40px")
     i.href = href
     i.style.padding = "0px"
     i.title = title
+    i.id = title + "_link";
 
+    j.id = title + "_image";
+    j.alt = title
     j.src = image
     j.style.width = width
 
@@ -1305,12 +1347,174 @@ function sortByKey (array)
     //console.log(array)
     return ordered;
 }
-function old (array, key)
+// ============================================================================
+//                     FUNCTION: downloadServerDataClicked
+// ============================================================================
+function downloadServerDataClicked ()
 {
-
-    return array.sort(function (a, b)
+    // User has clicked on the download Server Data Button
+    try
     {
-        var x = a[key]; var y = b[key];
-        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-    });
+        RequestServerDataFile();
+    }
+    catch (err)
+    {
+        console.log("downloadServerDataClicked Error:", err, err.message)
+    }
+}
+// ============================================================================
+//                     FUNCTION: RequestServerDataFile
+// ============================================================================
+function RequestServerDataFile ()
+{
+    // request the saved data from the server (callback will go to downloadServerDataFileReceived below)
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "RequestServerDataFile",
+                serverConfig.extensionname,
+                "",
+                "",
+                "autopilot"
+            ),
+            "",
+            "autopilot"
+        ));
+}
+// ============================================================================
+//                     FUNCTION: downloadServerDataFileReceived
+// ============================================================================
+function downloadServerDataFileReceived (data)
+{
+    try
+    {   // should only be called via a users request to download the server file after
+        // we have received the file from the server
+        let fileToDownload = JSON.stringify(data, null, 2);
+        var a = document.createElement("a");
+        var file = new Blob([fileToDownload], { type: "application/json" });
+        a.href = URL.createObjectURL(file);
+        a.download = "StreamRoller_autopilotBackup_" + getFileNameDateString() + ".json";
+        a.click();
+    }
+    catch (err)
+    {
+        console.log("downloadServerDataFileReceived Error:", err, err.message)
+    }
+}
+// ============================================================================
+//                     FUNCTION: uploadServerDataClicked
+// ============================================================================
+function uploadServerDataClicked ()
+{
+    try
+    {
+        // user has selected a file to upload to the server
+        var file = document.getElementById('AutoPilotDatFileUploadElement').files[0];
+        if (file)
+        {
+            var reader = new FileReader();
+            reader.readAsText(file, "application/json");
+            reader.onload = function (evt)
+            {
+                let userDataFile = JSON.parse(evt.target.result);
+                // some basic sanity checks.
+                if (userDataFile && userDataFile != ""
+                    && userDataFile.__version__)
+                {
+                    console.log("userDataFile.__version__", userDataFile.__version__);
+                    document.getElementById('AutoPilotDatFileUploadMessage').innerHTML = "Processing";
+                    processingAnimation('AutoPilotDatFileUploadMessage');
+                    saveUserDataFile(userDataFile)
+                }
+                else
+                {
+                    document.getElementById('AutoPilotDatFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+                }
+            }
+        } else
+            document.getElementById('AutoPilotDatFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+    }
+    catch (err)
+    {
+        console.log("uploadServerDataClicked Error:", err, err.message)
+    }
+}
+// ============================================================================
+//                     FUNCTION: saveUserDataFile
+// ============================================================================
+function saveUserDataFile (userDataFile)
+{
+    // request the saved data from the server (callback will go to downloadServerDataFileReceived below)
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "userRequestSaveDataFile",
+                serverConfig.extensionname,
+                userDataFile,
+                "",
+                "autopilot"
+            ),
+            "",
+            "autopilot"
+        ));
+}
+// ============================================================================
+//                     FUNCTION: downloadServerDataFileReceivedResponse
+// ============================================================================
+function downloadServerDataFileReceivedResponse (data)
+{
+    try
+    {
+        // clear the animation if we have it running
+        if (processingTextAnimation_handle['AutoPilotDatFileUploadMessage'])
+        {
+            clearInterval(processingTextAnimation_handle['AutoPilotDatFileUploadMessage'])
+            processingTextAnimation_handle['AutoPilotDatFileUploadMessage'] = null;
+        }
+        document.getElementById('AutoPilotDatFileUploadMessage').innerHTML = data.response;
+    }
+    catch (err)
+    {
+        console.log("downloadServerDataFileReceivedResponse Error:", err, err.message)
+    }
+}
+// ============================================================================
+//                     FUNCTION: processingAnimation
+// ============================================================================
+function processingAnimation (element)
+{
+    var count = 0;
+    // stop any previous timer we may have had for this element
+    if (processingTextAnimation_handle[element])
+        clearInterval(processingTextAnimation_handle[element])
+    processingTextAnimation_handle[element] = setInterval(function ()
+    {
+        // stop after 5 minutes if this keeps running
+        if (count > 300)
+            clearInterval(processingTextAnimation_handle[element]);
+        count++;
+        var dots = new Array(count % 10).join('.');
+        document.getElementById(element).innerHTML = "Processing" + dots;
+    }, 1000);
+}
+// ============================================================================
+//                     FUNCTION: getFileNameDateString
+// ============================================================================
+function getFileNameDateString ()
+{
+    // returns a suitable date string for appending to a filename
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    const hours = `${date.getHours()}`.padStart(2, '0');
+    const minutes = `${date.getMinutes()}`.padStart(2, '0');
+    const seconds = `${date.getSeconds()}`.padStart(2, '0');
+    return `${year}_${month}_${day}-${hours}_${minutes}_${seconds}`
 }

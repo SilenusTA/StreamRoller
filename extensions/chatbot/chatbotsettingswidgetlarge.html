@@ -1,25 +1,3 @@
-<!--
-      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
- 
-      StreamRoller is an all in one streaming solution designed to give a single
-      'second monitor' control page and allow easy integration for configuring
-      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
-      controlled by donations etc)
- 
-      This program is free software: you can redistribute it and/or modify
-      it under the terms of the GNU Affero General Public License as published
-      by the Free Software Foundation, either version 3 of the License, or
-      (at your option) any later version.
- 
-      This program is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-      GNU Affero General Public License for more details.
- 
-      You should have received a copy of the GNU Affero General Public License
-      along with this program.  If not, see <https://www.gnu.org/licenses/>.
- 
--->
 <form id="extensionnametext_settingsform">
     <div class="form-group invisible">
         <input type="hidden"
@@ -500,6 +478,64 @@
     <!-- ####################################################### -->
     <!--          end behaviour and personalities                -->
     <!-- ####################################################### -->
+    <div class="form-group row-2"
+        class="form-control">
+        <!--
+         Load Save chatbot settings files
+    -->
+        <HR class="hrbold">
+        <div class="container-fluid">
+            <H3>Save/Load Chatbot Config Files</H3>
+            These files contain all your saved chatbot profiles and settings
+            <BR>Please note that if loading older files they may fail
+            due to outdated version numbers.
+            <BR>
+            <h5>Manually Editing the files</H5>
+            You can manually edit these files if you wish to edit profiles in a text editor
+            The Version number should only change when the fields have changed, you only need to change these values to
+            match the latest version numbers if you are copying an older config over to a newer one.
+            I'd suggest saving the current config, then copy/pasting your changes into the fields but leave the version
+            number as it is saved from streamroller
+            <HR>
+
+            <div class="row">
+                <div class="col-6 px-3">
+                    <div class="form-group">
+                        <!--<h5>Download the chatbot Server Data File</h5>-->
+                        <label class="form-label"
+                            for="uploadChatbotFileButton">Download the chatbot Server Data File</label>
+                        <!--<form id="uploadChatbotFileButton"
+                            class="form-inline">-->
+                        <button type="button"
+                            class="btn btn-secondary"
+                            onclick="return downloadServerDataClicked()">Download</button>
+                        <!-- </form> -->
+                    </div>
+                </div>
+                <div class="col-6 px-3">
+                    <div class="form-group">
+                        <!-- <h5>Upload a Server Data File</h5>-->
+                        <label class="form-label"
+                            for="ChatBotDatFileUploadElement">Upload an chatbot Server Data File</label>
+                        <!-- <form class="form-inline"> -->
+                        <input type="file"
+                            name=""
+                            class="form-control"
+                            id="ChatBotDatFileUploadElement">
+                        <BR>
+                        <button type="button"
+                            id="Upload"
+                            class="btn btn-secondary"
+                            onclick="uploadServerDataClicked()">Upload ChatBot data file</button>
+                        <div id="ChatBotDatFileUploadMessage"></div>
+                        <!--/form> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <HR>
     <h5 class="text-center">Debug</h5>
@@ -533,4 +569,120 @@
         <button type="submit"
             class="btn btn-primary">Update</button>
     </div>
+
 </form>
+<script type="text/javascript">
+    // ============================================================================
+    //                     FUNCTION: downloadServerDataClicked
+    // ============================================================================
+    function downloadServerDataClicked ()
+    {
+        // User has clicked on the download Server Data Button
+        try
+        {
+            RequestServerDataFile();
+        }
+        catch (err)
+        {
+            console.log("downloadServerDataClicked Error:", err, err.message)
+        }
+    }
+
+    // ============================================================================
+    //                     FUNCTION: RequestServerDataFile
+    // ============================================================================
+    function RequestServerDataFile ()
+    {
+        // request the saved data from the server (callback will go to downloadServerDataFileReceived below)
+        sr_api.sendMessage(
+            DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "RequestServerDataFile",
+                    serverConfig.extensionname,
+                    "",
+                    "",
+                    "chatbot"
+                ),
+                "",
+                "chatbot"
+            ));
+    }
+    // ============================================================================
+    //                     FUNCTION: uploadServerDataClicked
+    // ============================================================================
+    function uploadServerDataClicked ()
+    {
+        try
+        {
+            // user has selected a file to upload to the server
+            var file = document.getElementById('ChatBotDatFileUploadElement').files[0];
+            if (file)
+            {
+                var reader = new FileReader();
+                reader.readAsText(file, "application/json");
+                reader.onload = function (evt)
+                {
+                    let userDataFile = JSON.parse(evt.target.result);
+                    // some basic sanity checks.
+                    if (userDataFile && userDataFile != ""
+                        && userDataFile.__version__)
+                    {
+                        document.getElementById('ChatBotDatFileUploadMessage').innerHTML = "Processing";
+                        processingAnimation('ChatBotDatFileUploadMessage');
+                        saveUserDataFile(userDataFile)
+                    }
+                    else
+                    {
+                        document.getElementById('ChatBotDatFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+                    }
+                }
+            } else
+                document.getElementById('ChatBotDatFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+        }
+        catch (err)
+        {
+            console.log("uploadServerDataClicked Error:", err, err.message)
+        }
+    }
+    // ============================================================================
+    //                     FUNCTION: saveUserDataFile
+    // ============================================================================
+    function saveUserDataFile (userDataFile)
+    {
+        // request the saved data from the server (callback will go to downloadServerDataFileReceived below)
+        sr_api.sendMessage(
+            DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "userRequestSaveDataFile",
+                    serverConfig.extensionname,
+                    userDataFile,
+                    "",
+                    "chatbot"
+                ),
+                "",
+                "chatbot"
+            ));
+    }
+    // ============================================================================
+    //                     FUNCTION: getFileNameDateString
+    // ============================================================================
+    function getFileNameDateString ()
+    {
+        // returns a suitable date string for appending to a filename
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, '0');
+        const day = `${date.getDate()}`.padStart(2, '0');
+        const hours = `${date.getHours()}`.padStart(2, '0');
+        const minutes = `${date.getMinutes()}`.padStart(2, '0');
+        const seconds = `${date.getSeconds()}`.padStart(2, '0');
+        return `${year}_${month}_${day}-${hours}_${minutes}_${seconds}`
+    }
+
+</script>

@@ -587,6 +587,29 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
+        else if (extension_packet.type === "RequestServerDataFile")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "ServerConfigForDownload",
+                        serverConfig.extensionname,
+                        serverConfig,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+
+        else if (extension_packet.type === "userRequestSaveDataFile")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+                parseUserRequestSaveDataFile(extension_packet)
+        }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
@@ -2287,6 +2310,46 @@ function findtriggerByMessageType (messagetype)
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: triggerMacroButton
+// ============================================================================
+function parseUserRequestSaveDataFile (extensions_message)
+{
+    //do something with the file. ie check version etc.
+    let response = "No Response from Server, please try again.";
+    try
+    {
+        if (extensions_message.data.__version__ === default_serverConfig.__version__)
+        {
+            // overwrite our data and save it to the server.
+            serverConfig = structuredClone(extensions_message.data);
+            SaveConfigToServer()//we have the same version of the file so we should save it over our current one.
+            response = "Data saved."
+        }
+        else
+            response = "received file version doesn't match current version: " + extensions_message.data.__version__ + " == " + default_serverConfig.__version__
+    }
+    catch (err)
+    {
+        logger.err(serverConfig.extensionname + ".parseUserRequestSaveDataFile", "Error saving data to server.Error:", err, err.message);
+        response = "Error saving data to server.Error:", err, err.message;
+    }
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "UserSaveServerDataResponse",
+                serverConfig.extensionname,
+                { response: response },
+                "",
+                extensions_message.from
+            ),
+            "",
+            extensions_message.from
+        ));
 }
 // ============================================================================
 //                                  EXPORTS
