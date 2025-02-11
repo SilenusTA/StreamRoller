@@ -2006,38 +2006,41 @@ function handleSettingsWidgetSmallData (modalCode)
         }
         /* Process Twitch Category */
         const userSelectedCategoryId = modalCode[localConfig.twitchCategoriesDropdownId]
-        getGameFromId(userSelectedCategoryId)
-            .then((game) =>
-            {
-                if (game)
+        if (userSelectedCategoryId)
+        {
+            getGameFromId(userSelectedCategoryId)
+                .then((game) =>
                 {
-                    const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
-                    if (inHistory == -1)
-                        serverConfig.twitchCategoriesHistory.push(game)
-                    if (localConfig.status.connected && localConfig.currentTwitchGameCategoryId != game.id)
-                        setStreamGame(game.id)
-                }
-                else
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                        ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", userSelectedCategoryId);
-
-                /* Process Twitch Title */
-                if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
-                {
-                    let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
-                    if (titleIndex > -1)
-                        serverConfig.lastSelectedTwitchTitleId = titleIndex;
+                    if (game)
+                    {
+                        const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+                        if (inHistory == -1)
+                            serverConfig.twitchCategoriesHistory.push(game)
+                        if (localConfig.status.connected && localConfig.currentTwitchGameCategoryId != game.id)
+                            setStreamGame(game.id)
+                    }
                     else
-                        serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(modalCode[localConfig.twitchTitlesTextElementId]) - 1
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                            ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", userSelectedCategoryId);
 
-                    setStreamTitle(serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId])
-                }
-                return restartConnection
-            })
-            .catch((err) =>
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData getGameFromId", "Error", err, err.message);
-            })
+                    /* Process Twitch Title */
+                    if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
+                    {
+                        let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
+                        if (titleIndex > -1)
+                            serverConfig.lastSelectedTwitchTitleId = titleIndex;
+                        else
+                            serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(modalCode[localConfig.twitchTitlesTextElementId]) - 1
+
+                        setStreamTitle(serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId])
+                    }
+                    return restartConnection
+                })
+                .catch((err) =>
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData.getGameFromId", "Error", err, err.message);
+                })
+        }
     }
     catch (err)
     {
@@ -2241,7 +2244,7 @@ async function getGameFromId (gameId)
     {
         // check if we have this game in our list from twitch
         const categoryIndex = localConfig.gameCategories.findIndex(e => e.id === gameId);
-        if (!localConfig.apiClient.games)
+        if (!localConfig.apiClient || !localConfig.apiClient.games)
         {
             console.log("localConfig.apiClient.games not available yet.")
             return null;
