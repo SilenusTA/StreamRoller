@@ -147,7 +147,8 @@
         },
         bTTVEmotes: null,
         bTTVNames: [],
-        TTSVoiceList: []
+        TTSVoiceList: [],
+        bannedUsersList: []
 
     }
     const chatcolors =
@@ -1465,14 +1466,10 @@
         //checking for old heartbeat message types. should be all fixed
         if ((typeof (status)) != "object")
         {
-            console.log("Extension Status not an object", typeof (status), status)
             if (!status || status == false || status == "false")
                 document.getElementById(extension + "_status").style = "color:red";
             else
-            {
-                console.log("Extension Status not an object and not a boolean or string")
                 document.getElementById(extension + "_visibility_settingswidgetsmall").style.display = "";
-            }
         }
         else if (!status)
         {
@@ -1998,7 +1995,6 @@
         // other data update
         for (const [key, value] of Object.entries(serverConfig))
         {
-            console.log("checking", key, value)
             // checkboxes
             if (value === "on")
                 modalstring = modalstring.replaceAll(' ' + key + 'checked', 'checked');
@@ -2006,13 +2002,8 @@
                 modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
             // replace text strings
             else if (typeof (value) == "string" || typeof (value) == "number")
-            {
-                console.log("setting modeal value")
                 modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
-            }
         }
-
-
         livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
         addSettingsWidgetSmall(serverConfig.extensionname, modalstring)
@@ -2521,7 +2512,15 @@
             var user_icons = "";
             var action = "";
             var endaction = "";
-            let icons = "<img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>"
+            //chatdata.data.username
+            var banicon = `<img  onclick='banUserClicked("${chatdata.data.username}")' style='width: 20px; cursor: pointer;' alt='BanUser' title='BanUser' src='/liveportal/images/banhammer.png'>`;
+            let icons = "";
+            if (localConfig.bannedUsersList.includes(chatdata.data.username))
+                banicon = `<img  onclick='unBanUserClicked("${chatdata.data.username}")' style='width: 20px; cursor: pointer;' alt='UnBanUser' title='UnBanUser' src='/liveportal/images/unbanhammer.png'>`
+
+
+            icons = banicon + "<img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>"
+
             var mod_badge = "<img src='liveportal/images/badge_mod.png'>";
             var greyout_line = "false";
 
@@ -3892,6 +3891,59 @@
             );
         }
     }
+    // ============================================================================
+    //                           FUNCTION: banUserClicked
+    // ============================================================================
+    function banUserClicked (username)
+    {
+        if (!localConfig.bannedUsersList.includes(username))
+        {
+            localConfig.bannedUsersList.push(username);
+            // request the twitch chat buffer so our display code will update the icons correctly
+            RequestChatBuffer("twitchchat");
+
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "action_TwitchBan",
+                        serverConfig.extensionname,
+                        { user: username, reason: "banned by streamer" },
+                        "",
+                        "twitch"),
+                    "",
+                    "twitch"
+                ),
+            );
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: banUserClicked
+    // ============================================================================
+    function unBanUserClicked (username)
+    {
+        if (localConfig.bannedUsersList.includes(username))
+        {
+            localConfig.bannedUsersList.pop(username)
+            // request the twitch chat buffer so our display code will update the icons correctly
+            RequestChatBuffer("twitchchat");
+
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "action_TwitchUnban",
+                        serverConfig.extensionname,
+                        { user: username, reason: "unbanned by streamer" },
+                        "",
+                        "twitch"),
+                    "",
+                    "twitch"
+                ),
+            );
+        }
+    }
+
     // ============================================================================
     //                           FUNCTION: updateMacroButtonsDisplay
     // ============================================================================

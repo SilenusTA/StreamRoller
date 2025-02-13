@@ -829,6 +829,7 @@ function ShowHideTriggerGroup (name)
     if (visible == "false")
     {
         localStorage.setItem(name + "visible", "true")
+        localStorage.setItem("AllGroupsHidden", "false");
         group.style.display = "none"
     }
     else

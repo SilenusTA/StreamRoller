@@ -2189,6 +2189,7 @@ async function addGameToHistoryFromGameName (gameName)
     {
         // get the game index if we already have the data
         const categoryIndex = localConfig.gameCategories.findIndex(e => e.name === gameName);
+        // not got this game in our local cache so get it from twitch
         if (categoryIndex == -1)
         {
             if (!localConfig.apiClient.games)
@@ -2202,10 +2203,14 @@ async function addGameToHistoryFromGameName (gameName)
                 {
                     if (game)
                     {
-                        const gameObject = { id: game.id, name: game.name, imageURL: game.boxArtUrl }
-                        serverConfig.twitchCategoriesHistory.push(gameObject);
-                        localConfig.twitchCategoryErrorsShowCounter = 0
-                        SendSettingsWidgetSmall()
+                        if (!serverConfig.twitchCategoriesHistory
+                            || serverConfig.twitchCategoriesHistory.findIndex(e => e.name === game.name) == -1)
+                        {
+                            const gameObject = { id: game.id, name: game.name, imageURL: game.boxArtUrl }
+                            serverConfig.twitchCategoriesHistory.push(gameObject);
+                            localConfig.twitchCategoryErrorsShowCounter = 0
+                            SendSettingsWidgetSmall()
+                        }
                     }
                     else
                     {
@@ -2225,8 +2230,15 @@ async function addGameToHistoryFromGameName (gameName)
         }
         else
         {
-            serverConfig.twitchCategoriesHistory.push(localConfig.gameCategories[categoryIndex]);
-            localConfig.twitchCategoryErrorsShowCounter = 0
+            // get the game from our list
+            let game = localConfig.gameCategories[categoryIndex]
+            // if not in the history already then add it.
+            if (!serverConfig.twitchCategoriesHistory || serverConfig.twitchCategoriesHistory.findIndex(e => e.name === game.name) == -1)
+            {
+                serverConfig.twitchCategoriesHistory.push(game);
+                localConfig.twitchCategoryErrorsShowCounter = 0;
+            }
+
         }
     } catch (err)
     {
@@ -2359,7 +2371,7 @@ async function getChannelEditors ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getChannelEditors", "ERROR", "Failed to get editors (try reauthorising by going to  go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2382,7 +2394,7 @@ async function getChannelVIPs ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getChannelVIPs", "ERROR", "Failed to get VIPs (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2404,12 +2416,12 @@ async function addVIP (username)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addVIP", "ERROR", "Failed to add VIP?");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addVIP", "ERROR", "Failed to add VIP)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -2432,12 +2444,12 @@ async function removeVIP (username)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeVIP", "ERROR", "Failed to remove VIP?");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeVIP", "ERROR", "Failed to remove VIP)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -2456,12 +2468,12 @@ async function addMod (username)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addMod", "ERROR", "Failed to add Mod?");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addMod", "ERROR", "Failed to add Moderator)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -2480,12 +2492,12 @@ async function removeMod (username)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeMod", "ERROR", "Failed to remove Mod?");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeMod", "ERROR", "Failed to remove Moderator)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -2496,32 +2508,49 @@ async function banUser (username, reason)
 {
     try
     {
-        console.log("banUser", username, reason)
-        console.log("banUser", localConfig.apiClient)
-        let user = await localConfig.apiClient.users.getUserByName(username)
-        console.log("banUser", user)
-        let banData = {
-            duration: 0,
-            reason: "streamrollerBan:" + reason,
-            user: user.id
-        }
-        await localConfig.apiClient.moderation.banUser(localConfig.streamerData.id, banData)
+        localConfig.apiClient.users.getUserByName(username)
+            .then((user) =>
+            {
+                if (user)
+                {
+                    let banData = {
+                        duration: 0,
+                        reason: "streamrollerBan:" + reason,
+                        user: user.id
+                    }
+                    localConfig.apiClient.moderation.banUser(localConfig.streamerData.id, banData)
+                        .then((response) =>
+                        {
+                            //console.log("twitch.banUser User returned", response)
+                        })
+                }
+                else
+                {
+                    console.log("BanUser Error: User '" + username + "' was not found on twitch")
+                }
+            })
+            .catch((err) =>
+            {
+                console.log("BanUser.getUserByName error", err)
+            })
+
+
     }
     catch (err)
     {
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".banUser", "ERROR", "Failed to ban User?");
-            console.error(err._body);
+            console.log(err, err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".banUser", "ERROR", "Failed to ban User)");
-            console.error(err);
+            console.log(err, err._body);
         }
     }
 }
-unbanUser
+
 // ===========================================================================
 //                           FUNCTION: unbanUser
 // ===========================================================================
@@ -2529,29 +2558,45 @@ async function unbanUser (username, reason)
 {
     try
     {
-        console.log("unbanUser", username, reason)
-        console.log("unbanUser", localConfig.apiClient)
-        let user = await localConfig.apiClient.users.getUserByName(username)
-        console.log("unbanUser", user)
-        let banData = {
-            duration: 0,
-            reason: "streamrollerBan:" + reason,
-            user: user.id
-        }
-        await localConfig.apiClient.moderation.unbanUser(localConfig.streamerData.id, user.id)
+        await localConfig.apiClient.users.getUserByName(username)
+            .then((user) =>
+            {
+                if (user && user.id && user.name)
+                {
+                    let banData = {
+                        duration: 0,
+                        reason: "streamrollerBan:" + reason,
+                        user: user.id
+                    }
+                    localConfig.apiClient.moderation.unbanUser(localConfig.streamerData.id, user.id)
+                        .then((response) =>
+                        {
+                            //console.log("User '"+username+"'was unbanned");
+                        })
+                        .catch((err) =>
+                        {
+                            if (err._body && err._body)
+                                console.log("Error banning user", JSON.parse(err._body).message.replaceAll("in the user_id query parameter is not banned", username) + ". User is not banned.");
+                            else
+                                console.log("Error banning user", err)
+                        })
+                }
+                else
+                {
+                    console.log("Can't unban User '" + username + "' as they were not found on twitch")
+                }
+            })
+            .catch((err) =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser.getUserByName", "ERROR", err);
+                console.log("JSON error", JSON.stringify(err, null, 2));
+            })
     }
     catch (err)
     {
-        if (err._statusCode == 400)
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser", "ERROR", "Failed to ban User?");
-            console.error(err._body);
-        }
-        else
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser", "ERROR", "Failed to ban User)");
-            console.error(err);
-        }
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".unbanUser", "ERROR", "Failed to unBan User)");
+        console.log("JSON error", JSON.stringify(err, null, 2));
+
     }
 }
 // ===========================================================================
@@ -2569,7 +2614,7 @@ async function followerCount ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".followerCount", "ERROR", "Failed to get follower count)");
-        console.error(err);
+        console.log(err);
 
     }
 }
@@ -2595,7 +2640,7 @@ async function followedChannels ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".followedChannels", "ERROR", "Failed followed channels (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2613,9 +2658,9 @@ async function cheerEmotes ()
     }
     catch (err)
     {
-        console.error(err)
+        console.log(err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cheerEmotes", "ERROR", "Failed to get cheer emotes  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2640,9 +2685,9 @@ async function leaderboard ()
     }
     catch (err)
     {
-        console.error(err)
+        console.log(err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".leaderboard", "ERROR", "Failed to get leaderboard data  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2678,7 +2723,7 @@ async function getPolls ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPolls", "ERROR", "Failed to get polls (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2711,7 +2756,7 @@ async function getPoll (id)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPoll", "ERROR", "Failed to get poll by id (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2735,12 +2780,12 @@ async function createPoll (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createPoll", "ERROR", "Failed to create a poll");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createPoll", "ERROR", "Failed to create a poll (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2758,12 +2803,12 @@ async function endPoll (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".endPoll", "ERROR", "Failed to end a poll");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".endPoll", "ERROR", "Failed to end a poll (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2787,12 +2832,12 @@ async function startPrediction (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startPrediction", "ERROR", "Failed to create a prediction");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startPrediction", "ERROR", "Failed to create a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2810,12 +2855,12 @@ async function cancelPrediction (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cancelPrediction", "ERROR", "Failed to cancel a prediction");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cancelPrediction", "ERROR", "Failed to cancel a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2837,7 +2882,7 @@ async function getPredictions (data)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPredictions", "ERROR", "Failed to get predictions list (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2887,7 +2932,7 @@ async function getPrediction (data)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getPrediction", "ERROR", "Failed to get prediction by id (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-        console.error(err._body);
+        console.log(err._body);
     }
 }
 // ===========================================================================
@@ -2904,12 +2949,12 @@ async function lockPrediction (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".lockPrediction", "ERROR", "Failed to lock a prediction");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".lockPrediction", "ERROR", "Failed to lock a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2927,12 +2972,12 @@ async function removePrediction (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removePrediction", "ERROR", "Failed to remove a prediction");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removePrediction", "ERROR", "Failed to remove a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2950,12 +2995,12 @@ async function resolvePrediction (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".resolvePrediction", "ERROR", "Failed to resolve a prediction");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".resolvePrediction", "ERROR", "Failed to resolve a prediction (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
-            console.error(err._body);
+            console.log(err._body);
         }
     }
 }
@@ -2980,12 +3025,12 @@ async function createBlock (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createBlock", "ERROR", "Failed to block user");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createBlock", "ERROR", "Failed to block user)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -3004,12 +3049,12 @@ async function deleteBlock (data)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".deleteBlock", "ERROR", "Failed to unblock user");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".deleteBlock", "ERROR", "Failed to unblock user)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -3068,12 +3113,12 @@ async function getUser (username)
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "ERROR", "400:Failed to get user", username);
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "ERROR", "Failed to get user)", username);
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -3102,12 +3147,12 @@ async function getBlockedUsers ()
         if (err._statusCode == 400)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ". getAuthenticatedUser", "ERROR", "Failed to get authenticated user");
-            console.error(err._body);
+            console.log(err._body);
         }
         else
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ". getAuthenticatedUser", "ERROR", "Failed to get authenticated user)");
-            console.error(err);
+            console.log(err);
         }
     }
 }
@@ -3126,7 +3171,7 @@ async function createClip ()
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".createClip", "ERROR", "Failed to create clip)");
-        console.error(err);
+        console.log(err);
     }
 }
 // ===========================================================================
@@ -3174,7 +3219,7 @@ async function getClipById (data, rollbackCount = 5)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
-        console.error(err);
+        console.log(err);
     }
 }
 // ===========================================================================
@@ -3236,7 +3281,7 @@ async function getClipsByBroadcaster (data, rollbackCount = 5)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
-        console.error(err);
+        console.log(err);
     }
 }
 // ===========================================================================
@@ -3289,7 +3334,7 @@ async function getClipsByGame (data)
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "ERROR", "Failed to get clip by name)");
-        console.error(err);
+        console.log(err);
     }
 }
 // ===========================================================================
@@ -3327,7 +3372,7 @@ function pubSubTriggerCallback (trigger)
     if (trigger.messagetype == "trigger_TwitchGamedChanged")
     {
         // change our setup so it matches the data from twitch
-        localConfig.currentTwitchGameCategoryId = trigger.parameters.id;
+        localConfig.currentTwitchGameCategoryId = trigger.parameters.gameId;
         addGameToHistoryFromGameName(trigger.parameters.name)
         //update any of our modals
         SendSettingsWidgetSmall()
@@ -3335,7 +3380,7 @@ function pubSubTriggerCallback (trigger)
         SaveConfigToServer()
     }
     else
-        console.log("pubSubTriggerCallback()", trigger)
+        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getClipById", "pubSubTriggerCallback() no handler for ", trigger.messagetype, " twitch callback message");
 }
 // ===========================================================================
 //                           FUNCTION: sendTrigger
@@ -3364,8 +3409,7 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
 {
     let dropdownHtml = ""
     dropdownHtml += '<div class="d-flex-align w-100">';
-
-    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Game Category' id="` + id + `" value='-1' name="` + id + `" required="">`
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Game Category' id="${id}" value='${currentSelectedId}' name="${id}" required="">`
     // add history section if we have one
     if (history.length)
     {
@@ -3419,12 +3463,12 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
     let dropdownHtml = "";
     dropdownHtml += '<div class="d-flex-align w-100">';
     if (history[currentSelectedId])
-        dropdownHtml += `<input type="text" class="form-control" id="` + TextEleId + `" name="` + TextEleId + `" value = "` + history[currentSelectedId] + `" placeholder="` + history[currentSelectedId] + `">`
+        dropdownHtml += `<input type="text" class="form-control" id="${TextEleId}" name="${TextEleId}" value = "${history[currentSelectedId]}" placeholder="${history[currentSelectedId]}">`
     else
-        dropdownHtml += `<input type="text" class="form-control" id="` + TextEleId + `" name="` + TextEleId + `" placeholder="Please Enter a new Title or select one from the history">`
+        dropdownHtml += `<input type="text" class="form-control" id="${TextEleId}" name="${TextEleId}" placeholder="Please Enter a new Title or select one from the history">`
 
 
-    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Title' id="` + SelectEleId + `" value='-1' name="` + SelectEleId + `" onchange="document.getElementById('` + TextEleId + `').value = this.options[this.selectedIndex].text">`
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Title' id="${SelectEleId}" value='${currentSelectedId}' name="${SelectEleId}" onchange="document.getElementById('${TextEleId}').value = this.options[this.selectedIndex].text">`
 
     if (history.length)
     {
