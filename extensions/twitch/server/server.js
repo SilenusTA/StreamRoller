@@ -1993,7 +1993,7 @@ function handleSettingsWidgetSmallData (modalCode)
                 serverConfig.twitchTitlesHistory = [];
                 localConfig.currentTwitchGameCategoryId = -1
             }
-            return false;
+            return restartConnection;
         }
         // search for game on twitch
         if (modalCode["twitchSearchForTwitchGameElementId"] && modalCode["twitchSearchForTwitchGameElementId"] != "")
@@ -2002,7 +2002,7 @@ function handleSettingsWidgetSmallData (modalCode)
             // Add game name to history list (true)
             addGameToHistoryFromGameName(gameName)
             // return now as we only want to process the search on this submit
-            return false;
+            return restartConnection;
         }
         /* Process Twitch Category */
         const userSelectedCategoryId = modalCode[localConfig.twitchCategoriesDropdownId]
@@ -2041,6 +2041,7 @@ function handleSettingsWidgetSmallData (modalCode)
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData.getGameFromId", "Error", err, err.message);
                 })
         }
+        return restartConnection
     }
     catch (err)
     {
