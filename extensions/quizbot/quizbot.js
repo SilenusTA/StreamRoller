@@ -582,9 +582,9 @@ function heartBeatCallback ()
         connected: serverConfig.quizbot_enabled == "on",
         color: "red"
     }
-    if (status.connected && localConfig.quizbotTimerHandle._destroyed)
+    if (status.connected && typeof (localConfig.quizbotTimerHandle) != "undefined" && localConfig.quizbotTimerHandle._destroyed)
         status.color = "orange";
-    else if (status.connected && !localConfig.quizbotTimerHandle._destroyed)
+    else if (status.connected && typeof (localConfig.quizbotTimerHandle) != "undefined" && !localConfig.quizbotTimerHandle._destroyed)
         status.color = "green";
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
