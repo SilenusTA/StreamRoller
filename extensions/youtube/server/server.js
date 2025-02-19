@@ -277,7 +277,7 @@ function onDataCenterMessage (server_packet)
                     serverConfig = structuredClone(default_serverConfig);
                     serverCredentials = structuredClone(default_serverCredentials);
                     console.log("\x1b[31m" + serverConfig.extensionname + " Config Files Updated.", "The config files have been Restored to defaults. Your settings may have changed" + "\x1b[0m");
-                    saveCredentialsToServer();
+                    saveCredentialsToServer(serverCredentials);
                 }
                 else
                 {
@@ -287,7 +287,7 @@ function onDataCenterMessage (server_packet)
                     if (extension_packet.data.youtubechatpollrate != serverConfig.youtubechatpollrate)
                     {
                         serverConfig.youtubechatpollrate = extension_packet.data.youtubechatpollrate;
-                        startYoutubeMonitor()
+                        StatusChanged = true
                     }
 
                     // default any checkboxes we may have in our settings
@@ -371,7 +371,7 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-function SendSettingsWidgetSmall (toExtension)
+function SendSettingsWidgetSmall (toExtension = "")
 {
     // read our modal file
     fs.readFile(__dirname + '/youtubesettingswidgetsmall.html', function (err, filedata)
@@ -560,27 +560,30 @@ function postTrigger (data)
 // ============================================================================
 function checkCredentialsValid ()
 {
-    if (localConfig.ServerCredentialsLoaded)
+    if (serverConfig.youtubeenabled == "on")
     {
-        if (!serverCredentials.access_token || serverCredentials.access_token == "" ||
-            !serverCredentials.refresh_token || serverCredentials.refresh_token == "" ||
-            !serverCredentials.scope || serverCredentials.scope == "" ||
-            !serverCredentials.token_type || serverCredentials.token_type == "" ||
-            !serverCredentials.expiry_date || serverCredentials.expiry_date == ""
-        )
+        if (localConfig.ServerCredentialsLoaded)
         {
-            console.log("checkCredentialsValid():Invalid credentials")
-            return false;
+            if (!serverCredentials.access_token || serverCredentials.access_token == "" ||
+                !serverCredentials.refresh_token || serverCredentials.refresh_token == "" ||
+                !serverCredentials.scope || serverCredentials.scope == "" ||
+                !serverCredentials.token_type || serverCredentials.token_type == "" ||
+                !serverCredentials.expiry_date || serverCredentials.expiry_date == ""
+            )
+            {
+                console.log("checkCredentialsValid():Invalid credentials")
+                return false;
+            }
+            if (!localConfig.oauth2Client)
+            {
+                console.log("checkCredentialsValid():oauth client error:")
+                return false;
+            }
+            return true;
         }
-        if (!localConfig.oauth2Client)
-        {
-            console.log("checkCredentialsValid():oauth client error:")
-            return false;
-        }
-        return true;
+        else
+            console.log("checkCredentialsValid localConfig.ServerCredentialsLoaded is false", localConfig.ServerCredentialsLoaded)
     }
-    else
-        console.log("checkCredentialsValid localConfig.ServerCredentialsLoaded is false", localConfig.ServerCredentialsLoaded)
     return false;
 }
 // ============================================================================
@@ -592,25 +595,26 @@ function startYoutubeMonitor ()
     // Set interval to fetch messages every x seconds
     localConfig.messagePollingHandle = setInterval(async () =>
     {
-        // don't try and attach to Youtube until we have loaded our credentials from the server
-        if (!localConfig.ServerCredentialsLoaded || !checkCredentialsValid())
-        {
-            return;
-        }
-        // check for updated credentials here as we want to make sure we keep our refresh token uptodate
-        if (localConfig.oauth2Client.credentials.access_token != serverCredentials.access_token)
-        {
-            saveCredentialsToServer(
-                {
-                    access_token: localConfig.oauth2Client.credentials.access_token,
-                    refresh_token: localConfig.oauth2Client.credentials.refresh_token,
-                    expiry_date: localConfig.oauth2Client.credentials.expiry_date
-                }
-            )
-        }
         // only poll if we are enabled.
         if (serverConfig.youtubeenabled == "on")
         {
+            // don't try and attach to Youtube until we have loaded our credentials from the server
+            if (!localConfig.ServerCredentialsLoaded || !checkCredentialsValid())
+            {
+                return;
+            }
+            // check for updated credentials here as we want to make sure we keep our refresh token uptodate
+            if (localConfig.oauth2Client.credentials.access_token != serverCredentials.access_token)
+            {
+                saveCredentialsToServer(
+                    {
+                        access_token: localConfig.oauth2Client.credentials.access_token,
+                        refresh_token: localConfig.oauth2Client.credentials.refresh_token,
+                        expiry_date: localConfig.oauth2Client.credentials.expiry_date
+                    }
+                )
+            }
+
             if (!localConfig.liveChatId)
                 await getLiveChatId();
             // check again to see if we managed to open it.
@@ -753,6 +757,12 @@ async function getLiveChatMessages ()
 //##########################################################################
 async function postLiveChatMessages (message)
 {
+    // only poll if we are enabled.
+    if (serverConfig.youtubeenabled == "on")
+    {
+        console.log("Trying to send YouTube Message with extensions turned off")
+        return;
+    }
     if (!localConfig.liveChatId)
     {
         if (!getLiveChatId())
@@ -800,7 +810,7 @@ async function postLiveChatMessages (message)
 // ============================================================================
 //                     FUNCTION: getLiveChatId
 // ============================================================================
-function getLiveChatId ()
+async function getLiveChatId ()
 {
     try
     {
@@ -834,7 +844,7 @@ function getLiveChatId ()
             })
             .catch(error =>
             {
-                console.log('getLiveChatId():error?', error);
+                //console.log('getLiveChatId():error?', JSON.stringify(error.response.data.error, null, 2));
                 handleGaxiosErrors(error)
                 localConfig.liveChatId = null;
                 return null;
@@ -851,27 +861,46 @@ function getLiveChatId ()
 // ###########################################################################
 function handleGaxiosErrors (error)
 {
-    console.log("handleGaxiosErrors called")
+    //console.log("handleGaxiosErrors called")
     if (error.response)
     {
-        if (error.response.data.error_description == 'Token has been expired or revoked.')
+        if (error.response.data && error.response.data.error)
         {
-            console.log("Received error", error.response.data)
+            if (error.response.data.error == "invalid_grant")
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".setupAuthenticatePage", "Error: Received invalid grant error from GoogleAPI token. One reason for this is if the google API is still unpublished and in testing state. This will cause authorization to be revoked every 7 days meaning you need to reauthorize.");
+
+                console.log("To re-authorize correctly you will need to turn off youtube extension,restart StreamRoller and then re-authorize in the usual way fom the admin page.")
+                // Stop the server to avoid constant errors from the timers
+                serverConfig.youtubeenabled = "off";
+                stopYoutubeMonitor();
+                SendSettingsWidgetSmall();
+            }
+            else
+            {
+                console.log("received error", error.response.data.error)
+                // The request was made and the server responded with a status code
+                console.log('Error status:', error.response.status);
+                console.log('Error data:', error.response.data);
+                console.log('Error headers:', error.response.headers);
+            }
+        }
+        else if (error.response.data.error_description == 'Token has been expired or revoked.')
+        {
+            console.log("Received error", error.response.data.error_description)
             refreshAccessToken();
             return;
         }
-        // The request was made and the server responded with a status code
-        console.error('Error status:', error.response.status);
-        console.error('Error data:', error.response.data);
-        console.error('Error headers:', error.response.headers);
+
     } else if (error.request)
     {
         // The request was made but no response was received
-        console.error('No response received:', error.request);
+        console.log('No response received:', error.request);
     } else
     {
         // Something happened in setting up the request
-        console.error('Error:', error.message);
+        console.log('Error:', error);
     }
 }
 // ###########################################################################
@@ -879,25 +908,57 @@ function handleGaxiosErrors (error)
 // ###########################################################################
 async function refreshAccessToken ()
 {
-    console.log("refreshAccessToken ()")
+
+    //console.log("refreshAccessToken ()")
     // Initialize the OAuth2Client
     //const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET);
-    localConfig.oauth2Client = new OAuth2Client(serverCredentials.clientId, serverCredentials.clientSecret);
+    localConfig.oauth2Client = new OAuth2Client(serverCredentials.clientId, serverCredentials.clientSecret, serverCredentials.redirectURI);
+    localConfig.oauth2Client.forceRefreshOnFailure = true;
+
     // Set the refresh token
     //oAuth2Client.setCredentials({        refresh_token: REFRESH_TOKEN,    });
+    //console.log("setCredentials being called")
+
     localConfig.oauth2Client.setCredentials({
-        refresh_token: serverCredentials.refresh_token,
+        refresh_token: serverCredentials.refresh_token
     })
+
+    //console.log("localConfig.oauth2Client", JSON.stringify(localConfig.oauth2Client, null, 2))
 
     try
     {
+        //console.log("calling refresh access token current credentials", serverCredentials)
+        let expdate = new Date(serverCredentials.expiry_date)
+        let expdateconverted = expdate.toString();
+
         // Get a new access token
-        //const { credentials } = await oAuth2Client.refreshAccessToken(); // Deprecated but still works
-        //console.log('New access token:', credentials.access_token);
+        //const { credentials } = await localConfig.oauth2Client.refreshAccessToken(); // Deprecated but still works
+        localConfig.oauth2Client.refreshAccessToken(
+            /*function (err, tokens, response)
+        {
+            console.log("ERR: ", err); // keeps saying invalid_request 400 and nothing more.
+            console.log("RESPONSE: ", response); //bunch of stuff here, also where I found the reason for the error
+            console.log("TOKENS: ", tokens)
+            //console.log('New access token:', credentials);
+        }
+            */
+        ).then((credentials, res) =>
+        {
+            //console.log("refreshAccessToken.then")
+            //console.log("credentials: ", credentials); //bunch of stuff here, also where I found the reason for the error
+            //console.log("res: ", res)
+            /*console.log("ERR: ", err); // keeps saying invalid_request 400 and nothing more.
+            console.log("RESPONSE: ", response); //bunch of stuff here, also where I found the reason for the error
+            console.log("TOKENS: ", tokens)*/
+        }).catch((err) =>
+        {
+            console.log("refreshAccessToken.err")
+            console.log(err);
+        })
 
         // Alternatively, you can use the getAccessToken() method (non-deprecated)
-        const accessTokenInfo = await localConfig.oauth2Client.getAccessToken();
-        console.log('Access token info:', accessTokenInfo.token);
+        //const accessTokenInfo = await localConfig.oauth2Client.getAccessToken();
+        //console.log('Access token info:', accessTokenInfo.token);
         //serverCredentials.access_token = credentials.access_token;
 
         //return credentials.access_token;
@@ -908,6 +969,16 @@ async function refreshAccessToken ()
         //throw error;
     }
 }
+/*
+ var oauth2Client = new auth.OAuth2(conf.cliend_id, conf.client_secret, conf.red_url);
+    var creds = {access_token: accessToken,  // **I tried without this too**
+                refresh_token: refreshToken};
+    oauth2Client.setCredentials(creds); // Tried without this too
+    oauth2Client.refreshToken_(refreshToken, function(err, tokens, response){
+      console.log("ERR: ", err); // keeps saying invalid_request 400 and nothing more.
+      console.log("RESPONSE: ", response); //bunch of stuff here, also where I found the reason for the error
+      console.log("TOKENS: ", tokens); // NULL
+      //  */
 // ###########################################################################
 // ######################### setupAuthenticatePage ##########################
 // ###########################################################################
@@ -922,8 +993,10 @@ function setupAuthenticatePage ()
         {
             // we only use one emitter so remove all the previous ones
             localConfig.oauth2Client.removeAllListeners();
+            //console.log("Setting up on tokens handler")
             localConfig.oauth2Client.on('tokens', (tokens) =>
             {
+                //console.log("on tokens returned", tokens)
                 serverCredentials = { ...serverCredentials, ...tokens }//merge the new ones over (might have some 
                 saveCredentialsToServer(tokens);
             })
