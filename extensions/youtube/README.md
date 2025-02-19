@@ -176,7 +176,7 @@ follow the following steps.
 - In the image shown below ...
 - Image note 1. Click to bring up the credentials page
 - Image note 2. Click on the download button for the project you created above, this will bring up the dialog box allowing you to copy/download your settings
-- Image note 3. Click the 'copy' button for your Client ID and past it in the Client ID box below
-- Image note 4. Click the 'copy' button for your Client Secret and past it in the Client Secret box below
+- Image note 3. Click the 'copy' button for your Client ID and paste it in the Client ID box below
+- Image note 4. Click the 'copy' button for your Client Secret and paste it in the Client Secret box below
 - Click the update button on this page to save the data in StreamRollers encrypted file storage. You can now click the authorize link to connect streamroller to youtube
 ![googleAuthScreen](public/images/googleAuthScreen.png)
