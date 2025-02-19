@@ -367,12 +367,14 @@ function pruneUsers (platform)
                             {
                                 if (currentOldestMessage == 0)
                                 {
-                                    currentOldest = userMessageData.timeStamp;
+                                    if (userMessageData)
+                                        currentOldest = userMessageData.timeStamp;
                                     oldestMessageId = userMessageId
                                 }
                                 if (userMessageData.timeStamp < currentOldestMessage)
                                 {
-                                    currentOldestMessage = userMessageData.timeStamp;
+                                    if (userMessageData)
+                                        currentOldestMessage = userMessageData.timeStamp;
                                     oldestMessageId = userMessageId
                                 }
                             }
