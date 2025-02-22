@@ -16,7 +16,7 @@ Contents
     - [Extended features (working with adminpage extension)](#extended-features-working-with-adminpage-extension)
 ## Outgoing channel : "DEMOEXT_CHANNEL"
 ## Description
-The demo extension is designed to give a starting point for you to copy and past into your own extension.
+The demo extension is designed to give a starting point for you to copy and paste into your own extension.
 
 The idea is to save the ammount of time/code needed to get up and running with you own extension
 

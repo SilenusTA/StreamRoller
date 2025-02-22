@@ -1,14 +1,14 @@
 # Timers
 Contents
 - [Timers](#timers)
-  - [Outgoing channel : "TIMERS_CHANNEL"](#outgoing-channel--timers_channel)
+  - [Outgoing channel : "TIMERS\_CHANNEL"](#outgoing-channel--timers_channel)
   - [Description](#description)
   - [Features](#features)
     - [Standard Features](#standard-features)
     - [Extended features (working with adminpage extension)](#extended-features-working-with-adminpage-extension)
 ## Outgoing channel : "TIMERS_CHANNEL"
 ## Description
-The Timers extension is designed to give a starting point for you to copy and past into your own extension.
+The Timers extension is designed to give a starting point for you to copy and paste into your own extension.
 
 The idea is to save the ammount of time/code needed to get up and running with you own extension
 
