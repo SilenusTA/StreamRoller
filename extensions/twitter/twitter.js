@@ -180,8 +180,9 @@ function onDataCenterMessage (server_packet)
             connectToTwitter(server_packet.data);
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
+            if (serverConfig.twitterenabled == "on")
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
 
     }
