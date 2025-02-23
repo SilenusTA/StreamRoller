@@ -26,7 +26,10 @@
 // GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 01-Jul-2023
 // ============================================================================
-
+/**
+ * @extension MSFS2020
+ * Game extension to allow access to control Microsoft Flight simulator and also receive data from on of ten's of thousands of sim variables
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -118,6 +121,13 @@ let serverData = structuredClone(default_serverData)
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     try

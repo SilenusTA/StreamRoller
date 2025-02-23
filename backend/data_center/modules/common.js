@@ -54,8 +54,9 @@ if (!fs.existsSync(credentialFilesPath)) fs.mkdirSync(credentialFilesPath, { rec
 /**
  * decrypt a text string
  * @param {String} text 
- * @returns 
+ * @returns {object} Encrypted data {iv:initialization vector ,encryptedData: string}
  */
+
 function encrypt (text)
 {
     let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
@@ -70,7 +71,7 @@ function encrypt (text)
 /**
  * decrypt a text string
  * @param {String} text 
- * @returns 
+ * @returns {String} A string containing the decrypted data
  */
 function decrypt (text)
 {
@@ -91,7 +92,7 @@ function initcrypto ()
     if (credfile === "")
     {
         // should create a new set on run and re-encrypt the current files but as
-        // this is really only here to avoid me sahring my keys on stream it isn't 
+        // this is really only here to avoid me sharing my keys on stream it isn't 
         // really needed
         credentials.algorithm = 'aes-256-cbc'; //Using AES encryption
         credentials.key = crypto.randomBytes(32);

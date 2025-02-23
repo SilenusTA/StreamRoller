@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Timers</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Timers</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Timers</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#timers">Timers</a>
+<ul>
+<li><a href="#outgoing-channel--timers_channel">Outgoing channel : &quot;TIMERS_CHANNEL&quot;</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#features">Features</a>
+<ul>
+<li><a href="#standard-features">Standard Features</a></li>
+<li><a href="#extended-features-working-with-adminpage-extension">Extended features (working with adminpage extension)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Outgoing channel : &quot;TIMERS_CHANNEL&quot;</h2>
+<h2>Description</h2>
+<p>The Timers extension is designed to give a starting point for you to copy and paste into your own extension.</p>
+<p>The idea is to save the ammount of time/code needed to get up and running with you own extension</p>
+<h2>Features</h2>
+<p>The Timers has the following features implemented in it</p>
+<h3>Standard Features</h3>
+<ul>
+<li>
+<p>Connect to server and consume messages</p>
+</li>
+<li>
+<p>Saving/Loading config settings from the server for persistance for the next run.</p>
+</li>
+<li>
+<p>Logging commands to show the preferred way of logging messages (log,info,warn,err)</p>
+<ul>
+<li>It is recommended to use 'log' for most messages to trace where the code is and what it is doing and then add 'info' to expand on these. The 'log' messages are mostly to track down where the code is in case of errors or to report status of the code. Recommended format of messages is currently</li>
+</ul>
+<pre class="prettyprint source"><code>log(&quot;Extension &quot; + EXTENSION_NAME + &quot;.&quot; &lt;filename> + &quot;.&quot; &lt;functionname>, message);
+</code></pre>
+</li>
+<li>
+<p>Creating a channel to broadcast your data on</p>
+<ul>
+<li>This is effectivly your channel (&quot;TIMERS_CHANNEL&quot;) to send out data on that you are providing to the system. ie if you are a chat application then you would send chat message out on this channel</li>
+</ul>
+</li>
+<li>
+<p>Joining a Channel</p>
+<ul>
+<li>These are other extensions channels that you want to consume data from. in this case we join the 'STREAMLABS_ALERT' channel so we can consume and process these messages. All we do at the moment is log that data to the console</li>
+</ul>
+<p>You can always browse other extensions to see how they implement things in the system to get other ideas</p>
+</li>
+</ul>
+<h3>Extended features (working with adminpage extension)</h3>
+<ul>
+<li>
+<p>Provide an SettingsWidgetSmall</p>
+<ul>
+<li>SettingsWidgetSmalls are something that the adminpage extension can use to display a popup box (a modal) with code you provide. These are normally used for settings. This feature of the adminpage will put your code onto a link so that when a user clicks it your modal will be shown. If the modal is a form then when the user clicks the form the data will be sent back to you. Usefull for settings etc.</li>
+</ul>
+</li>
+<li>
+<p>Process SettingsWidgetSmall data</p>
+<ul>
+<li>This is the data sent back from the modal (popup) when the user clicks the submit button. in this case our modal just has a checkbox and text field and all we do is save the data</li>
+</ul>
+<p>Note that the SettingsWidgetSmall part of this extension is something that is only needed by the settingswidgetsmall page extension. It is not requied at all if you don't want any settings to be shown or changed from the admin page.</p>
+<p>Other extension can implement their own style of this data. ie an Overaly could reqest code to be displayed. the livestreampage addon will probably use these to display status information in future.</p>
+</li>
+</ul>
+    </article>
+</section>
+<section><header><h2>"Timers" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Provides timers than can be used for things like triggering actions. Provides a method to create complex trigger action sequences by allowing chaining/delaying etc.Some other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line22">line 22</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetSmall">
+    SendSettingsWidgetSmall<span class="signature">(tochannel)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    send some modal code
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>tochannel</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line334">line 334</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line144">line 144</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterConnect">
+    onDataCenterConnect<span class="signature">(socket)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Connection message handler
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>socket</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    *
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line174">line 174</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterDisconnect">
+    onDataCenterDisconnect<span class="signature">(reason)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Disconnection message sent from the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>reason</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line163">line 163</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterMessage">
+    onDataCenterMessage<span class="signature">(server_packet)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    receives message from the socket
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>server_packet</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    data
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_timers_timers.js.html">extensions/timers/timers.js</a>,
+                    <a href="extensions_timers_timers.js.html#line194">line 194</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Timers</h3><ul><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Timers_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="Timers_extension.html#initialise">initialise</a></li><li><a href="Timers_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="Timers_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="Timers_extension.html#onDataCenterMessage">onDataCenterMessage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

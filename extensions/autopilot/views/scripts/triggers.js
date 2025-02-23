@@ -36,6 +36,10 @@ const itemCounter = (value, field, index) =>
 // ============================================================================
 //                           FUNCTION: initTriggersAndActions
 // ============================================================================
+/**
+ * Requests the triggers and actions 'SendTriggerAndActions' from each extension list in 'extension_list' and also the User triggers from the autopilot backend 'RequestUserTriggers'
+ * @param {strings[]} extension_list extensions to query
+ */
 function initTriggersAndActions (extension_list)
 {
     // get some defaults from local storage (if set)
@@ -83,6 +87,10 @@ function initTriggersAndActions (extension_list)
 //                           FUNCTION: receivedTrigger
 //                           received triggers/actions from extension
 // ============================================================================
+/**
+ * Received trigger from an extension
+ * @param {Object[]} extensiontriggers triggers received from extension
+ */
 function receivedTrigger (extensiontriggers)
 {
     if (extensionlist[extensiontriggers.extensionname] == undefined)
@@ -111,6 +119,9 @@ function receivedTrigger (extensiontriggers)
 //                  FUNCTION: addTriggerEntries
 //            Loads first dropdown to chose extension for trigger         
 // ============================================================================
+/**
+ * starts the process to build the webpage from the triggers and actions we have
+ */
 function addTriggerEntries ()
 {
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")

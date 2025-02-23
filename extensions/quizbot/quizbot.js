@@ -19,7 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+/**
+ * @extension Quizbot
+ * Runs a quizbot from a list of files to entertain your viewers.
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -128,6 +131,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     if (typeof (heartbeat) != "undefined")

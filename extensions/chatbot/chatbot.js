@@ -33,6 +33,15 @@
 // mess. Need to rewrite the code as stuff has been added and the process changed
 // but not all code follows the new trigger process nicely
 // ============================================================================
+/** 
+ * @extension chatbot 
+ * An extension using OpenAI to provide chatbot facilities for streaming.
+ * Features
+ * Customisable personalities
+ * auto chatting bot, question bot, translation bot
+ * Requires OpenAI account.
+ * 
+ */
 import { Configuration, OpenAIApi } from "openai";
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
@@ -418,13 +427,12 @@ function initialise (app, host, port, heartbeat)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
 }
-
-
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
 /**
  * Disconnection message sent from the server
+ * 
  * @param {String} reason 
  */
 function onDataCenterDisconnect (reason)

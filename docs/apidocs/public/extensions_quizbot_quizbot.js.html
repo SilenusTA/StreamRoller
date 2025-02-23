@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: extensions/quizbot/quizbot.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/quizbot/quizbot.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+/**
+ * @extension Quizbot
+ * Runs a quizbot from a list of files to entertain your viewers.
+ */
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+
+import * as fs from "fs";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const localConfig = {
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    quizQuestions: [],
+    currentQuestionAnswer: 0,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
+    quizbotTimerHandle: undefined
+};
+
+const default_serverConfig = {
+    __version__: "0.2",
+    extensionname: "quizbot",
+    channel: "QUIZBOT_CHANNEL",
+    // setting variables
+    quizbot_enabled: "off",
+    quizbot_restart: "on",
+    quizbot_showanswerinconsole: "off",
+    quizbot_restore_defaults: "off",
+    quizbot_filename: "questions.txt",
+    quizbot_duration: "3600000",
+};
+let serverConfig = structuredClone(default_serverConfig)
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Quiz bot, ask chat a question",
+    version: "0.2",
+    channel: serverConfig.channel,
+    triggers:
+        [
+            {
+                name: "quizbotQuizStarted",
+                displaytitle: "QuizStarted",
+                description: "Quiz was started, restarted or a new question was asked",
+                messagetype: "trigger_QuizbotQuizStarted",
+                parameters: { question: "" }
+            },
+            {
+                name: "quizbotQuizStopped",
+                displaytitle: "QuizStopped",
+                description: "Quiz was stopped",
+                messagetype: "trigger_QuizbotQuizStopped",
+                parameters: { question: "", answer: "" }
+            },
+            {
+                name: "quizbotQuizTimeout",
+                displaytitle: "QuizTimeout",
+                description: "Quiz Question timedout",
+                messagetype: "trigger_QuizbotQuizTimeout",
+                parameters: { question: "", answer: "" }
+            },
+            {
+                name: "quizbotIncorrectAnswer",
+                displaytitle: "IncorrectAnswer",
+                description: "Someone provided an incorrec answer",
+                messagetype: "trigger_QuizbotIncorrectAnswer",
+                parameters: { user: "", question: "", answer: "" }
+            },
+            {
+                name: "quizbotCorrectAnswer",
+                displaytitle: "CorrectAnswer",
+                description: "Someone answered the quiz question correctly",
+                messagetype: "trigger_QuizbotCorrectAnswer",
+                parameters: { user: "", question: "", answer: "" }
+            },
+        ],
+    actions:
+        [
+            {
+                name: "quizbotStartQuiz",
+                displaytitle: "Start-Restart the quiz",
+                description: "Start, restart or skip current question",
+                messagetype: "action_QuizbotStartQuiz",
+                parameters: {}
+            },
+            {
+                name: "quizbotStopQuiz",
+                displaytitle: "Stop the quiz",
+                description: "Stop the Quiz",
+                messagetype: "action_QuizbotStopQuiz",
+                parameters: {}
+            },
+            {
+                name: "quizbotCheckAnswer",
+                displaytitle: "Check an answer",
+                description: "Check if answer is correct (including chat tag, ie !answer",
+                messagetype: "action_QuizbotCheckAnswer",
+                parameters: { user: "", answer: "" }
+            }
+
+        ],
+}
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
+function initialise (app, host, port, heartbeat)
+{
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+            onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err.message);
+    }
+}
+
+// ============================================================================
+//                           FUNCTION: onDataCenterDisconnect
+// ============================================================================
+function onDataCenterDisconnect (reason)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+function onDataCenterConnect (socket)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+    );
+    // clear the previous timeout if we have one
+    clearTimeout(localConfig.heartBeatHandle);
+    // start our heatbeat timer
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+function onDataCenterMessage (server_packet)
+{
+    if (server_packet.type === "ConfigFile")
+    {
+        if (server_packet.data != "" &amp;&amp; server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+            SaveConfigToServer();
+        }
+        readQuizFile()
+    }
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                if (extension_packet.data.quizbot_restore_defaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    let quizstarted = false
+                    let quizstopped = false
+                    // check if we have toggled the enabled flag
+                    if (serverConfig.quizbot_enabled == "on" &amp;&amp; extension_packet.data.quizbot_enabled != "on")
+                        quizstopped = true;
+                    else if (serverConfig.quizbot_enabled == "off" &amp;&amp; extension_packet.data.quizbot_enabled == "on")
+                        quizstarted = true;
+
+                    serverConfig.quizbot_enabled = "off";
+                    serverConfig.quizbot_restart = "off";
+                    serverConfig.quizbot_showanswerinconsole = "off";
+                    serverConfig.quizbot_restore_defaults = "off";
+                    for (const [key, value] of Object.entries(extension_packet.data))
+                    {
+                        if (key == "quizbot_duration")
+                        {
+                            // if we have an updated timeout set it and restart the quiz
+                            if (value != serverConfig[key] / 1000)
+                            {
+                                quizstarted = true;
+                                if (value > 1)
+                                    serverConfig[key] = value * 1000;
+                                else
+                                    serverConfig[key] = default_serverConfig.quizbot_duration
+                            }
+                        }
+                        else
+                            serverConfig[key] = value;
+                    }
+
+                    // check if we want to restart the current quiz
+                    if (serverConfig.quizbot_enabled == "on" &amp;&amp; serverConfig.quizbot_restart == "on")
+                        quizstarted = true;
+                    // reset the restart flag
+                    serverConfig.quizbot_restart = "off";
+                    if (quizstopped)
+                        stopQuiz()
+                    if (quizstarted)
+                        startQuiz()
+                }
+
+                SaveConfigToServer();
+                SendSettingsWidgetSmall("");
+            }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+        else if (extension_packet.type === "action_QuizbotStartQuiz")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                serverConfig.quizbot_enabled = "on"
+                startQuiz();
+            }
+        }
+        else if (extension_packet.type === "action_QuizbotStopQuiz")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                stopQuiz();
+            }
+        }
+        else if (extension_packet.type === "action_QuizbotCheckAnswer")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+                checkAnswer(extension_packet.data);
+        }
+
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+
+    }
+    else if (server_packet.type === "UnknownChannel")
+    {
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+
+    }
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "HeartBeat")
+        {
+            //Just ignore messages we know we don't want to handle
+        }
+        else
+        {
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
+    }
+    else if (server_packet.type === "InvalidMessage")
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    }
+    else if (server_packet.type === "LoggingLevel")
+    {
+        logger.setLoggingLevel(server_packet.data)
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+    )
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+function SendSettingsWidgetSmall (tochannel)
+{
+    fs.readFile(__dirname + '/quizbotsettingswidgetsmall.html', function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (key == "quizbot_duration")
+                    modalstring = modalstring.replace(key + "text", value / 1000);
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode",
+                        serverConfig.extensionname,
+                        modalstring,
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel
+                ))
+        }
+    });
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+function SaveConfigToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
+        ("SaveConfig",
+            serverConfig.extensionname,
+            serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: readQuizFile
+// ============================================================================
+function readQuizFile ()
+{
+    try
+    {
+        fs.readFile(__dirname + "/" + serverConfig.quizbot_filename, (err, filedata) =>
+        {
+            if (err)
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".readQuizFile", "failed read file", err.message);
+            else
+            {
+                let str = filedata.toString()
+                if (str.indexOf("\r") > -1)
+                    localConfig.quizQuestions = str.split("\r\n")
+                else
+                    localConfig.quizQuestions = str.split("\n")
+                // if we are set to run then start the quiz
+                if (serverConfig.quizbot_enabled == "on")
+                    startQuiz()
+            }
+        })
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".readQuizFile", "Failed to read quiz file", err.message);
+    }
+}
+// ============================================================================
+//                           FUNCTION: sendQuizStarted
+// ============================================================================
+function sendQuizStarted ()
+{
+    let QA = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")
+    let data = findtriggerByMessageType("trigger_QuizbotQuizStarted")
+    let answer = QA[1].trim();
+
+    answer = answer.replaceAll(/[!-~]/ig, "#")
+    data.parameters.question = QA[0].trim() + ": !answer " + answer
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "trigger_QuizbotQuizStarted",
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel
+            ),
+            serverConfig.channel)
+    )
+}
+// ============================================================================
+//                           FUNCTION: sendFirstLine
+// ============================================================================
+function checkAnswer (userAnswer)
+{
+    let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim()
+    let answer = userAnswer.answer.replace("!answer ", "").trim()
+    let data = {}
+    let messagetype = ""
+    if (currentAnswer.toLowerCase() == answer.toLowerCase())
+        messagetype = "trigger_QuizbotCorrectAnswer";
+    else
+        messagetype = "trigger_QuizbotIncorrectAnswer";
+    data = findtriggerByMessageType(messagetype);
+    data.parameters.question = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
+    data.parameters.answer = answer;
+    data.parameters.user = userAnswer.user;
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                messagetype,
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel
+            ),
+            serverConfig.channel)
+    )
+    if (currentAnswer.toLowerCase() == answer.toLowerCase())
+    {
+        clearTimeout(localConfig.quizbotTimerHandle)
+        startQuiz();
+    }
+}
+// ============================================================================
+//                           FUNCTION: startQuiz
+// ============================================================================
+function startQuiz ()
+{
+    // check if quiz is running
+    if (typeof (localConfig.quizbotTimerHandle) != "undefined" &amp;&amp; !localConfig.quizbotTimerHandle._destroyed)
+        stopQuiz()
+    localConfig.currentQuestionAnswer = Math.floor(Math.random() * localConfig.quizQuestions.length);
+
+    if (serverConfig.quizbot_showanswerinconsole == "on")
+    {
+        let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")
+        console.log("currentQuestion", "'" + currentQuestion[0].trim() + "'")
+        console.log("answer", "'" + currentQuestion[1].trim() + "'")
+    }
+    quizTimerCallback();
+    //timeout here is so we don't get "sending too quickly" when the bot isn't modded/vip
+    setTimeout(() =>
+    {
+        sendQuizStarted();
+    }, 2000);
+
+
+}
+// ============================================================================
+//                           FUNCTION: stopQuiz
+// ============================================================================
+function stopQuiz ()
+{
+    // if we are currently turned on trigger a message so we can post the answer to the last question when turning it off
+    if (serverConfig.quizbot_enabled == "on" &amp;&amp; typeof (localConfig.quizbotTimerHandle) != "undefined" &amp;&amp; !localConfig.quizbotTimerHandle._destroyed)
+    {
+        let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
+        let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim();
+        let data = findtriggerByMessageType("trigger_QuizbotQuizStopped")
+
+        data.parameters.question = currentQuestion
+        data.parameters.answer = currentAnswer;
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "trigger_QuizbotQuizStopped",
+                    serverConfig.extensionname,
+                    data,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
+    clearTimeout(localConfig.quizbotTimerHandle)
+}
+// ============================================================================
+//                           FUNCTION: quizTimeout
+// ============================================================================
+function quizTimeout ()
+{
+    let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
+    let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim();
+    let data = findtriggerByMessageType("trigger_QuizbotQuizTimeout")
+
+    data.parameters.question = currentQuestion
+    data.parameters.answer = currentAnswer;
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "trigger_QuizbotQuizTimeout",
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function quizTimerCallback ()
+{
+    clearTimeout(localConfig.quizbotTimerHandle)
+    if (serverConfig.quizbot_enabled == "on")
+    {
+        localConfig.quizbotTimerHandle = setTimeout(() =>
+        {
+            quizTimeout();
+            startQuiz();
+            // if we get here the timer has expired
+            quizTimerCallback();
+        }, serverConfig.quizbot_duration)
+    }
+}
+// ============================================================================
+//                           FUNCTION: findtriggerByMessageType
+// ============================================================================
+function findtriggerByMessageType (messagetype)
+{
+    for (let i = 0; i &lt; triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase()) return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findtriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+function heartBeatCallback ()
+{
+    let status = {
+        connected: serverConfig.quizbot_enabled == "on",
+        color: "red"
+    }
+    if (status.connected &amp;&amp; typeof (localConfig.quizbotTimerHandle) != "undefined" &amp;&amp; localConfig.quizbotTimerHandle._destroyed)
+        status.color = "orange";
+    else if (status.connected &amp;&amp; typeof (localConfig.quizbotTimerHandle) != "undefined" &amp;&amp; !localConfig.quizbotTimerHandle._destroyed)
+        status.color = "green";
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                status,
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                                  EXPORTS
+// Note that initialise is mandatory to allow the server to start this extension
+// ============================================================================
+export { initialise };
+
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

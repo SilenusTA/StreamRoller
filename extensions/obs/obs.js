@@ -30,7 +30,10 @@
 // Current functionality:
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-
+/**
+ * @extension OBS
+ * Connects to Open Broadcasting Software to allow control/events to be processed
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -224,10 +227,11 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * Starts the extension
- * @param {Object} app 
- * @param {String} host 
- * @param {String} port 
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
  */
 function initialise (app, host, port, heartbeat)
 {

@@ -1,0 +1,15 @@
+<?js var DEBUG=false ?>
+<?js if(DEBUG) { ?>
+<div style="color:red">TYPE.TMPL</div>
+<?js } ?>
+<?js
+    // adds type field to the variables
+    var data = obj;
+    var self = this;
+    data.forEach(function(name, i) { ?>
+<span class="param-type">
+    <?js= self.linkto(name, self.htmlsafe(name)) ?>
+</span>
+<?js if (i < data.length-1) { ?>|
+<?js } ?>
+<?js }); ?>

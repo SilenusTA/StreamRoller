@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: backend/data_center/modules/logger.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: backend/data_center/modules/logger.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+// ############################# LOGGER.js ####################################
+// This file is to handle all our logging in one place. If you need to add
+// logging to the code use this inport to do it so it can easily be turn on
+// or off as required.
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
+// Date: 14-Jan-2021
+// --------------------------- functionality ----------------------------------
+// Adds console messages for logging, errors and warnings.
+// .....
+// Environment variable "STREAMTOOL_DEBUG_LEVEL" can be changed to format
+// the output.
+// Options include
+//      0   : errors only (always on)
+//      1   : warn and err
+//      2   : log, warn and err
+//      3   : log, info, awrn and err.
+//      4   : extra, additional info/heavy logging
+// *** no flag set defaults to standard logging
+// .....
+// Environment variable "STREAMTOOL_DEBUG_FORMAT" can be changed to format
+// the output.
+// Options include
+//     extended, extended-line, off
+// *** no flag set defaults to standard logging
+// ----------------------------- notes ----------------------------------------
+// TBD. Still need to update this to a better formatting for logging
+// ============================================================================
+
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+import * as fs from "fs";
+import process from 'node:process';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const logfilename = __dirname + "/../../../streamroller.log"
+// This will pipe all normal logging to a common file
+const __createlogfile = false;
+let firstrun = true;
+
+// this is for user specified logging
+let filestreams = [];
+
+// cap message to 300 chars max
+let cap_message_length = 300;
+//default level
+let loglevel = 5;
+// what color scheme to use
+let usecolor = "default";
+// empty colors
+let bgColour = "";
+let resetColour = "";
+let dimText = "";
+let brightText = "";
+let logColour = "";
+let infoColour = "";
+let warnColour = "";
+let errColour = "";
+let extraColour = ""
+
+/**
+ * Turn on or off color
+ * @param {string} val "off","default" or a color code
+ */
+function usecoloredlogs (val)
+{
+    usecolor = val;
+    if (val === "off")
+    {
+        bgColour = "";
+        resetColour = "";
+        dimText = "";
+        brightText = "";
+        logColour = "";
+        infoColour = "";
+        warnColour = "";
+        errColour = "";
+        extraColour = "";
+    }
+    else if (val === "default")
+    {
+        if (process.platform === "win32")
+        {
+            //bgColour = "\x1b[44m";
+            bgColour = "";
+            resetColour = "\x1b[0m";
+            dimText = "\x1b[1m";
+            brightText = "\x1b[1m";
+            infoColour = "\x1b[32m";
+            logColour = "\x1b[33m";
+            warnColour = "\x1b[35m";
+            errColour = "\x1b[31m";
+            extraColour = "\x1b[32m";
+        }
+        else if (process.platform === "linux")
+        {
+            bgColour = "";
+            resetColour = "\x1b[0m";
+            dimText = "\x1b[1m";
+            brightText = "\x1b[1m";
+            infoColour = "\x1b[32m";
+            logColour = "\x1b[33m";
+            warnColour = "\x1b[35m";
+            errColour = "\x1b[31m";
+            extraColour = "\x1b[32m";
+        }
+    }
+    else
+    {
+        bgColour = "";
+        resetColour = "\x1b[0m";
+        dimText = val;
+        brightText = val;
+        logColour = val;
+        infoColour = val;
+        warnColour = val;
+        errColour = val;
+        extraColour = val;
+    }
+}
+/* color reference
+Reset = "\x1b[0m"
+Bold = "\x1b[1m"
+Underscore = "\x1b[4m"
+Blink = "\x1b[5m"
+Reverse = "\x1b[7m"
+Hidden = "\x1b[8m"
+
+FgBlack = "\x1b[30m"
+FgRed = "\x1b[31m"
+FgGreen = "\x1b[32m"
+FgYellow = "\x1b[33m"
+FgBlue = "\x1b[34m"
+FgMagenta = "\x1b[35m"
+FgCyan = "\x1b[36m"
+FgWhite = "\x1b[37m"
+
+BgBlack = "\x1b[40m"
+BgRed = "\x1b[41m"
+BgGreen = "\x1b[42m"
+BgYellow = "\x1b[43m"
+BgBlue = "\x1b[44m"
+BgMagenta = "\x1b[45m"
+BgCyan = "\x1b[46m"
+BgWhite = "\x1b[47m"
+ */
+
+/**
+ * Sets the logging level for this module
+ * 0) errors only
+ * 1) 0 + warnings
+ * 2) 1 + logging
+ * 3) 2 + info
+ * @param {string} level 
+ */
+function setLoggingLevel (level)
+{
+    loglevel = level;
+    /*    
+        console.log("LOG:STREAMTOOL_DEBUG_LEVEL: ", loglevel);
+        if (!process.env.STREAMTOOL_DEBUG_FORMAT)
+            process.env.STREAMTOOL_DEBUG_FORMAT = "off"
+        console.log("LOG:Log system: " + process.platform);
+        console.log("LOG:Log color: " + usecolor);
+    */
+}
+/**
+ * gets the current logging elvel
+ * @returns logging level (string)
+ */
+function getLoggingLevel ()
+{
+    return loglevel;
+}
+// ============================================================================
+//                           FUNCTION: log
+// ============================================================================
+/**
+ * log a message 
+ * logging level 2 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function log (source, ...args)
+{
+    if (__createlogfile)
+        addToLogfile("[log]" + source, args)
+    if (loglevel >= 2)
+        output(brightText + bgColour + logColour + "%s" + resetColour, source, "[log]", args);
+}
+// ============================================================================
+//                           FUNCTION: info
+// ============================================================================
+/**
+ * log additional informational message
+ * logging level 3 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function info (source, ...args)
+{
+    if (__createlogfile)
+        addToLogfile("[info]" + source, args)
+    if (loglevel >= 3)
+        output(brightText + bgColour + infoColour + "%s" + resetColour, source, "[info]", args);
+}
+// ============================================================================
+//                           FUNCTION: warn
+// ============================================================================
+/**
+ * log a warning messge message
+ * logging level 1 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function warn (source, ...args)
+{
+    if (__createlogfile)
+        addToLogfile("[warn]" + source, args)
+    if (loglevel >= 1)
+        output(brightText + bgColour + warnColour + "%s" + resetColour, source, "!#! WARNING !#!", args);
+}
+// ============================================================================
+//                           FUNCTION: err
+// ============================================================================
+/**
+ * log an error message
+ * logging level 0 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function err (source, ...args)
+{
+    if (__createlogfile)
+        addToLogfile("[err]" + source, args)
+    output(brightText + bgColour + errColour + "%s" + resetColour, source, "!!! ERROR !!!", args);
+}
+
+// ============================================================================
+//                           FUNCTION: extra
+// ============================================================================
+/**
+ * log an extra message
+ * logging level 0 or above
+ * @param {String} source log source. Normall "filename.function"
+ * @param  {...any} args additional arguments
+ */
+function extra (source, ...args)
+{
+    if (__createlogfile)
+        addToLogfile("[extra]" + source, args)
+    if (loglevel >= 4)
+        output(brightText + bgColour + extraColour + "%s" + resetColour, source, "[extra]", args);
+}
+// ============================================================================
+//                           FUNCTION: output
+// ============================================================================
+/**
+ * outputs a message to the log
+ * @param {String} col colour for message
+ * @param {String} func source of the nessge "filename.function"
+ * @param {String} tag tag "[EXTENSION]"
+ * @param {String} message message to log 
+ */
+function output (col, func, tag, message)
+{
+    try
+    {
+        if (typeof (message) == "object")
+            message = JSON.stringify(message);
+        if (message.length > cap_message_length)
+            message = message.substring(0, cap_message_length) + "...";
+        if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended-line")
+            console.log(col, message, tag, func, tag);
+        else if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended")
+            console.log(col, tag, func, tag, "\n", message);
+        else if (process.env.STREAMTOOL_DEBUG_FORMAT != "off")
+            console.log(col, tag, func, message);
+        else
+            console.log(col, tag, func, message);
+    }
+    catch (err)
+    {
+        console.log(brightText + bgColour + errColour + "%s" + resetColour, "!!! LOGGING ERROR !!!", message)
+    }
+}
+// ============================================================================
+//                           FUNCTION: output
+// ============================================================================
+/**
+ * 
+ * @param {String} func source of the nessge "filename.function"
+ * @param {String} tag tag "[EXTENSION]"
+ * @param {String} message message to log 
+ */
+function addToLogfile (func, tag, message)
+{
+    if (firstrun)
+    {
+        fs.unlink(logfilename, err =>
+        {
+            if (err)
+            {
+                console.error(err)
+                return
+            }
+        })
+        firstrun = false;
+    }
+    if (typeof (func) === "object")
+        func = JSON.stringify(func);
+    if (typeof (tag) === "object")
+        tag = JSON.stringify(tag);
+    if (typeof (message) === "object")
+        message = JSON.stringify(message);
+    else if (typeof (message) === "undefined")
+        message = ""
+
+    fs.appendFile(logfilename, tag + " " + func + " " + message + "\n", err =>
+    {
+        if (err)
+        {
+            console.error(err)
+            return
+        }
+    })
+}
+// ============================================================================
+//                           FUNCTION: file_log
+//                       For debug purposes. logs raw message data
+// ============================================================================
+//logger.file_log("./", "streamlabstest", "some test data")
+function file_log (childdir, file_name, message)
+{
+    childdir += "/" + childdir
+    if (!fs.existsSync(childdir))
+    {
+        fs.mkdirSync(childdir, { recursive: true });
+    }
+
+    let msg = JSON.stringify(message, null, 2)
+    // check if we already have this handler
+    if (!filestreams.file_name)
+    {
+        filestreams[file_name] = fs.createWriteStream(childdir + file_name + ".log", { flags: 'a' });
+    }
+    filestreams[file_name].write(msg + "\n");
+}
+// ============================================================================
+//                           EXPORTS: 
+// ============================================================================
+export { err, extra, file_log, getLoggingLevel, info, log, loglevel, setLoggingLevel, usecoloredlogs, warn, bgColour, resetColour, dimText, brightText, logColour, infoColour, warnColour, errColour, extraColour };
+
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

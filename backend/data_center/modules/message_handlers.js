@@ -24,8 +24,7 @@
 * Messages are routed by type. Either driect to socket, room or broadcast
 * all(excluding sender), or broadcast to all(including sender)
 * 
-* @link   https://github.com/SilenusTA/StreamRoller
-* @file   common StreamRoller functions
+* @see   https://github.com/SilenusTA/StreamRoller
 * @author Silenus aka twitch.tv/OldDepressedGamer
 * @since  29-Jan-2021
 */

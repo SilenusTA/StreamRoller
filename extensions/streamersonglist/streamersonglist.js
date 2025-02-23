@@ -19,7 +19,11 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+/**
+ * @extension StreamerSongList
+ * Connects to the StreamerSongList service to allow adding/removing/viewing songlist data.
+ * Mostly used by music streamers to queue music for viewers.
+ */
 // ############################# STREAMERSONGLIST.js ##############################
 // Provides streamer songlist functionality
 // ---------------------------- creation --------------------------------------
@@ -166,10 +170,11 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * initialise
- * @param {Object} app 
- * @param {String} host 
- * @param {String} port 
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
  */
 function initialise (app, host, port, heartbeat)
 {

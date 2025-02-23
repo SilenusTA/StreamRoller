@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension PhilipsHue
+ * Allows control over philips hue lights
+ */
 // ############################# philipshue.js ##############################
 // This extension provides access to hue lights
 // ---------------------------- creation --------------------------------------
@@ -108,6 +112,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     if (typeof (heartbeat) != "undefined")

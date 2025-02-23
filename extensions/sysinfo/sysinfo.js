@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension Sysinfo
+ * Provides information about the system(computer) that the extension is running on
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -133,6 +137,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     // update our triggers with the systems fields

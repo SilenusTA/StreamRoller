@@ -20,7 +20,7 @@
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 // ############################# SERVER.JS ####################################
-// This file starts up the http server, express app and then call the socket 
+// This file starts up the http server, express app and then call the socket
 // startup and import all the extension code needed
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -31,7 +31,11 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-
+/**
+ * @extension StreamRoller
+ * The main backend server that handles all message/communication for StreamRoller.
+ * 
+ */
 // ============================================================================
 //                      CONFIG IMPORTS/VARIABLES
 // ============================================================================
@@ -295,8 +299,9 @@ async function loadExtensions (extensionFolder)
                                 console.log("loaded:", value, "in", Math.round(debugEndTime - debugStartTimeArray[value]), "ms");
                                 debugStartTimeArray[value] = debugEndTime
                             }
-                            console.log("loaded:", value, "initialising extension..."
-                            );
+                            else
+                                console.log("loaded:", value, "initialising extension..."
+                                );
                             return x;
                         })
                     return x;
@@ -331,7 +336,8 @@ async function loadExtensions (extensionFolder)
                         logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an initialise function");
                     if (DEBUG_TIMING)
                         console.log("extension", files[index], " loaded:", Math.round(performance.now() - debugStartTime[files[index]]), "ms");
-                    console.log("extension", files[index], "started");
+                    else
+                        console.log("extension", files[index], "started");
                 }
                 catch (err) 
                 {

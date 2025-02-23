@@ -20,7 +20,7 @@
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 // ############################# LIVE.js ##############################
-// A page for live streaming. This should contain all items needed while 
+// A page for live streaming. This should contain all items needed while
 // streaming. settings title, modding chatters, OBS controls etc
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -39,7 +39,10 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
-
+/**
+ * @extension LivePortal 
+ * The main webpage used as a control center/monitor for streamroller.
+ */
 const config = {
     EXTENSION_NAME: "liveportal",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
@@ -61,7 +64,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]liveportal.initialise", "host", host, "port", port, "heartbeat", heartbeat);

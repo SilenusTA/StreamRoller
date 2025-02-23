@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension TwitchChat
+ * Access to Twitch Chat IRC for sending/receiving message and also some alerts/notifications
+ */
 // ############################# TWITCHCHAT.js ##############################
 // Simple twitch chat reader so we can display/parse twitch chat/commands
 // in other extension
@@ -642,6 +646,13 @@ const triggersandactions =
 // this funcion is required by the backend to start the extensions.
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeatst", heartbeat);

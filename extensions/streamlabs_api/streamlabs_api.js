@@ -35,9 +35,12 @@
 // Channel name : STREAMLABS_ALERT
 // GitHub: https://github.com/SilenusTA/StreamRoller
 // ----------------------------- notes ----------------------------------------
-// TBD. 
+// TBD.
 // ============================================================================
-
+/**
+ * @extension StreamlabsAPI
+ * Connects to Streamlabs API and provides alerts for dono's etc.
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -54,6 +57,13 @@ import { start as SL_connection_start } from "./streamlabs_api_handler.js";
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     SL_connection_start(host, port, heartbeat);

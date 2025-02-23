@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: LivePortal</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">LivePortal</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Live Streaming Portal</h1>
+<h2>Outgoing channel : none</h2>
+<ul>
+<li><a href="#live-streaming-portal">Live Streaming Portal</a>
+<ul>
+<li><a href="#outgoing-channel--none">Outgoing channel : none</a></li>
+</ul>
+</li>
+<li><a href="#about">About</a>
+<ul>
+<li><a href="#current-features-under-developement">Current features (under developement)</a>
+<ul>
+<li><a href="#display">Display</a></li>
+<li><a href="#logic">Logic</a></li>
+</ul>
+</li>
+<li><a href="#tbd">TBD.</a></li>
+</ul>
+</li>
+</ul>
+<h1>About</h1>
+<p>The live streaming portal is a webpage that you can use on your second monitor to show all the information/settings you need on one page. The idea is to save having to switch programs in order to do things and to have the information you need in one place.
+I would expect this to be something that people will want to customise to what you need for streaming.</p>
+<p>If you creatate a portal page for your streaming please consider sharing it so that others who might have similar requrements can use it.</p>
+<h2>Current features (under developement)</h2>
+<h4>Display</h4>
+<ul>
+<li>Chat Window: for twitch chat to display/send messages</li>
+<li>Mod Message Window: to display discord mod messages (twitch mod messages can be filtered to this window as well)</li>
+<li>OBS Stats: Stats for the stream (when stream is started)</li>
+<li>Scenes Buttons: configurable buttons for switching scense (main, secondary, all)</li>
+<li>Mute Button: Mute a specific device (ie the mic)</li>
+<li>Extension Status: Status icon for each extension</li>
+<li>Extension List: list of extensions with a link to settings for that extension</li>
+<li>Alert List: Shows Alerts (donation, follow etc)</li>
+</ul>
+<h4>Logic</h4>
+<ul>
+<li>Sends a &quot;Stream Started&quot; message to twitter and discord</li>
+<li>Sends Alerts to discord channel</li>
+<li>Set twitch chat channel to monitor</li>
+<li>Set discord mod and alert messages channel (with options for each alert type)</li>
+<li>Enable/Disable streamlabs alerts/twitchchat/discord/twitter</li>
+</ul>
+<h2>TBD.</h2>
+<p>Add volume monitoring to portal
+Add music player to portal (requries a music player extension)</p>
+    </article>
+</section>
+<section><header><h2>"LivePortal" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">The main webpage used as a control center/monitor for streamroller.Some other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_liveportal_liveportal.js.html">extensions/liveportal/liveportal.js</a>,
+                    <a href="extensions_liveportal_liveportal.js.html#line42">line 42</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_liveportal_liveportal.js.html">extensions/liveportal/liveportal.js</a>,
+                    <a href="extensions_liveportal_liveportal.js.html#line74">line 74</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>LivePortal</h3><ul><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="LivePortal_extension.html#initialise">initialise</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

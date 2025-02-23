@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: extensions/adminpage/adminpage.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/adminpage/adminpage.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+// ############################# ADMINPAGE.js ##############################
+// Page to handle extension settings and show general data
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/streamer
+// Date: 05-Jan-2022
+// --------------------------- functionality ----------------------------------
+// ----------------------------- notes ----------------------------------------
+// ============================================================================
+/**
+ * @extension Adminpage
+ * Provides a webpage to allow authorization for an extension.
+ * To use the webpage an extension needs to monitor for the message "RequestCredentialsModalsCode" and respond with "CredentialsModalCode".
+ * The message should contain a model that will be used to pass back the data to the extension when the user presses submit, any named fields in teh model will be returned (such as text boxes etc).
+ * NOTE: checkboxes 'variables' will be only be in the object if checked otherwise they will be missing from the returned object
+ * The response message type will be taken from the html's "modaldatatype" element 
+ */
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+// Desription: Import/Variable secion
+// ----------------------------- notes ----------------------------------------
+// none
+// ============================================================================
+import express from "express";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+import * as logger from "../../backend/data_center/modules/logger.js";
+
+let dataCenterApp = null;
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+// Description: Starts the extension
+// Parameters: none
+// ----------------------------- notes ----------------------------------------
+// creates the connection to the data server and registers our message handlers
+// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
+function initialise (app, host, port, heartbeat)
+{
+    logger.extra("[EXTENSION]adminpage.initialise", "host", host, "port", port, "heartbeat", heartbeat);
+    dataCenterApp = app;
+    try
+    {
+        dataCenterApp.use("/adminpage/", express.static(__dirname + '/public'));
+        // add ourselves to the app loader so we can server these pages on the main server connection
+        dataCenterApp.get('/adminpage', function (req, res)
+        {
+            var servervar1 = "server variable passed ok";
+            // we will store our global data in app.data so we need to pass this to any new page
+            res.render(__dirname + '/views/pages/index', {
+                host: host,
+                port: port,
+                heartbeat: heartbeat
+            });
+        });
+    } catch (err)
+    {
+        logger.err("[EXTENSION]adminpage.initialise", "Startup Failed:", err);
+    }
+}
+// ============================================================================
+//                           EXPORTS: initialise
+// ============================================================================
+// Desription: exports from this module
+// ----------------------------- notes ----------------------------------------
+// will also need additional exports in future (ie reconnect, stop, start etc)
+// ============================================================================
+
+export { initialise };</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

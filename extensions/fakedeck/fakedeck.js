@@ -26,7 +26,12 @@
 // GitHub: https://github.com/SilenusTA/StreamRoller
 // Date: 05-Jul-2023
 // ============================================================================
-
+/** 
+ * @extension FakeDeck
+ * A single webpage that displays the macro buttons to act as a streamdeck. This could be run on any device with access to the streamroller server.
+ * if the server is running on 1.2.3.4 port 3000 then you can access it using http://1.2.3.4:3000/fakedeck/
+ * TBD still needs testing and a better startup to enable entry of the StreamRoller server/IP details
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -51,7 +56,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]fakedeck.initialise", "host", host, "port", port, "heartbeat", heartbeat);

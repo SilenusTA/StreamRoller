@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: extensions/users/users.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/users/users.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+/**
+ * @extension Users
+ * Collects data on users.i.e. last seen, a buffer of messages etc. 
+ * TBD. needs more work due to size of data and finding a useful reason (from a streamers perspective)
+ * Awaiting requests for what it should do before advancing the extension
+ */
+// ############################# users.js ##############################
+// This extension handles users/viewers data. ie a place to store channel points etc
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/StreamRoller
+// Date: 09-Mar-2023
+// ============================================================================
+
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+import * as fs from "fs";
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+// these lines are a fix so that ES6 has access to dirname etc
+import https from "https";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// how many times we have attempted to connect on failure
+let ServerConnectionAttempts = 0;
+let millisecondsInDay = 86400000;
+const localConfig = {
+    OUR_CHANNEL: "USERS_CHANNEL",
+    EXTENSION_NAME: "users",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    MaxServerConnectionAttempts: 20
+};
+const default_serverConfig = {
+    __version__: 0.1,
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
+    enableusersextension: "on",
+    cleardatausersextension: "off",
+    maxuserstokeep: "50",
+    maxusersmessagestokeep: "100",
+    // how often to update the profile data for a user (default 30 days)
+    profiletimeout: "30"
+};
+let serverConfig = structuredClone(default_serverConfig)
+const serverData = { userData: { twitch: {}, youtube: {} } }
+
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "User interactions",
+    version: "0.2",
+    channel: serverConfig.channel,
+    triggers:
+        [
+            {
+                name: "UsersNewChatter",
+                displaytitle: "First Time Poster",
+                description: "Someone has posted in the chat for the first time",
+                messagetype: "trigger_NewChatter",
+                parameters: {
+                    name: "",
+                    message: "",
+                    platform: ""
+                }
+            }
+        ],
+}
+
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
+function initialise (app, host, port, heartbeat)
+{
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+            onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+    }
+}
+
+// ============================================================================
+//                           FUNCTION: onDataCenterDisconnect
+// ============================================================================
+/**
+ * Disconnection message sent from the server
+ * @param {String} reason 
+ */
+function onDataCenterDisconnect (reason)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+/**
+ * Connection message handler
+ * @param {*} socket 
+ */
+function onDataCenterConnect (socket)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH_CHAT"));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH"));
+
+    // get a main list of twitch users who are bots
+    getTwitchBotStatusList()
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * receives message from the socket
+ * @param {data} server_packet 
+ */
+function onDataCenterMessage (server_packet)
+{
+    //logger.log(localConfig.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
+
+    if (server_packet.type === "ConfigFile")
+    {
+        if (server_packet.data != "" &amp;&amp; server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+        }
+    }
+    else if (server_packet.type === "DataFile" &amp;&amp; server_packet.data != "")
+    {
+        // check it is our data
+        if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.data.userData)
+                serverData.userData = JSON.parse(JSON.stringify(server_packet.data.userData));
+        SaveDataToServer();
+    }
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+        {
+            SendSettingsWidgetSmall(extension_packet.from);
+        }
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            {
+
+                if (serverConfig.cleardatausersextension == "on")
+                    serverData.userData = { twitch: {}, youtube: {} };
+                SaveDataToServer();
+
+                serverConfig.enableusersextension = "off";
+                for (const [key, value] of Object.entries(extension_packet.data))
+                    serverConfig[key] = value;
+                serverConfig.cleardatausersextension = "off";
+                SaveConfigToServer();
+                SendSettingsWidgetSmall("");
+            }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+
+    }
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        //serverData.userData = {};
+        if (extension_packet.type === "trigger_ChatJoin" || extension_packet.type === "trigger_ChatMessageReceived")
+        {
+            let platform = extension_packet.data.parameters.platform
+            let username = ""
+            if (extension_packet.type === "trigger_ChatJoin")
+                username = extension_packet.data.parameters.username.toLowerCase()
+            else
+                username = extension_packet.data.parameters.sender.toLowerCase()
+            let timeStamp = Date.now()
+            // new platform
+            if (serverData.userData[platform] == undefined)
+                serverData.userData[platform] = {};
+            // new user
+            if (serverData.userData[platform][username] == undefined)
+            {
+                getUserIDData(username)
+                serverData.userData[platform][username] = {};
+                serverData.userData[platform][username].firstseen = timeStamp;
+                serverData.userData[platform][username]
+                setTwitchBotStatus(username)
+                sendNewUserTrigger(server_packet.data)
+            }
+            // check if we need to update the users profile data from twitch
+            // ignore users with invalid names (chinese chars etc as twitch fails on that call)
+            else if (
+                !serverData.userData[platform][username].userNameInvalid
+                &amp;&amp; (serverData.userData[platform][username].lastProfileUpdate == undefined
+                    ||
+                    (timeStamp - serverData.userData[platform][username].lastProfileUpdate) >
+                    (serverConfig.profiletimeout * millisecondsInDay)))
+            {
+                getUserIDData(username)
+                setTwitchBotStatus(username)
+            }
+
+            serverData.userData[platform][username].lastseen = timeStamp;
+            if (extension_packet.type === "trigger_ChatMessageReceived" &amp;&amp; extension_packet.data.parameters.message)
+            {
+                let message = extension_packet.data.parameters.message
+                if (!serverData.userData[platform][username].messages)
+                    serverData.userData[platform][username].messages = [];
+                serverData.userData[platform][username].messages[timeStamp] = message;
+
+            }
+            pruneUsers(platform);
+            SaveDataToServer();
+            //console.log(JSON.stringify(serverData, null, 2))
+        }
+        else if (extension_packet.type === "trigger_TwitchUserDetails")
+        {
+            //serverData.userData = {}
+            try
+            {
+                let platform = "twitch";
+                let username = extension_packet.data.parameters.username.toLowerCase()
+                let timeStamp = Date.now()
+                if (serverData.userData[platform][username] == undefined)
+                    serverData.userData[platform][username] = {};
+
+                for (const [key, value] of Object.entries(extension_packet.data.parameters))
+                    serverData.userData[platform][username][key] = value;
+                serverData.userData[platform][username].lastseen = timeStamp;
+                serverData.userData[platform][username].lastProfileUpdate = timeStamp
+                pruneUsers(platform);
+                SaveDataToServer();
+            }
+            catch (error)
+            {
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + " packet trigger_TwitchUserDetails", error.message);
+            }
+        }
+        else if (extension_packet.type === "HeartBeat"
+            || extension_packet.dest_channel === "TWITCH_CHAT")
+        {
+            //ignore these
+        }
+        else
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
+    }
+    else if (server_packet.type === "UnknownChannel")
+    {
+        if (ServerConnectionAttempts++ &lt; localConfig.MaxServerConnectionAttempts)
+        {
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
+                    ));
+            }, 5000);
+        }
+    }
+    else if (server_packet.type === "InvalidMessage")
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    }
+    else if (server_packet.type === "LoggingLevel")
+    {
+        logger.setLoggingLevel(server_packet.data)
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+    )
+    {
+
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+// ===========================================================================
+//                           FUNCTION: pruneUsers
+// ===========================================================================
+function pruneUsers (platform)
+{
+
+    let count = 0
+    try
+    {
+        while (Object.keys(serverData.userData[platform]).length > serverConfig.maxuserstokeep)
+        {
+            // some surge protection. only delete upto 100 at a time
+            if (count++ > 100)
+                return;
+
+            // prunes message stored
+            let currentOldestMessage = 0;
+            let oldestMessageId = "";
+            let currentOldest = 0;
+            let oldestId = "";
+            for (const [user, userData] of Object.entries(serverData.userData[platform]))
+            {
+                //#################
+                //find oldest users
+                if (user != "botList")
+                {
+                    //#########################
+                    // check number of messages
+                    if (userData.messages)
+                    {
+                        while (Object.entries(userData.messages).length > serverConfig.maxusersmessagestokeep)
+                        {
+                            for (const [userMessageId, userMessageData] of Object.entries(userData.messages))
+                            {
+                                if (currentOldestMessage == 0)
+                                {
+                                    if (userMessageData)
+                                        currentOldest = userMessageData.timeStamp;
+                                    oldestMessageId = userMessageId
+                                }
+                                if (userMessageData.timeStamp &lt; currentOldestMessage)
+                                {
+                                    if (userMessageData)
+                                        currentOldestMessage = userMessageData.timeStamp;
+                                    oldestMessageId = userMessageId
+                                }
+                            }
+                            // delete the oldest message found
+                            if (serverData.userData[platform][user].messages[oldestMessageId])
+                                delete serverData.userData[platform][user].messages[oldestMessageId];
+                        }
+                    }
+
+                    if (currentOldest == 0)
+                    {
+                        currentOldest = serverData.userData[platform][user].lastseen;
+                        oldestId = user
+                    }
+                    if (serverData.userData[platform][user].lastseen &lt; currentOldest)
+                    {
+                        currentOldest = serverData.userData[platform][user].lastseen;
+                        oldestId = user
+                    }
+                }
+            }
+            // delete the oldest user found
+            if (serverData.userData[platform][oldestId])
+                delete serverData.userData[platform][oldestId];
+        }
+    }
+    catch (error)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".pruneUsers", platform, error.message);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+/**
+ * send some modal code to be displayed on the admin page 
+ * @param {String} tochannel 
+ */
+function SendSettingsWidgetSmall (tochannel)
+{
+
+    fs.readFile(__dirname + "/userssettingswidgetsmall.html", function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        //throw err;
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    localConfig.EXTENSION_NAME,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode", // message type
+                        localConfig.EXTENSION_NAME, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        localConfig.OUR_CHANNEL
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ============================================================================
+//                           FUNCTION: sendNewUserTrigger
+// ============================================================================
+function sendNewUserTrigger (data)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "trigger_NewChatter",
+                serverConfig.extensionname,
+                data,
+                serverConfig.channel
+            ),
+            serverConfig.channel
+        ));
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * Sends our config to the server to be saved for next time we run
+ */
+function SaveConfigToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
+        "SaveConfig",
+        localConfig.EXTENSION_NAME,
+        serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+// Description:save data on backend data store
+// Parameters: none
+// ----------------------------- notes ----------------------------------------
+// none
+// ===========================================================================
+function SaveDataToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            localConfig.EXTENSION_NAME,
+            serverData));
+}
+// ===========================================================================
+//                           FUNCTION: getTwitchBotStatusList
+// ===========================================================================
+async function getTwitchBotStatusList ()
+{
+    try
+    {
+        let url = "https://api.twitchinsights.net/v1/bots/all";
+        let queryResult = ""
+        https.get(url, response =>
+        {
+            response.on("data", (chunk) =>
+            {
+                queryResult += chunk;
+            })
+            response.on("end", () =>
+            {
+                try
+                {
+                    let BotsData = JSON.parse(queryResult);
+                    let Bots = []
+                    let i;
+                    // Bots[0] is the timestamp of this data
+                    Bots.push(Date.now())
+                    for (i in BotsData.bots)
+                        Bots.push(BotsData.bots[i][0])
+
+                    serverData.userData["twitch"].botList = Bots;
+                    SaveDataToServer()
+
+                } catch (error)
+                {
+                    console.error(error.message);
+                }
+            })
+        })
+            .on('error', err =>
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed http.get for bot list", err, err.message)
+            });
+
+    }
+    catch (err)
+    {
+        if (err._statusCode == 400)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Failed to get bot list");
+            console.error(err._body);
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getTwitchBotStatusList", "ERROR", "Error");
+            console.error(err);
+        }
+    }
+}
+// ===========================================================================
+//                           FUNCTION: setTwitchBotStatus
+// ===========================================================================
+async function setTwitchBotStatus (name)
+{
+
+    if (serverData.userData["twitch"].botList &amp;&amp; serverData.userData["twitch"].botList.includes(name))
+        serverData.userData["twitch"][name].isBot = true;
+    else
+        serverData.userData["twitch"][name].isBot = false;
+    SaveDataToServer()
+}
+// ===========================================================================
+//                           FUNCTION: getUserIDData
+// ===========================================================================
+function getUserIDData (username)
+{
+    // request user data so we can store the twitch id with the username
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            localConfig.EXTENSION_NAME,
+            sr_api.ExtensionPacket(
+                "action_TwitchGetUser",
+                localConfig.EXTENSION_NAME,
+                { "username": username },
+                "",
+                "twitch"
+            ),
+            "",
+            "twitch"
+        ));
+}
+// ============================================================================
+//                                  EXPORTS
+// Note that initialise is mandatory to allow the server to start this extension
+// ============================================================================
+export { initialise };
+
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

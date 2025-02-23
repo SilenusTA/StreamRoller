@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: StreamRoller</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">StreamRoller</h1>
+
+    
+
+
+
+<h3>
+    
+    
+</h3>
+
+
+
+
+
+
+
+
+<section>
+    <article>    
+        <h1>StreamRoller (current dev. stage: Alpha)</h1>
+<p><strong>StreamRoller</strong> is a versatile streaming backend system designed to integrate and manage various tools essential for live streaming. By consolidating functionalities such as chat management, alerts, and OBS control into a single interface, StreamRoller enhances the streaming experience for both creators and their audiences.</p>
+<h2>Key Features</h2>
+<ul>
+<li><strong>Unified Control Interface</strong>: Access and manage all your streaming tools from a centralized web portal, reducing the need to switch between multiple applications.</li>
+<li><strong>Extensible Architecture</strong>: Utilize a variety of extensions to add functionalities like Twitch chat integration, AI-driven chatbots, Discord notifications, and more.</li>
+<li><strong>OBS Integration</strong>: Seamlessly control OBS directly from StreamRoller, allowing for scene switching, streaming status monitoring, and other essential broadcasting functions.</li>
+<li><strong>Event Handling System</strong>: Set up triggers and actions to automate responses to events such as donations or chat commands, enhancing interactivity and engagement during streams.</li>
+<li><strong>Open Source and Customizable</strong>: As an open-source project, StreamRoller encourages community contributions, enabling users to develop custom extensions tailored to their specific streaming needs.</li>
+</ul>
+<p>StreamRoller is currently in its alpha stage of development, and we welcome feedback and contributions from the community to help shape its future.</p>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#streamroller-current-dev-stage-alpha">StreamRoller (current dev. stage: Alpha)</a>
+<ul>
+<li><a href="#key-features">Key Features</a></li>
+<li><a href="#table-of-contents">Table of Contents</a></li>
+</ul>
+</li>
+<li><a href="#contacts-for-questions-suggestions-etc">Contacts: (For questions, suggestions etc.)</a></li>
+<li><a href="#downloadinstalling">Download/Installing</a></li>
+<li><a href="#videos">Videos</a>
+<ul>
+<li><a href="#while-streaming">While streaming</a></li>
+<li><a href="#streaming-setup-getting-it-to-do-fun-and-interesting-stuff-while-streaming">Streaming setup (Getting it to do fun and interesting stuff while streaming)</a></li>
+</ul>
+</li>
+<li><a href="#security">Security</a></li>
+<li><a href="#some-of-the-current-extensions">Some of the current extensions</a>
+<ul>
+<li><a href="#logiccontrollerdisplay-style-extensions">Logic/Controller/Display style extensions</a></li>
+<li><a href="#webpages">Webpages</a>
+<ul>
+<li><a href="#liveportal">Liveportal</a></li>
+<li><a href="#adminpage">Adminpage</a></li>
+<li><a href="#overlay">Overlay</a></li>
+</ul>
+</li>
+<li><a href="#featuredatahander-extensions">Feature/Datahander extensions</a>
+<ul>
+<li><a href="#twitchchat">twitchchat</a></li>
+<li><a href="extensions/chatbot">Chatbot</a> <a href="extensions/chatbot/README.md">README</a></li>
+<li><a href="#discordchat">discordchat</a></li>
+<li><a href="#streamlabs_api">streamlabs_api</a></li>
+<li><a href="#twitter">twitter</a></li>
+<li><a href="#obs">obs</a></li>
+</ul>
+</li>
+<li><a href="#feature-extensions">Feature Extensions</a></li>
+<li><a href="#in-progress">In progress</a></li>
+<li><a href="#ideas-for-extensions">Ideas for extensions</a></li>
+</ul>
+</li>
+<li><a href="#for-the-devscoders-out-there">For the Dev's/Coders out there</a>
+<ul>
+<li><a href="#server">Server</a></li>
+<li><a href="#functional-extensions">functional extensions</a></li>
+<li><a href="#extensions-can-be-of-different-types">Extensions can be of different types</a></li>
+</ul>
+</li>
+</ul>
+<h1>Contacts: (For questions, suggestions etc.)</h1>
+<ul>
+<li><a href="https://discord.gg/EyJy8brZ6R">Discord, (streamroller-stuff channel)</a>.</li>
+<li><a href="https://twitch.tv/OldDepressedGamer">twitch.tv/OldDepressedGamer</a>.</li>
+</ul>
+<h1>Download/Installing</h1>
+<p>You can find the releases on the relase page on the right of this screen or click <a href="https://github.com/SilenusTA/StreamRoller/releases">here</a> to go right to them.
+To run streamroller just grab the zip (or exe) and save it somewhere. Double click to run the StreamRoller server and then head to you webbrowser and enter <a href="http://localhost:3000">localhost:3000</a></p>
+<p>In order to be useful you will need to enter your details for whatever parts of StreamRoller you wish to use. To do this click on the Admin link on the web page you loaded above. There is a list of credentials you can enter (depending on what parts of StreamRoller you want to use).</p>
+<p>On these links there will be instruction on where to find your tokens etc for each feature.</p>
+<p>I.e. if you only want the AI chatbot then you will need the twitchchat tokens (to enable posting into chat) and an openAI token (to perform requests for the chat messages)</p>
+<h1>Videos</h1>
+<p>Installing StreamRoller</p>
+<p><a href="https://youtu.be/nIf06vKJpBw"><img src="https://img.youtube.com/vi/nIf06vKJpBw/hqdefault.jpg" alt="Watch the video"></a></p>
+<h2>While streaming</h2>
+<p>StreamRoller is designed to bring all the tools needed for streaming into one web page so when streaming you have all your controls on one screen and not have to worry about swapping programs (or even running them). Eventually the you will only need StreamRoller and OBS for all your streaming needs ... if I ever get round to coding up enough extensions:D</p>
+<h2>Streaming setup (Getting it to do fun and interesting stuff while streaming)</h2>
+<p>The Main reason I started making StreamRoller was so I could have all my streaming tools on one webpage and be able to configure them easily.</p>
+<p>I also wanted a easier way of making things happen. i.e. triggering things from donations (post a thanks on twitter/discord) or in future (when I get round to adding the code) maybe flash your Hue LED lights/stream lights when someone subs.</p>
+<p>The plan is to extend StreamRoller extension list to cover all the things that might be needed.</p>
+<p>Once an extension is made (ie the twitter one) then it is easy to do things like sending messages when something happens 'sendTwitterMessage(&quot;hi twitter&quot;)'</p>
+<p>For now it is relativly easy for me to link together events just using simple javascript coding on the webpage.
+It is almost at the point where I can write ...</p>
+<pre class="prettyprint source"><code>if (alert.type=&quot;donation&quot;) 
+    sendtotwitter (&quot;thanks for the donation&quot; + alert.from)
+</code></pre>
+<p>Although this isn't great for people who don't code so I do plan (somewhere in the future) of trying to get the setup (ie what to do when a tweet comes in) in a more usable fashion. This will probably anothe webpage to configure what you want it do to for you (ie Flash my Philips Hugh lights when someone donates), if chat is happy (an inprogress extension to predict the mood of chat) then set the appropriate song list up to play or change the lighting etc.</p>
+<h1>Security</h1>
+<p>At it's current stage the use case for this software to be run in a controlled environment (ie at home behind your routers firewall).</p>
+<p>Any tokens, passwords entered stay on your system and are encrypted.</p>
+<p><em>I would treat it like you would an encrypted password file you have on your PC. i.e you wouldn't put that text file on a public computer.</em></p>
+<h1>Some of the current extensions</h1>
+<p>Still being developed so list might be out of date by now</p>
+<h2>Logic/Controller/Display style extensions</h2>
+<h2>Webpages</h2>
+<h3>Liveportal</h3>
+<ul>
+<li>The live streaming portal is a webpage that you can use on your second monitor to show all the information/settings you need on one page.</li>
+</ul>
+<h3>Adminpage</h3>
+<ul>
+<li>Provides a webpage to configure the system</li>
+</ul>
+<h3>Overlay</h3>
+<ul>
+<li>There is a very basic overlay to that gives the bare bones to allow you to create your own, only needing to focuss on the art and animation aspects and not worry about the overlay server part of it.</li>
+</ul>
+<h2>Feature/Datahander extensions</h2>
+<h3>twitchchat</h3>
+<ul>
+<li>Join a twitch chat channel to send receive chat messages on the main page. Also used to handle commands and post responces from the chatbot etc</li>
+</ul>
+<h3>chatbot (The AI chatbot)</h3>
+<ul>
+<li>Provides a chatbot using the openAI chatGPT system</li>
+<li>Monitors chat and occasionally pops in with messages based on the conversation</li>
+<li>Can be asked questions that are processed by the openAI system</li>
+<li>The bot can be setup with a personality of your chosing (ie happy, sad, funny etc) to match your channel ethos</li>
+</ul>
+<h3>discordchat</h3>
+<ul>
+<li>connects to discord to allow things like alerts to be posted when they come in</li>
+<li>receive messages from a given mod only discord channel (currently used in live page as a Mod messages window so mods can send easy to see messages without having to post in chat)</li>
+</ul>
+<h3>streamlabs_api</h3>
+<ul>
+<li>Povides alerts data from streamlabs for twitch alerts and streamlab donations</li>
+<li>Used with the discord chat extension to alerts them to discord</li>
+<li>I also run my overlay off StreamRoller so that uses these as well to trigger alerts while streaming</li>
+</ul>
+<h3>twitter</h3>
+<ul>
+<li>Post messages to twitter (need to add a reader output)</li>
+<li>Used currently to send a message when you hit the start streaming button on OBS</li>
+</ul>
+<h3>obs</h3>
+<ul>
+<li>Used to control OBS from the live portal page (change scenes, mute ect)</li>
+<li>Live portal receives status upadates from obs (stream started, scene changed etc)</li>
+</ul>
+<h2>Feature Extensions</h2>
+<p>These are extension that use the data provided by the above extensions to do something usefull</p>
+<h2>In progress</h2>
+<ul>
+<li>chatmood extension to try and sense the mood of the chat and allow triggering of events (ie change the lighting, overlays, music etc when the chat's mood changes)</li>
+<li>more data extensions (ie youtube, specific games, home control etc)</li>
+</ul>
+<h2>Ideas for extensions</h2>
+<p>The current focus in on twitch streaming (although the streamlabs api currently supports other platforms as is). Other platforms will be integrated in time (Youtube etc)
+Some things I still need to get sorted are</p>
+<ul>
+<li>moderator chatbot: one bot that will work with all the chat extension to provide a single moderator bot for all chat channels (discord/twitch/youtube/facebook etc)</li>
+<li>NDI stream extension to allow easy integration of external video feeds for duel streaming</li>
+<li>chat auto language conversion.</li>
+<li>TextToSpeech for chat. So us streamers don't have to focus on chat all the time :P</li>
+<li>Autoclip/video creation from current stream.</li>
+<li>
+<ul>
+<li>This would be an extension to create a clip from the current live obs stream (most likely post stream) and post to twitter/twitch/discord/yourtube shorts all automatically from 1 action (could be set to a macro button or twitch chat mod message etc)</li>
+<li>example workflow follows</li>
+<li>on &quot;action_clip&quot; setup an internal trigger on obs.stopstreaming action with start/stop time relating to time action was received (assuming we can tell obs to save a second clip of hte current stream, would need recording on for the whole stream)</li>
+<li>on stopstreaming, find recording from obs and use FFMPEG to create a clip at that time</li>
+<li>possibly add standard intro/exit clip to the clip</li>
+<li>possibly upload to twitch/youtube shorts if clips appear to be working reliably enough</li>
+</ul>
+</li>
+</ul>
+<h1>For the Dev's/Coders out there</h1>
+<p>If you would like to extend the functionality of StreamRoller feel free. All the code currently is in javascript and runs on websockets. This means it should be fairly simple for anyone with web page coding skills to add features, link things together etc.</p>
+<p>There are three areas of StreamRoller</p>
+<h2>Server</h2>
+<p>This is simply a message handing system that all other extensions/webpages/dataprocessors connect to.
+It mostly handles routing messages from one extension to another as well as storing persistant data/credentials etc.</p>
+<h2>functional extensions</h2>
+<p>Every extension (like the live portal) sits on a websocket that connects to the server. On this socket it receives any messages it from extensions it has signed up for and can send messages to other extensions to request information or ask them to do things</p>
+<h2>Extensions can be of different types</h2>
+<ul>
+<li>A control extension that will use other extension to link functionality, The main one of these is the live portal, this listens to almost all extensions and provides the logic to do things like send a message to discord when someone donates</li>
+<li>simple data producers (like the factoftheday extension that you can request a fact from)</li>
+<li>other types might create an overlay to add to obs like the countdowntimer and setup via sending them a message, ie start a timer for 5 minutes called breaktime and it will create a breaktime.txt to add to your overlay</li>
+</ul>
+<p>A extension simply connects to the server and request the other extensions it wants to 'listen' to. After that it simply decides what it wants to do with the data it receives (ie chat messages)</p>
+<p>Extensions like twitch chat simply connect to the StreamRoller server, create a channel (for other to listen to), and then sends any chat messages out on that channel. It will also receive messages like SendChatMessage(&quot;user&quot;,&quot;hi) to send a twitch chat message from the user or bot that is set up.</p>
+<p>This means that any webpage or bit of code that can use a websocket can connect to the system, use the eisting extensions functionality or provide more functionality of their own.</p>
+<p>If you are interested in helping expand or configure these kind of things feel free to contact me. Maybe you just want to write a couple of overlay items, add some kind of LED sign extension that can display messages sent to it or even write your own live portal page that fits better for your type of streaming (ie music streamers will probabaly want an option for streamsonglist on there in place of the mod panel, currently working on that)</p>
+    </article>
+</section>
+
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: DiscordChat</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">DiscordChat</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Discord Chat</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#discord-chat">Discord Chat</a></li>
+<li><a href="#setup">Setup</a>
+<ul>
+<li><a href="#outgoing-channel--discord_chat">Outgoing channel : &quot;DISCORD_CHAT&quot;</a></li>
+<li><a href="#authorization-fields">Authorization fields</a>
+<ul>
+<li><a href="#field-1">Field 1</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#about">About</a>
+<ul>
+<li><a href="#features">Features</a>
+<ul>
+<li><a href="#channel-messages">Channel messages</a></li>
+<li><a href="#requests">Requests</a></li>
+</ul>
+</li>
+<li><a href="#discord-credentials">Discord credentials</a></li>
+<li><a href="#future-ideas">Future ideas?!?</a></li>
+</ul>
+</li>
+</ul>
+<h1>Setup</h1>
+<h2>Outgoing channel : &quot;DISCORD_CHAT&quot;</h2>
+<h2>Authorization fields</h2>
+<h4>Field 1</h4>
+<ul>
+<li>Name: DISCORD_TOKEN</li>
+<li>Value: bot token</li>
+</ul>
+<h1>About</h1>
+<h2>Features</h2>
+<ul>
+<li>Send alerts to discord. This can be configured in the alerts modal. Channel to use and which alerts to send are currently available</li>
+</ul>
+<h3>Channel messages</h3>
+<p>All messages follow the standard server message with with the message data within the data section.
+These will be broadcast on the outgoing channel</p>
+<ul>
+<li>Discord chat messages - from the assigned channel (can be set in the admind card on the admin page)</li>
+</ul>
+<h3>Requests</h3>
+<ul>
+<li>none</li>
+</ul>
+<p>The discordchat extension currently provides the following features</p>
+<ul>
+<li>Creates a 'DISCORD_CHAT' channel for other extension to consume mesages from</li>
+<li>Reads messages from a discord channel (set in the settings) and sends them out on the 'DISCORD_CHAT' channel with the following format<pre class="prettyprint source"><code>{
+    type: &quot;ChannelData&quot;,
+    from: &quot;discordchat&quot;,
+    {
+        &quot;DiscordModChat&quot;,
+        &quot;discordchat&quot;,
+        {
+          name: &lt;message author>,
+          message: &lt;message sent>,
+        },
+        &quot;DISCORD_CHAT&quot;
+    },
+    dest_channel: &quot;DISCORD_CHAT&quot;,
+}
+</code></pre>
+</li>
+<li>Listents to 'STREAMLABS_ALERT' channel and posts certain events on the discord channel set in the settings</li>
+<li>Discord Channels
+<ul>
+<li>There are two channels the extension utilises.
+<ul>
+<li>mod messages channel - used to read messages and output on our &quot;DISCORD_CHAT' channel for other extension to use</li>
+<li>alerts channel - used to post alerts to</li>
+</ul>
+</li>
+<li>These channel names are defined in the settings files and can be updated buy the provided settings widget small code</li>
+</ul>
+</li>
+<li>SettingsWidgetSmall.
+<ul>
+<li>Provide an settings widget small to the admin page to allow the user to set the following values
+<ul>
+<li>streamlabs alerts to log</li>
+<li>channelname for streamlabs alerts to be post on (on discord)</li>
+<li>channelname to read on discord for message we will post out on our 'DISCORD_CHAT' channel</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Discord credentials</h2>
+<p>Currnetly the extension reads the environment variable &quot;DISCORD_TOKEN&quot; to be able to connect to the discord needed. You will need to provide a token in your PC's environment variable to use this addon</p>
+<h2>Future ideas?!?</h2>
+<ul>
+<li>send a chat message to discord. This would allow a viewer (using a command) to send a message to a discord channel. Useful for reminders, saving the viewers from having to switch to discord to remind me of things.</li>
+</ul>
+    </article>
+</section>
+<section><header><h2>"DiscordChat" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Send received discord chat messages. Useful for mod messages during stream<br>as these can be displayed below chat on the liveportal<br>This is useful when you want mod messages not seen by chat.Some other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line36">line 36</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveConfigToServer">
+    SaveConfigToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    save our config to the server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line570">line 570</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendCredentialsModal">
+    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our CredentialsModal to whoever requested it
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line522">line 522</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetLarge">
+    SendSettingsWidgetLarge<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our SettingsWidgetSmall to whoever requested it
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line473">line 473</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetSmall">
+    SendSettingsWidgetSmall<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our SettingsWidgetSmall to whoever requested it
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line426">line 426</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    mandatory function so that the backend can start us up
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line136">line 136</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendChatBuffer">
+    sendChatBuffer<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our chat buffer to the extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>toExtension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
+                    <a href="extensions_discordchat_discordchat.js.html#line401">line 401</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>DiscordChat</h3><ul><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="DiscordChat_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="DiscordChat_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="DiscordChat_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="DiscordChat_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="DiscordChat_extension.html#initialise">initialise</a></li><li><a href="DiscordChat_extension.html#sendChatBuffer">sendChatBuffer</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

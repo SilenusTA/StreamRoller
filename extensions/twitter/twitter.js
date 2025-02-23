@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension Twitter
+ * Connects to twitter allowing sending of tweets
+ */
 // ############################# TWITTER.js ##############################
 // Allows posting and reading twitter
 // ---------------------------- creation --------------------------------------
@@ -94,10 +98,11 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * 
- * @param {Object} app 
- * @param {String} host 
- * @param {String} port 
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
  */
 function initialise (app, host, port, heartbeat)
 {

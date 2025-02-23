@@ -20,7 +20,10 @@
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 // ############################# twitch.js ##############################
-
+/**
+ * @extension Twitch
+ * Connection to the Twitch pub/sub api. Allows full admin access over your streaming acccount from banning users, setting stream titles to more complex features like vods, clips etc.
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -41,6 +44,13 @@ import * as server from "./server/server.js"
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]twitch.initialise", "host", host, "port", port, "heartbeat", heartbeat);

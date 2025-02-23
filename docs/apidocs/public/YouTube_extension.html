@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: YouTube</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">YouTube</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Youtube Extension</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#youtube-extension">Youtube Extension</a>
+<ul>
+<li><a href="#outgoing-channel--youtube">Outgoing channel : &quot;YOUTUBE&quot;</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#settings">Settings</a>
+<ul>
+<li><a href="#settings-small-for-mainpage-quick-links">Settings Small (for mainpage quick links)</a></li>
+<li><a href="#settings-large-for-main-settings-full-page">Settings Large (for main settings full page)</a></li>
+</ul>
+</li>
+<li><a href="#authorization">Authorization</a></li>
+<li><a href="#autopilot-triggers-and-actions">Autopilot triggers and actions</a>
+<ul>
+<li><a href="#triggers">Triggers</a>
+<ul>
+<li><a href="#trigger_chatmessagereceived">&quot;trigger_ChatMessageReceived&quot;</a></li>
+</ul>
+</li>
+<li><a href="#actions">Actions</a>
+<ul>
+<li><a href="#action_demoextensiondostuff">&quot;action_DemoextensionDoStuff&quot;</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#google-api-requirements">Google API requirements</a>
+<ul>
+<li><a href="#step-1-connecting-streamroller-to-youtube">Step 1: Connecting StreamRoller to YouTube</a></li>
+<li><a href="#creatingsetting-up-google-api">Creating/Setting up Google API</a>
+<ul>
+<li><a href="#step-1-google-api-project-setup-if-you-dont-have-one-already">Step 1: Google API Project setup (if you don't have one already)</a>
+<ul>
+<li><a href="#1-set-up-a-google-cloud-project">1. Set Up a Google Cloud Project</a></li>
+<li><a href="#2-google-client-id-and-secret">2, Google Client ID and secret</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Outgoing channel : &quot;YOUTUBE&quot;</h2>
+<h2>Description</h2>
+<p>This extension allows youtube integration.</p>
+<h2>Features</h2>
+<p>The extension currently allows sending and receiving of chat message during a live stream (youtube messages are integrated into live portal chat window)</p>
+<h2>Settings</h2>
+<h3>Settings Small (for mainpage quick links)</h3>
+<ul>
+<li>enable/disable addon</li>
+<li>chat poll rate</li>
+<li>
+<ul>
+<li>This allows you to reduce the google api usage by limiting how often to check for new messages</li>
+</ul>
+</li>
+<li>restore defaults</li>
+<li>
+<ul>
+<li>Resets the extension data to defaults.</li>
+</ul>
+</li>
+</ul>
+<h3>Settings Large (for main settings full page)</h3>
+<p>none</p>
+<h2>Authorization</h2>
+<p>Authorization is preformed though the admin page link.</p>
+<p>Click on the extension name and enter the credentials requested, click update, then re-click the link and hit the ytoauth link at the bottom of the page to perform the authorization</p>
+<ul>
+<li>
+<ul>
+<li>Google CLIENT_ID</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Google CLIENT_SECRET</li>
+</ul>
+</li>
+</ul>
+<p>See below for creating a google API account to get hold of these details <a href="#google-api-requirements">Google API requirements</a></p>
+<h2>Autopilot triggers and actions</h2>
+<h3>Triggers</h3>
+<h4>&quot;trigger_ChatMessageReceived&quot;</h4>
+<pre class="prettyprint source lang-name:"><code>displaytitle: &quot;YouTube Chat Message&quot;,
+description: &quot;A chat message was received. textMessage field has name and message combined&quot;,
+messagetype: &quot;trigger_ChatMessageReceived&quot;,
+parameters: 
+  {
+  type: &quot;trigger_ChatMessageReceived&quot;,
+  platform: &quot;Youtube&quot;,
+  textMessage: &quot;[username]: [message]&quot;,
+  safemessage: &quot;&quot;,
+  color: &quot;#FF0000&quot;,
+  channel: &quot;&quot;,
+  // youtube message data
+  id: &quot;&quot;,
+  message: &quot;&quot;,
+  ytmessagetype: &quot;&quot;,
+  textmessagedetails: &quot;&quot;,
+  publishedat: &quot;&quot;,
+  hasdisplaycontent: &quot;&quot;,
+  //youtube author data
+  sender: &quot;&quot;,
+  senderchannelid: &quot;&quot;,
+  senderprofileimageurl: &quot;&quot;,
+  senderisverified: false,
+  senderischatowner: false,
+  senderischatsponsor: false,
+  senderischatmoderator: false,
+}
+</code></pre>
+<h3>Actions</h3>
+<h4>&quot;action_DemoextensionDoStuff&quot;</h4>
+<pre class="prettyprint source lang-name:"><code>displaytitle: &quot;Post a Message to youtube live chat&quot;,
+description: &quot;Post to youtube live chat if we are connected.&quot;,
+messagetype: &quot;action_youtubePostLiveChatMessage&quot;,
+parameters: 
+  { 
+  message: &quot;&quot; 
+  }
+</code></pre>
+<h1>Google API requirements</h1>
+<h3>Step 1: Connecting StreamRoller to YouTube</h3>
+<p>Note: If you have changed the client ID or client secret above remember to save this page before
+requesting authorization!</p>
+<h2>Creating/Setting up Google API</h2>
+<p>Note: Most paid programs would use their own Google API project but as the free Google API account only
+gives you 10,000 per day it would soon stop working unless I paid for more credits.</p>
+<p>This means I can't setup an API project for you to use as this isn't viable unless I was charging
+a subscription for StreamRoller to pay for it.</p>
+<p>Youtube Chat API is accessible only through a google API project. This page will guide you through
+setting up an account and project if you don't already have one you can use.</p>
+<p>This is a 2 step process</p>
+<ul>
+<li>Setup a Google API project to get a client id and client secret. This gives you access to the Google API's authorization process.</li>
+<li>Authorize StreamRoller to allow it to connect to your youtube livestream chat.</li>
+</ul>
+<h3>Step 1: Google API Project setup (if you don't have one already)</h3>
+<p>In order to use the youtube API you will need to have a google cloud API account</p>
+<p><a href="https://console.cloud.google.com">Create Google Account if you don't have one already</a></p>
+<p>Once setup you need to create a project for the specific API's you want to use (ie gmail, dropbox
+etc), for StreamRoller you only need the <b><i>&quot;YouTube Data API v3&quot;</i></b> as shown below.</p>
+<p>Follow the steps below to setup the correct project details</p>
+<h4>1. Set Up a Google Cloud Project</h4>
+<ul>
+<li>Go to the Google Cloud Console.</li>
+<li>Create a new project (you can use any name you like here) or select an existing one.
+<a href="https://console.cloud.google.com">Google account page</a></li>
+</ul>
+<p><img src="public/images/googleAuthSelectproject.png" alt="googleAuthSelectproject"></p>
+<ul>
+<li>Once you have your project setup and selected (as I have in the above image for the project named streamroller) click the &quot;API and services&quot; button in the quick access area or click <a href="https://console.cloud.google.com/apis/dashboard">Here</a></li>
+</ul>
+<p><img src="public/images/googleAuthAPIsAndServices.png" alt="APIsAndServices"></p>
+<ul>
+<li>Set up OAuth 2.0 credentials:</li>
+<li>
+<ul>
+<li>On the click &quot;Credentials.&quot; page</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Create a new OAuth 2.0 Client ID set of credentials (check you are on your correct project name, 1 in the image below)</li>
+</ul>
+</li>
+</ul>
+<p><img src="public/images/googleAPIcreateCredentials.png" alt="iAPIcreateCredentials"></p>
+<ul>
+<li>Set the Application Type to &quot;Desktop App&quot; or &quot;Web Application.&quot;</li>
+<li>For &quot;Web Application,&quot; add http://localhost:3000 (or your server's port) as an authorized
+redirect URI.</li>
+<li>Enable the <b><i>&quot;YouTube Data API v3&quot;</i></b> for your project on the scopes page (second
+page during setup or editing)</li>
+</ul>
+<p><img src="public/images/googleAuthYouTubeV3Scope.png" alt="gYouTubeV3Scope"></p>
+<ul>
+<li>The rest of the settings can be left defaulted</li>
+</ul>
+<h4>2, Google Client ID and secret</h4>
+<p>To get your details needed below (to allow StreamRoller to access your Google API project for youtube)
+follow the following steps.</p>
+<ul>
+<li>Go to your API credentials page for the project you created <a href="https://console.cloud.google.com/apis/credentials">Credentials Page</a>.</li>
+<li>In the image shown below ...</li>
+<li>Image note 1. Click to bring up the credentials page</li>
+<li>Image note 2. Click on the download button for the project you created above, this will bring up the dialog box allowing you to copy/download your settings</li>
+<li>Image note 3. Click the 'copy' button for your Client ID and paste it in the Client ID box below</li>
+<li>Image note 4. Click the 'copy' button for your Client Secret and paste it in the Client Secret box below</li>
+<li>Click the update button on this page to save the data in StreamRollers encrypted file storage. You can now click the authorize link to connect streamroller to youtube
+<img src="public/images/googleAuthScreen.png" alt="googleAuthScreen"></li>
+</ul>
+    </article>
+</section>
+<section><header><h2>"YouTube" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">YouTube functionality. <br>TBC. Currently just chat (send/receive messages), once testing proves it viable more features need adding (title changing etc)Some other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_youtube_youtube.js.html">extensions/youtube/youtube.js</a>,
+                    <a href="extensions_youtube_youtube.js.html#line22">line 22</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendCredentialsModal">
+    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our CredentialsModal to whoever requested it
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_youtube_server_server.js.html">extensions/youtube/server/server.js</a>,
+                    <a href="extensions_youtube_server_server.js.html#line417">line 417</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_youtube_youtube.js.html">extensions/youtube/youtube.js</a>,
+                    <a href="extensions_youtube_youtube.js.html#line39">line 39</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>YouTube</h3><ul><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="YouTube_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="YouTube_extension.html#initialise">initialise</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

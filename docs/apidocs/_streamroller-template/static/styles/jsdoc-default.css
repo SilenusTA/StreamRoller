@@ -1,0 +1,491 @@
+:root {
+    /* JSDoc defults
+    color: #212529;
+    background-color: white;
+    a:active color: #0095dd;
+    */
+    /*default coulours*/
+    --color-bg: #f8f9fa;
+    --color-fg: #212529;
+    /* headings*/
+    --color-h4-fg: #212529;
+
+    /*tables*/
+    --color-th-fg: #212529;
+    --color-th-border: #ddd;
+    --color-tr-thread-bg: #ddd;
+    --color-th-border-right: #aaa;
+    --color-tr-th-last-child-border-right: #ddd;
+    --color-td-fg: #212529;
+
+    /*others*/
+
+    --color-a-fg-active: #0095dd;
+    --color-section-bg: #fff;
+    --color-section-border-bottom: #ccc;
+    --color-signature-fg-attributes: #aaa;
+    --color-nav-border-left: #ccc;
+    --color-nav-ul-a-fg-active: #212529;
+
+    /*classes*/
+    --color-ancestors-attribs-fg: #999;
+    --color-important-fg: #950B02;
+    --color-type-signature-fg: #aaa;
+    --color-details-border-left: #DDD;
+    --color-source-border: #ddd;
+    --color-source-code-bg: #fff;
+    --color-source-code-fg: #212529;
+    --color-prettyprint-linenums-li-border-left: #ddd;
+    --color-prettyprint-linenums-li-selected-bg: #lightyellow;
+    --color-params_name_props_name_name-code: #212529;
+    --color-disabled: #454545;
+}
+
+[data-theme="light"] {
+    /* These should be the same as the defaults*/
+    --color-bg: #f8f9fa;
+    --color-fg: #212529;
+    --color-h4-fg: #212529;
+    --color-nav-border-left: #ccc;
+    --color-nav-ul-a-fg-active: #212529;
+    --color-params_name_props_name_name-code: #212529;
+    --color-th-border: #ddd;
+    --color-tr-thread-bg: #ddd;
+    --color-th-border-right: #aaa;
+    --color-tr-th-last-child-border-right: #ddd;
+    --color-td-fg: #212529;
+    --color-source-border: #ddd;
+    --color-source-code-bg: #fff;
+    --color-source-code-fg: #212529;
+}
+
+[data-theme="dark"] {
+    --color-bg: #212529;
+    --color-fg: #f8f9fa;
+    --color-h4-fg: #f8f9fa;
+    --color-nav-border-left: #212529;
+    --color-nav-ul-a-fg-active: #ccc;
+    --color-params_name_props_name_name-code: #f8f9fa;
+    --color-th-border: #ddd;
+    --color-tr-thread-bg: #ddd;
+    --color-th-border-right: #aaa;
+    --color-tr-th-last-child-border-right: #ddd;
+    --color-td-fg: #f8f9fa;
+    --color-source-border: #ddd;
+    --color-source-code-bg: #212529;
+    --color-source-code-fg: #f8f9fa;
+}
+
+#page-nav-bar {
+    position: sticky;
+    top: 0px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#top-icon {
+    color: var(--color-fg)
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-weight: normal;
+    font-style: normal;
+    src: url('../fonts/OpenSans-Regular-webfont.eot');
+    src:
+        local('Open Sans'),
+        local('OpenSans'),
+        url('../fonts/OpenSans-Regular-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../fonts/OpenSans-Regular-webfont.woff') format('woff'),
+        url('../fonts/OpenSans-Regular-webfont.svg#open_sansregular') format('svg');
+}
+
+@font-face {
+    font-family: 'Open Sans Light';
+    font-weight: normal;
+    font-style: normal;
+    src: url('../fonts/OpenSans-Light-webfont.eot');
+    src:
+        local('Open Sans Light'),
+        local('OpenSans Light'),
+        url('../fonts/OpenSans-Light-webfont.eot?#iefix') format('embedded-opentype'),
+        url('../fonts/OpenSans-Light-webfont.woff') format('woff'),
+        url('../fonts/OpenSans-Light-webfont.svg#open_sanslight') format('svg');
+}
+
+@font-face {
+    font-family: 'Audiowide-Regular';
+    src: url('../fonts/Audiowide-Regular.ttf');
+    font-size: large;
+}
+
+html {
+    overflow: auto;
+    //font-size: 14px;
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    /*font-family: "Audiowide-Regular";*/
+    line-height: 1.5;
+}
+
+
+a,
+a:visited,
+a:active {
+    color: var(--color-a-fg-active);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+header {
+    display: block;
+    padding: 0px 4px;
+}
+
+tt,
+code,
+kbd,
+samp {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+}
+
+.class-description {
+    font-size: 130%;
+    line-height: 140%;
+    margin-bottom: 1em;
+    margin-top: 1em;
+}
+
+.class-description:empty {
+    margin: 0;
+}
+
+#main {
+    float: right;
+    width: 80%;
+}
+
+article dl {
+    margin-bottom: 40px;
+}
+
+article img {
+    max-width: 100%;
+}
+
+section {
+    display: block;
+    background-color: var(---color-section-bg);
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--color-section-border-bottom);
+    margin-right: 30px;
+}
+
+.variation {
+    display: none;
+}
+
+.signature-attributes {
+    font-size: 60%;
+    color: var(--color-signature-fg-attributes);
+    font-style: italic;
+    font-weight: lighter;
+}
+
+nav {
+    display: block;
+    float: left;
+    margin-top: 28px;
+    width: 20%;
+    box-sizing: border-box;
+    border-left: 1px solid var(--color-nav-border-left);
+    padding-left: 16px;
+}
+
+nav ul {
+    font-family: 'Lucida Grande', 'Lucida Sans Unicode', arial, sans-serif;
+    font-size: 100%;
+    line-height: 17px;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+}
+
+nav ul a,
+nav ul a:visited,
+nav ul a:active {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    line-height: 18px;
+    color: var(--color-nav-ul-a-fg-active);
+}
+
+nav h3 {
+    font-family: 'Audiowide-Regular';
+    margin-top: 12px;
+}
+
+nav li {
+    margin-top: 6px;
+}
+
+footer {
+    display: block;
+    padding: 6px;
+    margin-top: 12px;
+    font-style: italic;
+    font-size: 90%;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Audiowide-Regular';
+    font-weight: 200;
+    margin: 0;
+}
+
+h1 {
+    /*font-family: 'Open Sans Light', sans-serif;*/
+    font-size: 48px;
+    letter-spacing: -2px;
+    margin: 12px 24px 20px;
+}
+
+h2,
+h3.subsection-title {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+}
+
+h3 {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+}
+
+h4 {
+    font-size: 18px;
+    letter-spacing: -0.33px;
+    margin-bottom: 12px;
+    color: var(--color-h4-fg);
+}
+
+h5,
+.container-overview .subsection-title {
+    font-size: 120%;
+    font-weight: bold;
+    letter-spacing: -0.01em;
+    margin: 8px 0 3px 0;
+}
+
+h6 {
+    font-size: 100%;
+    letter-spacing: -0.01em;
+    margin: 6px 0 3px 0;
+    font-style: italic;
+}
+
+table {
+    border-spacing: 0;
+    border: 0;
+    border-collapse: collapse;
+}
+
+td,
+th {
+    border: 1px solid var(--color-th-border);
+    color: var(--color-th-fg);
+    margin: 0px;
+    text-align: left;
+    vertical-align: top;
+    padding: 4px 6px;
+    display: table-cell;
+}
+
+thead tr {
+    background-color: var(--color-tr-thread-bg);
+    font-weight: bold;
+}
+
+th {
+    border-right: 1px solid var(--color-th-border-right)
+}
+
+tr {
+    color: var(--color-tr-fg)
+}
+
+tr>th:last-child {
+    border-right: 1px solid var(--color-tr-th-last-child-border-right)
+}
+
+td {
+    color: var(--color-td-fg)
+}
+
+.ancestors,
+.attribs {
+    color: var(--color-ancestors-attribs-fg);
+}
+
+.ancestors a,
+.attribs a {
+    color: var(--color-ancestors-attribs-fg) !important;
+    text-decoration: none;
+}
+
+.clear {
+    clear: both;
+}
+
+.important {
+    font-weight: bold;
+    color: var(--color-important-fg);
+}
+
+.yes-def {
+    text-indent: -1000px;
+}
+
+.type-signature {
+    color: var(--color-type-signature-fg);
+}
+
+.name,
+.signature {
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+}
+
+.details {
+    margin-top: 14px;
+    border-left: 2px solid var(--color-details-border-left);
+}
+
+.details dt {
+    width: 120px;
+    float: left;
+    padding-left: 10px;
+    padding-top: 6px;
+}
+
+.details dd {
+    margin-left: 70px;
+}
+
+.details ul {
+    margin: 0;
+}
+
+.details ul {
+    list-style-type: none;
+}
+
+.details li {
+    margin-left: 30px;
+    padding-top: 6px;
+}
+
+.details pre.prettyprint {
+    margin: 0
+}
+
+.details .object-value {
+    padding-top: 0;
+}
+
+.description {
+    margin-bottom: 1em;
+    margin-top: 1em;
+}
+
+.code-caption {
+    font-style: italic;
+    font-size: 107%;
+    margin: 0;
+}
+
+.source {
+    border: 1px solid var(--color-source-border);
+    width: 80%;
+    overflow: auto;
+}
+
+.prettyprint.source {
+    width: inherit;
+}
+
+.source code {
+    font-size: 100%;
+    line-height: 18px;
+    display: block;
+    padding: 4px 12px;
+    margin: 0;
+    background-color: var(--color-source-code-bg);
+    color: var(--color-source-code-fg);
+}
+
+.prettyprint code span.line {
+    display: inline-block;
+}
+
+.prettyprint.linenums {
+    padding-left: 70px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.prettyprint.linenums ol {
+    padding-left: 0;
+}
+
+.prettyprint.linenums li {
+    border-left: 3px var(--color-prettyprint-linenums-li-border-left) solid;
+}
+
+.prettyprint.linenums li.selected,
+.prettyprint.linenums li.selected * {
+    background-color: var(--color-prettyprint-linenums-li-selected-bg);
+}
+
+.prettyprint.linenums li * {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+.params .name,
+.props .name,
+.name code {
+    color: var(--color-params_name_props_name_name-code);
+    font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    font-size: 100%;
+}
+
+.params td.description>p:first-child,
+.props td.description>p:first-child {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.params td.description>p:last-child,
+.props td.description>p:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.disabled {
+    color: var(--color-disabled);
+}

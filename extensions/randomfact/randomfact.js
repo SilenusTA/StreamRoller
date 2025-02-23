@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension RandomFact
+ * Supplies random facts
+ */
 // ############################# RANDOMFACT.js ##############################
 // Provides random facts and information on request
 // ---------------------------- creation --------------------------------------
@@ -94,10 +98,11 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * initialise
- * @param {Object} app 
- * @param {String} host 
- * @param {String} port 
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
  */
 function initialise (app, host, port, heartbeat)
 {

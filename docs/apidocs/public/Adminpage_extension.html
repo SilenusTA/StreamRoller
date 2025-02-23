@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Adminpage</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Adminpage</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Adminpage</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#adminpage">Adminpage</a>
+<ul>
+<li><a href="#outgoing-channel--none">Outgoing channel : none</a></li>
+<li><a href="#purpose">Purpose</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#funcionality">Funcionality</a></li>
+<li><a href="#extension-developer-information">Extension Developer information</a>
+<ul>
+<li><a href="#message-formats">Message formats</a></li>
+<li><a href="#request-for-your-modal">Request for your modal</a></li>
+<li><a href="#response-to-a-modal-request">Response to a modal request</a></li>
+<li><a href="#data-returned-from-a-modal-submit">Data returned from a modal submit</a></li>
+</ul>
+</li>
+<li><a href="#example-modal-code">Example modal code</a>
+<ul>
+<li><a href="#description-of-the-example">Description of the example</a>
+<ul>
+<li><a href="#title">Title</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#hidden-fields">Hidden fields</a></li>
+<li><a href="#extension-data">Extension data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Outgoing channel : none</h2>
+<p>The admin page extension is designed to display various information about the system and all control/settings to be issues to extensions in use</p>
+<h2>Purpose</h2>
+<p>To allow configuration of the extensions/backend and to show the status of the sytem.</p>
+<h2>Usage</h2>
+<p>Open a webbrowser on the server (normally localhost:3000)</p>
+<h2>Funcionality</h2>
+<ol>
+<li>Sets credentials for the extensions (ie security keys, passwords etc)</li>
+<li>Display StreamRoller messages from the system being sent received so you can monitor if something appears to be missing</li>
+<li>Display a list of extensions loaded and running (currently only the ones started by the server)</li>
+<li>Display a list of all channels created</li>
+<li>Loads code from extensions and added as a link to the extension name in the extension list</li>
+<li>Posts any data submitted on the extension form loaded (by clicking the link in 5) and submits it back to the extension</li>
+</ol>
+<h2>Extension Developer information</h2>
+<h3>Message formats</h3>
+<p>If you want your extension to appear on the Admin page via the extension links you can provide this via bootstrap modal code.</p>
+<h3>Request for your modal</h3>
+<p>During the admin page loading it will send out a message on the system requesting the modal. The message will be of the format</p>
+<pre class="prettyprint source"><code>{
+    type: &quot;ExtensionMessage&quot;,
+    from: &quot;settingswidgetsmallpage&quot;,
+    data:
+    {
+        type: &quot;RequestSettingsWidgetSmallCode&quot;
+        from :&quot;settingswidgetsmallpage&quot;
+    } 
+}
+</code></pre>
+<h3>Response to a modal request</h3>
+<p>To send code back use the following message structure.
+Note that you should add the 'destination extension name'</p>
+<pre class="prettyprint source"><code>sr_api.sendMessage
+    (
+    &lt;your socket handle>,
+    sr_api.ServerPacket
+        (
+        &quot;ExtensionMessage&quot;,
+        &lt;your extension name>,
+        sr_api.ExtensionPacket
+            (
+            &quot;SettingsWidgetSmallCode&quot;,
+             &lt;your extension name>,
+             {&lt;modalstring>},
+             &quot;&quot;,
+             &lt;destination extension name>,,
+             &lt;your channel name>,
+            ),
+        &quot;&quot;,
+        &lt;destination extension name>
+        )
+    )
+</code></pre>
+<p>for clarity (without the code) the packet looks like</p>
+<pre class="prettyprint source"><code>{
+    type: &quot;ExtensionMessage&quot;,
+    from: &lt;your extension name>,
+    data: 
+    {
+        &quot;SettingsWidgetSmallCode&quot;,
+        &lt;your extension name>,
+        {&lt;modalstring>},
+        &quot;&quot;,
+        &lt;destination extension name>,,
+        &lt;your channel name>,
+    },
+    dest_channel: &quot;&quot;,
+    to: &lt;destination extension name>
+}
+</code></pre>
+<h3>Data returned from a modal submit</h3>
+<pre class="prettyprint source"><code>{
+    type: &quot;ExtensionMessage&quot;,
+    from: &quot;settingswidgetsmallpage&quot;,
+    data:
+    {
+        type: &quot;SettingsWidgetSmallData&quot;,
+        from: &quot;settingswidgetsmallpage&quot;,
+        data: 
+        {
+            &lt;modal data>
+        },
+        dest_channel : &quot;&quot;,
+        to : &lt;your extension name>
+    },
+    dest_channel :&quot;&quot;,
+    to : &lt;your extension name>
+}
+</code></pre>
+<h2>Example modal code</h2>
+<p><img src="twitchchatmodal.png" alt="Tux, the Linux mascot"></p>
+<p>The settings widget small code sent is expectEd to be used in the contents of a popup settings box (linked on the extension name in the list of extensions).
+In order to be processed correctly and allow form submission back there are a few fields required and some formatting requirements.
+Any field wishing to be returned needs to have a 'name' tag
+example modal for a twitch chat extension popup</p>
+<pre class="prettyprint source"><code>&lt;div class=&quot;modal-dialog modal-xl&quot;>
+    &lt;div class=&quot;modal-content bg-light text-dark&quot;>
+        &lt;div class=&quot;modal-header&quot;>
+            &lt;h5 class=&quot;modal-title&quot;>Twitch Chat Settings&lt;/h5>
+            &lt;button type=&quot;button&quot; class=&quot;btn-close&quot; data-bs-dismiss=&quot;modal&quot;>&lt;/button>
+        &lt;/div>
+        &lt;div class=&quot;modal-body&quot;>
+            &lt;p>Settings available for twitch chat
+            &lt;/p>
+            &lt;div class=&quot;form-group invisible&quot;>
+                &lt;input type=&quot;hidden&quot; name=&quot;extensionname&quot; class=&quot;form-control&quot; value=&quot;twitchchat&quot;
+                    tabindex=&quot;-1&quot; />
+                &lt;input type=&quot;hidden&quot; name=&quot;modalcodetype&quot; class=&quot;form-control&quot; value=&quot;SettingsWidgetSmallCode&quot; tabindex=&quot;-1&quot; />
+                &lt;input type=&quot;hidden&quot; name=&quot;modaldatatype&quot; class=&quot;form-control&quot; value=&quot;SettingsWidgetSmallData&quot; tabindex=&quot;-1&quot; />
+                &lt;input type=&quot;hidden&quot; name=&quot;channel&quot; class=&quot;form-control&quot; value=&quot;TWITCH_CHAT&quot; tabindex=&quot;-1&quot; />
+            &lt;/div>
+            &lt;div class=&quot;form-group&quot;>
+                &lt;div class=&quot;form-check form-check-inline&quot;>
+                    &lt;input class=&quot;form-check-input&quot; name=&quot;enabletwitchchat&quot; type=&quot;checkbox&quot; id=&quot;enabletwitchchat&quot; checked>
+                    &lt;label class=&quot;form-check-label&quot; for=&quot;enabletwitchchat&quot;>Enable/Disable&lt;/label>
+                &lt;/div>
+            &lt;/div>
+
+            &lt;div class=&quot;form-group&quot;>
+                &lt;label for=&quot;streamername&quot; class=&quot;col-form-label&quot;>Streamer name&lt;/label>
+                &lt;input type=&quot;text&quot; name=&quot;streamername&quot; class=&quot;form-control&quot; id=&quot;streamername&quot; value=&quot;OldDepressedGamer&quot;>
+            &lt;/div>
+        &lt;/div>
+        &lt;div class=&quot;modal-footer&quot;>
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-dismiss=&quot;modal&quot;>Cancel&lt;/button>
+            &lt;button type=&quot;submit&quot; data-bs-dismiss=&quot;modal&quot; class=&quot;btn btn-primary&quot;>Update&lt;/button>
+        &lt;/div>
+    &lt;/div>
+&lt;/div>
+</code></pre>
+<p>The data that would be returned from this page when submitted would be</p>
+<pre class="prettyprint source"><code>{
+type: &quot;ExtensionMesssge&quot;,
+from: &quot;adminpage&quot;,
+data:
+    {
+        type: &quot;SettingsWidgetSmallCode&quot;,
+        from: &quot;adminpage&quot;
+        data:
+        {
+            extensionname: 'twitchchat',
+            modalcodetype: 'SettingsWidgetSmallCode',
+            modaldatatype: 'SettingsWidgetSmallData',
+            channel: 'TWITCH_CHAT',
+            enabletwitchchat: 'on',
+            streamername: 'OldDepressedGamer'
+        }
+        dest_channel: &quot;TWITCH_CHAT&quot;,
+        to: &quot;twitchchat&quot;,
+    }
+    dest_channel: &quot;TWITCH_CHAT&quot;,
+    to: &quot;twitchchat&quot;,
+}
+...
+</code></pre>
+<p>You can easily capture this in your message handler by looking for ExtensionMessage in the main packet and SettingsWidgetSmallData in the data packet</p>
+<h3>Description of the example</h3>
+<p>Going through some important bits in the example above</p>
+<h4>Title</h4>
+<p>Title for the modal</p>
+<pre class="prettyprint source"><code>    &lt;h5 class=&quot;modal-title&quot;>Twitch Chat Settings&lt;/h5>
+</code></pre>
+<h4>Description</h4>
+<p>This is where you put a short desription of the modal and maybe some explanation (if needed) to help the user know what to fill in.</p>
+<pre class="prettyprint source"><code>    &lt;p>Settings available for twitch chat
+</code></pre>
+<h4>Hidden fields</h4>
+<p>Hidden fields are used to know where to send the form back to and the type of data to report in the return message. You can add more if you want but these are the minimum required as they are needed to return the data</p>
+<pre class="prettyprint source"><code>&lt;input type=&quot;hidden&quot; name=&quot;extensionname&quot; class=&quot;form-control&quot; value=&quot;twitchchat&quot; tabindex=&quot;-1&quot; />
+&lt;input type=&quot;hidden&quot; name=&quot;modalcodetype&quot; class=&quot;form-control&quot; value=&quot;SettingsWidgetSmallCode&quot; tabindex=&quot;-1&quot; />
+&lt;input type=&quot;hidden&quot; name=&quot;modaldatatype&quot; class=&quot;form-control&quot; value=&quot;SettingsWidgetSmallData&quot; tabindex=&quot;-1&quot; />
+&lt;input type=&quot;hidden&quot; name=&quot;channel&quot; class=&quot;form-control&quot; value=&quot;TWITCH_CHAT&quot; tabindex=&quot;-1&quot; />
+</code></pre>
+<h4>Extension data</h4>
+<p>This are the fields you would like to receive when the form is submitted. You can used most fields but some will not get processed. Currently radio boxes and drop downs are not processed so it is best to stick with text boxes and checkboxes.</p>
+<p>Note: that checkboxes will not be in the returned message if disabled. An unchecked checkbox is verified as unchecked if it doesn't appear in the returned data.</p>
+<p>In this case there is one checkbox and one textbox</p>
+<pre class="prettyprint source"><code>&lt;input class=&quot;form-check-input&quot; name=&quot;enabletwitchchat&quot; type=&quot;checkbox&quot; id=&quot;enabletwitchchat&quot; checked>
+&lt;label class=&quot;form-check-label&quot; for=&quot;enabletwitchchat&quot;>Enable/Disable&lt;/label>
+
+&lt;label for=&quot;streamername&quot; class=&quot;col-form-label&quot;>Streamer name&lt;/label>
+&lt;input type=&quot;text&quot; name=&quot;streamername&quot; class=&quot;form-control&quot; id=&quot;streamername&quot; value=&quot;streamernametext&quot;>
+</code></pre>
+    </article>
+</section>
+<section><header><h2>"Adminpage" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Provides a webpage to allow authorization for an extension.<br>To use the webpage an extension needs to monitor for the message "RequestCredentialsModalsCode" and respond with "CredentialsModalCode".<br>The message should contain a model that will be used to pass back the data to the extension when the user presses submit, any named fields in teh model will be returned (such as text boxes etc).<br>NOTE: checkboxes 'variables' will be only be in the object if checked otherwise they will be missing from the returned object<br>The response message type will be taken from the html's "modaldatatype" elementSome other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_adminpage_adminpage.js.html">extensions/adminpage/adminpage.js</a>,
+                    <a href="extensions_adminpage_adminpage.js.html#line31">line 31</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_adminpage_adminpage.js.html">extensions/adminpage/adminpage.js</a>,
+                    <a href="extensions_adminpage_adminpage.js.html#line68">line 68</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Adminpage</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Adminpage_extension.html#initialise">initialise</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: backend/data_center/modules/common.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: backend/data_center/modules/common.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+// ############################# COMMON.js ####################################
+// Common code that is reused acrross modules
+// ---------------------------- creation --------------------------------------
+// Author: Silenus aka twitch.tv/OldDepressedGamer
+// GitHub: https://github.com/SilenusTA/streamer
+// Date: 02-Feb-2022
+// ============================================================================
+
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+import * as fs from "fs";
+import crypto from 'crypto';
+import process from 'node:process';
+import { execFile } from "child_process";
+import { dirname } from "path";
+import { fileURLToPath, pathToFileURL } from "url";
+
+//const usersPath = dirname(fileURLToPath(import.meta.url));
+let usersPath = process.env.APPDATA + "\\StreamRoller\\Data";
+const configFilesPath = usersPath + "\\configstore\\";
+const dataFilesPath = usersPath + "\\datastore\\";
+const credentialFilesPath = usersPath + "\\credentialstore\\";
+let credentials = {};
+
+if (!fs.existsSync(configFilesPath)) fs.mkdirSync(configFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(dataFilesPath)) fs.mkdirSync(dataFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+if (!fs.existsSync(credentialFilesPath)) fs.mkdirSync(credentialFilesPath, { recursive: true }, (err) => { if (err) throw err; });
+
+// ============================================================================
+//                  FUNCTION: encrypt
+// ============================================================================
+/**
+ * decrypt a text string
+ * @param {String} text 
+ * @returns {object} Encrypted data {iv:initialization vector ,encryptedData: string}
+ */
+
+function encrypt (text)
+{
+    let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { iv: JSON.stringify(credentials.iv), encryptedData: encrypted.toString('hex') };
+}
+
+// ============================================================================
+//                  FUNCTION: decrypt
+// ============================================================================
+/**
+ * decrypt a text string
+ * @param {String} text 
+ * @returns {String} A string containing the decrypted data
+ */
+function decrypt (text)
+{
+    //let iv = Buffer.from(text.iv, 'hex');
+    //let iv = JSON.parse(text.iv);
+    let encryptedText = Buffer.from(text.encryptedData, 'hex');
+    let decipher = crypto.createDecipheriv(credentials.algorithm, Buffer.from(credentials.key), Buffer.from(credentials.iv, 'hex'));
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+}
+// ============================================================================
+//                  FUNCTION: loadconfig
+// ============================================================================
+function initcrypto ()
+{
+    const credfile = loadConfig("seed", credentialFilesPath)
+    if (credfile === "")
+    {
+        // should create a new set on run and re-encrypt the current files but as
+        // this is really only here to avoid me sharing my keys on stream it isn't 
+        // really needed
+        credentials.algorithm = 'aes-256-cbc'; //Using AES encryption
+        credentials.key = crypto.randomBytes(32);
+        credentials.iv = crypto.randomBytes(16);
+        let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(credentials.key), credentials.iv);
+        saveConfig("seed", {
+            algorithm: credentials.algorithm,
+            key: credentials.key,
+            iv: credentials.iv
+        }, credentialFilesPath)
+    }
+    else
+    {
+        credentials.algorithm = credfile.algorithm;
+        credentials.key = credfile.key;
+        credentials.iv = credfile.iv
+    }
+}
+
+// ============================================================================
+//                  FUNCTION: loadconfig
+// ============================================================================
+/**
+ * Loads and returns a config file
+ * @param {String} configname 
+ * @returns configfile object or ""
+ */
+function loadConfig (configname, path = configFilesPath)
+{
+    let filename = path + configname + ".json";
+    try
+    {
+        if (fs.existsSync(filename))
+        {
+            try
+            {
+                var data = fs.readFileSync(filename);
+                let myObj = JSON.parse(data);
+                return myObj;
+            }
+            catch (err)
+            {
+                console.log('common.js: loadConfig: There has been an error parsing your JSON while loading the config file', configname)
+                console.log(err);
+                return {};
+            }
+        }
+    }
+    catch (err)
+    {
+        console.log("common.js: loadConfig error", err);
+    }
+    return "";
+}
+// ============================================================================
+//                  FUNCTION: loadSoftwareVersion
+// ============================================================================
+/**
+ * Loads and returns a SoftwareVersion number
+ * @returns version number or ""
+ */
+function loadSoftwareVersion ()
+{
+    let filename = dirname(fileURLToPath(import.meta.url)) + "/../../../SoftwareVersion.txt"
+    try
+    {
+        if (fs.existsSync(filename))
+        {
+            try
+            {
+                var data = fs.readFileSync(filename, { encoding: 'utf8', flag: 'r' });
+                return data;
+            }
+            catch (err)
+            {
+                console.log("Failed to find version file")
+                console.log(err);
+                return "";
+            }
+        }
+        else
+        {
+            return ""
+        }
+    }
+    catch (err)
+    {
+        console.log("common.js: loadConfig error", err);
+    }
+    return "";
+}
+// ============================================================================
+//                  FUNCTION: saveConfig
+// ============================================================================
+/**
+ * Saves data to the filename given.
+ * @param {string} configname 
+ * @param {object} data 
+ */
+function saveConfig (configname, data, path = configFilesPath)
+{
+    try
+    {
+        if (!fs.existsSync(path + configname + ".json"))
+        {
+            if (!fs.existsSync(configFilesPath))
+                console.log("common.js: saveConfig Path doesn't exist creating new")
+        }
+        fs.writeFileSync(path + configname + ".json", JSON.stringify(data), function (err)
+        {
+            if (err)
+                return false;
+            else
+                return true;
+        });
+    }
+    catch (err)
+    {
+        console.log("common.js: saveConfig failed,", err.message)
+    }
+}
+
+// ============================================================================
+//                  FUNCTION: loadData
+// ============================================================================
+function loadData (configname)
+{
+    return loadConfig(configname, dataFilesPath)
+}
+// ============================================================================
+//                  FUNCTION: saveData
+// ============================================================================
+function saveData (configname, data)
+{
+    return saveConfig(configname, data, dataFilesPath)
+}
+// ============================================================================
+//                  FUNCTION: loadCredentials
+// ============================================================================
+/**
+ * Loads and returns a config file
+ * @param {String} configname 
+ * @returns configfile object or ""
+ */
+function loadCredentials (configname)
+{
+    const credfile = loadConfig(configname, credentialFilesPath)
+    if (credfile != "")
+    {
+        const credfile = loadConfig(configname, credentialFilesPath)
+        const decrypted = decrypt(credfile);
+        return JSON.parse(decrypted);
+    }
+    else
+        return "";
+}
+// ============================================================================
+//                  FUNCTION: saveCredentials
+// ============================================================================
+/**
+ * Saves data to the filename given.
+ * @param {object} data 
+ */
+function saveCredentials (data)
+{
+    if (
+        (data.ExtensionName != "" &amp;&amp; data.CredentialName != "" &amp;&amp; data.CredentialValue != "")
+        &amp;&amp; (data.ExtensionName != null &amp;&amp; data.CredentialName != null &amp;&amp; data.CredentialValue != null)
+    )
+    {
+        let currentCredentials = loadCredentials(data.ExtensionName);
+        if (currentCredentials === "")
+        {
+            // we don't have an existing credential file
+            currentCredentials = {};
+            currentCredentials.ExtensionName = data.ExtensionName
+        }
+        currentCredentials[data.CredentialName] = data.CredentialValue;
+        const credstring = JSON.stringify(currentCredentials);
+        const encryptedcreds = encrypt(credstring);
+        saveConfig(data.ExtensionName, encryptedcreds, credentialFilesPath)
+    }
+    else
+        console.log("common.js: SaveCredentials failed, missing field in data", data.ExtensionName)
+}
+// ============================================================================
+//                           EXPORTS: 
+// ============================================================================
+export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials, loadSoftwareVersion };
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

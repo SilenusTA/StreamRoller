@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: extensions/sysinfo/sysinfo.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/sysinfo/sysinfo.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ *      StreamRoller Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ *      StreamRoller is an all in one streaming solution designed to give a single
+ *      'second monitor' control page and allow easy integration for configuring
+ *      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+ *      controlled by donations etc)
+ * 
+ *      This program is free software: you can redistribute it and/or modify
+ *      it under the terms of the GNU Affero General Public License as published
+ *      by the Free Software Foundation, either version 3 of the License, or
+ *      (at your option) any later version.
+ * 
+ *      This program is distributed in the hope that it will be useful,
+ *      but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *      GNU Affero General Public License for more details.
+ * 
+ *      You should have received a copy of the GNU Affero General Public License
+ *      along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
+ */
+/**
+ * @extension Sysinfo
+ * Provides information about the system(computer) that the extension is running on
+ */
+// ============================================================================
+//                           IMPORTS/VARIABLES
+// ============================================================================
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import si from 'systeminformation';
+import * as fs from "fs";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const localConfig = {
+    OUR_CHANNEL: "SYSINFO_CHANNEL",
+    EXTENSION_NAME: "sysinfo",
+    SYSTEM_LOGGING_TAG: "[EXTENSION]",
+    DataCenterSocket: null,
+    MAX_CONNECTION_ATTEMPTS: 5,
+    poll_handle_cpu_data: null,
+    poll_handle_cpu_temperature: null,
+    poll_handle_gpu_data: null,
+    CPUDataTriggerUpdated: false,
+    GPUDataTriggerUpdated: false,
+    CPUTemperaturesTriggerUpdated: false
+};
+
+const default_serverConfig = {
+    __version__: "0.1",
+    // data used in the settings modal
+    extensionname: localConfig.EXTENSION_NAME,
+    channel: localConfig.OUR_CHANNEL,
+    sysinfo_enabled: "off",
+    sysinfo_console_log_enabled: "off",
+    sysinfo_cpu_data_enabled: "off",
+    sysinfo_cpu_data_poll_interval: "60",//default poll time if enabled
+    sysinfo_cpu_temperature_enabled: "off",
+    sysinfo_cpu_temperature_poll_interval: "10",
+    sysinfo_gpu_data_enabled: "off",
+    sysinfo_gpu_data_poll_interval: "60",//default poll time if enabled
+
+
+    sysinfo_restore_defaults: "off",
+    // data for the app
+    temps_enabled: "off"
+
+};
+let serverConfig = structuredClone(default_serverConfig)
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "SysInfo Extension can provide information about the system that StreamRoller is running on",
+    version: "0.2",
+    channel: serverConfig.channel,
+    triggers:
+        [
+            {
+                name: "sysInfoCPUData",
+                displaytitle: "CPU Data",
+                description: "Data about the CPU",
+                messagetype: "trigger_sysinfoCPUData",
+                parameters: {
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)
+                }
+            },
+            {
+                name: "sysInfoCPUTemperatures",
+                displaytitle: "CPU Temperatures",
+                description: "CPU Temperatures if available (you may need to run StreamRoller as admin to allow windows to read this)",
+                messagetype: "trigger_sysinfoCPUTemperatures",
+                parameters: {
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)
+                }
+            },
+            {
+                name: "sysInfoGPUData",
+                displaytitle: "GPU Data",
+                description: "GPU Data",
+                messagetype: "trigger_sysInfoGPUData",
+                parameters: {
+                    reference: "",// this will be auto or a value passed in by an action
+                    //fields will be added on the first call (values change for specific hardware)/
+                }
+            }
+        ],
+    actions:
+        [
+            {
+                name: "sysInfoGetCPUData",
+                displaytitle: "Get CPU Data",
+                description: "Sends out a trigger with the CPU Data",
+                messagetype: "action_sysInfoGetCPUData",
+                parameters: { reference: "" }
+            },
+            {
+                name: "sysInfoGetCPUTemperatures",
+                displaytitle: "Get CPU Temperatures",
+                description: "Sends out a trigger with the CPU Temperatures",
+                messagetype: "action_sysInfoGetCPUTemperatures",
+                parameters: { reference: "" }
+            },
+            {
+                name: "sysInfoGetGPUData",
+                displaytitle: "Get GPU Data",
+                description: "Sends out a trigger with the GPU Data",
+                messagetype: "action_sysInfoGetGPUData",
+                parameters: { reference: "" }
+            }
+
+        ],
+}
+// ============================================================================
+//                           FUNCTION: initialise
+// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
+function initialise (app, host, port, heartbeat)
+{
+    // update our triggers with the systems fields
+    getCPUData("initialise");
+    getGPUData("initialise");
+    getCPUTemperature("initialise");
+
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
+            onDataCenterDisconnect, host, port);
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
+    }
+}
+
+// ============================================================================
+//                           FUNCTION: onDataCenterDisconnect
+// ============================================================================
+/**
+ * Disconnection message sent from the server
+ * @param {String} reason 
+ */
+function onDataCenterDisconnect (reason)
+{
+    // do something here when disconnects happens if you want to handle them
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+/**
+ * Connection message handler
+ * @param {*} socket 
+ */
+function onDataCenterConnect (socket)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
+    );
+
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * receives message from the socket
+ * @param {data} server_packet 
+ */
+function onDataCenterMessage (server_packet)
+{
+    //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
+    if (server_packet.type === "ConfigFile")
+    {
+        if (server_packet.data != "" &amp;&amp; server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+            }
+            else
+                serverConfig = structuredClone(server_packet.data);
+
+            SaveConfigToServer();
+            UpdateMonitoring();
+        }
+    }
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+            SendSettingsWidgetSmall(extension_packet.from);
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            {
+                if (extension_packet.data.sysinfo_restore_defaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                {
+                    serverConfig.sysinfo_enabled = "off";
+                    serverConfig.sysinfo_console_log_enabled = "off";
+                    serverConfig.sysinfo_cpu_data_enabled = "off";
+                    serverConfig.sysinfo_cpu_temperature_enabled = "off";
+                    serverConfig.sysinfo_gpu_data_enabled = "off";
+                    for (const [key, value] of Object.entries(extension_packet.data))
+                        serverConfig[key] = value;
+                }
+                SaveConfigToServer();
+                SendSettingsWidgetSmall("");
+                UpdateMonitoring();
+            }
+        }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sendTriggersAndActions(server_packet.from)
+        }
+        else if (extension_packet.type === "action_sysInfoGetCPUTemperatures")
+        {
+            console.log("action_sysInfoGetCPUTemperatures called with", extension_packet.data)
+            getCPUTemperature(extension_packet.data.reference)
+        }
+        else if (extension_packet.type === "action_sysInfoGetCPUData")
+        {
+            console.log("action_sysInfoGetCPUData called with", extension_packet.data)
+            getCPUData(extension_packet.data.reference)
+        }
+        else if (extension_packet.type === "action_sysInfoGetGPUData")
+        {
+            console.log("action_sysInfoGetGPUData called with", extension_packet.data)
+            getGPUData(extension_packet.data.reference)
+        }
+        else
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+
+    }
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        if (extension_packet.type === "HeartBeat")
+        {
+            //Just ignore messages we know we don't want to handle
+        }
+        else
+        {
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+        }
+    }
+    else if (server_packet.type === "InvalidMessage")
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+            "InvalidMessage ", server_packet.data.error, server_packet);
+    }
+    else if (server_packet.type === "LoggingLevel")
+    {
+        logger.setLoggingLevel(server_packet.data)
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+    )
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+/**
+ * sends some modal code to be displayed on the admin page or somewhere else
+ * this is done as part of the webpage request for modal message we get from 
+ * extension. It is a way of getting some user feedback via submitted forms
+ * from a page that supports the modal system
+ * @param {String} toextension 
+ */
+function SendSettingsWidgetSmall (toextension)
+{
+    fs.readFile(__dirname + '/sysinfosettingswidgetsmall.html', function (err, filedata)
+    {
+        if (err)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+        else
+        {
+            let modalstring = filedata.toString();
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                // replace text strings
+                else if (typeof (value) == "string")
+                    modalstring = modalstring.replace(key + "text", value);
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage",
+                    localConfig.EXTENSION_NAME,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode",
+                        localConfig.EXTENSION_NAME,
+                        modalstring,
+                        "",
+                        toextension,
+                        localConfig.OUR_CHANNEL
+                    ),
+                    "",
+                    toextension
+                ))
+        }
+    });
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * Sends our config to the server to be saved for next time we run
+ */
+function SaveConfigToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
+        ("SaveConfig",
+            localConfig.EXTENSION_NAME,
+            serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: sendTriggersAndActions
+// ============================================================================
+/**
+ * Sends the triggers and actions to the extension or broadcast if extension name is ""
+ * @param {string} extension 
+ */
+function sendTriggersAndActions (extension)
+{
+    if (extension != "")
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "TriggerAndActions",
+                    serverConfig.extensionname,
+                    triggersandactions,
+                    "",
+                    extension
+                ),
+                "",
+                extension
+            )
+        )
+    }
+    else
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "TriggerAndActions",
+                    serverConfig.extensionname,
+                    triggersandactions,
+                    serverConfig.channel,
+                    ""
+                ),
+                serverConfig.channel,
+                ""
+            )
+        )
+    }
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * Sends our config to the server to be saved for next time we run
+ */
+function UpdateMonitoring ()
+{
+    if (serverConfig.sysinfo_enabled == "on")
+    {
+        if (serverConfig.sysinfo_cpu_data_enabled == "on")
+        {
+            // is there any reason to have a poll for this data?
+            console.log("CPUData Polling TBD");
+            //getCPUData()
+        }
+        else
+            clearTimeout(localConfig.poll_handle_cpu_data);
+
+        if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
+            getCPUTemperatureScheduler();
+        else
+            clearTimeout(localConfig.poll_handle_cpu_temperature);
+
+        if (serverConfig.sysinfo_gpu_data_enabled == "on")
+            getGPUDataScheduler();
+        else
+            clearTimeout(localConfig.poll_handle_gpu_data);
+    }
+}
+// ============================================================================
+//                           FUNCTION: getCPUData
+// ============================================================================
+/**
+ * Requests CPU data and sends out a trigger message to the system
+  * @param {string} reference 
+ */
+function getCPUData (reference = "poll")
+{
+    si.cpu()
+        .then(data => 
+        {
+            // get the data in a format we can use in the triggers (can't access multidimensional arrays)
+            let new_data = flattenObject(data);
+            // update our triggers if we haven't done so already
+            if (!localConfig.CPUDataTriggerUpdated)
+            {
+                updateTrigger("trigger_sysinfoCPUData", new_data);
+                localConfig.CPUDataTriggerUpdated = true;
+            }
+
+            // add the users reference or the default if not provided
+            new_data.reference = reference;
+            if (serverConfig.sysinfo_console_log_enabled == "on")
+            {
+                console.log("CPU Data:", new_data)
+            }
+            // send the trigger with the new data
+            sendTrigger("trigger_sysinfoCPUData", new_data)
+        })
+        .catch(error => 
+        {
+            console.log("##### SysInfo getCPUData Error ######");
+            console.error(error)
+        });
+}
+
+// ============================================================================
+//                           FUNCTION: getCPUTemperature
+// ============================================================================
+/**
+ * Requests CPU Temperature data and sends out a trigger message to the system
+ */
+function getCPUTemperature (reference = "poll")
+{
+    // for an action use getCPUTemperature(reference); where reference is from the users action
+    try
+    {
+        si.cpuTemperature()
+            .then(data => 
+            {
+                // get the data in a format we can use in the triggers (can't access multidimensional arrays)
+                let new_data = flattenObject(data);
+                if (!localConfig.CPUTemperaturesTriggerUpdated)
+                {
+                    updateTrigger("trigger_sysinfoCPUTemperatures", new_data)
+                    localConfig.CPUTemperaturesTriggerUpdated = true;
+                }
+
+                new_data.reference = reference;
+                if (serverConfig.sysinfo_console_log_enabled == "on")
+                {
+                    console.log("CPU Temperature:", new_data)
+                }
+                // send the trigger with the new data
+                sendTrigger("trigger_sysinfoCPUTemperatures", new_data)
+            })
+            .catch(error => 
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "failed:", error);
+            });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getCPUTemperature", "callback failed:", err.message);
+    }
+    // restart timer if we are poll enabled
+    if (serverConfig.sysinfo_cpu_temperature_enabled == "on")
+        getCPUTemperatureScheduler();
+}
+// ============================================================================
+//                           FUNCTION: getCPUTemperatureScheduler
+// ============================================================================
+/**
+ * start the poll timer for the CPU temperature
+ */
+function getCPUTemperatureScheduler ()
+{
+    console.log("getCPUTemperatureScheduler")
+    // if we have a poll timer value, setup the poll timer
+    if (localConfig.poll_handle_cpu_temperature > 0)
+        clearTimeout(localConfig.poll_handle_cpu_temperature);
+    localConfig.poll_handle_cpu_temperature = setTimeout(getCPUTemperature, serverConfig.sysinfo_cpu_temperature_poll_interval * 1000)
+}
+// ============================================================================
+//                           FUNCTION: getGPUData
+// ============================================================================
+/**
+ * Requests GPU data and sends out a trigger message to the system
+ */
+function getGPUData (reference = "poll")
+{
+    si.graphics()
+        .then(data => 
+        {
+            let new_data = flattenObject(data);
+            if (!localConfig.GPUDataTriggerUpdated)
+            {
+                updateTrigger("trigger_sysInfoGPUData", new_data);
+                localConfig.GPUDataTriggerUpdated = true;
+            }
+            new_data.reference = reference;
+            if (serverConfig.sysinfo_console_log_enabled == "on")
+            {
+                console.log("GPU Data:", new_data)
+            }
+            sendTrigger("trigger_sysInfoGPUData", new_data)
+        })
+        .catch(error => 
+        {
+            console.log("##### SysInfo getGPUData Error ######");
+            console.error(error)
+        });
+    // restart timer if we are poll enabled
+    if (serverConfig.sysinfo_gpu_data_enabled == "on")
+        getGPUDataScheduler();
+}
+// ============================================================================
+//                           FUNCTION: getGPUDataScheduler
+// ============================================================================
+/**
+ * start the poll timer for the GPU Data
+ */
+function getGPUDataScheduler ()
+{
+    console.log("getGPUDataScheduler")
+    // if we have a poll timer value, setup the poll timer
+    if (localConfig.poll_handle_gpu_data > 0)
+        clearTimeout(localConfig.poll_handle_gpu_data);
+    localConfig.poll_handle_gpu_data = setTimeout(getGPUData, serverConfig.sysinfo_gpu_data_poll_interval * 1000)
+}
+// ============================================================================
+//                           FUNCTION: sendTrigger
+// ============================================================================
+/**
+ * Requests CPU Temperature data and sends out a trigger message to the system
+ */
+function sendTrigger (trigger_name, trigger_data)
+{
+    let trigger = findTriggerByMessageType(trigger_name);
+    if (trigger)
+    {
+        trigger.parameters = trigger_data;
+        //console.log("#### sendTrigger sending ####")
+        //console.log(JSON.stringify(trigger, null, 2))
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    trigger_name,
+                    serverConfig.extensionname,
+                    trigger,
+                    serverConfig.channel,
+                ),
+                serverConfig.channel)
+        )
+    }
+    else
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".sendTrigger:", "Failed to retrieve ", trigger_name);
+    }
+}
+// ============================================================================
+//                           FUNCTION: findTriggerByMessageType
+// ============================================================================
+function findTriggerByMessageType (messagetype)
+{
+    for (let i = 0; i &lt; triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".findTriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: flatten
+// ============================================================================
+function flatten (data = [])
+{
+    var ret = [];
+    console.log("########## flatten ##########")
+    console.log(data)
+    //check if we have an Array. if not it is probably an object
+    if (Array.isArray(data))
+    {
+        console.log("array passed")
+        for (var i = 0; i &lt; data.length; i++)
+        {
+            if (Array.isArray(data[i]))
+            {
+                ret = ret.concat(flatten(data[i]));
+            } else
+            {
+                ret.push(data[i]);
+            }
+        }
+    }
+    else if (typeof data === 'object' &amp;&amp;
+        !Array.isArray(data) &amp;&amp;
+        data !== null
+    )
+    {
+        console.log("got an object");
+    }
+    else 
+    {
+        console.log("got a variable");
+    }
+    return ret;
+}
+// ============================================================================
+//                           FUNCTION: flatten
+// ============================================================================
+function flattenObject (ob)
+{
+    var toReturn = {};
+
+    for (var i in ob)
+    {
+        if (!ob.hasOwnProperty(i)) continue;
+
+        if ((typeof ob[i]) == 'object' &amp;&amp; ob[i] !== null)
+        {
+            var flatObject = flattenObject(ob[i]);
+            for (var x in flatObject)
+            {
+                if (!flatObject.hasOwnProperty(x)) continue;
+                toReturn[i + '.' + x] = flatObject[x];
+            }
+        } else
+        {
+            toReturn[i] = ob[i];
+        }
+    }
+    return toReturn;
+}
+// ============================================================================
+//                           FUNCTION: updateTrigger
+// ============================================================================
+/**
+ * Updates the trigger parameter fields to what we get from the system (as these will be different on each PC)
+ * @param {string} trigger 
+ * @param {data} ob 
+ */
+function updateTrigger (trigger, ob)
+{
+    for (var triggers_i = 0; triggers_i &lt; triggersandactions.triggers.length; triggers_i++)
+    {
+        // find this trigger
+        if (triggersandactions.triggers[triggers_i].messagetype == trigger)
+        {
+            // add the fields to the trigger
+            for (const property in ob)
+            {
+                triggersandactions.triggers[triggers_i].parameters[property] = ""
+            }
+        }
+    }
+
+    // send out the update so extensions have the new trigger fields
+    sendTriggersAndActions("");
+    localConfig.CPUDataTriggerUpdated = true
+}
+// ============================================================================
+//                                  EXPORTS
+// ============================================================================
+export { initialise };
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

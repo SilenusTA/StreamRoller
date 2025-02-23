@@ -19,11 +19,23 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension YouTube
+ * YouTube functionality. 
+ * TBC. Currently just chat (send/receive messages), once testing proves it viable more features need adding (title changing etc)
+ */
 import * as logger from "../../backend/data_center/modules/logger.js";
 import { init } from "./server/server.js";
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]youtube.initialise", "host", host, "port", port, "heartbeat", heartbeat);

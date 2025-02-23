@@ -1,0 +1,474 @@
+<?js
+var self = this;
+var isGlobalPage;
+var objectcounter = 0
+var isExtensionPage = false
+var extensionsDone = false;
+var DEBUG = false
+var htmlstring = ""
+if (DEBUG)
+    htmlstring += `<div style="color:red">CONTAINER.TMPL</div>`
+
+docs.forEach(function (doc, i) 
+{
+    // for extensions we just run though once (we loop the items to insert into tis page)
+    if (extensionsDone)
+        return;
+    if (doc.kind == "extension")
+    {
+        //console.log("extobj",doc.readme)
+        //htmlstring+=doc.readme;
+        isExtensionPage = true
+        extensionsDone = true;
+    }
+    if (DEBUG)
+    {
+        htmlstring += `<div style="color:blue"><h2> Loop: ${objectcounter++}<BR>
+            </h2><BR>${JSON.stringify(doc, null, 2)}</div>`
+    }
+    // we only need to check this once
+    if (typeof isGlobalPage === 'undefined')
+        isGlobalPage = (doc.kind === 'globalobj');
+    if (doc.kind === 'mainpage' || doc.kind === 'package' )
+    {
+        if (DEBUG)
+            htmlstring += `<div style="color:red">mainpage or package</div>`
+        htmlstring += `${self.partial('mainpage.tmpl', doc)}`
+    }
+    else if (doc.kind === 'source') 
+    {
+        if (DEBUG)
+            htmlstring += `<div style="color:red">source</div>`
+        htmlstring += `${self.partial('source.tmpl', doc)} `
+    }
+    else 
+    {
+        if(doc.readme)
+        {
+            if (DEBUG)
+                htmlstring += `<div style="color:red">Readme</div>`
+            htmlstring += `${self.partial('mainpage.tmpl', doc)}`
+        }
+        /* Start Extensions page here, one pass multiple items in it */
+        if (DEBUG)
+            htmlstring += `<h3 style="color:red">starting header</h3>`
+        htmlstring += `<section><header>`
+        if (DEBUG)
+        {
+            htmlstring += `<div style="color:red">longname =
+                    ${doc.longname} 
+                    <BR>kind=${doc.kind}
+                    <BR>extensionname=${typeof (doc.extensionname)}:${doc.extensionname}
+                    </div>`
+        }
+        // if not a module and it has an extension name (part of extension code)
+        if (!doc.longname || (doc.kind !== 'module' && doc.extensionname))
+        {
+            if (DEBUG)
+            {
+                htmlstring += `<div style="color:red">Found an extensionname field</div>`
+            }
+            htmlstring += `<h2>`
+            if (doc.attribs)
+            { //######### attribs start
+
+                if (DEBUG)
+                {
+                    htmlstring += `<div style="color:red">has attributes${doc.attribs}</div>`
+                }
+                htmlstring += `<span class="attribs">${doc.attribs}</span>`
+
+            } // ######### attribs end
+            if (doc.ancestors && doc.ancestors.length)
+            { // ######### ancestors start
+
+                if (DEBUG)
+                {
+                    htmlstring += `<div style="color:red">has ancestors</div>`
+                }
+                htmlstring += `<span class="ancestors">${doc.ancestors.join('')}</span>`
+
+            }// ######### ancestors end
+            // set the label as to show it is an extension list of details on this page
+            if (isExtensionPage)
+                htmlstring += `"${doc.name}" Extension Details... `
+            else
+            {
+                if(doc.name)
+                htmlstring += doc.name
+            }
+            if (doc.variation)
+            { // variation start
+
+                if (DEBUG)
+                {
+                    htmlstring += `<div style="color:red">variation</div>`
+                }
+                htmlstring += `<sup class="variation">${doc.variation}</sup>`
+
+            }// variation end
+            if (doc.signature && !doc.hideconstructor)
+            { // signature start
+
+                if (DEBUG)
+                {
+                    htmlstring += `<div style="color:red">doc.signature && !doc.hideconstructor</div>`
+                }
+                htmlstring += `${doc.signature}`
+
+            }//signature end
+            htmlstring += `</h2>`
+            if (doc.classdesc)
+            { //classdesc start
+                if (DEBUG)
+                    htmlstring += `<div style="color:red">has doc.classdesc</div>`
+                htmlstring += `<div class="class-description">${doc.classdesc}</div>`
+            } //classdesc end
+        } //// !doc.longname || doc.kind !== 'module' end
+        else if (doc.kind === 'module' && doc.modules)
+        { // doc.kind === 'module' && doc.modules start
+
+            if (DEBUG)
+                htmlstring += `<div style="color:red">doc.kind === 'module' && doc.modules</div>`
+            doc.modules.forEach(function (module)
+            {
+                if (DEBUG)
+                    htmlstring += `<div style="color:red">looping modules</div>`
+                if (module.classdesc)
+                {
+                    if (DEBUG)
+                        htmlstring += `<div style="color:red">has module/classdescription</div>`
+                    htmlstring += `<div class="class-description">${module.classdesc}</div>`
+                }
+            })
+        } // doc.kind === 'module' && doc.modules end
+        htmlstring += `</header>`
+
+        if (DEBUG)
+        {
+            htmlstring += `<h3 style="color:red">Ending header</h3>
+                <div style="color:red">end looping modules</div>
+                <h3 style="color:red">Starting Article</h3>`
+        }
+        htmlstring += `<article>
+                <div class="container-overview">`
+        if (DEBUG)
+            htmlstring += `<h3 style="color:red">container-overview start
+                        <BR>doc.kind=${doc.kind} </h3>`
+
+        if (doc.kind === 'module' && doc.modules)
+        {
+            if (doc.description)
+            {
+                if (DEBUG)
+                    htmlstring += `< div style = "color:red" > doc.kind === 'module' && doc.modules</div>`
+                htmlstring += `<div class="description">${doc.description}</div>`
+            }
+            doc.modules.forEach(function (module)
+            {
+                if (DEBUG)
+                    htmlstring += `< div style = "color:red" > calling method on loop for all</div >`
+                elf.partial('method.tmpl', module)
+            })
+        }
+        else if (doc.kind === 'class'
+            || doc.kind === 'namespace'
+            || (doc.extensionanme && doc.kind != 'extension')
+            && doc.signature)
+        {
+            if (DEBUG)
+                htmlstring += `s<div style = "color:red" > parsing extensions/classes/namespaces</div>`
+            htmlstring += `${self.partial('method.tmpl', doc)}`
+        }
+        else
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red">examples</div>`
+            if (doc.description) 
+                // this field could be long so use line breaks
+                htmlstring += `<div class="description">${doc.description.replace(/(?:\r\n|\r|\n)/g, '<br>')}</div>`
+            htmlstring += `${self.partial('details.tmpl', doc)}`
+            if (doc.examples && doc.examples.length)
+                htmlstring += `<h3>Example${doc.examples.length > 1 ? 's' : ''}
+                    </h3>${self.partial('examples.tmpl', doc.examples)}`
+        }
+        //############################### End overview. start parsing items in extension ####
+
+        if (DEBUG)
+            htmlstring += `<h3 style="color:red">container-overview end</h3>`
+        htmlstring += `</div>`
+        if (doc.augments && doc.augments.length)
+        {
+            if (DEBUG)
+                htmlstring += `< div style = "color:red" > doc.augments && doc.augments.length</div >`
+            htmlstring += `<h3 class="subsection-title">Extends</h3>${self.partial('augments.tmpl', doc)}`
+        }
+        if (doc.requires && doc.requires.length)
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red">Requies</div>`
+            htmlstring += `<h3 class="subsection-title">Requires</h3>
+                    <ul>`
+            doc.requires.forEach(function (r)
+            {
+                htmlstring += `<li>${self.linkto(r, r)}</li>`
+            });
+            htmlstring += `</ul>`
+        }
+        var classes
+        if (isExtensionPage)
+            classes = self.find({ kind: 'class', extensionname: doc.extensionname });
+        else
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red">NOT EXTENSION PAGE</div>`
+       
+            classes = self.find({ kind: 'class', memberof: doc.longname });
+              // only show non extensions on other pages so remove them here
+            classes = classes.filter(removeextensionmemebers)
+        }
+
+        if (DEBUG)
+        {
+            htmlstring += "<div style = 'color:red'>Checking classes 2<BR>"+isExtensionPage+"<BR>"+ JSON.stringify(classes, null, 2) + "</div>"
+        }
+        if (!isGlobalPage && classes && classes.length)
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red">found some classes to process</div>`
+            htmlstring += `<h3 class="subsection-title">Classes</h3>
+                <dl>`
+            if (isExtensionPage)
+            {
+                classes.forEach(function (c)
+                {
+                    if (DEBUG)
+                        htmlstring += `<div style = "color:red" > parsing all extension classes</div >`
+                    htmlstring += `${self.partial('method.tmpl', c)}`
+                });
+            } else
+                classes.forEach(function (c)
+                {
+                    htmlstring += `<dt>`
+                    if (DEBUG)
+                    {
+                        htmlstring += `<div style = "color:red">looping classes`
+                        htmlstring += `${c.longname}<BR>${c.name}<BR></div>`
+                    }
+                    htmlstring += `${self.linkto(c.longname, c.name)}
+                                    </dt >
+                                <dd>`
+                    if (c.summary)
+                    {
+                        htmlstring += `${c.summary}`
+                    }
+                    htmlstring += `</dd>`
+                });
+            htmlstring += `</dl>`
+
+        }
+        var interfaces = self.find({ kind: 'interface', memberof: doc.longname });
+        // only show non extensions on other pages so remove them here
+        interfaces = interfaces.filter(removeextensionmemebers)
+        if (!isGlobalPage && interfaces && interfaces.length)
+        {
+            if (DEBUG)
+                htmlstring += `< div style = "color:red" > !isGlobalPage && interfaces && interfaces.length</div>`
+            htmlstring += `<h3 class= "subsection-title">Interfaces</h3>
+                    <dl>`
+            interfaces.forEach(function (i)
+            {
+                htmlstring += `
+                        <dt>`
+                if (DEBUG)
+                    htmlstring += `< div style = "color:red" > interfaces.forEach(function (i)h</div >`
+                htmlstring += `self.linkto(i.longname, i.name) 
+                        </dt>
+                        <dd>`
+                if (i.summary)
+                    htmlstring += `${i.summary}`
+                htmlstring += `
+                        </dd>`
+            });
+            htmlstring += `
+                    </dl>`
+        }
+        var mixins = self.find({ kind: 'mixin', memberof: doc.longname });
+        // only show non extensions on other pages so remove them here
+        mixins = mixins.filter(removeextensionmemebers)
+        if (!isGlobalPage && mixins && mixins.length)
+        {
+            htmlstring += `<h3 class="subsection-title">Mixins</h3>
+                <dl>`
+            mixins.forEach(function (m) 
+            {
+                htmlstring += `<dt>${self.linkto(m.longname, m.name)}
+                    </dt>
+                <dd>`
+                if (m.summary)
+                    htmlstring += `m.summary `
+                htmlstring += `</dd>`
+            });
+            htmlstring += `</dl>`
+        }
+
+        var namespaces = self.find({ kind: 'namespace', memberof: doc.longname });
+        // only show non extensions on other pages so remove them here
+        namespaces = namespaces.filter(removeextensionmemebers)
+        if (!isGlobalPage && namespaces && namespaces.length)
+        {
+            htmlstring += `<h3 class="subsection-title">Namespaces</h3>
+        <dl>`
+            namespaces.forEach(function (n) 
+            {
+                htmlstring += `
+            <dt>${self.linkto(n.longname, n.name)}
+            </dt>
+            <dd>`
+                if (n.summary)
+                    htmlstring += `${n.summary}`
+                htmlstring += `
+        </dd>`
+
+            });
+            htmlstring += `
+        </dl>`
+        }
+        var members = self.find({ kind: 'member', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
+        // only show non extensions on other pages so remove them here
+        members = members.filter(removeextensionmemebers)
+        // symbols that are assigned to module.exports are not globals, even though they're not a memberof anything
+        if (isGlobalPage && members && members.length && members.forEach)
+        {
+            if (DEBUG)
+                htmlstring += `< div style = "color:red" > isGlobalPage && members && members.length && members.forEach</div >`
+            members = members.filter(function (m)
+            {
+                return m.longname && m.longname.indexOf('module:') !== 0;
+            });
+        }
+        if (members && members.length && members.forEach)
+        {
+            if (DEBUG)
+                htmlstring += `< div style = "color:red" > members && members.length && members.forEach</div >`
+            htmlstring += `<h3 class="subsection-title">Members</h3>`
+
+            members.forEach(function (p)
+            {
+                if (DEBUG)
+                    htmlstring += `<div style = "color:red" > members.forEach(function (p)</div >`
+                htmlstring += `${self.partial('members.tmpl', p)}`
+            });
+        }
+        if (DEBUG)
+            htmlstring += `<div style="color:red">Checking normal methods</div>`
+        var methods = self.find({ kind: 'function', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
+        // only show non extensions on other pages so remove them here
+        methods = methods.filter(removeextensionmemebers)
+        if (DEBUG)
+            htmlstring += `<div style = "color:red">methdods=${methods}<BR>
+                    isGlobalPage=${isGlobalPage}<BR></div>`
+        if (methods && methods.length && methods.forEach)
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red" > methods && methods.length && methods.forEach</div >`
+            htmlstring += `<h3 class="subsection-title">Methods</h3>`
+            methods.forEach(function (m)
+            {
+                if (DEBUG)
+                    htmlstring += `<div style = "color:red" > parsing all methods</div >`
+                htmlstring += `${self.partial('method.tmpl', m)}`
+            });
+        }
+        if (DEBUG)
+            htmlstring += `<div style = "color:red"> Checking extension methods</div>`
+        var extensionmethods = self.find({ kind: 'function', extensionname: doc.name });
+        //var extensionmethods = self.find({kind: 'function'});
+        if (DEBUG)
+        {
+            htmlstring += `<div style = "color:red" >isGlobalPage=${isGlobalPage} <BR>`
+            //htmlstring += `extensionmethods=${JSON.stringify(extensionmethods, null, 2)}<BR>`
+            htmlstring += `doc.name=${doc.name}<Br></div>`
+        }
+        if (extensionmethods && extensionmethods.length && extensionmethods.forEach)
+        {
+            if (DEBUG)
+                htmlstring += `<div style = "color:red" > extensionmethods && extensionmethods.length && extensionmethods.forEach</div >`
+            htmlstring += `<h3 class="subsection-title">Methods</h3>`
+            extensionmethods.forEach(function (m)
+            {
+                if (DEBUG)
+                    htmlstring += `<div style = "color:red" > parsing all extensions</div >`
+                htmlstring += `${self.partial('method.tmpl', m)}`
+            });
+        }
+        var typedefs = self.find({ kind: 'typedef', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
+        // only show non extensions on other pages so remove them here
+        typedefs = typedefs.filter(removeextensionmemebers)
+        if (typedefs && typedefs.length && typedefs.forEach)
+        {
+            htmlstring += `<h3 class="subsection-title">Type Definitions</h3>`
+            if (DEBUG)
+                htmlstring += `<div style = "color:red">Type Definitions</div>`
+            typedefs.forEach(function (e)
+            {
+                if (e.signature)
+                {
+                    if (DEBUG)
+                        htmlstring += `<div style = "color:red" > Type Definitions</div>`
+                    htmlstring += `${self.partial('method.tmpl', e)}`
+                }
+                else
+                    htmlstring += `${self.partial('members.tmpl', e)}`
+            });
+        }
+        var events = self.find({ kind: 'event', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
+        // only show non extensions on other pages so remove them here
+        events = events.filter(removeextensionmemebers)
+        if (events && events.length && events.forEach)
+        {
+            htmlstring += `<h3 class="subsection-title">Events</h3>`
+            events.forEach(function (e)
+            {
+                htmlstring += `${self.partial('method.tmpl', e)}`
+            });
+        }
+        htmlstring += `</article >`
+        if (DEBUG)
+            htmlstring += `<h3 style="color:red">Ending Article</h3>`
+        htmlstring += `</section >`
+    }
+});
+
+if (DEBUG)
+{
+    let docsformatted = JSON.stringify(docs, null, 2)
+        .replaceAll("{", " <BR> {<BR>& nbsp;&nbsp;&nbsp;&nbsp;")
+        .replaceAll(",}", ",<BR>}")
+        .replaceAll(",", ",<BR>&nbsp;&nbsp;&nbsp;&nbsp;")
+        .replaceAll("}", "<BR>}")
+        .replaceAll('"', "&quot;");
+    let docsJSON = JSON.stringify(docs, null, 2);
+    htmlstring += `"Container Data provided <BR>"`
+    htmlstring += `<BR>docsJSON=${docsJSON}<HR>`
+    htmlstring += `<BR>docsformatted${docsformatted}<HR>`
+    
+    let selfformatted = JSON.stringify(self, null, 2);
+    htmlstring += `<BR>selfformatted${selfformatted}<HR>`
+
+}
+function removeextensionmemebers (d)
+{
+    // only filter out memebers. let the extensions go through
+    if (d.kind == "extension")
+        return true
+    // let through anything not part of an extension
+    else if (d.extensionname == undefined)
+        return true
+    // remove everything else
+    else 
+        return false
+}
+return htmlstring
+    //return "<h1>Return</h1>"
+    ?>

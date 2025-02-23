@@ -12,7 +12,7 @@
     "postinstall": "cd backend && npm install"
   },
   "author": "Twitch/OldDepressedGamer",
-  "license": "",
+  "license": "MIT",
   "dependencies": {
     "debug": "^4.3.3",
     "express": "^4.17.3",

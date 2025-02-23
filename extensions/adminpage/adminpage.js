@@ -19,7 +19,7 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
- // ############################# ADMINPAGE.js ##############################
+// ############################# ADMINPAGE.js ##############################
 // Page to handle extension settings and show general data
 // ---------------------------- creation --------------------------------------
 // Author: Silenus aka twitch.tv/OldDepressedGamer
@@ -28,7 +28,14 @@
 // --------------------------- functionality ----------------------------------
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-
+/**
+ * @extension Adminpage
+ * Provides a webpage to allow authorization for an extension.
+ * To use the webpage an extension needs to monitor for the message "RequestCredentialsModalsCode" and respond with "CredentialsModalCode".
+ * The message should contain a model that will be used to pass back the data to the extension when the user presses submit, any named fields in teh model will be returned (such as text boxes etc).
+ * NOTE: checkboxes 'variables' will be only be in the object if checked otherwise they will be missing from the returned object
+ * The response message type will be taken from the html's "modaldatatype" element 
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -46,12 +53,19 @@ let dataCenterApp = null;
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Desription: Starts the extension
+// Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
-function initialise(app, host, port, heartbeat)
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
+function initialise (app, host, port, heartbeat)
 {
     logger.extra("[EXTENSION]adminpage.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     dataCenterApp = app;

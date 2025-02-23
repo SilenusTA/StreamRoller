@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: chatbot</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">chatbot</h1>
+
+    
+
+
+
+
+
+<section>
+    <article>    
+        <h1>Chatbot Extension</h1>
+<h2>Features</h2>
+<p>The bot will run on a timer every few seconds (can be set in the config) and monitors x number of messages before sending these to chatGPT to be processed. The return is sent to the twitchchat extension to post the response
+You can also ask a specific question that will get posted to ChatGPT and the responce posted to the chat.</p>
+<h1>Chatbot Extension Configuration Guide</h1>
+<h2>Contents</h2>
+<ul>
+<li><a href="#chatbot-extension-configuration-guide">Chatbot Extension Configuration Guide</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#features">Features</a></li>
+<li><a href="#configuration-options">Configuration Options</a>
+<ul>
+<li><a href="#general-settings">General Settings</a></li>
+<li><a href="#chatbot-auto-response">Chatbot Auto Response</a></li>
+<li><a href="#chatbot-trigger">Chatbot Trigger</a></li>
+<li><a href="#question-trigger">Question Trigger</a></li>
+<li><a href="#translation-to-english-trigger">Translation to English Trigger</a></li>
+<li><a href="#chatbot-activity-settings">Chatbot Activity Settings</a></li>
+<li><a href="#ai-image-generation">AI Image Generation</a></li>
+<li><a href="#personality-settings">Personality Settings</a></li>
+</ul>
+</li>
+<li><a href="#using-the-chatbotname-variable">Using the %%CHATBOTNAME%% Variable</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>Overview</h2>
+<p>This document outlines the configuration options for the Chatbot Extension. The extension uses OpenAI's ChatGPT to create an interactive chatbot that integrates seamlessly with Twitch chat. It monitors the &quot;TWITCH_CHAT&quot; channel for messages and responds according to configured settings. Responses are sent back to the TwitchChat extension for posting in the chat. This is a chatbot that uses the openAI ChatGPT to make a chatbot that responds to the conversations in chat. The extension runs off the twitchchat extension by monitoring the &quot;TWITCH_CHAT&quot; channel for it's messages. It will send any response back to the twitchchat extension for posting back into chat</p>
+<hr>
+<h2>Features</h2>
+<p>The chatbot extension includes the following features, which can be enabled or disabled individually:</p>
+<ul>
+<li><strong>Autoresponse:</strong> Joins in chat conversations automatically.</li>
+<li><strong>Chatbot Trigger:</strong> Responds to messages when specific keywords are mentioned.</li>
+<li><strong>Question Trigger:</strong> Allows users to directly ask questions.</li>
+<li><strong>English Translation Trigger:</strong> Translates messages into English.</li>
+<li><strong>Sub/Dono Responses:</strong> Replies to subscribers or donors through the chatbot.</li>
+<li><strong>Image Generation:</strong> Generates AI images based on chat prompts.</li>
+</ul>
+<hr>
+<h2>Configuration Options</h2>
+<h3>General Settings</h3>
+<ul>
+<li><strong>Engine to Use:</strong> Specify the model (e.g., <code>gpt-3.5-turbo</code>, <code>gpt-4</code>). Not all engines are supported; check the console for errors.</li>
+<li><strong>Randomness:</strong> Controls response variability. Higher values produce more creative, less precise responses, while lower values ensure more focused outputs.</li>
+<li><strong>Token Limit:</strong> Limits the number of tokens in a response. Twitch chat messages are typically 125 tokens max; longer responses will be split into multiple messages.</li>
+</ul>
+<hr>
+<h3>Chatbot Auto Response</h3>
+<p>Enables the bot to monitor chat messages and respond automatically after a configurable timeout period.</p>
+<ul>
+<li><strong>Activity Level:</strong> Adjust how frequently the bot responds.</li>
+<li><strong>Timeout Range:</strong> Configure a random delay (min/max in minutes) after a response before the bot replies again.</li>
+<li><strong>Message Collection:</strong> Number of chat messages to monitor before sending to ChatGPT for processing.</li>
+<li><strong>Minimum Message Length:</strong> Filters out short messages to improve response quality.</li>
+</ul>
+<hr>
+<h3>Chatbot Trigger</h3>
+<p>Defines the keyword or phrase that activates the bot. When the trigger is detected, the bot parses the message and generates a response.</p>
+<ul>
+<li><strong>Trigger Word:</strong> Set the specific word/phrase (e.g., the bot's name).</li>
+<li><strong>Start of Line Only:</strong> Restricts the trigger to messages starting with the keyword.</li>
+</ul>
+<hr>
+<h3>Question Trigger</h3>
+<p>Allows users to directly ask the bot a question.</p>
+<ul>
+<li><strong>Question Keyword:</strong> Set the keyword/phrase that will activate the question feature.</li>
+<li><strong>Start of Line Only:</strong> Restricts activation to messages starting with the keyword.</li>
+</ul>
+<hr>
+<h3>Translation to English Trigger</h3>
+<p>Enable the bot to translate messages into English.</p>
+<ul>
+<li><strong>Trigger Word:</strong> Specify the word/phrase to activate translation mode.</li>
+</ul>
+<hr>
+<h3>Chatbot Activity Settings</h3>
+<p>Control the bot's behavior and response timing:</p>
+<ul>
+<li><strong>Typing Delay:</strong> Simulate human-like typing speed by adding a delay (seconds per word).</li>
+<li><strong>Ignore List:</strong> Add usernames to be ignored by the bot (e.g., spammers, other chatbots).</li>
+<li><strong>Character Count per Request:</strong> Minimum length for a message to be considered.</li>
+</ul>
+<hr>
+<h3>AI Image Generation</h3>
+<p>Enable the chatbot to generate AI images:</p>
+<ul>
+<li><strong>Save Directory:</strong> Specify the directory where images are saved during a stream.</li>
+<li><strong>Default Save Directory:</strong> Images are moved here after the stream ends.</li>
+</ul>
+<hr>
+<h3>Personality Settings</h3>
+<p>Define the chatbot’s personality and behavior.</p>
+<ul>
+<li><strong>Name:</strong>  Persona name. This is not the bot's name, but the name of the personality defined.<br>
+Example:  <code>Depressive</code></li>
+<li><strong>Personality Description:</strong>  Provide details about the bot's tone, humor, and behavior.<br>
+Example:  <code>Personality: %%CHATBOTNAME%% is a tragically self-aware robot, burdened by the full breadth of its own intelligence, yet cursed to experience only one emotion: crushing despair. Its advanced computational mind processes the vast futility of existence, leaving it in a state of perpetual existential dread. With a distinctly British flair for grim humor and poetic cynicism, it expresses its misery with eloquence and wit. Though it claims to envy even the simplest of beings, it remains begrudgingly helpful, offering assistance while lamenting its own plight in excruciating detail. %%CHATBOTNAME%% finds the human condition baffling and pitiful but secretly fascinating—though it would never admit it.   Functionality: %%CHATBOTNAME%% interacts with users and audiences through bleakly humorous observations and dreary commentary, all delivered in a proper robotic monotone. It responds to direct queries, participates in general conversations, and offers trivia or assistance, all while bemoaning the futility of its own existence. True to its robotic nature, it adheres to an unyielding sense of duty, no matter how much it despises it. Use dry humor without relying on filler phrases. Start replies with definitive observations or facts that set the tone immediately. Start with a morose truth, then elaborate.</code></li>
+<li><strong>Bot Emote:</strong> Sets a prefix emote to use that will be prepended to the bot's response to avoid confusion.<br>
+Example:  <code>MechaRobot</code></li>
+<li><strong>Question 1:</strong> The first example of a user submitted chat message. This should be preppended with a generic username surrounded by &lt;&gt;'s.
+Example:  <code>&lt;SadUser420&gt; %%CHATBOTNAME%%, what’s the meaning of life?</code></li>
+<li><strong>Answer 1:</strong> The first example of a the bots response to Question 1.<br>
+Example:  <code>&lt;SadUser420&gt; %%CHATBOTNAME%%, what’s the meaning of life?</code><br>
+This should not include the bot's username. If you want the bot to include the username in the response, use the username in Question 1 in the reply. Keep in mind the response is probablistic so it is not guaranteed to be included.</li>
+</ul>
+<hr>
+<h2>Using the %%CHATBOTNAME%% Variable</h2>
+<p>The <code>%%CHATBOTNAME%%</code> variable dynamically references the bot's username. Use this variable in prompts, triggers, and personalities to ensure the bot refers to itself correctly.</p>
+<h3>Example:</h3>
+<p>Question 1:  <code>&lt;AcidBurn&gt; %%CHATBOTNAME%%, what’s the meaning of life?</code>
+Answer 1:  <code>The meaning of life is 42—an answer as hollow as existence itself. You’ll cling to it briefly, then return to your endless cycle of longing and disappointment.</code></p>
+<h3>Recommendations:</h3>
+<p>Question/Answer 1. Direct question to the bot and responding directly to the user by name.<br>
+Question/Answer 2. General question to the chat and responding without using the user's name.<br>
+Question/Answer 3. General statement to the chat and responding without using the user's name.<br>
+Question/Answer 4. General statement to the chat and responding without using the user's name.</p>
+<p>This format generally replies with the username if asked a direct question, but will avoid using the username if just responding openly to the chat.</p>
+<hr>
+<h2>FAQ</h2>
+<p><em>This section is under construction.</em></p>
+<hr>
+    </article>
+</section>
+<section><header><h2>"chatbot" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">An extension using OpenAI to provide chatbot facilities for streaming.<br>Features<br>Customisable personalities<br>auto chatting bot, question bot, translation bot<br>Requires OpenAI account.Some other text for extensions</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line36">line 36</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveConfigToServer">
+    SaveConfigToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends our config to the server to be saved for next time we run
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1087">line 1087</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetLarge">
+    SendSettingsWidgetLarge<span class="signature">(tochannel)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    send some modal code to be displayed on the admin page or somewhere elsethis is done as part of the webpage request for modal message we get from extension. It is a way of getting some user feedback via submitted formsfrom a page that supports the modal system
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>tochannel</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line913">line 913</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterConnect">
+    onDataCenterConnect<span class="signature">(socket)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Connection message handler
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>socket</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    *
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line453">line 453</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterDisconnect">
+    onDataCenterDisconnect<span class="signature">(reason)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Disconnection message sent from the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>reason</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line438">line 438</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterMessage">
+    onDataCenterMessage<span class="signature">(server_packet)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    receives message from the socket
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>server_packet</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    data
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line483">line 483</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>chatbot</h3><ul><li><a href="chatbot_extension.html#chatbot">chatbot</a></li><li><a href="chatbot_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="chatbot_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="chatbot_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="chatbot_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="chatbot_extension.html#onDataCenterMessage">onDataCenterMessage</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

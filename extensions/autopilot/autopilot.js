@@ -19,7 +19,11 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+/**
+ * @extension Autopilot
+ * Provides the Autopilot webpage. This page allows the user to pair up triggers and actions from extensions to perform tasks.
+ * It also provides a macro button system (similar to streamdeck's)
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -40,6 +44,13 @@ import * as server from "./server/server.js"
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     config.heartBeatTimeout = heartbeat;

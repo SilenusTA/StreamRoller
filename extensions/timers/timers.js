@@ -19,6 +19,10 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension Timers
+ * Provides timers than can be used for things like triggering actions. Provides a method to create complex trigger action sequences by allowing chaining/delaying etc.
+ */
 // ############################# Timers.js ##############################
 // This extension creates timers for use in the system.
 // ---------------------------- creation --------------------------------------
@@ -29,7 +33,6 @@
 // Current functionality:
 // Countdown Timers etc
 // ============================================================================
-
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -131,6 +134,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     try

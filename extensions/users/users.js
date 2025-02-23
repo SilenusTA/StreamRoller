@@ -19,6 +19,12 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * @extension Users
+ * Collects data on users.i.e. last seen, a buffer of messages etc. 
+ * TBD. needs more work due to size of data and finding a useful reason (from a streamers perspective)
+ * Awaiting requests for what it should do before advancing the extension
+ */
 // ############################# users.js ##############################
 // This extension handles users/viewers data. ie a place to store channel points etc
 // ---------------------------- creation --------------------------------------
@@ -88,6 +94,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {object:Express} app 
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     try

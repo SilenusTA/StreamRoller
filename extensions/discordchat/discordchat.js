@@ -33,7 +33,12 @@
 // ----------------------------- notes ----------------------------------------
 // In Progress
 // ============================================================================
-
+/** 
+ * @extension DiscordChat 
+ * Send received discord chat messages. Useful for mod messages during stream
+ * as these can be displayed below chat on the liveportal
+ * This is useful when you want mod messages not seen by chat.
+ */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -126,7 +131,7 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * maddatory function so that the backend can start us up
+ * mandatory function so that the backend can start us up
  */
 function initialise (app, host, port, heartbeat)
 {
