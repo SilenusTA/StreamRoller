@@ -439,8 +439,9 @@ function onDataCenterMessage (server_packet)
         }
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname, "CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
+            if (serverConfig.enabled == "on")
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    serverConfig.extensionname, "CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
 
     }
