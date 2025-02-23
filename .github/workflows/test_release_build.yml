@@ -18,6 +18,13 @@ jobs:
           rm -fr .git/*
           rmdir .git
           ls -la
+    - name: removing git folder (to keep space down in exe)
+      run: |
+          ls -la
+          rm -fr docs/apidocs/*
+          rmdir docs/apidocs
+          ls -la
+    
     - name: uploading artifact
       uses: actions/upload-artifact@v4
       with:
