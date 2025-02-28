@@ -28,33 +28,57 @@ import { fileURLToPath } from 'url';
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
 
+let DEBUG_PERFORMANCE = true;
+const pv =
+{
+    api_call_count: [],
+    api_read_write: [],
+    start_time: 0,
+    end_time: 0,
+    api_calls: [],
+    api_calls_average_start: 0,
+    debugFile: null,
+    fileStarted: false,
+    pollTimer: 60000
+}
+pv.api_call_count["oauth2Client_setCredentials"] = 0;
+pv.api_call_count["oauth2Client_credentials_access_token"] = 0;
+pv.api_call_count["oauth2Client_new_OAuth2Client"] = 0;
+pv.api_call_count["oauth2Client_refreshAccessToken"] = 0;
+pv.api_call_count["oauth2Client_removeAllListeners"] = 0;
+pv.api_call_count["oauth2Client_on"] = 0;
+pv.api_call_count["oauth2Client_generateAuthUrls"] = 0;
+pv.api_call_count["oauth2Client_getToken"] = 0;
+pv.api_call_count["youtubeAPI_liveChatMessages_list"] = 0;
+pv.api_call_count["youtubeAPI_liveChatMessages_insert"] = 0;
+pv.api_call_count["youtubeAPI_new"] = 0;
+pv.api_call_count["youtubeAPI_liveBroadcasts_list"] = 0;
+pv.timeoutHandle = setInterval(file_log, pv.pollTimer);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
-    OUR_CHANNEL: "YOUTUBE",
-    EXTENSION_NAME: "youtube",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
-    youtubeliveid: null,
     oauth2Client: null,
     youtubeAPI: null,
-    lastProcessedMessageId: null,
-    skippedBacklog: false,
+    //lastProcessedMessageId: null,
+    //skippedBacklog: false,
     ServerCredentialsLoaded: false,
     delayStartYoutubeMonitorHandle: null,
     delaySetupAuthenticatePage: null,
     liveChatId: null,
+    liveChatMessagePageToken: null
 };
 
 const default_serverConfig = {
     __version__: "0.1",
-    extensionname: localConfig.EXTENSION_NAME,
-    channel: localConfig.OUR_CHANNEL,
-    youtubeenabled: "off",
-    youtube_restore_defaults: "off",
-    youtubechatpollrate: 5000,
+    extensionname: "youtubeapi",
+    channel: "YOUTUBEAPI",
+    youtubeapienabled: "off",
+    youtubeapi_restore_defaults: "off",
+    youtubeapichatpollrate: 5000,
     host: "http://localhost",
     port: "3000"
 };
@@ -84,14 +108,14 @@ let serverCredentials = structuredClone(default_serverCredentials);
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "YouTube extension",
+    description: "YouTubeAPI extension",
     version: "0.2",
     channel: serverConfig.channel,
     triggers:
         [
             {
-                name: "YoutubeMessageReceived",
-                displaytitle: "YouTube Chat Message",
+                name: "YouTubeAPIMessageReceived",
+                displaytitle: "YouTubeAPI Chat Message",
                 description: "A chat message was received. textMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
@@ -126,10 +150,10 @@ const triggersandactions =
     actions:
         [
             {
-                name: "youtubepostlivechatmessage",
+                name: "YouTubeAPIPostLiveChatMessage",
                 displaytitle: "Post a Message to youtube live chat",
                 description: "Post to youtube live chat if we are connected.",
-                messagetype: "action_youtubePostLiveChatMessage",
+                messagetype: "action_youtubeAPIPostLiveChatMessage",
                 parameters: { message: "" }
             }
 
@@ -140,6 +164,10 @@ const triggersandactions =
 // ============================================================================
 function init (host, port, heartbeat, webapp)
 {
+    if (DEBUG_PERFORMANCE)
+    {
+        pv.start_time = performance.now()
+    }
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "heartbeat", heartbeat);
     serverConfig.host = host
     serverConfig.port = port
@@ -155,7 +183,7 @@ function init (host, port, heartbeat, webapp)
             onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
     setupAuthenticatePage();
 }
@@ -165,7 +193,7 @@ function init (host, port, heartbeat, webapp)
 // ============================================================================
 function onDataCenterDisconnect (reason)
 {
-    logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -193,7 +221,7 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
-            let previous_enabled = serverConfig.youtubeenabled;
+            let previous_enabled = serverConfig.youtubeapienabled;
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
                 serverConfig = structuredClone(default_serverConfig);
@@ -204,8 +232,8 @@ function onDataCenterMessage (server_packet)
 
             SaveConfigToServer();
             // check if we were previously enabled in setting (on startup this will be off)
-            if (previous_enabled != serverConfig.youtubeenabled)
-                if (serverConfig.youtubeenabled == "on")
+            if (previous_enabled != serverConfig.youtubeapienabled)
+                if (serverConfig.youtubeapienabled == "on")
                     startYoutubeMonitor()
                 else
                     stopYoutubeMonitor()
@@ -240,15 +268,26 @@ function onDataCenterMessage (server_packet)
             // if something else has changed then update the client credentials to match
             if (originalCredentials != serverCredentials)
             {
-                localConfig.oauth2Client.setCredentials(
-                    {
-                        access_token: serverCredentials.access_token,
-                        refresh_token: serverCredentials.refresh_token,
-                        scope: serverCredentials.scope,
-                        token_type: serverCredentials.token_type,
-                        expiry_date: serverCredentials.expiry_date,
-                    }
-                );
+                if (DEBUG_PERFORMANCE)
+                {
+                    pv.api_call_count.oauth2Client_setCredentials++;
+                }
+                try
+                {
+                    localConfig.oauth2Client.setCredentials(
+                        {
+                            access_token: serverCredentials.access_token,
+                            refresh_token: serverCredentials.refresh_token,
+                            scope: serverCredentials.scope,
+                            token_type: serverCredentials.token_type,
+                            expiry_date: serverCredentials.expiry_date,
+                        }
+                    );
+                }
+                catch (error)
+                {
+                    console.log("CredentialsFile:setCredentials error", error)
+                }
                 // need to re-setup the page so we now can get an authorizeUrl using the oauthclient
                 clearTimeout(localConfig.delaySetupAuthenticatePage);
                 localConfig.delaySetupAuthenticatePage = delayStartFunction(setupAuthenticatePage, 5000, localConfig.delaySetupAuthenticatePage);
@@ -272,7 +311,7 @@ function onDataCenterMessage (server_packet)
             {
                 let StatusChanged = false
                 // check for restore defaults
-                if (extension_packet.data.youtube_restore_defaults == "on")
+                if (extension_packet.data.youtubeapi_restore_defaults == "on")
                 {
                     serverConfig = structuredClone(default_serverConfig);
                     serverCredentials = structuredClone(default_serverCredentials);
@@ -282,16 +321,16 @@ function onDataCenterMessage (server_packet)
                 else
                 {
                     // have we just enabled the extension?
-                    if (extension_packet.data.youtubeenabled != serverConfig.youtubeenabled)
+                    if (extension_packet.data.youtubeapienabled != serverConfig.youtubeapienabled)
                         StatusChanged = true
-                    if (extension_packet.data.youtubechatpollrate != serverConfig.youtubechatpollrate)
+                    if (extension_packet.data.youtubeapichatpollrate != serverConfig.youtubeapichatpollrate)
                     {
-                        serverConfig.youtubechatpollrate = extension_packet.data.youtubechatpollrate;
+                        serverConfig.youtubeapichatpollrate = extension_packet.data.youtubeapichatpollrate;
                         StatusChanged = true
                     }
 
                     // default any checkboxes we may have in our settings
-                    serverConfig.youtubeenabled = "off";
+                    serverConfig.youtubeapienabled = "off";
                     // update our config
                     for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
@@ -302,7 +341,7 @@ function onDataCenterMessage (server_packet)
                 // check if we need to start/stop or restart the service
                 if (StatusChanged)
                 {
-                    if (serverConfig.youtubeenabled == "on")
+                    if (serverConfig.youtubeapienabled == "on")
                         startYoutubeMonitor();
                     else
                         stopYoutubeMonitor();
@@ -313,17 +352,17 @@ function onDataCenterMessage (server_packet)
         {
             SendCredentialsModal(extension_packet.from);
         }
-        else if (extension_packet.type === "action_youtubePostLiveChatMessage")
+        else if (extension_packet.type === "action_youtubeAPIPostLiveChatMessage")
         {
             postLiveChatMessages(extension_packet.data)
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     else if (server_packet.type === "UnknownChannel")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
         setTimeout(() =>
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -344,12 +383,12 @@ function onDataCenterMessage (server_packet)
         }
         else
         {
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
         }
     }
     else if (server_packet.type === "InvalidMessage")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
     else if (server_packet.type === "LoggingLevel")
@@ -364,7 +403,7 @@ function onDataCenterMessage (server_packet)
         // just a blank handler for items we are not using to avoid message from the catchall
     }
     else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
@@ -374,10 +413,10 @@ function onDataCenterMessage (server_packet)
 function SendSettingsWidgetSmall (toExtension = "")
 {
     // read our modal file
-    fs.readFile(__dirname + '/youtubesettingswidgetsmall.html', function (err, filedata)
+    fs.readFile(__dirname + '/youtubeapisettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         else
         {
@@ -416,10 +455,10 @@ function SendSettingsWidgetSmall (toExtension = "")
  */
 function SendCredentialsModal (extensionname)
 {
-    fs.readFile(__dirname + "/youtube_credentialsmodal.html", function (err, filedata)
+    fs.readFile(__dirname + "/youtubeapi_credentialsmodal.html", function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendCredentialsModal", "failed to load modal", err);
         else
         {
@@ -469,7 +508,7 @@ function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
         ("SaveConfig",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             serverConfig))
 }
 // ============================================================================
@@ -482,9 +521,9 @@ function saveCredentialsToServer (credentials)
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "UpdateCredentials",
-                localConfig.EXTENSION_NAME,
+                serverConfig.extensionname,
                 {
-                    ExtensionName: localConfig.EXTENSION_NAME,
+                    ExtensionName: serverConfig.extensionname,
                     CredentialName: c,
                     CredentialValue: credentials[c]
                 },
@@ -499,7 +538,7 @@ function heartBeatCallback ()
     let connected = false;
     let color = "red";
 
-    if (serverConfig.youtubeenabled === "on")
+    if (serverConfig.youtubeapienabled === "on")
     {
         connected = true;
         if (localConfig.liveChatId)
@@ -560,7 +599,7 @@ function postTrigger (data)
 // ============================================================================
 function checkCredentialsValid ()
 {
-    if (serverConfig.youtubeenabled == "on")
+    if (serverConfig.youtubeapienabled == "on")
     {
         if (localConfig.ServerCredentialsLoaded)
         {
@@ -596,7 +635,7 @@ function startYoutubeMonitor ()
     localConfig.messagePollingHandle = setInterval(async () =>
     {
         // only poll if we are enabled.
-        if (serverConfig.youtubeenabled == "on")
+        if (serverConfig.youtubeapienabled == "on")
         {
             // don't try and attach to Youtube until we have loaded our credentials from the server
             if (!localConfig.ServerCredentialsLoaded || !checkCredentialsValid())
@@ -627,26 +666,27 @@ function startYoutubeMonitor ()
                     {
                         if (messages && messages.length > 0)
                         {
+                            /*
                             if (!localConfig.skippedBacklog)
                                 localConfig.lastProcessedMessageId = messages[messages.length - 1].id
                             else
+                            {*/
+                            messages.forEach((message) =>
                             {
-                                messages.forEach((message) =>
-                                {
-                                    let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
-                                    triggerToSend.parameters = { ...triggerToSend.parameters, ...message };
-                                    triggerToSend.parameters.textMessage = message.sender + ":" + message.message;
-                                    // replace the html parts of the string with their escape chhars
-                                    let safemessage = sanitiseHTML(message);
-                                    // remove non ascii chars
-                                    safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
-                                    // remove unicode
-                                    safemessage = safemessage.replace(/[\u{0080}-\u{FFFF}]/gu, "");
-                                    triggerToSend.parameters.safemessage = message.sender + ":" + message.message;
-                                    postTrigger(triggerToSend);
+                                let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
+                                triggerToSend.parameters = { ...triggerToSend.parameters, ...message };
+                                triggerToSend.parameters.textMessage = message.sender + ":" + message.message;
+                                // replace the html parts of the string with their escape chhars
+                                let safemessage = sanitiseHTML(message);
+                                // remove non ascii chars
+                                safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
+                                // remove unicode
+                                safemessage = safemessage.replace(/[\u{0080}-\u{FFFF}]/gu, "");
+                                triggerToSend.parameters.safemessage = message.sender + ":" + message.message;
+                                postTrigger(triggerToSend);
 
-                                });
-                            }
+                            });
+                            //}
                         }
 
                     })
@@ -659,7 +699,7 @@ function startYoutubeMonitor ()
                     });
             }
         }
-    }, serverConfig.youtubechatpollrate); // Adjust interval if needed
+    }, serverConfig.youtubeapichatpollrate); // Adjust interval if needed
 }
 // ============================================================================
 //                     FUNCTION: stopYoutubeMonitor
@@ -682,7 +722,10 @@ async function getLiveChatMessages ()
             liveChatId: localConfig.liveChatId,
             part: 'snippet,authorDetails',
             auth: localConfig.oauth2Client,
+            pageToken: localConfig.liveChatMessagePageToken
         };
+        if (DEBUG_PERFORMANCE)
+            pv.api_call_count.youtubeAPI_liveChatMessages_list++;
         return localConfig.youtubeAPI.liveChatMessages.list(params)
             .then(res =>
             {
@@ -691,30 +734,32 @@ async function getLiveChatMessages ()
                 {
                     localConfig.liveChatId = null;
                     localConfig.youtubeAPI = null;
-                    localConfig.lastProcessedMessageId = null;
-                    localConfig.skippedBacklog = false;
+                    //localConfig.lastProcessedMessageId = null;
+                    //localConfig.skippedBacklog = false;
                     return newMessages;
                 }
-                let foundLastProcessedMessage = false;
+                localConfig.liveChatMessagePageToken = res.data.nextPageToken;
+                //let foundLastProcessedMessage = false;
                 // Process the messages and filter out the ones already processed
                 // check if we have over a page of comments as our stored id will no longer appear
-                if (res.data.items.length > 74)
-                    localConfig.lastProcessedMessageId = null;
+
+                //if (res.data.items.length > 74)
+                //localConfig.lastProcessedMessageId = null;
 
                 // mark that we have parsed the backlog
-                if (!localConfig.skippedBacklog && res.data.items.length > 0)
-                    localConfig.lastProcessedMessageId = res.data.items[res.data.items.length - 1].id;
+                //if (!localConfig.skippedBacklog && res.data.items.length > 0)
+                //    localConfig.lastProcessedMessageId = res.data.items[res.data.items.length - 1].id;
                 for (const message of res.data.items)
                 {
                     // skip processing any messages we have already seen.
-                    if (!foundLastProcessedMessage && localConfig.lastProcessedMessageId)
-                    {
-                        //check if this is the last Processed message 
-                        if (message.id === localConfig.lastProcessedMessageId)
-                            foundLastProcessedMessage = true;
-                        // Already processed this message
-                        continue;
-                    }
+                    /* if (!foundLastProcessedMessage && localConfig.lastProcessedMessageId)
+                     {
+                         //check if this is the last Processed message 
+                         if (message.id === localConfig.lastProcessedMessageId)
+                             foundLastProcessedMessage = true;
+                         // Already processed this message
+                         continue;
+                     }*/
                     newMessages.push({
                         //message data
                         id: message.id, // Track message ID to avoid re-processing
@@ -734,9 +779,9 @@ async function getLiveChatMessages ()
                         senderischatmoderator: message.authorDetails.isChatModerator
 
                     });
-                    localConfig.lastProcessedMessageId = message.id;
+                    //localConfig.lastProcessedMessageId = message.id;
                 }
-                localConfig.skippedBacklog = true;
+                //localConfig.skippedBacklog = true;
                 return newMessages;
             })
             .catch(err =>
@@ -758,7 +803,7 @@ async function getLiveChatMessages ()
 async function postLiveChatMessages (message)
 {
     // only poll if we are enabled.
-    if (serverConfig.youtubeenabled == "on")
+    if (serverConfig.youtubeapienabled == "off")
     {
         console.log("Trying to send YouTube Message with extensions turned off")
         return;
@@ -774,6 +819,8 @@ async function postLiveChatMessages (message)
     {
         if (localConfig.liveChatId)
         {
+            if (DEBUG_PERFORMANCE)
+                pv.api_call_count.youtubeAPI_liveChatMessages_insert++;
             localConfig.youtubeAPI.liveChatMessages.insert({
                 auth: localConfig.oauth2Client,
                 part: 'snippet',
@@ -816,10 +863,14 @@ async function getLiveChatId ()
     {
         if (!localConfig.youtubeAPI)
         {
+            if (DEBUG_PERFORMANCE)
+                pv.api_call_count.youtubeAPI_new++;
             localConfig.youtubeAPI = google.youtube({ version: 'v3', auth: localConfig.oauth2Client })
         }
         if (!checkCredentialsValid())
             return null;
+        if (DEBUG_PERFORMANCE)
+            pv.api_call_count.youtubeAPI_liveBroadcasts_list++;
         localConfig.youtubeAPI.liveBroadcasts.list({
             part: 'snippet,status',
             broadcastStatus: "active"
@@ -861,7 +912,7 @@ async function getLiveChatId ()
 // ###########################################################################
 function handleGaxiosErrors (error)
 {
-    //console.log("handleGaxiosErrors called")
+    console.log("handleGaxiosErrors called", error)
     if (error.response)
     {
         if (error.response.data && error.response.data.error)
@@ -871,9 +922,9 @@ function handleGaxiosErrors (error)
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                     ".setupAuthenticatePage", "Error: Received invalid grant error from GoogleAPI token. One reason for this is if the google API is still unpublished and in testing state. This will cause authorization to be revoked every 7 days meaning you need to reauthorize.");
 
-                console.log("To re-authorize correctly you will need to turn off youtube extension,restart StreamRoller and then re-authorize in the usual way fom the admin page.")
+                console.log("To re-authorize correctly you will need to turn off youtubeapi extension,restart StreamRoller and then re-authorize in the usual way fom the admin page.")
                 // Stop the server to avoid constant errors from the timers
-                serverConfig.youtubeenabled = "off";
+                serverConfig.youtubeapienabled = "off";
                 stopYoutubeMonitor();
                 SendSettingsWidgetSmall();
             }
@@ -912,16 +963,33 @@ async function refreshAccessToken ()
     //console.log("refreshAccessToken ()")
     // Initialize the OAuth2Client
     //const oAuth2Client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET);
-    localConfig.oauth2Client = new OAuth2Client(serverCredentials.clientId, serverCredentials.clientSecret, serverCredentials.redirectURI);
+    if (DEBUG_PERFORMANCE)
+        pv.api_call_count.oauth2Client_new_OAuth2Client++;
+    try
+    {
+        localConfig.oauth2Client = new OAuth2Client(serverCredentials.clientId, serverCredentials.clientSecret, serverCredentials.redirectURI);
+    }
+    catch (error)
+    {
+        console.log("refreshAccessToken:new Oauth", error)
+    }
     localConfig.oauth2Client.forceRefreshOnFailure = true;
 
     // Set the refresh token
     //oAuth2Client.setCredentials({        refresh_token: REFRESH_TOKEN,    });
     //console.log("setCredentials being called")
-
-    localConfig.oauth2Client.setCredentials({
-        refresh_token: serverCredentials.refresh_token
-    })
+    if (DEBUG_PERFORMANCE)
+        pv.api_call_count.oauth2Client_setCredentials++;
+    try
+    {
+        localConfig.oauth2Client.setCredentials({
+            refresh_token: serverCredentials.refresh_token
+        })
+    }
+    catch (error)
+    {
+        console.log("refreshAccessToken:setCredentials", error)
+    }
 
     //console.log("localConfig.oauth2Client", JSON.stringify(localConfig.oauth2Client, null, 2))
 
@@ -933,6 +1001,8 @@ async function refreshAccessToken ()
 
         // Get a new access token
         //const { credentials } = await localConfig.oauth2Client.refreshAccessToken(); // Deprecated but still works
+        if (DEBUG_PERFORMANCE)
+            pv.api_call_count.oauth2Client_refreshAccessToken++;
         localConfig.oauth2Client.refreshAccessToken(
             /*function (err, tokens, response)
         {
@@ -992,15 +1062,22 @@ function setupAuthenticatePage ()
         if (localConfig.oauth2Client)
         {
             // we only use one emitter so remove all the previous ones
+            if (DEBUG_PERFORMANCE)
+                pv.api_call_count.oauth2Client_removeAllListeners++;
             localConfig.oauth2Client.removeAllListeners();
             //console.log("Setting up on tokens handler")
             localConfig.oauth2Client.on('tokens', (tokens) =>
             {
-                //console.log("on tokens returned", tokens)
+                if (DEBUG_PERFORMANCE)
+                    pv.api_call_count.oauth2Client_on++;
+                console.log("on tokens returned", tokens)
+                console.log("serverCredentials", serverCredentials)
                 serverCredentials = { ...serverCredentials, ...tokens }//merge the new ones over (might have some 
                 saveCredentialsToServer(tokens);
             })
             // get a valid auth url
+            if (DEBUG_PERFORMANCE)
+                pv.api_call_count.oauth2Client_generateAuthUrls++;
             serverCredentials.authorizeUrl = localConfig.oauth2Client.generateAuthUrl({
                 access_type: 'offline',
                 scope: serverCredentials.scope,
@@ -1028,18 +1105,30 @@ function setupAuthenticatePage ()
                 else
                 {
                     res.end('You can now close this page.');
-                    const { tokens } = await localConfig.oauth2Client.getToken({ code: code, redirect_uri: serverCredentials.redirectURI });
-                    // merge/overwrite our credentials
-                    //serverCredentials = { ...serverCredentials, ...tokens };
-                    // save the credentials for future use
-                    saveCredentialsToServer(tokens);
-                    localConfig.oauth2Client.setCredentials({
-                        access_token: tokens.access_token,
-                        refresh_token: tokens.refresh_token,
-                        scope: tokens.scope,
-                        token_type: tokens.token_type,
-                        expiry_date: tokens.expiry_date,
-                    });
+                    if (DEBUG_PERFORMANCE)
+                        pv.api_call_count.oauth2Client_getToken++;
+                    console.log("calling getToken with", code, serverCredentials.redirectURI)
+                    localConfig.oauth2Client.getToken({ code: code, redirect_uri: serverCredentials.redirectURI })
+                        .then((tokens) =>
+                        {
+                            // merge/overwrite our credentials
+                            //serverCredentials = { ...serverCredentials, ...tokens };
+                            // save the credentials for future use
+                            saveCredentialsToServer(tokens);
+                            if (DEBUG_PERFORMANCE)
+                                pv.api_call_count.oauth2Client_setCredentials++;
+                            localConfig.oauth2Client.setCredentials({
+                                access_token: tokens.access_token,
+                                refresh_token: tokens.refresh_token,
+                                scope: tokens.scope,
+                                token_type: tokens.token_type,
+                                expiry_date: tokens.expiry_date,
+                            });
+                        })
+                        .catch((err) =>
+                        {
+                            handleGaxiosErrors(err);
+                        })
                 }
             }
         });
@@ -1057,11 +1146,22 @@ function createoauth2Client ()
     // remove previous client reference (so garbage collection can happen on it)
     if (localConfig.oauth2Client)
     {
-        localConfig.oauth2Client.removeAllListeners();
+        if (DEBUG_PERFORMANCE)
+            pv.api_call_count.oauth2Client_removeAllListeners++;
+        try
+        {
+            localConfig.oauth2Client.removeAllListeners();
+        }
+        catch (error)
+        {
+            console.log("createoauth2Client:removeAllListeners", error)
+        }
         localConfig.oauth2Client = null;
     }
     try
     {
+        if (DEBUG_PERFORMANCE)
+            pv.api_call_count.oauth2Client_new_OAuth2Client++;
         // create a new client using the new id and secret
         localConfig.oauth2Client = new OAuth2Client(
             serverCredentials.clientId,
@@ -1070,13 +1170,13 @@ function createoauth2Client ()
         );
         if (!localConfig.oauth2Client)
         {
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect.CredentialsFile", "failed to create new google api auth client for api connection");
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect.CredentialsFile", "failed to create new google api auth client for api connection");
         }
     }
     catch (error)
     {
         //TBD remove creds from error log here
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect.CredentialsFile", "error on new OAuth2Client(" + serverCredentials.clientId + "," + serverCredentials.redirectURI + ")", error.message, error);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect.CredentialsFile", "error on new OAuth2Client(" + serverCredentials.clientId + "," + serverCredentials.redirectURI + ")", error.message, error);
     }
 }
 // #######################################################################
@@ -1115,6 +1215,56 @@ function sanitiseHTML (string)
     {
         return entityMap[s];
     });
+}
+
+// ============================================================================
+//                           FUNCTION: file_log
+//             For debug purposes. logs performance data
+// ============================================================================
+function file_log ()
+{
+    //console.log("logging", pv.api_call_count)
+    var headings = ""
+    try
+    {
+        if (DEBUG_PERFORMANCE)
+        {
+            //console.log("logging data");
+            //var filename = __dirname + "\\debug_logging.txt";
+            var filename = __dirname + "/debug_logging.csv";
+            var buffer = "";
+            //console.log("filename", filename)
+            for (var prop in pv.api_call_count)
+            {
+                // first line write the headings (csv)
+                if (!fs.existsSync(filename))
+                {
+                    if (pv.api_call_count.hasOwnProperty(prop))
+                    {
+                        //console.log("prop: " + prop + " value: " + pv.api_call_count[prop])
+                        headings += prop + " ,"
+                    }
+                }
+                buffer += pv.api_call_count[prop] + ","
+            }
+            if (headings != "")
+                fs.writeFileSync(filename, headings += "\n", {
+                    encoding: "utf8",
+                    flag: "a+",
+                });
+            if (buffer != "")
+                fs.writeFileSync(filename, buffer += "\n", {
+                    encoding: "utf8",
+                    flag: "a+",
+                });
+
+
+        }
+    }
+    catch (error)
+    {
+        console.log("debug file logging error", error.message)
+    }
 }
 // ============================================================================
 //                                  EXPORTS

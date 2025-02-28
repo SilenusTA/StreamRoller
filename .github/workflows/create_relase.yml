@@ -23,6 +23,12 @@ jobs:
           rm -fr .git/*
           rmdir .git
           ls -la
+    - name: removing automated documents folder
+      run: |
+          ls -la docs/
+          rm -fr docs/apidocs/*
+          rmdir docs/apidocs
+          ls -la docs/
     - name: uploading artifact
       uses: actions/upload-artifact@v4
       with:

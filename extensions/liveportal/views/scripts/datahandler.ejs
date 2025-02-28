@@ -20,8 +20,7 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
 -->
-<script src="/streamroller-message-api.cjs"
-    onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
+<script src="/streamroller-message-api.cjs" onerror="scriptLoadFailed('streamroller-message-api.cjs')"></script>
 <!-- placeholder we will use for inserting widgets-->
 <%- include('../modals/liveportalsettingswidgetssmallplaceholder'); %>
 
@@ -818,7 +817,7 @@
                             updateChatPlatforms();
                         }
                     }
-                    else if (extension_packet.from == "youtube")
+                    else if (extension_packet.from == "youtube" || extension_packet.from == "youtubeapi")
                     {
                         // check if we are able to use the platform
                         if (extension_packet.data.connected != localConfig.youtubeplatformavailable)
@@ -875,7 +874,7 @@
             // -------------------------------------------------------------------------------------------------
             //                           YOUTUBE
             // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "YOUTUBE")
+            else if (server_packet.dest_channel == "YOUTUBEAPI")
             {
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
@@ -3427,21 +3426,40 @@
     // ============================================================================
     function postMessageToYoutube (msg)
     {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("ExtensionMessage",
-                serverConfig.extensionname,
-                sr_api.ExtensionPacket(
-                    "action_youtubePostLiveChatMessage",
+        // work out if we are on youtube extension or youtubeAPI
+        if (livePortalVolatileData.extensions.youtubeapi)
+
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
                     serverConfig.extensionname,
-                    // need to read accounts from twitchchat ext and give an option to chose who to send the message as
-                    {
-                        message: msg,
-                    },
+                    sr_api.ExtensionPacket(
+                        "action_youtubeAPIPostLiveChatMessage",
+                        serverConfig.extensionname,
+                        // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                        {
+                            message: msg,
+                        },
+                        "",
+                        "youtubeapi"),
                     "",
-                    "youtube"),
-                "",
-                "youtube"
-            ));
+                    "youtubeapi"
+                ));
+        else
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "action_youtubePostLiveChatMessage",
+                        serverConfig.extensionname,
+                        // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                        {
+                            message: msg,
+                        },
+                        "",
+                        "youtube"),
+                    "",
+                    "youtube"
+                ));
     }
     // ============================================================================
     //                           FUNCTION: changeDiscordListeningChannel
@@ -3472,6 +3490,7 @@
             postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.chatAsUsername)
         if (platform.includes("youtube"))
             postMessageToYoutube(document.getElementById("chatInputText").value)
+
         document.getElementById("chatInputText").value = ""
     }
     // ============================================================================

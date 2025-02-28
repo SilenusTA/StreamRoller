@@ -1,9 +1,9 @@
 {
-  "name": "youtube",
+  "name": "youtubeapi",
   "version": "1.0.0",
   "description": "Youtube chat",
   "type": "module",
-  "main": "youtube.js",
+  "main": "youtubeapi.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

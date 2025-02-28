@@ -3,7 +3,7 @@
 Contents
 
 - [Youtube Extension](#youtube-extension)
-  - [Outgoing channel : "YOUTUBE"](#outgoing-channel--youtube)
+  - [Outgoing channel : "YOUTUBEAPI"](#outgoing-channel--youtubeapi)
   - [Description](#description)
   - [Features](#features)
   - [Settings](#settings)
@@ -16,21 +16,21 @@ Contents
     - [Actions](#actions)
       - ["action\_DemoextensionDoStuff"](#action_demoextensiondostuff)
 - [Google API requirements](#google-api-requirements)
-    - [Step 1: Connecting StreamRoller to YouTube](#step-1-connecting-streamroller-to-youtube)
+    - [Step 1: Connecting StreamRoller to YouTubeAPI](#step-1-connecting-streamroller-to-youtubeapi)
   - [Creating/Setting up Google API](#creatingsetting-up-google-api)
     - [Step 1: Google API Project setup (if you don't have one already)](#step-1-google-api-project-setup-if-you-dont-have-one-already)
       - [1. Set Up a Google Cloud Project](#1-set-up-a-google-cloud-project)
       - [2, Google Client ID and secret](#2-google-client-id-and-secret)
 
-## Outgoing channel : "YOUTUBE"
+## Outgoing channel : "YOUTUBEAPI"
 
 ## Description
 
-This extension allows youtube integration.
+This extension allows youtubeapi integration.
 
 ## Features
 
-The extension currently allows sending and receiving of chat message during a live stream (youtube messages are integrated into live portal chat window)
+The extension currently allows sending and receiving of chat message during a live stream (youtubeapi messages are integrated into live portal chat window)
 
 ## Settings
 
@@ -75,14 +75,14 @@ parameters:
   safemessage: "",
   color: "#FF0000",
   channel: "",
-  // youtube message data
+  // youtubeapi message data
   id: "",
   message: "",
   ytmessagetype: "",
   textmessagedetails: "",
   publishedat: "",
   hasdisplaycontent: "",
-  //youtube author data
+  //youtubeapi author data
   sender: "",
   senderchannelid: "",
   senderprofileimageurl: "",
@@ -97,10 +97,10 @@ parameters:
 
 #### "action_DemoextensionDoStuff"
 
-``` name: "youtubepostlivechatmessage",
-displaytitle: "Post a Message to youtube live chat",
-description: "Post to youtube live chat if we are connected.",
-messagetype: "action_youtubePostLiveChatMessage",
+``` name: "youtubeapipostlivechatmessage",
+displaytitle: "Post a Message to youtubeapi live chat",
+description: "Post to youtubeapi live chat if we are connected.",
+messagetype: "action_youtubeapiPostLiveChatMessage",
 parameters: 
   { 
   message: "" 
@@ -109,7 +109,7 @@ parameters:
 
 # Google API requirements
 
-### Step 1: Connecting StreamRoller to YouTube
+### Step 1: Connecting StreamRoller to YouTubeAPI
 Note: If you have changed the client ID or client secret above remember to save this page before
 requesting authorization!
 
@@ -127,11 +127,11 @@ setting up an account and project if you don't already have one you can use.
 This is a 2 step process
 
 - Setup a Google API project to get a client id and client secret. This gives you access to the Google API's authorization process.
-- Authorize StreamRoller to allow it to connect to your youtube livestream chat.
+- Authorize StreamRoller to allow it to connect to your youtubeapi livestream chat.
 
 ### Step 1: Google API Project setup (if you don't have one already)
 
-In order to use the youtube API you will need to have a google cloud API account
+In order to use the youtubeapi API you will need to have a google cloud API account
 
 [Create Google Account if you don't have one already](https://console.cloud.google.com)
 
@@ -169,7 +169,7 @@ Follow the steps below to setup the correct project details
 
 #### 2, Google Client ID and secret
 
-To get your details needed below (to allow StreamRoller to access your Google API project for youtube)
+To get your details needed below (to allow StreamRoller to access your Google API project for youtubeapi)
 follow the following steps.
 
 - Go to your API credentials page for the project you created <a href="https://console.cloud.google.com/apis/credentials">Credentials Page</a>.
@@ -178,5 +178,5 @@ follow the following steps.
 - Image note 2. Click on the download button for the project you created above, this will bring up the dialog box allowing you to copy/download your settings
 - Image note 3. Click the 'copy' button for your Client ID and paste it in the Client ID box below
 - Image note 4. Click the 'copy' button for your Client Secret and paste it in the Client Secret box below
-- Click the update button on this page to save the data in StreamRollers encrypted file storage. You can now click the authorize link to connect streamroller to youtube
+- Click the update button on this page to save the data in StreamRollers encrypted file storage. You can now click the authorize link to connect streamroller to youtubeapi
 ![googleAuthScreen](public/images/googleAuthScreen.png)
