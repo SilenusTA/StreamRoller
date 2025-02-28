@@ -11,7 +11,7 @@ if (DEBUG)
 
 docs.forEach(function (doc, i) 
 {
-    // for extensions we just run though once (we loop the items to insert into tis page)
+    // for extensions we just run though once (we loop the items to insert into this page)
     if (extensionsDone)
         return;
     if (doc.kind == "extension")
@@ -23,8 +23,8 @@ docs.forEach(function (doc, i)
     }
     if (DEBUG)
     {
-        htmlstring += `<div style="color:blue"><h2> Loop: ${objectcounter++}<BR>
-            </h2><BR>${JSON.stringify(doc, null, 2)}</div>`
+        htmlstring += `<div style="color:blue"><h2> Loop: ${objectcounter++}</h2>
+            <BR>${JSON.stringify(doc, null, 2)}</div>`
     }
     // we only need to check this once
     if (typeof isGlobalPage === 'undefined')
@@ -225,7 +225,7 @@ docs.forEach(function (doc, i)
        
             classes = self.find({ kind: 'class', memberof: doc.longname });
               // only show non extensions on other pages so remove them here
-            classes = classes.filter(removeextensionmemebers)
+            classes = classes.filter(removeextensionmembers)
         }
 
         if (DEBUG)
@@ -269,7 +269,7 @@ docs.forEach(function (doc, i)
         }
         var interfaces = self.find({ kind: 'interface', memberof: doc.longname });
         // only show non extensions on other pages so remove them here
-        interfaces = interfaces.filter(removeextensionmemebers)
+        interfaces = interfaces.filter(removeextensionmembers)
         if (!isGlobalPage && interfaces && interfaces.length)
         {
             if (DEBUG)
@@ -295,7 +295,7 @@ docs.forEach(function (doc, i)
         }
         var mixins = self.find({ kind: 'mixin', memberof: doc.longname });
         // only show non extensions on other pages so remove them here
-        mixins = mixins.filter(removeextensionmemebers)
+        mixins = mixins.filter(removeextensionmembers)
         if (!isGlobalPage && mixins && mixins.length)
         {
             htmlstring += `<h3 class="subsection-title">Mixins</h3>
@@ -314,7 +314,7 @@ docs.forEach(function (doc, i)
 
         var namespaces = self.find({ kind: 'namespace', memberof: doc.longname });
         // only show non extensions on other pages so remove them here
-        namespaces = namespaces.filter(removeextensionmemebers)
+        namespaces = namespaces.filter(removeextensionmembers)
         if (!isGlobalPage && namespaces && namespaces.length)
         {
             htmlstring += `<h3 class="subsection-title">Namespaces</h3>
@@ -336,12 +336,12 @@ docs.forEach(function (doc, i)
         }
         var members = self.find({ kind: 'member', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
         // only show non extensions on other pages so remove them here
-        members = members.filter(removeextensionmemebers)
+        //members = members.filter(removeextensionmembers)
         // symbols that are assigned to module.exports are not globals, even though they're not a memberof anything
         if (isGlobalPage && members && members.length && members.forEach)
         {
             if (DEBUG)
-                htmlstring += `< div style = "color:red" > isGlobalPage && members && members.length && members.forEach</div >`
+                htmlstring += `<div style = "color:red" > isGlobalPage && members && members.length && members.forEach</di >`
             members = members.filter(function (m)
             {
                 return m.longname && m.longname.indexOf('module:') !== 0;
@@ -364,7 +364,7 @@ docs.forEach(function (doc, i)
             htmlstring += `<div style="color:red">Checking normal methods</div>`
         var methods = self.find({ kind: 'function', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
         // only show non extensions on other pages so remove them here
-        methods = methods.filter(removeextensionmemebers)
+        methods = methods.filter(removeextensionmembers)
         if (DEBUG)
             htmlstring += `<div style = "color:red">methdods=${methods}<BR>
                     isGlobalPage=${isGlobalPage}<BR></div>`
@@ -380,6 +380,10 @@ docs.forEach(function (doc, i)
                 htmlstring += `${self.partial('method.tmpl', m)}`
             });
         }
+/*
+        Functions
+*/
+
         if (DEBUG)
             htmlstring += `<div style = "color:red"> Checking extension methods</div>`
         var extensionmethods = self.find({ kind: 'function', extensionname: doc.name });
@@ -402,9 +406,14 @@ docs.forEach(function (doc, i)
                 htmlstring += `${self.partial('method.tmpl', m)}`
             });
         }
+        
+/*
+        Typedef
+*/
         var typedefs = self.find({ kind: 'typedef', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
+        //var typedefs = self.find({ kind: 'typedef'});
         // only show non extensions on other pages so remove them here
-        typedefs = typedefs.filter(removeextensionmemebers)
+        typedefs = typedefs.filter(removeextensionmembers)
         if (typedefs && typedefs.length && typedefs.forEach)
         {
             htmlstring += `<h3 class="subsection-title">Type Definitions</h3>`
@@ -424,7 +433,7 @@ docs.forEach(function (doc, i)
         }
         var events = self.find({ kind: 'event', memberof: isGlobalPage ? { isUndefined: true } : doc.longname });
         // only show non extensions on other pages so remove them here
-        events = events.filter(removeextensionmemebers)
+        events = events.filter(removeextensionmembers)
         if (events && events.length && events.forEach)
         {
             htmlstring += `<h3 class="subsection-title">Events</h3>`
@@ -457,7 +466,7 @@ if (DEBUG)
     htmlstring += `<BR>selfformatted${selfformatted}<HR>`
 
 }
-function removeextensionmemebers (d)
+function removeextensionmembers (d)
 {
     // only filter out memebers. let the extensions go through
     if (d.kind == "extension")

@@ -1,0 +1,56 @@
+<!-- Youtube Modal HTML-->
+<div class="modal-dialog modal-xl">
+    <div class="modal-content bg-light text-dark">
+        <div class="modal-header">
+            <h5 class="modal-title">Youtube Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <p>Enable/Disable the Youtube extension
+            </p>
+            <div class="form-group invisible">
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="youtubeenabled" type="checkbox" id="youtubeenabled" youtubeenabledchecked>
+                    <label class="form-check-label" for="youtubeenabled">youtube enabled</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="youtubechatpollrate" class="col-form-label">chat poll rate (in milliseconds)</label>
+                <input type="text" name="youtubechatpollrate" class="form-control" id="youtubechatpollrate" value="youtubechatpollratetext">
+            </div>
+
+            <div class="form-group">
+                <label for="youtubechannelname" class="col-form-label">ChannelID</label>
+                <input type="text" name="youtubechannelname" class="form-control" id="youtubechannelname" value="youtubechannelnametext">
+            </div>
+            <HR>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="youtubedebugenabled" type="checkbox" id="youtubedebugenabled" youtubedebugenabledchecked>
+                    <label class="form-check-label" for="youtubedebugenabled">Debug</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="youtube_restore_defaults" type="checkbox" id="youtube_restore_defaults"
+                        youtube_restore_defaultschecked>
+                    <label class="form-check-label" for="youtube_restore_defaults">Restore Defaults</label>
+                </div>
+            </div>
+
+        </div>
+        <HR>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+<!-- END: -->

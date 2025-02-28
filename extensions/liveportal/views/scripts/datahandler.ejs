@@ -872,9 +872,25 @@
                 }
             }
             // -------------------------------------------------------------------------------------------------
-            //                           YOUTUBE
+            //                           YOUTUBEAPI
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel == "YOUTUBEAPI")
+            {
+                if (extension_packet.type === "trigger_ChatMessageReceived")
+                {
+                    if (serverConfig.winttsyoutubeenabled == "on")
+                    {
+                        if (serverConfig.youtubeBlackList.toLowerCase().indexOf(extension_packet.data.parameters.sender.toLowerCase()) == -1)
+                            TTSSpeak(serverConfig.YouTubeTTSVoiceIndex, extension_packet.data.parameters.message, serverConfig.youtubeTTSVolume)
+                    }
+                    parseYoutubeChatMessage(extension_packet.data.parameters);
+                    displayChatMessages();
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                           YOUTUBE
+            // -------------------------------------------------------------------------------------------------
+            else if (server_packet.dest_channel == "YOUTUBE")
             {
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
