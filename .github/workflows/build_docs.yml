@@ -1,0 +1,35 @@
+name: StreamRoller apidocs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+      - name: Install npm dependencies
+        run: |
+          cd docs
+          cd api
+          npm install
+      - name: Run build task
+        run: |
+          cd docs
+          cd api
+          npm run builddocs
+      - name: Deploy to Server
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i --delete"
+          SOURCE: "public/"
+          REMOTE_HOST: ${{ secrets.ORACLE_REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.ORACLE_REMOTE_USER }}
+          TARGET: ${{ secrets.ORACLE_REMOTE_TARGET }}
+          EXCLUDE: "/dist/, /node_modules/"
