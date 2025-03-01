@@ -35,7 +35,7 @@ jobs:
         with:
           SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
           ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: "dosc/apidocs/public/"
+          SOURCE: "docs/apidocs/public/"
           REMOTE_HOST: ${{ secrets.ORACLE_REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.ORACLE_REMOTE_USER }}
           TARGET: ${{ secrets.ORACLE_REMOTE_TARGET }}
