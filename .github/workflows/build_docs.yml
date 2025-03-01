@@ -12,7 +12,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "20.16.0"
       - name: Install npm dependencies
         run: |
           cd docs
