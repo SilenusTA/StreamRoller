@@ -22,6 +22,8 @@ jobs:
         run: |
           cd docs
           cd apidocs
+          pwd
+          ls -la
           npm run builddocslinux
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
