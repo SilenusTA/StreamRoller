@@ -23,13 +23,15 @@ jobs:
           cd docs
           cd apidocs
           pwd
-          ls -la
+          rm -fr public/
           ls -la public
       - name: Run build task
         run: |
           cd docs
           cd apidocs
           npm run builddocslinux
+          ls -la /home/runner/work/StreamRoller/StreamRoller/extensions/adminpage
+          ls -la extensions/adminpage
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         with:
