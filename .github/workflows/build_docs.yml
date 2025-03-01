@@ -23,7 +23,8 @@ jobs:
           cd docs
           cd apidocs
           pwd
-          rm -fr public/
+          rm -fr public/*
+          ls -la
           ls -la public
       - name: Run build task
         run: |
