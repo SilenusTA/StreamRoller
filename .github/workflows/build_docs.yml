@@ -18,12 +18,17 @@ jobs:
           cd docs
           cd apidocs
           npm install
-      - name: Run build task
+      - name: Clean old docs
         run: |
           cd docs
           cd apidocs
           pwd
           ls -la
+          ls -la public
+      - name: Run build task
+        run: |
+          cd docs
+          cd apidocs
           npm run builddocslinux
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
