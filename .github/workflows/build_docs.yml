@@ -21,14 +21,14 @@ jobs:
       - name: Run build task
         run: |
           cd docs
-          cd api
+          cd apidocs
           npm run builddocs
       - name: Deploy to Server
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
           ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: "public/"
+          SOURCE: "dosc/apidocs/public/"
           REMOTE_HOST: ${{ secrets.ORACLE_REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.ORACLE_REMOTE_USER }}
           TARGET: ${{ secrets.ORACLE_REMOTE_TARGET }}
