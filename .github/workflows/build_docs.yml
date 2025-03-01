@@ -2,6 +2,10 @@ name: StreamRoller apidocs
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Create a new Release"]
+    types:
+      - completed
 
 jobs:
   build:
