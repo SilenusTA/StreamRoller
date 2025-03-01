@@ -800,7 +800,7 @@ exports.publish = (taffyData, opts, tutorials) =>
                 let readMarkdown;
                 try
                 {
-                    readMarkdown = new readme(extensionRootPaths[i].rootPath + "/readme.md")
+                    readMarkdown = new readme(extensionRootPaths[i].rootPath + "/README.md")
                 }
                 catch (e)
                 {
