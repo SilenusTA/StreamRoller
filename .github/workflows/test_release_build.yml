@@ -9,56 +9,60 @@ jobs:
   remove_git:
     runs-on: ubuntu-latest
     steps:
-    - name: getting node version
-      run: node -v
-    - uses: actions/checkout@v4
-    - name: removing git folder (to keep space down in exe)
-      run: |
+      - name: getting node version
+        run: node -v
+      - uses: actions/checkout@v4
+      - name: removing git folder (to keep space down in exe)
+        run: |
           ls -la
           rm -fr .git/*
           rmdir .git
           ls -la
-    - name: removing apidocs folder
-      run: |
+      - name: removing apidocs folder
+        run: |
           ls -la docs/
           rm -fr docs/apidocs/*
           rmdir docs/apidocs
           ls -la docs/
-    
-    - name: uploading artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: mini-artifacts
-        path: .      
+      - name: removing older extensions ~~
+        run: |
+          ls -la extensions/
+          rm -fr extensions/~~*
+          ls -la extensions/
+      - name: uploading artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-artifacts
+          path: .
   creating_exe:
-    runs-on: windows-latest  
-    needs: remove_git  
+    runs-on: windows-latest
+    needs: remove_git
     steps:
-    - name: importing artecfact
-      uses: actions/download-artifact@v4
-      with:
-        name: mini-artifacts
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20.16.0'
-    - name: Create SoftwareVersion.txt
-      run: |
+      - name: importing artecfact
+        uses: actions/download-artifact@v4
+        with:
+          name: mini-artifacts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.16.0"
+      - name: Create SoftwareVersion.txt
+        run: |
           echo "TESTBUILD #${{github.run_number}}.${{ github.run_attempt }}" > SoftwareVersion.txt
           dir S*
           type SoftwareVersion.txt
-    - name: Creating exe
-      run: |
+      - name: Creating exe
+        run: |
           npm i -D caxa
           npm install
           npx caxa -m "Unpacking " -i . -o StreamRoller${{ github.ref_name }}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
-    - name: Create Release.txt
-      run: |
+      - name: Create Release.txt
+        run: |
           echo Release version ${{ github.ref_name }} >> Release.txt
-    - name: Zip up exe
-      run: |
-        7z a StreamRoller${{ github.ref_name }}.zip StreamRoller${{ github.ref_name }}.exe
-    - name: uploading artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: StreamRoller${{ github.ref_name }}.zip
-        path: StreamRoller${{ github.ref_name }}.exe
+      - name: Zip up exe
+        run: |
+          7z a StreamRoller${{ github.ref_name }}.zip StreamRoller${{ github.ref_name }}.exe
+      - name: uploading artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamRoller${{ github.ref_name }}.zip
+          path: StreamRoller${{ github.ref_name }}.exe
