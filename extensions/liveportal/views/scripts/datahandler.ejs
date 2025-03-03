@@ -2964,8 +2964,11 @@
     {
         for (var key of Object.keys(localConfig.bTTVEmotes))
         {
-            if (message.includes(" " + localConfig.bTTVEmotes[key].code)
-                || message.indexOf(localConfig.bTTVEmotes[key].code) == 0)
+            if (message == localConfig.bTTVEmotes[key].code
+                || message.includes(" " + localConfig.bTTVEmotes[key].code + " ")
+                || (message.indexOf(localConfig.bTTVEmotes[key].code + " ")) == 0
+                || message.endsWith(" " + localConfig.bTTVEmotes[key].code)
+            )
             {
                 message = message.replaceAll(localConfig.bTTVEmotes[key].code, "<img src='https://cdn.betterttv.net/emote/" + localConfig.bTTVEmotes[key].id + "/1x.webp'>")
             }
