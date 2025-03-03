@@ -502,18 +502,13 @@ function stopYoutubeMonitor ()
 
         if (localConfig.liveChatAPI)
             localConfig.liveChatAPI.stop();
-        if (localConfig.signedIn)
-        {
-            localConfig.youtubeAPI.session.signOut();
-            localConfig.signedIn = false;
-        }
         localConfig.youtubeAPI = null;
         SendSettingsWidgetSmall();
     }
     catch (error)
     {
         console.log("stopYoutubeMonitor Error", error.status, error.message)
-        console.error(error)
+        console.log(error)
     }
 }
 
@@ -751,7 +746,7 @@ function SendSettingsWidgetSmall (toExtension = "")
             }
             modalString = modalString.replace("youtubeBrowserCookieStatus", "Status: " + localConfig.youtubeBrowserCookieStatus);
             if (localConfig.connectedAsUsername || localConfig.connectedAsUsername != "")
-                modalString = modalString.replace("YouTubeConnectedAs", `Connected as ${localConfig.connectedAsUsername || 'Guest'}`);
+                modalString = modalString.replace("YouTubeConnectedAs", `Connected as '${localConfig.connectedAsUsername || 'Guest'}'`);
             else
                 modalString = modalString.replace("YouTubeConnectedAs", "Connected as 'Guest'}");
 
