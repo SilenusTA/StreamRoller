@@ -32,6 +32,7 @@ import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+const DEBUG_LOGGING = false
 // set logging level for youtube.js : NONE, ERROR, WARNING, INFO, DEBUG
 Log.setLevel(Log.Level.NONE);
 
@@ -42,15 +43,18 @@ const localConfig = {
     DataCenterSocket: null,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
-    ServerCredentialsLoaded: false,
     liveChatMessagePageToken: null,
     youtubeAPI: null,
     liveChatAPI: null,
     youtubevideoid: "",
     ytInfo: null,
     info: { views: -1, likes: -1, date: -1 },
-    connectedToLiveStream: false
-
+    connectedToLiveStream: false,
+    credentialsSet: false,
+    signedIn: false,
+    youtubeBrowserCookieStatus: "Cookie not set",
+    startupTimerBufferHandle: null, //have a startup buffer to stop multiple stars (workaround for settings credentials)
+    connectedAsUsername: null
 };
 
 const default_serverConfig = {
@@ -60,12 +64,14 @@ const default_serverConfig = {
     youtubeenabled: "off",
     youtubedebugenabled: "off",
     youtube_restore_defaults: "off",
+    enableYouTubeBrowserCookie: "off",
     youtubechatpollrate: 5000,
     youtubechannelname: "OldDepressedGamer",
     host: "http://localhost",
     port: "3000"
 };
 let serverConfig = structuredClone(default_serverConfig)
+let serverCredentials = {};
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
@@ -169,6 +175,9 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
     );
     clearTimeout(localConfig.heartBeatHandle);
@@ -191,22 +200,48 @@ function onDataCenterMessage (server_packet)
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
                 serverConfig = structuredClone(default_serverConfig);
+                SaveConfigToServer();
                 console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
             }
             else
                 serverConfig = structuredClone(server_packet.data);
-
-            SaveConfigToServer();
             // check if we were previously enabled in setting (on startup this will be off)
             if (previous_enabled != serverConfig.youtubeenabled)
                 if (serverConfig.youtubeenabled == "on")
                 {
-                    console.log("calling startYoutubeMonitor from ConfigFile")
-                    startYoutubeMonitor()
-                }
+                    //only start if we have already got our credentials
+                    if (localConfig.credentialsSet)
+                    {
+                        stopYoutubeMonitor();
+                        if (localConfig.startupTimerBufferHandle)
+                            clearTimeout(localConfig.startupTimerBufferHandle)
+                        localConfig.startupTimerBufferHandle = setTimeout(
+                            startYoutubeMonitor()
+                            , 2000
+                        )
 
+                    }
+                }
                 else
                     stopYoutubeMonitor()
+        }
+    }
+    else if (server_packet.type === "CredentialsFile")
+    {
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)    
+        {
+            serverCredentials = server_packet.data
+            if (serverCredentials.youtubeCookie && serverCredentials.youtubeCookie != "")
+                localConfig.youtubeBrowserCookieStatus = "Cookie Loaded"
+            localConfig.credentialsSet = true
+            SendSettingsWidgetSmall()
+            if (localConfig.startupTimerBufferHandle)
+                clearTimeout(localConfig.startupTimerBufferHandle)
+            localConfig.startupTimerBufferHandle = setTimeout(() =>
+            {
+                stopYoutubeMonitor();
+                startYoutubeMonitor();
+            }, 2000);
         }
     }
     else if (server_packet.type === "ExtensionMessage")
@@ -223,47 +258,61 @@ function onDataCenterMessage (server_packet)
                 if (extension_packet.data.youtube_restore_defaults == "on")
                 {
                     serverConfig = structuredClone(default_serverConfig);
-                    console.log("\x1b[31m" + serverConfig.extensionname + " Config Files Updated.", "The config files have been Restored to defaults. Your settings may have changed" + "\x1b[0m");
+                    serverCredentials = {};
+                    deleteCredentials()
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Config/Credentials Files Updated.", "The config files have been Restored to defaults and credentials deleted. Your settings may have changed" + "\x1b[0m");
                 }
                 else
                 {
-                    // have we just enabled the extension?
+                    // have we just changed something that needs a restart
                     if (extension_packet.data.youtubeenabled != serverConfig.youtubeenabled)
                         StatusChanged = true
                     if (extension_packet.data.youtubechatpollrate != serverConfig.youtubechatpollrate)
                         StatusChanged = true
                     if (extension_packet.data.youtubechannelname != serverConfig.youtubechannelname)
                         StatusChanged = true
-
+                    if (extension_packet.data.enableYouTubeBrowserCookie == "on")
+                        StatusChanged = true;
+                    if (extension_packet.data.youtubeCookie != "")
+                    {
+                        serverCredentials.youtubeCookie = extension_packet.data.youtubeCookie
+                        saveCredentialsToServer()
+                    }
                     // default any checkboxes we may have in our settings
                     serverConfig.youtubeenabled = "off";
                     serverConfig.youtubedebugenabled = "off"
+                    serverConfig.enableYouTubeBrowserCookie = "off"
+
                     // update our config
                     for (const [key, value] of Object.entries(extension_packet.data))
                     {
                         serverConfig[key] = value;
                     }
                 }
-                SaveConfigToServer();
-                SendSettingsWidgetSmall(extension_packet.from);
                 // check if we need to start/stop or restart the service
                 if (StatusChanged)
                 {
                     if (serverConfig.youtubeenabled == "on")
                     {
-                        console.log("calling SettingsWidgetSmallData from ConfigFile")
-                        startYoutubeMonitor();
+                        if (localConfig.startupTimerBufferHandle)
+                            clearTimeout(localConfig.startupTimerBufferHandle)
+                        localConfig.startupTimerBufferHandle = setTimeout(() =>
+                        {
+                            stopYoutubeMonitor();
+                            startYoutubeMonitor();
+                        }
+                            , 2000
+                        )
                     }
                     else
                         stopYoutubeMonitor();
                 }
+                SaveConfigToServer();
+                SendSettingsWidgetSmall(extension_packet.from);
             }
         }
         else if (extension_packet.type === "action_youtubePostLiveChatMessage")
-        {
-            console.log("action_youtubePostLiveChatMessage not implemented yet")
             postLiveChatMessages(extension_packet.data)
-        }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
@@ -314,6 +363,20 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
+
+// ============================================================================
+//                           FUNCTION: deleteCredentials
+// ============================================================================
+/**
+ * delete the credentials file on the server
+ */
+function deleteCredentials ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
+        ("DeleteCredentials",
+            serverConfig.extensionname,
+            serverConfig))
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -329,31 +392,161 @@ function SaveConfigToServer ()
 
 }
 // ============================================================================
+//                           FUNCTION: saveCredentialsToServer
+// ============================================================================
+function saveCredentialsToServer ()
+{
+    for (var c in serverCredentials)
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "UpdateCredentials",
+                serverConfig.extensionname,
+                {
+                    ExtensionName: serverConfig.extensionname,
+                    CredentialName: c,
+                    CredentialValue: serverCredentials[c]
+                },
+            ));
+    }
+}
+// ============================================================================
+//                     FUNCTION: startYoutubeMonitor
+// ============================================================================
+/**
+ * Start the Monitor
+ */
+function startYoutubeMonitor ()
+{
+    if (serverConfig.youtubeenabled == "on")
+    {
+        // if we don't have an api handle create one
+        if (!localConfig.youtubeAPI && localConfig.credentialsSet)
+            connectToAPI();
+
+        // if we haven't received the api yet then reschedule the start until we have one back
+        if (!localConfig.youtubeAPI || !localConfig.credentialsSet)
+        {
+            if (localConfig.startupTimerBufferHandle)
+                clearTimeout(localConfig.startupTimerBufferHandle)
+            localConfig.startupTimerBufferHandle = setTimeout(() =>
+            {
+                startYoutubeMonitor();
+            }, 5000);
+        }
+        else
+        {
+            if (localConfig.liveChatAPI)
+                localConfig.liveChatAPI.start();
+            else
+            {
+                console.log("Couldn't start monitoring, is there a live video available?")
+                MonitorForLiveStream()
+            }
+        }
+        SendSettingsWidgetSmall();
+    }
+}
+// ============================================================================
+//                     FUNCTION: MonitorForLiveStream
+// ============================================================================
+/**
+ * Monitor for a stream going live on our channel
+ */
+function MonitorForLiveStream ()
+{
+    const monitorTimeout = 10000;
+    let filters = { features: ["live"] }
+    localConfig.youtubeAPI.search(serverConfig.youtubechannelname, filters)
+        .then((search) =>
+        {
+            if (search.videos.length < 1)
+            {
+                console.log("no live videos found yet, monitoring")
+                if (localConfig.youtubeenabled == "on")
+                {
+                    setTimeout(() =>
+                    {
+                        MonitorForLiveStream()
+                    }, monitorTimeout);
+                }
+            }
+            else
+                connectToAPI();
+            // check for found live and call the start function (to save duplicating code)
+        })
+        .catch((err) =>
+        {
+            console.log("Error searching for live stream", err, err.message)
+            console.error(err)
+            if (localConfig.youtubeenabled == "on") 
+            {
+                setTimeout(() =>
+                {
+                    MonitorForLiveStream()
+                }, monitorTimeout);
+            }
+        })
+}
+// ============================================================================
+//                     FUNCTION: stopYoutubeMonitor
+// ============================================================================
+/**
+ * Stop monitoring YouTube chat
+ */
+function stopYoutubeMonitor ()
+{
+    try
+    {
+        localConfig.connectedToLiveStream = false;
+
+        if (localConfig.liveChatAPI)
+            localConfig.liveChatAPI.stop();
+        if (localConfig.signedIn)
+        {
+            localConfig.youtubeAPI.session.signOut();
+            localConfig.signedIn = false;
+        }
+        localConfig.youtubeAPI = null;
+        SendSettingsWidgetSmall();
+    }
+    catch (error)
+    {
+        console.log("stopYoutubeMonitor Error", error.status, error.message)
+        console.error(error)
+    }
+}
+
+// ============================================================================
 //                     FUNCTION: startYoutubeMonitor
 // ============================================================================
 /**
  * Connects and starts monitoring YouTube chat
  */
-function startYoutubeMonitor ()
+function connectToAPI ()
 {
-    Innertube.create({ cache: new UniversalCache(false) })
+    let cookie = ""
+    if (serverCredentials && serverCredentials.youtubeCookie && serverCredentials.youtubeCookie != "")
+        cookie = serverCredentials.youtubeCookie
+    Innertube.create({ cache: new UniversalCache(false), cookie: cookie })
         .then(async (handle) =>
         {
             if (handle)
             {
                 localConfig.youtubeAPI = handle;
                 // search for videos on channel. first will be the live video if it exists
-                const filters = { features: ["live"] }
+
+                let filters = { features: ["live"] }// note live doesn't include funderaiser live videos, need to add all types of live options here.
+                //filters = {};
                 const search = await localConfig.youtubeAPI.search(serverConfig.youtubechannelname, filters);
                 file_log(JSON.stringify(search.videos, null, 2))
                 if (search.videos.length < 1)
                 {
                     console.log("No live video found for channel name", serverConfig.youtubechannelname)
-                    return;
                 }
-                localConfig.youtubevideoid = search.videos[0].id;
-                if (localConfig.youtubevideoid)
+                if (search.videos[0] != [])
                 {
+                    localConfig.youtubevideoid = search.videos[0].id;
                     localConfig.youtubeAPI.getInfo(localConfig.youtubevideoid)
                         .then((info) =>
                         {
@@ -362,9 +555,9 @@ function startYoutubeMonitor ()
                             {
                                 localConfig.ytInfo = info;
                                 localConfig.liveChatAPI = localConfig.ytInfo.getLiveChat()
-
                                 localConfig.liveChatAPI.on('start', (initial_data) =>
                                 {
+                                    // filter on live chat rather than TOP_CHAT
                                     localConfig.liveChatAPI.applyFilter("LIVE_CHAT");
                                     chatStart(initial_data)
                                 });
@@ -378,8 +571,6 @@ function startYoutubeMonitor ()
                                 localConfig.liveChatAPI.on('end', () => { chatEnd() });
                                 localConfig.liveChatAPI.on('chat-update', (action) => chatMessage(action));
                                 localConfig.liveChatAPI.on('metadata-update', (metadata) => metaUpdate(metadata));
-
-                                localConfig.liveChatAPI.start();
                             }
                             else
                                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
@@ -387,14 +578,13 @@ function startYoutubeMonitor ()
                         })
                         .catch((err) =>
                         {
-                            console.error(err)
                             console.log("Error:", JSON.stringify(err))
                             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                                 ".startYoutubeMonitor.getLiveChat", "failed to load getLiveChat", err);
                         })
                 }
                 else
-                    console.log("localConfig.youtubevideoid is empty: ''")
+                    console.log("No live video found")
 
             }
             else
@@ -419,7 +609,10 @@ function startYoutubeMonitor ()
 function chatStart (initial_data)
 {
     localConfig.connectedToLiveStream = true;
-    console.info(`Connected as ${initial_data.viewer_name || 'Guest'}`);
+    if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
+        localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
+    localConfig.connectedAsUsername = initial_data.viewer_name
+    SendSettingsWidgetSmall()
 }
 /**
  * Called on YouTube error
@@ -435,7 +628,12 @@ function chatStart (initial_data)
 function chatError (error)
 {
     localConfig.connectedToLiveStream = false;
-    console.info('Live chat error:', error);
+    console.log('Live chat error:');
+    if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
+        localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
+    stopYoutubeMonitor()
+    let parsedError = JSON.parse(error.info)
+    console.log("error.code", parsedError)
 }
 // ============================================================================
 //                     FUNCTION: metaUpdate
@@ -447,6 +645,8 @@ function chatError (error)
 function metaUpdate (metadata)
 {
     localConfig.connectedToLiveStream = true;
+    if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
+        localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
     localConfig.info =
     {
         views: metadata.views?.view_count.toString(),
@@ -463,7 +663,9 @@ function metaUpdate (metadata)
 function chatEnd ()
 {
     localConfig.connectedToLiveStream = false;
-    console.log("chatEnd()")
+    if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
+        localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
+    localConfig.liveChatAPI = null;
 }
 // ============================================================================
 //                     FUNCTION: chatMessage
@@ -475,25 +677,24 @@ function chatEnd ()
 function chatMessage (action)
 {
     localConfig.connectedToLiveStream = true;
+    if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
+        localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
     if (action.is(YTNodes.AddChatItemAction))
     {
         const item = action.as(YTNodes.AddChatItemAction).item;
 
         if (!item)
         {
-            console.log('Action did not have an item.', action);
+            console.log('Chat Action did not have an item.', action);
             return;
         }
-
         const hours = new Date(item.hasKey('timestamp') ? item.timestamp : Date.now()).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
         });
-
         switch (item.type)
         {
             case 'LiveChatTextMessage':
-                console.log("item", item)
                 sendChatMessageTrigger(item, hours);
                 break;
             case 'LiveChatPaidMessage':
@@ -510,31 +711,18 @@ function chatMessage (action)
 
     if (action.is(YTNodes.AddBannerToLiveChatCommand))
     {
-        console.info('Message pinned:', action.banner?.contents);
+        console.info('Message pinned:', action.banner?.contents, ". Needs implementation");
     }
 
     if (action.is(YTNodes.RemoveBannerForLiveChatCommand))
     {
-        console.info(`Message with action id ${action.target_action_id} was unpinned.`);
+        console.info(`Message with action id ${action.target_action_id} was unpinned.`, ". Needs implementation");
     }
 
     if (action.is(YTNodes.RemoveChatItemAction))
     {
-        console.warn(`Message with action id ${action.target_item_id} just got deleted!`, '\n');
+        console.warn(`Message with action id ${action.target_item_id} just got deleted!`, ". Needs implementation");
     }
-}
-// ============================================================================
-//                     FUNCTION: stopYoutubeMonitor
-// ============================================================================
-/**
- * Stop monitoring YouTube chat
- */
-function stopYoutubeMonitor ()
-{
-    console.log("stopYoutubeMonitor()")
-    localConfig.connectedToLiveStream = false;
-    if (localConfig.liveChatAPI)
-        localConfig.liveChatAPI.stop();
 }
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
@@ -561,7 +749,12 @@ function SendSettingsWidgetSmall (toExtension = "")
                 else if (typeof (value) == "string" || typeof (value) == "number")
                     modalString = modalString.replace(key + "text", value);
             }
-            modalString.replace("youtubevideoid", localConfig.youtubevideoid)
+            modalString = modalString.replace("youtubeBrowserCookieStatus", "Status: " + localConfig.youtubeBrowserCookieStatus);
+            if (localConfig.connectedAsUsername || localConfig.connectedAsUsername != "")
+                modalString = modalString.replace("YouTubeConnectedAs", `Connected as ${localConfig.connectedAsUsername || 'Guest'}`);
+            else
+                modalString = modalString.replace("YouTubeConnectedAs", "Connected as 'Guest'}");
+
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
@@ -673,7 +866,19 @@ function sendChatMessageTrigger (ytmessage, time)
  */
 function postLiveChatMessages (data)
 {
-    console.log("postLiveChatMessages data", data)
+    if (localConfig.liveChatAPI)
+    {
+        localConfig.liveChatAPI.sendMessage(data.message)
+            .then((commentResponse) =>
+            {
+                // no need to do anything if it posts ok.
+                //console.log("commentResponse", JSON.stringify(commentResponse, null, 2))
+            })
+            .catch((err) =>
+            {
+                console.log("comment error", JSON.stringify(err, null, 2))
+            })
+    }
 }
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType
@@ -757,7 +962,8 @@ function heartBeatCallback ()
     if (serverConfig.youtubeenabled === "on")
     {
         connected = true;
-        if (localConfig.connectedToLiveStream)
+
+        if (localConfig.connectedToLiveStream && localConfig.signedIn)
             color = "green"
         else
             color = "orange"
@@ -782,8 +988,10 @@ function heartBeatCallback ()
 //                           FUNCTION: file_log
 //             For debug purposes. logs performance data
 // ============================================================================
-function file_log (data)
+function file_log (data, override_debug)
 {
+    if (!DEBUG_LOGGING && !override_debug)
+        return;
     try
     {
         //console.log("logging data");

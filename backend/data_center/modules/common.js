@@ -190,6 +190,29 @@ function loadSoftwareVersion ()
 /**
  * Saves data to the filename given.
  * @param {string} configname 
+ * @param {string} path 
+ */
+function deleteConfig (configname, path = configFilesPath)
+{
+    if (fs.existsSync(path + configname + ".json"))
+    {
+        fs.unlink(path + configname + ".json",
+            (err =>
+            {
+                if (err) console.log(err);
+                else
+                {
+                    console.log("\nDeleted file: example_file.txt");
+                }
+            }));
+    }
+}
+// ============================================================================
+//                  FUNCTION: saveConfig
+// ============================================================================
+/**
+ * Saves data to the filename given.
+ * @param {string} configname 
  * @param {object} data 
  */
 function saveConfig (configname, data, path = configFilesPath)
@@ -250,6 +273,17 @@ function loadCredentials (configname)
         return "";
 }
 // ============================================================================
+//                  FUNCTION: deleteCredentials
+// ============================================================================
+/**
+ * Saves data to the filename given.
+ * @param {string} extensionname 
+ */
+function deleteCredentials (extensionname)
+{
+    deleteConfig(extensionname, credentialFilesPath)
+}
+// ============================================================================
 //                  FUNCTION: saveCredentials
 // ============================================================================
 /**
@@ -281,4 +315,4 @@ function saveCredentials (data)
 // ============================================================================
 //                           EXPORTS: 
 // ============================================================================
-export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials, loadSoftwareVersion };
+export { initcrypto, loadConfig, saveConfig, loadData, saveData, loadCredentials, saveCredentials, deleteCredentials, loadSoftwareVersion };

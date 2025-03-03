@@ -367,7 +367,13 @@ function UpdateCredentials (server_packet)
 {
     cm.saveCredentials(server_packet);
 }
-
+// ============================================================================
+//                           FUNCTION: DeleteCredentials
+// ============================================================================
+function DeleteCredentials (from)
+{
+    cm.deleteCredentials(from)
+}
 // ============================================================================
 //                           FUNCTION: RetrieveCredentials
 // ============================================================================
@@ -452,6 +458,6 @@ function sendDataLoad (server_socket, receivedSize)
 // ============================================================================
 export
 {
-    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, sendDataLoad
+    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, DeleteCredentials, sendDataLoad
 };
 

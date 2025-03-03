@@ -6,14 +6,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <p>Enable/Disable the Youtube extension
-            </p>
             <div class="form-group invisible">
                 <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
                 <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
                 <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
                 <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
+            <h4>Enable/Disable extension</h4>
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="youtubeenabled" type="checkbox" id="youtubeenabled" youtubeenabledchecked>
@@ -21,16 +20,58 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="youtubechatpollrate" class="col-form-label">chat poll rate (in milliseconds)</label>
-                <input type="text" name="youtubechatpollrate" class="form-control" id="youtubechatpollrate" value="youtubechatpollratetext">
-            </div>
-
+            <h4>Channel Name</h4>
             <div class="form-group">
                 <label for="youtubechannelname" class="col-form-label">ChannelID</label>
                 <input type="text" name="youtubechannelname" class="form-control" id="youtubechannelname" value="youtubechannelnametext">
             </div>
             <HR>
+            <h4>YouTube login options</h4>
+            <span style="color:yellow">
+                <div>YouTubeConnectedAs</div>
+            </span>
+            <p>Connect using browser cookie</p>
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" name="enableYouTubeBrowserCookie" type="checkbox" id="enableYouTubeBrowserCookie"
+                        enableYouTubeBrowserCookiechecked>
+                    <label class="form-check-label" for="enableYouTubeBrowserCookie">enableYouTubeBrowserCookie. <BR>
+                </div>
+                <div>
+                    <label for="youtubeCookie" class="col-form-label">BrowserCookie:</label>
+                    <input type="password" name="youtubeCookie" class="form-control" id="youtubeCookie" value="youtubeCookietext">
+                </div>
+                <div>
+                    <div>youtubeBrowserCookieStatus</div>
+                    <hr style="width:50%">
+                    <!--
+                        <BR>Use the browser cookies you normally use when watching to authenticate. Instructions on how to get the
+                        cookie can be found <span style="color:yellow">(To avoid the cookie resetting, log in using incognito mode, grab the cookie from there
+                            and then close the browser. This should stop the cookie from being refreshed)</span><a
+                            href="https://github.com/patrickkfkan/Volumio-YouTube.js/wiki/How-to-obtain-Cookie" target="__new">Here</a></label>
+                        -->
+                    <H5>Getting your youtube cookie</H5>
+                    Normally YouTube cookies get refreshed/updated while you are on Youtube. This means that if you use a normal cookie you will need to
+                    keep updating StreamRoller. To avoid this either use another browser or an incognito window, login to youtube, get the cookie as
+                    explained
+                    below then close the browser. As long as you don't go back to youtube in that browser the cookie should not get updated.
+                    <BR>
+                    <ol>
+                        <li>In a browser, sign into YouTube (either incognito or a browser you don't use for YouTube), then hit
+                            F12/ctrl-shift-i/right-click-menu to bring up the Developer Tools/Inspector.</li>
+                        <li>Choose the Network tab.</li>
+                        <li>Select XHR filter.</li>
+                        <li>Enter 'browse' in the Filter box.</li>
+                        <li>Now scroll down the YouTube web page until an entry starting with 'browse' appears. Select it.</li>
+                        <li>Scroll down in the Headers tab until you see Cookie under Request Headers.</li>
+                        <li>Right-click on the value of Cookie and select Copy Value.</li>
+                    </ol>
+                    <a href="https://github.com/patrickkfkan/Volumio-YouTube.js/wiki/How-to-obtain-Cookie">Link to instructions with pictures.</a>
+
+                </div>
+            </div>
+            <HR>
+            <h4>Reset</h4>
             <div class="form-group">
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" name="youtubedebugenabled" type="checkbox" id="youtubedebugenabled" youtubedebugenabledchecked>
