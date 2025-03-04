@@ -1,0 +1,30 @@
+<!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+# Twitch
+## Outgoing channel : TWITCH
+- [Twitch](#twitch)
+  - [Outgoing channel : TWITCH](#outgoing-channel--twitch)
+- [About](#about)
+  - [Triggers/actions](#triggersactions)
+    - [Triggers](#triggers)
+    - [Actions](#actions)
+# About
+This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect
+
+## Triggers/actions
+Triggers and actions should be autoupdated from the apidocs automatic doc generator.
+ReplaceTAGForTriggersUpdatedDocTime
+
+### Triggers
+
+ReplaceTAGForTriggers
+### Actions
+
+ReplaceTAGForActions

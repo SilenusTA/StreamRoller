@@ -65,18 +65,11 @@ note: the cookies are large multiline section blocks.
 [More detailed description with pictures](https://github.com/patrickkfkan/Volumio-YouTube.js/wiki/How-to-obtain-Cookie)
 ## Triggers/actions
 Triggers and actions should be autoupdated from the apidocs automatic doc generator.
-
-
-Table last updated: *Tue, 04 Mar 2025 03:51:52 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| Youtube message received | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| YouTube post livechat message | action_youtubePostLiveChatMessage | Post to youtube live chat if we are connected. |
+ReplaceTAGForActions

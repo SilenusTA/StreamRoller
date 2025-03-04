@@ -81,7 +81,7 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "YoutubeMessageReceived",
+                name: "Youtube message received",
                 displaytitle: "YouTube Chat Message",
                 description: "A chat message was received. textMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
@@ -115,7 +115,7 @@ const triggersandactions =
     actions:
         [
             {
-                name: "youtubepostlivechatmessage",
+                name: "YouTube post livechat message",
                 displaytitle: "Post a Message to youtube live chat",
                 description: "Post to youtube live chat if we are connected.",
                 messagetype: "action_youtubePostLiveChatMessage",
@@ -394,6 +394,9 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: saveCredentialsToServer
 // ============================================================================
+/**
+ * 
+ */
 function saveCredentialsToServer ()
 {
     for (var c in serverCredentials)
@@ -1008,4 +1011,4 @@ function file_log (data, override_debug)
         console.log("debug file logging error", error.message)
     }
 }
-export { initialise };
+export { initialise, triggersandactions };

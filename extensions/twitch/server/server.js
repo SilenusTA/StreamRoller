@@ -3513,4 +3513,4 @@ function findTriggerByMessageType (messagetype)
         ".findTriggerByMessageType", "failed to find trigger", messagetype);
 }
 
-export { start };
+export { start, triggersandactions };
