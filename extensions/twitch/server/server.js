@@ -1963,8 +1963,8 @@ function handleSettingsWidgetSmallData (modalCode)
 {
     try
     {
-        /* enable disable checkbox */
         let restartConnection = false;
+        /* check enabled change */
         if (serverConfig.twitchenabled != modalCode.twitchenabled)
         {
             restartConnection = true;
@@ -1973,14 +1973,14 @@ function handleSettingsWidgetSmallData (modalCode)
             else
                 serverConfig.twitchenabled = "off"
         }
-        /* streamername */
+        /* check streamername change */
         if (modalCode.twitchstreamername != serverConfig.twitchstreamername)
         {
             restartConnection = true;
             serverConfig.twitchstreamername = modalCode["twitchstreamername"]
         }
 
-        /* Clear History */
+        /* check clear history/cagegories flag */
         let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"]
         let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"]
 
@@ -1993,6 +1993,7 @@ function handleSettingsWidgetSmallData (modalCode)
                 serverConfig.twitchTitlesHistory = [];
                 localConfig.currentTwitchGameCategoryId = -1
             }
+            // return now to clear options
             return restartConnection;
         }
         // search for game on twitch
@@ -2013,9 +2014,12 @@ function handleSettingsWidgetSmallData (modalCode)
                 {
                     if (game)
                     {
+                        // found game check if we have it in our history already
                         const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+                        // add to history if not already there
                         if (inHistory == -1)
                             serverConfig.twitchCategoriesHistory.push(game)
+                        //  set game if we are connected and the game is different
                         if (localConfig.status.connected && localConfig.currentTwitchGameCategoryId != game.id)
                             setStreamGame(game.id)
                     }
@@ -2143,7 +2147,7 @@ async function connectTwitch ()
                 //to start up (if we have just started the server)
                 setTimeout(() =>
                 {
-                    sendCurrentGameData()
+                    sendCurrentGameData("twitch")
                 }, 5000);
 
             })
@@ -3353,13 +3357,13 @@ function sendGameCategoriesTrigger (id)
 // ===========================================================================
 //                           FUNCTION: sendCurrentGameData
 // ===========================================================================
-function sendCurrentGameData (id)
+function sendCurrentGameData (triggerId = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
     const game = serverConfig.twitchCategoriesHistory.find(e => e.id === localConfig.currentTwitchGameCategoryId);
     if (game)
     {
-        trigger.parameters = { triggerId: "InitialTwitchConnection", id: game.id, name: game.name, imageURL: game.imageURL }
+        trigger.parameters = { triggerId: triggerId, id: game.id, name: game.name, imageURL: game.imageURL }
         sendTrigger(trigger)
     }
 }
@@ -3509,4 +3513,4 @@ function findTriggerByMessageType (messagetype)
         ".findTriggerByMessageType", "failed to find trigger", messagetype);
 }
 
-export { start };
+export { start, triggersandactions };

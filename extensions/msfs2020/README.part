@@ -26,20 +26,11 @@ ie you can change your obs settns/overlay/chat based on game variable and also s
 > Note that there are thousands of options for MSFS2020. These will only appear if the game is
 running and the extension connected.
 </div>
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
-
-Table last updated: *Tue, 04 Mar 2025 07:54:50 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| onRequest_PLANE LATITUDE LONGITUDE | trigger_onRequest_PLANE LATITUDE LONGITUDE | The current lat long in one message with separate variables |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| PLANE LATITUDE LONGITUDE_get | action_PLANE LATITUDE LONGITUDE_get | Get the current lat long in one message |
+ReplaceTAGForActions

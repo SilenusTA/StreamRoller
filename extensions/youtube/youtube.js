@@ -81,7 +81,7 @@ const triggersandactions =
     triggers:
         [
             {
-                name: "YoutubeMessageReceived",
+                name: "Youtube message received",
                 displaytitle: "YouTube Chat Message",
                 description: "A chat message was received. textMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
@@ -115,7 +115,7 @@ const triggersandactions =
     actions:
         [
             {
-                name: "youtubepostlivechatmessage",
+                name: "YouTube post livechat message",
                 displaytitle: "Post a Message to youtube live chat",
                 description: "Post to youtube live chat if we are connected.",
                 messagetype: "action_youtubePostLiveChatMessage",
@@ -394,6 +394,9 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: saveCredentialsToServer
 // ============================================================================
+/**
+ * 
+ */
 function saveCredentialsToServer ()
 {
     for (var c in serverCredentials)
@@ -502,18 +505,13 @@ function stopYoutubeMonitor ()
 
         if (localConfig.liveChatAPI)
             localConfig.liveChatAPI.stop();
-        if (localConfig.signedIn)
-        {
-            localConfig.youtubeAPI.session.signOut();
-            localConfig.signedIn = false;
-        }
         localConfig.youtubeAPI = null;
         SendSettingsWidgetSmall();
     }
     catch (error)
     {
         console.log("stopYoutubeMonitor Error", error.status, error.message)
-        console.error(error)
+        console.log(error)
     }
 }
 
@@ -751,7 +749,7 @@ function SendSettingsWidgetSmall (toExtension = "")
             }
             modalString = modalString.replace("youtubeBrowserCookieStatus", "Status: " + localConfig.youtubeBrowserCookieStatus);
             if (localConfig.connectedAsUsername || localConfig.connectedAsUsername != "")
-                modalString = modalString.replace("YouTubeConnectedAs", `Connected as ${localConfig.connectedAsUsername || 'Guest'}`);
+                modalString = modalString.replace("YouTubeConnectedAs", `Connected as '${localConfig.connectedAsUsername || 'Guest'}'`);
             else
                 modalString = modalString.replace("YouTubeConnectedAs", "Connected as 'Guest'}");
 
@@ -1013,4 +1011,4 @@ function file_log (data, override_debug)
         console.log("debug file logging error", error.message)
     }
 }
-export { initialise };
+export { initialise, triggersandactions };

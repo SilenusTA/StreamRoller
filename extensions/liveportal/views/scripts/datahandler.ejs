@@ -917,6 +917,7 @@
                 {
                     let ele = document.getElementById("liveportaltitleTwitchCategoryImage")
                     let imagecode = extension_packet.data.parameters.imageURL.replace("{width}", 30).replace("{height}", 30)
+                    ele.title = extension_packet.data.parameters.name;
                     ele.innerHTML = "<img style='border: 5px solid #6441a5; border-radius:50%' src='" + imagecode + "'>"
                 }
             }

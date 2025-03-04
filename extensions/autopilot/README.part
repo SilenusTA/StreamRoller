@@ -45,24 +45,11 @@ Timers provide a great way to give more control over the system. You can set a t
 
 
 ## Triggers/actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
-
-Table last updated: *Tue, 04 Mar 2025 05:14:20 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| Macro Triggered | trigger_MacroTriggered | A Macro was triggered |
-| AllTriggers | trigger_AllTriggers | Catches all triggers (for debugging) |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| Activate Macro | action_ActivateMacro | Activate a macro function |
-| Set Group Pause State | action_SetGroupPauseState | Pause/Unpause groups |
-| LogToConsole | action_LogToConsole | Log triggers to console |
-
+ReplaceTAGForActions

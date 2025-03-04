@@ -1530,3 +1530,5 @@ function getFileNameDateString ()
     const seconds = `${date.getSeconds()}`.padStart(2, '0');
     return `${year}_${month}_${day}-${hours}_${minutes}_${seconds}`
 }
+// only exported here to keep autodocumentation happy for triggersandactions
+export { triggersandactions }
