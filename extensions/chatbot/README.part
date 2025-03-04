@@ -149,24 +149,11 @@ Question/Answer 4. General statement to the chat and responding without using th
 This format generally replies with the username if asked a direct question, but will avoid using the username if just responding openly to the chat.
 
 ## Triggers/actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
-
-Table last updated: *Tue, 04 Mar 2025 06:26:23 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| OpenAIChatbotResponseReceived | trigger_chatbotResponse | The OpenAI chatbot returned a response |
-| OpenAIImageResponseReceived | trigger_imageResponse | The OpenAI chatbot returned a image |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| OpenAIChatbotProcessText | action_ProcessText | Send some text through the chatbot (users in original message on the ignore list will not get processed) |
-| OpenAIChatbotProcessImage | action_ProcessImage | Send some text through the chatbot to create an image |
-| OpenAIChatbotSwitchProfile | action_ChangeProfile | Switches the chatbot to the given profile |
-
+ReplaceTAGForActions

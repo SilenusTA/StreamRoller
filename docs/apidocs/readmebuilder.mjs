@@ -81,6 +81,8 @@ async function parseFileForTriggers (file)
 // ============================================================================
 function parseTrigger (trigger, filename)
 {
+    if (!trigger.extensionname)
+        return;
     console.log("\x1b[1m\x1b[32mfound triggers for:", trigger.extensionname, "in", filename, "\x1b[0m")
     let readmeTriggerStringReplacement = ""
     let readmeActionStringReplacement = ""

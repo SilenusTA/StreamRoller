@@ -676,7 +676,6 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
  * Causes an action to be triggered.
  * @param {object} action action to be triggered
  * @param {object} triggerParams received trigger parameters
- * @returns 
  */
 function TriggerAction (action, triggerParams)
 {
