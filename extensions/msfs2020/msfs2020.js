@@ -78,7 +78,7 @@ let serverConfig = structuredClone(default_serverConfig)
 const default_triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
+    description: "Connects to Microsoft Flight Sim 2020 and reads/writes simvars. when connected to MSFS2020 thousands more triggers/options will be available than appear in this default list. <BR> ie you can set a trigger on simvar 'FLAPS HANDLE INDEX' index 0 position 2 to trigger an action when the flaps are set to position 2<BR>Ie you can set an action on the simvar 'GENERAL ENG THROTTLE LEVER POSITION' using index 1 and a value of 50 to set the postition of throttle 1 to 50%. Please feel free to post useful triggers and actions on teh discord server for others to play with<BR><B>DON'T FORGET TO TURN ON MONITORING FOR ANY VARS YOU WANT TO TRIGGER ON (IN THE SETTINGS PAGE)</B>",
     version: "0.2",
     channel: serverConfig.channel,
     triggers:
@@ -147,6 +147,10 @@ function initialise (app, host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
+/**
+ * Called when connection is lost to StreamRoller
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
@@ -154,6 +158,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called when server connects
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
@@ -174,6 +182,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when we receive a message from the server
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
@@ -324,8 +336,6 @@ function onDataCenterMessage (server_packet)
         {
             //Just ignore messages we know we don't want to handle
         }
-        else if (server_packet.dest_channel === "STREAMLABS_ALERT")
-            process_stream_alert(server_packet);
         else
         {
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
@@ -351,18 +361,14 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
-
-// ============================================================================
-//                           FUNCTION: process_stream_alert
-// ============================================================================
-function process_stream_alert (server_packet)
-{
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".process_stream_alert", "empty function");
-}
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-function SendSettingsWidgetSmall (tochannel)
+/**
+ * Parses and sends out our small settings widget to the given extension
+ * @param {string} to 
+ */
+function SendSettingsWidgetSmall (to)
 {
     fs.readFile(__dirname + '/msfs2020settingswidgetsmall.html', function (err, filedata)
     {
@@ -389,11 +395,11 @@ function SendSettingsWidgetSmall (tochannel)
                         serverConfig.extensionname,
                         modalstring,
                         "",
-                        tochannel,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    tochannel
+                    to
                 ))
         }
     });
@@ -401,6 +407,10 @@ function SendSettingsWidgetSmall (tochannel)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
+/**
+ * Handles user submitted code from our large settings widget/page
+ * @param {object} modalcode 
+ */
 function handleSettingsWidgetLargeData (modalcode)
 {
     /////////////////////////////////////////////////
@@ -476,7 +486,11 @@ function handleSettingsWidgetLargeData (modalcode)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetLarge
 // ===========================================================================
-function SendSettingsWidgetLarge (tochannel)
+/**
+ * Creates and sends our large settings widget html code to the given extension
+ * @param {string} to 
+ */
+function SendSettingsWidgetLarge (to)
 {
     let generatedpage = "";
     let first = true
@@ -609,11 +623,11 @@ function SendSettingsWidgetLarge (tochannel)
                         serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
-                        tochannel,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    to // in this case we only need the "to" channel as we will send only to the requester
                 ))
 
         }
@@ -624,6 +638,9 @@ function SendSettingsWidgetLarge (tochannel)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Saves our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
@@ -634,6 +651,9 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
+/**
+ * Saves our data to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -645,6 +665,9 @@ function SaveDataToServer ()
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     localConfig.state.msfsconnected = localConfig.msfs_api.connected
@@ -693,6 +716,10 @@ function heartBeatCallback ()
         enabled: 'off'
         }
     */
+/**
+ * initialises our sim variables dynamically creates triggers and actions based on what is available.
+ * Note there can be thousands of possible options created here
+ */
 function initSimVarsandTriggers ()
 {
     if (serverConfig.msfs2020ennabled == "on")
@@ -855,6 +882,9 @@ function initSimVarsandTriggers ()
 // ============================================================================
 //                           FUNCTION: msfsapiconnect
 // ============================================================================
+/**
+ * connect to the MSFS2020 api interface
+ */
 function msfsapiconnect ()
 {
     if (serverConfig.msfs2020ennabled == "on")
@@ -879,13 +909,15 @@ function msfsapiconnect ()
 // ============================================================================
 //                           FUNCTION: MSFS2020Disconnect
 // ============================================================================
+/**
+ * disconnect from the MSFS2020 interface and callbacks
+ */
 function MSFS2020Disconnect ()
 {
     clearTimeout(localConfig.pollMSFSHandle)
     localConfig.state.msfsconnected = false
     for (let i = 0; i < serverData.EventVars.length; i++)
     {
-
         if (localConfig.EventCallabackHandles[serverData.EventVars[i]])
             localConfig.EventCallabackHandles[serverData.EventVars[i]]()
     }
@@ -899,6 +931,10 @@ function MSFS2020Disconnect ()
 // ============================================================================
 //                           FUNCTION: MSFS2020RegisterSimvars
 // ============================================================================
+/**
+ * Registers with MSFS2020 for callbacks on simvars
+ * @param {object} handle simconnecnt handle
+ */
 async function MSFS2020RegisterSimvars (handle)
 {
     try
@@ -985,6 +1021,12 @@ async function MSFS2020RegisterSimvars (handle)
 // ============================================================================
 //                           FUNCTION: addToTriggersArray
 // ============================================================================
+/**
+ * Adds a simvar to our known list of names. A simvar may be an array and have an index (ie engines have an index for each engine)
+ * others may not have index's
+ * @param {string} name 
+ * @param {number} [index=0] 
+ */
 function addToTriggersArray (name, index = 0)
 {
     if (name.indexOf(":index") > 0)
@@ -1004,6 +1046,16 @@ function addToTriggersArray (name, index = 0)
 // ============================================================================
 //                           FUNCTION: postTriggers
 // ============================================================================
+/**
+ * posts a trigger out when a given symvar fires. Will also post a "changed" trigger
+ * if the value was previously different
+ * possible message types posted (NAME) is the simvar name and (INDEX) is the 
+ * index if an indexed simvar
+ * trigger_(NAME)
+ * trigger_(NAME):(INDEX)
+ * trigger_onChange_(NAME)
+ * trigger_onChange_(NAME):(INDEX)
+ */
 async function postTriggers ()
 {
     let index = ""
@@ -1097,8 +1149,13 @@ async function postTriggers ()
 }
 // ============================================================================
 //                        FUNCTION: performActionGetLatLong
-//          this is a home grown request as it needs two simvars
 // ============================================================================
+/**
+ * Special simvar just for streamroller :D
+ * Creates a simvar containing both lat and long rather
+ * than having to create two requests actions and getting two responses back
+ * @param {object} data 
+ */
 function performActionGetLatLong (data)
 {
     let action = ""
@@ -1146,8 +1203,12 @@ function performActionGetLatLong (data)
 }
 // ============================================================================
 //                        FUNCTION: performAction
-//          someone has reqested we do something in flight sim
 // ============================================================================
+/**
+ * An action was received to set/change a simvar or retrieve some data
+ * A "trigger_onRequest_(simvarname)" will be fired on a request
+ * @param {object} data 
+ */
 function performAction (data)
 {
     let action = ""
@@ -1203,6 +1264,9 @@ function performAction (data)
 // ============================================================================
 //                           FUNCTION: pollMSFS
 // ============================================================================
+/**
+ * Poll MSFS for data we are monitoring for
+ */
 function pollMSFS ()
 {
     clearTimeout(localConfig.pollMSFSHandle);
@@ -1213,6 +1277,10 @@ function pollMSFS ()
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Sends a list of our current triggers/actions ot the given extension
+ * @param {string} to 
+ */
 function sendTriggersAndActions (to)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1234,6 +1302,11 @@ function sendTriggersAndActions (to)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds a specific trigger from the given name
+ * @param {string} messagetype 
+ * @returns 
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -1297,5 +1370,5 @@ function file_log (type, data)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
