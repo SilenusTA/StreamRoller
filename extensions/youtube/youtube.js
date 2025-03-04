@@ -544,7 +544,7 @@ function connectToAPI ()
                 {
                     console.log("No live video found for channel name", serverConfig.youtubechannelname)
                 }
-                if (search.videos[0] != [])
+                if (search.videos[0] && search.videos[0] != [])
                 {
                     localConfig.youtubevideoid = search.videos[0].id;
                     localConfig.youtubeAPI.getInfo(localConfig.youtubevideoid)
