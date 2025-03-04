@@ -19,10 +19,11 @@ This was the only way I could find to autoupdate the triggers and actions lists
 This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect
 
 ## Triggers/actions
-Triggers and actions should be autoupdated from the apidocs automatic doc generator.
 
 
-Table last updated: *Tue, 04 Mar 2025 03:29:40 GMT*
+Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
+
+Table last updated: *Tue, 04 Mar 2025 04:44:09 GMT*
 
 ### Triggers
 

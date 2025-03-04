@@ -64,10 +64,11 @@ To get hold of a cookie to use in StreamRoller perform the following steps.
 note: the cookies are large multiline section blocks.
 [More detailed description with pictures](https://github.com/patrickkfkan/Volumio-YouTube.js/wiki/How-to-obtain-Cookie)
 ## Triggers/actions
-Triggers and actions should be autoupdated from the apidocs automatic doc generator.
 
 
-Table last updated: *Tue, 04 Mar 2025 03:51:52 GMT*
+Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
+
+Table last updated: *Tue, 04 Mar 2025 04:44:09 GMT*
 
 ### Triggers
 

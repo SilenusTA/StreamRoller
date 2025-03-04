@@ -95,6 +95,12 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: startClient
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {String} host 
+ * @param {Number} port 
+ * @param {Number} heartbeat 
+ */
 async function startServer (host, port, heartbeat)
 {
     // setup the express app that will handle client side page requests
@@ -113,6 +119,11 @@ async function startServer (host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: ConnectToDataCenter
 // ============================================================================
+/**
+ * Connect to the StreamRoller websocket
+ * @param {string} host 
+ * @param {number} port 
+ */
 function ConnectToDataCenter (host, port)
 {
     try
@@ -124,12 +135,20 @@ function ConnectToDataCenter (host, port)
         logger.err(serverConfig.extensionname + "datahandler.initialise", "DataCenterSocket connection failed:", err);
     }
 }
+/**
+ * Called when the StreamRoller websocket disconnects
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called when the StreaRoller websocket connection starts
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -152,6 +171,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Handles all streamroller inbound messages
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     // -------------------------------------------------------------------------------------------------
@@ -176,7 +199,7 @@ function onDataCenterMessage (server_packet)
                     serverConfig = structuredClone(server_packet.data)
             }
             // update server log, mainly here if we have added new default options when a user
-            // updates their version of streamroller
+            // updates their version of StreamRoller
             SaveConfigToServer();
         }
     }
@@ -452,6 +475,9 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Saves our config on the server
+ */
 function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -465,6 +491,11 @@ function SaveConfigToServer ()
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
+/**
+ * Sends our small settins widget to the given channel 
+ * 
+ * @param {string} tochannel 
+ */
 function SendSettingsWidgetSmall (tochannel)
 {
     fs.readFile(__dirname + "/autopilotsettingswidgetsmall.html", function (err, filedata)
@@ -511,6 +542,10 @@ function SendSettingsWidgetSmall (tochannel)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
+/**
+ * Handles data sent when a user submits our small setting dialog box
+ * @param {object} modalcode 
+ */
 function handleSettingsWidgetSmallData (modalcode)
 {
     serverConfig.autopilotenabled = "off";
@@ -521,6 +556,10 @@ function handleSettingsWidgetSmallData (modalcode)
 // ============================================================================
 //                           FUNCTION: CheckTriggers
 // ============================================================================
+/**
+ * Handles received triggers checking if we have any matching trigger/action pairs
+ * @param {object} data 
+ */
 function CheckTriggers (data)
 {
     if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
@@ -536,6 +575,11 @@ function CheckTriggers (data)
 // ============================================================================
 //                           FUNCTION: ProcessReceivedTrigger
 // ============================================================================
+/**
+ * Processes a triger action pairing that has been triggered.
+ * @param {object} pairing 
+ * @param {object} receivedTrigger 
+ */
 function ProcessReceivedTrigger (pairing, receivedTrigger)
 {
     //check if the event fields match the trigger fields we have set for this entry
@@ -628,6 +672,12 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
 // ============================================================================
 //                           FUNCTION: TriggerAction
 // ============================================================================
+/**
+ * Causes an action to be triggered.
+ * @param {object} action action to be triggered
+ * @param {object} triggerParams received trigger parameters
+ * @returns 
+ */
 function TriggerAction (action, triggerParams)
 {
     if (action.paused)
@@ -752,6 +802,11 @@ function TriggerAction (action, triggerParams)
 // ============================================================================
 //                           FUNCTION: ProcessUserPairings
 // ============================================================================
+/**
+ * Updates our userPairings array with the date received from the frontend webpage
+ * when a user changes/adds a new item
+ * @param {object} userPairings 
+ */
 function ProcessUserPairings (userPairings)
 {
     if (userPairings != null
@@ -767,6 +822,9 @@ function ProcessUserPairings (userPairings)
 // ============================================================================
 //                           FUNCTION: RequestExtList
 // ============================================================================
+/**
+ * Requests a list of extensions connected from the server
+ */
 function RequestExtList ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -775,6 +833,9 @@ function RequestExtList ()
             serverConfig.extensionname,
         ));
 }
+/**
+ * Requests a channel list from the server
+ */
 // ============================================================================
 //                           FUNCTION: RequestChList
 // ============================================================================
@@ -789,6 +850,11 @@ function RequestChList ()
 // ============================================================================
 //                           FUNCTION: SendUserPairings
 // ============================================================================
+/**
+ * Sends our user pairing lists to the given extension or broadcasts if we have 
+ * just made a change and want to let everyone know
+ * @param {string} to 
+ */
 function SendUserPairings (to)
 {
     if (to != "")
@@ -823,6 +889,9 @@ function SendUserPairings (to)
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
+/**
+ * Save our data JSON to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -834,6 +903,9 @@ function SaveDataToServer ()
 // ============================================================================
 //                           FUNCTION: SendMacros
 // ============================================================================
+/**
+ * Sends out the current list of marcos
+ */
 function SendMacros ()
 {
     if (serverData.userPairings.macrotriggers != undefined)
@@ -854,7 +926,11 @@ function SendMacros ()
 // ============================================================================
 //                           FUNCTION: SendMacroImages
 // ============================================================================
-function SendMacroImages (from)
+/**
+ * Sends out the current list of macro images the user can chose from
+ * @param {string} to
+ */
+function SendMacroImages (to)
 {
     let imagelist = fs.readdirSync(__dirname + "/../public/images/deckicons")
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -865,15 +941,20 @@ function SendMacroImages (from)
                 serverConfig.extensionname,
                 imagelist,
                 "",
-                from),
+                to),
             "",
-            from
+            to
         ),
     );
 }
 // ============================================================================
 //                           FUNCTION: actionAction_SetGroupPauseState
 // ============================================================================
+/**
+ * Handles the paused state actions to pause/unpause a trigger action pair
+ * @param {string} group group to toggle
+ * @param {string} state state to move to
+ */
 function actionAction_SetGroupPauseState (group, state)
 {
     if (Object.keys(serverData.userPairings).length != 0 && serverData.userPairings.pairings != undefined)
@@ -899,6 +980,10 @@ function actionAction_SetGroupPauseState (group, state)
 // ============================================================================
 //                           FUNCTION: triggerMacroButton
 // ============================================================================
+/**
+ * Triggers the given actions mapped to a macro button trigger
+ * @param {string} name 
+ */
 function triggerMacroButton (name)
 {
     for (var i in serverData.userPairings.pairings)
@@ -929,8 +1014,13 @@ function triggerMacroButton (name)
 
 }
 // ============================================================================
-//                           FUNCTION: triggerMacroButton
+//                           FUNCTION: parseUserRequestSaveDataFile
 // ============================================================================
+/**
+ * Handles a 'userRequestSaveDataFile' message triggered when a user uploads a new
+ * JSON data file containing the trigger/action pairings
+ * @param {object} data 
+ */
 function parseUserRequestSaveDataFile (data)
 {
     //do something with the file. ie check version etc.
@@ -972,6 +1062,9 @@ function parseUserRequestSaveDataFile (data)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out our heartbeat message so others can monitor the extensions status
+ */
 function heartBeatCallback ()
 {
     let status = false;
@@ -990,4 +1083,4 @@ function heartBeatCallback ()
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
-export { startServer };
+export { startServer, triggersandactions };
