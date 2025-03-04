@@ -24,20 +24,11 @@ Contents
 - Value: discord bot token
 
 ## Triggers/actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
-
-Table last updated: *Tue, 04 Mar 2025 07:07:03 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| DiscordMessageRecieved | trigger_DiscordMessageReceived | A message was posted to a discord chat room |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| DiscordPostMessage | action_DiscordPostMessage | Post a message to a discord channel |
+ReplaceTAGForActions

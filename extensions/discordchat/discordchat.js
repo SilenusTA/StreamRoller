@@ -19,20 +19,6 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-// ############################# DISCORDCHAT.js ##############################
-// In progress test discord chat app.
-// ---------------------------- creation --------------------------------------
-// Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/StreamRoller
-// Date: 05-Jan-2022
-// --------------------------- functionality ----------------------------------
-// Current functionality:
-// 1) Send selected alerts to the given discord channel
-// 2) Read discord channel messages and send them out to StreamRoller, currently
-// used so that mods can send messages to appear on the live dashboard
-// ----------------------------- notes ----------------------------------------
-// In Progress
-// ============================================================================
 /** 
  * @extension DiscordChat 
  * Send received discord chat messages. Useful for mod messages during stream
@@ -131,7 +117,11 @@ const triggersandactions =
 //                           FUNCTION: initialise
 // ============================================================================
 /**
- * mandatory function so that the backend can start us up
+ * Starts the extension using the given data.
+ * @param {Express} app 
+ * @param {String} host 
+ * @param {Number} port 
+ * @param {Number} heartbeat 
  */
 function initialise (app, host, port, heartbeat)
 {
@@ -154,6 +144,10 @@ function initialise (app, host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
+/**
+ * called when websocket connection to server goes down
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
@@ -161,6 +155,9 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * called when a new server websocket connection is made
+ */
 function onDataCenterConnect ()
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
@@ -183,6 +180,10 @@ function onDataCenterConnect ()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when a message is received on the websocket
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
@@ -583,6 +584,9 @@ function SaveConfigToServer ()
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
+/**
+ * save our data to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -594,6 +598,9 @@ function SaveDataToServer ()
 // ============================================================================
 //                     FUNCTION: SaveChatMessagesToServerScheduler
 // ============================================================================
+/**
+ * saves the discord chat buffer to the server
+ */
 function SaveChatMessagesToServerScheduler ()
 {
     SaveDataToServer()
@@ -615,6 +622,10 @@ import { Client, Intents } from "discord.js";
 // ============================================================================
 //                          FUNCTION: connectToDiscord
 // ============================================================================
+/**
+ * Connets to discord
+ * @param {object} credentials 
+ */
 function connectToDiscord (credentials)
 {
     try
@@ -658,6 +669,10 @@ function connectToDiscord (credentials)
 // ============================================================================
 //                          FUNCTION: discordDisconnectHandler
 // ============================================================================
+/**
+ * Called when discord disconnects
+ * @param {string} message 
+ */
 function discordDisconnectHandler (message)
 {
     localConfig.status.connected = false;
@@ -666,6 +681,10 @@ function discordDisconnectHandler (message)
 // ============================================================================
 //                          FUNCTION: discordErrorHandler
 // ============================================================================
+/**
+ * Handles discord error messages
+ * @param {string} message 
+ */
 function discordErrorHandler (message)
 {
     localConfig.status.connected = false;
@@ -674,6 +693,10 @@ function discordErrorHandler (message)
 // ============================================================================
 //                          FUNCTION: discordErrorHandler
 // ============================================================================
+/**
+ * Handles discord reconnections
+ * @param {string} message 
+ */
 function discordReconnectHandler (message)
 {
     localConfig.status.connected = true;
@@ -683,6 +706,10 @@ function discordReconnectHandler (message)
 // ============================================================================
 //                          FUNCTION: discordMessageHandler
 // ============================================================================
+/**
+ * Handles discord messages
+ * @param {string} message 
+ */
 function discordMessageHandler (message)
 {
     // stop bot responding to other bots
@@ -715,6 +742,10 @@ function discordMessageHandler (message)
 // ============================================================================
 //                           FUNCTION: sendAlertMessageReceived
 // ============================================================================
+/**
+ * sends a discord message alert trigger.
+ * @param {object} message 
+ */
 function sendAlertMessageReceived (message)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -736,6 +767,13 @@ function sendAlertMessageReceived (message)
 // ============================================================================
 //                           FUNCTION: process_chat_data
 // ============================================================================
+/**
+ * Sends out a discord message targetted for teh liveportal chat window
+ * 
+ * @deprecated this should be removed and extensions should check for the 
+ * "trigger_DiscordMessageReceived" trigger instead
+ * @param {object} message 
+ */
 function process_chat_data (message)
 {
     let messagedata = { name: message.author.username, message: message.content }
@@ -756,6 +794,9 @@ function process_chat_data (message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/** 
+ * sends heartbeat status out so other extensions can monitor our status
+ */
 function heartBeatCallback ()
 {
     let connected = localConfig.status.connected
@@ -782,5 +823,5 @@ function heartBeatCallback ()
 // ----------------------------- notes ----------------------------------------
 // will also need additional exports in future (ie reconnect, stop, start etc)
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
