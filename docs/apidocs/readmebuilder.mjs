@@ -90,15 +90,22 @@ function parseTrigger (trigger, filename)
     let hbody = ""
 
     // build trigger/actions strings up
-    for (const t of trigger.triggers)
-        hbody += `| ${t.name} | ${t.messagetype} | ${t.description} |\n`
-    if (trigger.triggers.length > 0)
-        readmeTriggerStringReplacement += hbody
+    if (trigger.triggers)
+    {
+        //console.log("trigger.triggers", JSON.stringify(trigger.triggers, null, 2))
+        for (const t of trigger.triggers)
+            hbody += `| ${t.name} | ${t.messagetype} | ${t.description} |\n`
+        if (trigger.triggers.length > 0)
+            readmeTriggerStringReplacement += hbody
+    }
     hbody = ""
-    for (const a of trigger.actions)
-        hbody += `| ${a.name} | ${a.messagetype} | ${a.description} |\n`
-    if (trigger.actions.length > 0)
-        readmeActionStringReplacement += hbody
+    if (trigger.actions)
+    {
+        for (const a of trigger.actions)
+            hbody += `| ${a.name} | ${a.messagetype} | ${a.description} |\n`
+        if (trigger.actions.length > 0)
+            readmeActionStringReplacement += hbody
+    }
     // if we have anything to process ...
     if (trigger.actions.length > 0 || trigger.triggers.length > 0)
     {
