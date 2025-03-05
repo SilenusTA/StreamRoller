@@ -1305,7 +1305,6 @@ function sendTriggersAndActions (to)
 /**
  * Finds a specific trigger from the given name
  * @param {string} messagetype 
- * @returns 
  */
 function findtriggerByMessageType (messagetype)
 {

@@ -130,6 +130,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called when websocket connects
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -145,6 +149,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when we receive a websocket message
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
@@ -394,6 +402,11 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Find a trigger via it's name
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -406,6 +419,9 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends heartbeat messages so other extensions can monitor status
+ */
 function heartBeatCallback ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -425,5 +441,5 @@ function heartBeatCallback ()
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

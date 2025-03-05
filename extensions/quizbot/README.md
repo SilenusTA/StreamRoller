@@ -12,7 +12,7 @@ Contents
 - [Quizbot Extension](#quizbot-extension)
   - [Outgoing channel : "QUIZBOT\_CHANNEL"](#outgoing-channel--quizbot_channel)
   - [Description](#description)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 ## Outgoing channel : "QUIZBOT_CHANNEL"
@@ -24,12 +24,12 @@ An example set of triggers for twitch chat can be seen in the image below.
 
 <img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/quizbot/exampletriggers.png" title="example quzbot triggers" alt="example quzbot triggers">
 
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 02:03:22 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

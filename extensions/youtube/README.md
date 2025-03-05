@@ -19,7 +19,7 @@ Contents
     - [Settings Small (for mainpage quick links)](#settings-small-for-mainpage-quick-links)
     - [Settings Large (for main settings full page)](#settings-large-for-main-settings-full-page)
   - [Authorization](#authorization)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 
@@ -63,12 +63,12 @@ To get hold of a cookie to use in StreamRoller perform the following steps.
 - Right-click on the value of Cookie and select Copy Value (or select all and right click-copy).
 note: the cookies are large multiline section blocks.
 [More detailed description with pictures](https://github.com/patrickkfkan/Volumio-YouTube.js/wiki/How-to-obtain-Cookie)
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

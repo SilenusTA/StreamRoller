@@ -12,7 +12,7 @@ Contents
 - [Philips Hue Lights](#philips-hue-lights)
   - [Outgoing channel : "PHILIPSHUE\_CHANNEL"](#outgoing-channel--philipshue_channel)
   - [Pairing](#pairing)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 
@@ -20,12 +20,12 @@ Contents
 ## Pairing
 Pair the extension using the 'pair' option in the small settings dialog and press the button on the philips hue hub.
 
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 01:34:47 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

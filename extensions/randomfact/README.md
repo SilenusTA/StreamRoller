@@ -1,11 +1,38 @@
+<!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
 # RandomFact
 Contents
-- [Demo Extension](#demo-extension)
-  - [Outgoing channel : "RANDOMFACT_CHANNEL"](#outgoing-channel--demoext_channel)
+- [RandomFact](#randomfact)
+  - [Outgoing channel : "RANDOMFACT\_CHANNEL"](#outgoing-channel--randomfact_channel)
   - [Description](#description)
-  - [Features](#features)
-    - [Standard Features](#standard-features)
-    - [Extended features (working with adminpage extension)](#extended-features-working-with-adminpage-extension)
+  - [Triggers/Actions](#triggersactions)
+    - [Triggers](#triggers)
+    - [Actions](#actions)
 ## Outgoing channel : "RANDOMFACT_CHANNEL"
 ## Description
 Request a random fact and the result will be posted back.
+## Triggers/Actions
+
+
+Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
+
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+
+### Triggers
+
+| name | trigger | description |
+| --- | --- | --- |
+| RandfactPoster | trigger_RandomFact | An interesting or amusing random fact was received |
+
+### Actions
+
+| name | trigger | description |
+| --- | --- | --- |
+| RandfactRequest | action_RequestRandomFact | Requests a random fact |

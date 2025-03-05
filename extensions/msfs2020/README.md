@@ -12,7 +12,7 @@ Contents
 - [MSFS2020](#msfs2020)
   - [Outgoing channel : "MSFS2020\_CHANNEL"](#outgoing-channel--msfs2020_channel)
   - [Description](#description)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 ## Outgoing channel : "MSFS2020_CHANNEL"
@@ -20,7 +20,7 @@ Contents
 This extension connects to Microsoft Flight Simulator using the simconnect system. 
 It will allow the reading and writing of variables to the sim so that you can trigger on them or perfrom actions on them.
 ie you can change your obs settns/overlay/chat based on game variable and also setup chat commands etc to control parts of the game
-## Triggers/actions
+## Triggers/Actions
 <div style="color:red">
 
 > Note that there are thousands of options for MSFS2020. These will only appear if the game is
@@ -30,7 +30,7 @@ running and the extension connected.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

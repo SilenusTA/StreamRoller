@@ -16,7 +16,7 @@ Contents
       - [Field 1](#field-1)
       - [Field 2](#field-2)
       - [Field 3](#field-3)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 # Setup
@@ -35,7 +35,7 @@ Contents
 - Value: password
 
 Provides connection to OBS for information and control. 
-## Triggers/actions
+## Triggers/Actions
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers

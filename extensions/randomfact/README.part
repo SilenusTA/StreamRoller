@@ -7,23 +7,17 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
- # Quizbot Extension
+# RandomFact
 Contents
-- [Quizbot Extension](#quizbot-extension)
-  - [Outgoing channel : "QUIZBOT\_CHANNEL"](#outgoing-channel--quizbot_channel)
+- [RandomFact](#randomfact)
+  - [Outgoing channel : "RANDOMFACT\_CHANNEL"](#outgoing-channel--randomfact_channel)
   - [Description](#description)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "QUIZBOT_CHANNEL"
+## Outgoing channel : "RANDOMFACT_CHANNEL"
 ## Description
-Quizbot will ask questions and check answers
-
-The extension runs on triggers so these will need adding for the bot to do anything. 
-An example set of triggers for twitch chat can be seen in the image below.
-
-<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/quizbot/exampletriggers.png" title="example quzbot triggers" alt="example quzbot triggers">
-
+Request a random fact and the result will be posted back.
 ## Triggers/Actions
 ReplaceTAGForTriggersUpdatedDocTime
 

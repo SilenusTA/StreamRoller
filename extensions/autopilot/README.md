@@ -18,7 +18,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
     - [Multiple actions](#multiple-actions)
     - [Using trigger names](#using-trigger-names)
     - [Using timers](#using-timers)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 
@@ -47,12 +47,12 @@ You can set an identification in the action that will be passed back by a trigge
 Timers provide a great way to give more control over the system. You can set a timer with a 1 second timeout and use that as a starting trigger for serveral pairings. You can also then trigger a timer from a macro button like any other trigger.
 
 
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 02:03:22 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

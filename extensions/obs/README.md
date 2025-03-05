@@ -16,7 +16,7 @@ Contents
       - [Field 1](#field-1)
       - [Field 2](#field-2)
       - [Field 3](#field-3)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 # Setup
@@ -35,12 +35,12 @@ Contents
 - Value: password
 
 Provides connection to OBS for information and control. 
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

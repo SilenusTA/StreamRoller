@@ -13,7 +13,7 @@ Contents
 - [Setup](#setup)
   - [Outgoing channel : "DISCORD\_CHAT"](#outgoing-channel--discord_chat)
   - [Authorization fields](#authorization-fields)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 # Setup
@@ -23,7 +23,7 @@ Contents
 - Name: DISCORD_TOKEN 
 - Value: discord bot token
 
-## Triggers/actions
+## Triggers/Actions
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers

@@ -13,7 +13,7 @@ Contents
 - [Setup](#setup)
   - [Outgoing channel : "DISCORD\_CHAT"](#outgoing-channel--discord_chat)
   - [Authorization fields](#authorization-fields)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 # Setup
@@ -23,12 +23,12 @@ Contents
 - Name: DISCORD_TOKEN 
 - Value: discord bot token
 
-## Triggers/actions
+## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 
