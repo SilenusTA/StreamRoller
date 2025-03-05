@@ -107,7 +107,7 @@ function parseTrigger (trigger, filename)
             readmeActionStringReplacement += hbody
     }
     // if we have anything to process ...
-    if (trigger.actions.length > 0 || trigger.triggers.length > 0)
+    if (trigger.actions && trigger.actions.length > 0 || trigger.triggers && trigger.triggers.length > 0)
     {
         // create new slot if we don't have one already
         if (!allTAs[trigger.extensionname])
