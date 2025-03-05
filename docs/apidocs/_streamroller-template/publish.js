@@ -925,10 +925,21 @@ function add_doclet_extensions_for_StreamRoller (data)
     {
         let extNameAndFolder;
         if (doclet.meta)
+        {
             extNameAndFolder = extensionRootPaths.find(
-                (e) => doclet.meta.path.indexOf(e.rootPath) == 0
+                (e) =>
+                {                    // is it an exact match?
+                    if (doclet.meta.path == e.rootPath)
+                        return true;
+                    //check for partial match
+                    else if (doclet.meta.path.indexOf(e.rootPath + "\\") == 0)
+                        return true;
+                    else
+                        return false;
+                    //return doclet.meta.path.indexOf(e.rootPath) == 0
+                }
             );
-
+        }
         if (extNameAndFolder)
         {
             let extensionPrefix = extNameAndFolder.name + ":"
