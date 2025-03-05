@@ -10,10 +10,11 @@ This was the only way I could find to autoupdate the triggers and actions lists
 # SysInfo Extension
 Contents
 - [SysInfo Extension](#sysinfo-extension)
-  - [Outgoing channel : "SYSINFO_CHANNEL"](#outgoing-channel--sysinfo_channel)
+  - [Outgoing channel : "SYSINFO\_CHANNEL"](#outgoing-channel--sysinfo_channel)
   - [Description](#description)
-  - [Features](#features)
-    - [Standard Features](#standard-features)
+  - [Triggers/Actions](#triggersactions)
+    - [Triggers](#triggers)
+    - [Actions](#actions)
 ## Outgoing channel : "SYSINFO_CHANNEL"
 ## Description
 The sysinfo extension is designed to provide system information for other extensions to use. For some values to be read you may need to run streamroller 
