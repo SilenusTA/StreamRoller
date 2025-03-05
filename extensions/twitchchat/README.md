@@ -62,7 +62,7 @@ The twitch chat extension will send out any messages sent on the channel provide
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 05:31:37 GMT*
+Table last updated: *Wed, 05 Mar 2025 05:55:43 GMT*
 
 ### Triggers
 
@@ -109,5 +109,5 @@ Table last updated: *Wed, 05 Mar 2025 05:31:37 GMT*
 
 | name | trigger | description |
 | --- | --- | --- |
-| TwitchChatSendChatMessage | action_SendChatMessage | Post a message to twitch chat (Node user is case sensitive |
+| TwitchChatSendChatMessage | action_SendChatMessage | Post a message to twitch chat (Note user is case sensitive) |
 

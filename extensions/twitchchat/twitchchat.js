@@ -628,7 +628,7 @@ const triggersandactions =
         [{
             name: "TwitchChatSendChatMessage",
             displaytitle: "Post Twitch Message",
-            description: "Post a message to twitch chat (Node user is case sensitive",
+            description: "Post a message to twitch chat (Note user is case sensitive)",
             messagetype: "action_SendChatMessage",
             parameters: {
                 account: "",
