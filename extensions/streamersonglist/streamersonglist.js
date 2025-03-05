@@ -394,6 +394,10 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: sendTriggersAndActions
 // ===========================================================================
+/**
+ * Sends out triggers and actions out to the given extension name
+ * @param {string} from 
+ */
 function sendTriggersAndActions (from)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -510,7 +514,7 @@ function SendCredentialsModal (extensionname)
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
 /**
- * savel config file to the server
+ * save config file to the server
  */
 function SaveConfigToServer ()
 {
@@ -524,6 +528,9 @@ function SaveConfigToServer ()
 //                      FUNCTION: joinSslServer
 //                        Join the Song list server for updates
 // ============================================================================
+/**
+ * Joins the StreamerSonglist service
+ */
 function joinSslServer ()
 {
     // if we already have a connection lets remove that one (so we can start a new one with any changed data/creds)
@@ -593,8 +600,11 @@ function joinSslServer ()
 }
 // ============================================================================
 //                      FUNCTION: sendSongQueue
-//                        Sends to extension
 // ============================================================================
+/**
+ * Sends the current songQueue to the given extension name
+ * @param {string} extensionsname 
+ */
 function sendSongQueue (extensionsname)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -617,8 +627,10 @@ function sendSongQueue (extensionsname)
 }
 // ============================================================================
 //                     FUNCTION: outputSongQueue
-//                      put queue out on channel
 // ============================================================================
+/**
+ * Sends the current songQueue out on our channel
+ */
 function outputSongQueue ()
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -639,6 +651,9 @@ function outputSongQueue ()
 // ============================================================================
 //                           FUNCTION: fetchSongQueue
 // ============================================================================
+/**
+ * Fetches the current song queue from the StreamerSonglist server
+ */
 function fetchSongQueue ()
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -680,8 +695,11 @@ function fetchSongQueue ()
 }
 // ============================================================================
 //                       FUNCTION: sendSonglist
-//                      send songlist to extension
 // ============================================================================
+/**
+ * Sends the full songlist to given extensionextension
+ * @param {string} extension 
+ */
 function sendSonglist (extension)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -706,6 +724,10 @@ function sendSonglist (extension)
 //                       FUNCTION: sendCurrentSongChange
 //                      send songlist to extension
 // ============================================================================
+/**
+ * Sends a trigger_CurrentSongChange message to given extensionextension
+ * @param {string} extension 
+ */
 function sendCurrentSongChange (extension)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -754,6 +776,9 @@ function sendCurrentSongChange (extension)
 // ============================================================================
 //                           FUNCTION: outputSongList
 // ============================================================================
+/**
+ * Outputs the full songlist on our channel
+ */
 function outputSongList ()
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -774,6 +799,9 @@ function outputSongList ()
 // ============================================================================
 //                           FUNCTION: fetchSongList
 // ============================================================================
+/**
+ * Fetches the full songlist from the StreamerSonglist server
+ */
 function fetchSongList ()
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -803,6 +831,10 @@ function fetchSongList ()
 // ============================================================================
 //                           FUNCTION: addSongToQueuebyName
 // ============================================================================
+/**
+ * Adds a song by name to the songlist queue on the server
+ * @param {string} songName 
+ */
 function addSongToQueuebyName (songName)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -823,6 +855,10 @@ function addSongToQueuebyName (songName)
 // ============================================================================
 //                           FUNCTION: addSongToQueue
 // ============================================================================
+/**
+ * Adds a song by id to the songlist queue on the server
+ * @param {number} songId 
+ */
 function addSongToQueueById (songId)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -858,6 +894,10 @@ function addSongToQueueById (songId)
 // ============================================================================
 //                           FUNCTION: removeSongFromQueue
 // ============================================================================
+/**
+ * Removes a songqueue song using it's queueId
+ * @param {number} queueId Queue id of item to remove
+ */
 function removeSongFromQueue (queueId)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -891,6 +931,10 @@ function removeSongFromQueue (queueId)
 // ============================================================================
 //                           FUNCTION: markSongAsPlayed
 // ============================================================================
+/**
+ * Mark a song in the current queue as being played
+ * @param {number} queueId 
+ */
 function markSongAsPlayed (queueId)
 {
     if (serverConfig.enablestreamersonglist == "on")
@@ -951,6 +995,9 @@ function saveQueue (queue)
 // ============================================================================
 //                           FUNCTION: pollSongQueueCallback
 // ============================================================================
+/**
+ * Callback from the song queue timer
+ */
 function pollSongQueueCallback ()
 {
     if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "")//&& localConfig.clientId != "")
@@ -971,6 +1018,9 @@ function pollSongQueueCallback ()
 // ============================================================================
 //                           FUNCTION: pollSongListCallback
 // ============================================================================
+/**
+ * Timer for polling the songlist
+ */
 function pollSongListCallback ()
 {
     if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "" && localConfig.clientId != "")
@@ -991,6 +1041,9 @@ function pollSongListCallback ()
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     try
@@ -1016,6 +1069,11 @@ function heartBeatCallback ()
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Find a trigger by messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -1029,4 +1087,4 @@ function findtriggerByMessageType (messagetype)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
