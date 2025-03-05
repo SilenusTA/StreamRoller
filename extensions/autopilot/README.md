@@ -10,7 +10,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
  # AutoPilot
 ## Outgoing channels : AUTOPILOT_BE, AUTOPILOT_FE
 - [AutoPilot](#autopilot)
-  - [Outgoing channel : AUTOPILOT\_BE, AUTOPILOT\_FE](#outgoing-channel--autopilot_be-autopilot_fe)
+  - [Outgoing channels : AUTOPILOT\_BE, AUTOPILOT\_FE](#outgoing-channels--autopilot_be-autopilot_fe)
 - [About](#about)
   - [Simple example](#simple-example)
   - [Macro triggers](#macro-triggers)
@@ -25,8 +25,11 @@ This was the only way I could find to autoupdate the triggers and actions lists
 # About
 Allows the user to pair up triggers and actions in order to perform tasks in streamroller.
 ## Simple example
-Sending a bits donation message on twitter:
-![alt text](images/bits_to_twitter.png "bits to twitter")
+Sending a bits donation message on twitter (image from setup dialogs):
+<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/autopilot/images/bits_to_twitter.png" title="bits to twitter" alt="bits to twitter">
+
+Quizbot example handling all the quizbot functionality (image from existing trigger/action pairings)
+<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/quizbot/exampletriggers.png" title="example quzbot triggers" alt="example quzbot triggers">
 
 ## Macro triggers
 To setup a streamdeck style macro to trigger an action simply create a macro button and then use that as the trigger for an action
@@ -49,7 +52,7 @@ Timers provide a great way to give more control over the system. You can set a t
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:03:22 GMT*
 
 ### Triggers
 
