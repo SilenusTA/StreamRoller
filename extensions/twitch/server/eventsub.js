@@ -135,6 +135,13 @@ let parentServerConfig = null
 // ============================================================================
 //                           FUNCTION: Init
 // ============================================================================
+/**
+ * Initialises the pub sub module with the given data
+ * @param {object} LocalConfig 
+ * @param {object} ServerConfig 
+ * @param {object} tAndAs 
+ * @param {function} triggerCAllback 
+ */
 function init (LocalConfig, ServerConfig, tAndAs, triggerCAllback)
 {
     parentLocalConfig = LocalConfig;
@@ -145,6 +152,12 @@ function init (LocalConfig, ServerConfig, tAndAs, triggerCAllback)
 // ============================================================================
 //                           FUNCTION: startEventSub
 // ============================================================================
+/**
+ * Starts event pub subs registration
+ * @param {string} streamerId 
+ * @param {object} apiClient 
+ * @param {object} channelData 
+ */
 async function startEventSub (streamerId, apiClient, channelData)
 {
     try
@@ -166,6 +179,10 @@ async function startEventSub (streamerId, apiClient, channelData)
 // ============================================================================
 //                           FUNCTION: registerSubs
 // ============================================================================
+/**
+ * register all subs for the given streamerId stream
+ * @param {string} streamerId 
+ */
 function registerSubs (streamerId)
 {
     try
@@ -188,6 +205,9 @@ function registerSubs (streamerId)
 // ============================================================================
 //                           FUNCTION: removeSubs
 // ============================================================================
+/**
+ * remove all sub events
+ */
 function removeSubs ()
 {
     try
@@ -211,6 +231,10 @@ function removeSubs ()
 // ============================================================================
 //                           FUNCTION: onChannelBan
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelBan (data)
 {
     try
@@ -232,6 +256,10 @@ function onChannelBan (data)
 // ============================================================================
 //                           FUNCTION: onChannelCharityCampaignProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelCharityCampaignProgress (data)
 {
     try
@@ -255,6 +283,10 @@ function onChannelCharityCampaignProgress (data)
 // ============================================================================
 //                           FUNCTION: onChannelCharityCampaignStart
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelCharityCampaignStart (data)
 {
     try
@@ -279,6 +311,10 @@ function onChannelCharityCampaignStart (data)
 // ============================================================================
 //                           FUNCTION: onChannelCharityCampaignStop
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelCharityCampaignStop (data)
 {
     try
@@ -303,6 +339,10 @@ function onChannelCharityCampaignStop (data)
 // ============================================================================
 //                           FUNCTION: onChannelCharityDonation
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelCharityDonation (data)
 {
     try
@@ -326,6 +366,10 @@ function onChannelCharityDonation (data)
 // ============================================================================
 //                           FUNCTION: onChannelCheer
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelCheer (data)
 {
     try
@@ -346,6 +390,10 @@ function onChannelCheer (data)
 // ============================================================================
 //                           FUNCTION: onChannelFollow
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelFollow (data)
 {
     try
@@ -363,6 +411,10 @@ function onChannelFollow (data)
 // ============================================================================
 //                           FUNCTION: onChannelGoalBegin
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelGoalBegin (data)
 {
     try
@@ -384,6 +436,10 @@ function onChannelGoalBegin (data)
 // ============================================================================
 //                           FUNCTION: onChannelGoalEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelGoalEnd (data)
 {
     try
@@ -407,6 +463,10 @@ function onChannelGoalEnd (data)
 // ============================================================================
 //                           FUNCTION: onChannelGoalProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelGoalProgress (data)
 {
     try
@@ -428,6 +488,10 @@ function onChannelGoalProgress (data)
 // ============================================================================
 //                           FUNCTION: onChannelHypeTrainBegin
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelHypeTrainBegin (data)
 {
     try
@@ -453,6 +517,10 @@ function onChannelHypeTrainBegin (data)
 // ============================================================================
 //                           FUNCTION: onChannelHypeTrainEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelHypeTrainEnd (data)
 {
     try
@@ -476,6 +544,10 @@ function onChannelHypeTrainEnd (data)
 // ============================================================================
 //                           FUNCTION: onChannelHypeTrainProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelHypeTrainProgress (data)
 {
     try
@@ -501,6 +573,10 @@ function onChannelHypeTrainProgress (data)
 // ============================================================================
 //                           FUNCTION: onChannelModeratorAdd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelModeratorAdd (data)
 {
     try
@@ -517,6 +593,10 @@ function onChannelModeratorAdd (data)
 // ============================================================================
 //                           FUNCTION: onChannelModeratorRemove
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelModeratorRemove (data)
 {
     try
@@ -533,6 +613,10 @@ function onChannelModeratorRemove (data)
 // ============================================================================
 //                           FUNCTION: onChannelPollBegin
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPollBegin (data)
 {
     try
@@ -558,6 +642,10 @@ function onChannelPollBegin (data)
 // ============================================================================
 //                           FUNCTION: onChannelPollEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPollEnd (data)
 {
     try
@@ -584,6 +672,10 @@ function onChannelPollEnd (data)
 // ============================================================================
 //                           FUNCTION: onChannelPollProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPollProgress (data)
 {
     try
@@ -615,6 +707,10 @@ function onChannelPollProgress (data)
 // ============================================================================
 //                           FUNCTION: createPredictionString
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function createPredictionString (data)
 {
     let outcomeString = ""
@@ -652,6 +748,10 @@ function createPredictionString (data)
 // ============================================================================
 //                           FUNCTION: onChannelPredictionBegin
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPredictionBegin (data)
 {
     try
@@ -675,6 +775,10 @@ function onChannelPredictionBegin (data)
 // ============================================================================
 //                           FUNCTION: onChannelPredictionEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPredictionEnd (data)
 {
     try
@@ -699,6 +803,10 @@ function onChannelPredictionEnd (data)
 }// ============================================================================
 //                           FUNCTION: onChannelPollProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPredictionLock (data)
 {
     try
@@ -722,6 +830,10 @@ function onChannelPredictionLock (data)
 // ============================================================================
 //                           FUNCTION: onChannelPredictionProgress
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelPredictionProgress (data)
 {
     try
@@ -745,6 +857,10 @@ function onChannelPredictionProgress (data)
 // ============================================================================
 //                           FUNCTION: onChannelRaidFrom
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRaidFrom (data)
 {
     try
@@ -764,6 +880,10 @@ function onChannelRaidFrom (data)
 // ============================================================================
 //                           FUNCTION: onChannelRaidTo
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRaidTo (data)
 {
     try
@@ -782,6 +902,10 @@ function onChannelRaidTo (data)
 // ============================================================================
 //                           FUNCTION: onChannelRedemptionAdd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRedemptionAdd (data)
 {
     try
@@ -806,6 +930,10 @@ function onChannelRedemptionAdd (data)
 // ============================================================================
 //                           FUNCTION: onChannelRedemptionUpdate
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRedemptionUpdate (data)
 {
     try
@@ -829,6 +957,10 @@ function onChannelRedemptionUpdate (data)
 // ============================================================================
 //                           FUNCTION: onChannelRewardAdd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRewardAdd (data)
 {
     try
@@ -860,6 +992,10 @@ function onChannelRewardAdd (data)
 // ============================================================================
 //                           FUNCTION: onChannelRewardRemove
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRewardRemove (data)
 {
     try
@@ -891,6 +1027,10 @@ function onChannelRewardRemove (data)
 // ============================================================================
 //                           FUNCTION: onChannelRewardUpdate
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelRewardUpdate (data)
 {
     try
@@ -922,6 +1062,10 @@ function onChannelRewardUpdate (data)
 // ============================================================================
 //                           FUNCTION: onChannelShieldModeBegin
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelShieldModeBegin (data)
 {
     try
@@ -939,6 +1083,10 @@ function onChannelShieldModeBegin (data)
 // ============================================================================
 //                           FUNCTION: onChannelShieldModeEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelShieldModeEnd (data)
 {
     try
@@ -956,6 +1104,10 @@ function onChannelShieldModeEnd (data)
 // ============================================================================
 //                           FUNCTION: onChannelShoutoutCreate
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelShoutoutCreate (data)
 {
     try
@@ -977,6 +1129,10 @@ function onChannelShoutoutCreate (data)
 // ============================================================================
 //                           FUNCTION: onChannelShoutoutReceive
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelShoutoutReceive (data)
 {
     try
@@ -995,6 +1151,10 @@ function onChannelShoutoutReceive (data)
 // ============================================================================
 //                           FUNCTION: onChannelSubscription
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelSubscription (data)
 {
     try
@@ -1014,6 +1174,10 @@ function onChannelSubscription (data)
 // ============================================================================
 //                           FUNCTION: onChannelSubscriptionEnd
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelSubscriptionEnd (data)
 {
     try
@@ -1033,6 +1197,10 @@ function onChannelSubscriptionEnd (data)
 // ============================================================================
 //                           FUNCTION: onChannelSubscriptionGift
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelSubscriptionGift (data)
 {
     try
@@ -1055,6 +1223,10 @@ function onChannelSubscriptionGift (data)
 // ============================================================================
 //                           FUNCTION: onChannelSubscriptionMessage
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelSubscriptionMessage (data)
 {
     try
@@ -1078,6 +1250,10 @@ function onChannelSubscriptionMessage (data)
 // ============================================================================
 //                           FUNCTION: onChannelUnban
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onChannelUnban (data)
 {
     try
@@ -1096,6 +1272,10 @@ function onChannelUnban (data)
 // ============================================================================
 //                           FUNCTION: onChannelUpdate
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 async function onChannelUpdate (data)
 {
     try
@@ -1153,6 +1333,10 @@ async function onChannelUpdate (data)
 // ============================================================================
 //                           FUNCTION: onStreamStarted
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onStreamOnline (data)
 {
     try
@@ -1167,6 +1351,10 @@ function onStreamOnline (data)
 // ============================================================================
 //                           FUNCTION: onStreamStopped
 // ============================================================================
+/**
+ * Fires on a twitch pubsub event
+ * @param {object} data 
+ */
 function onStreamOffline (data)
 {
     try
@@ -1181,6 +1369,10 @@ function onStreamOffline (data)
 // ===========================================================================
 //                           FUNCTION: sendTrigger
 // ===========================================================================
+/**
+ * sends out the given trigger
+ * @param {object} trigger 
+ */
 function sendTrigger (trigger)
 {
     sr_api.sendMessage(parentLocalConfig.DataCenterSocket,
@@ -1203,6 +1395,11 @@ function sendTrigger (trigger)
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType
 // ============================================================================
+/**
+ * Find a trigger by message type
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < localConf.tAndAs.triggers.length; i++)

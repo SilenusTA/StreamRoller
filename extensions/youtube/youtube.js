@@ -630,8 +630,8 @@ function chatError (error)
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
     stopYoutubeMonitor()
-    let parsedError = JSON.parse(error.info)
-    console.log("error.code", parsedError)
+    if (error && error.info)
+        console.log("error.code", error.info)
 }
 // ============================================================================
 //                     FUNCTION: metaUpdate

@@ -1203,6 +1203,14 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} nonce
+ * @param {number} clientId
+ * @param {number} heartbeat 
+ */
 function start (host, port, nonce, clientId, heartbeat)
 {
     localConfig.host = host;
@@ -1224,6 +1232,11 @@ function start (host, port, nonce, clientId, heartbeat)
 // ============================================================================
 //                           FUNCTION: ConnectToDataCenter
 // ============================================================================
+/**
+ * Connects to the StreamRoller server
+ * @param {string} host 
+ * @param {number} port 
+ */
 function ConnectToDataCenter (host, port)
 {
     try
@@ -1238,6 +1251,10 @@ function ConnectToDataCenter (host, port)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
+/**
+ * called on StreamRoller websocket disconnect
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.err(serverConfig.extensionname + " server.initialise", "DataCenterSocket connection failed:", reason);
@@ -1245,6 +1262,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * called on StreamRoller websocket connect
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1262,6 +1283,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when we receive a StreamRoller message
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     try
@@ -1824,6 +1849,9 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Save our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1836,6 +1864,10 @@ function SaveConfigToServer ()
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
+/**
+ * Send our small settings widget html code to the given extension
+ * @param {string} toChannel 
+ */
 function SendSettingsWidgetSmall (toChannel = "")
 {
     fs.readFile(__dirname + "/twitchsettingswidgetsmall.html", function (err, filedata)
@@ -1919,7 +1951,7 @@ function SendSettingsWidgetSmall (toChannel = "")
 // ===========================================================================
 /**
  * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
+ * @param {string} extensionname 
  */
 function SendCredentialsModal (extensionname)
 {
@@ -1959,6 +1991,11 @@ function SendCredentialsModal (extensionname)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
+/**
+ * Handles data from a user submit on our small settings widget
+ * @param {object} modalCode 
+ * @returns boolean restart connection needed due to data change
+ */
 function handleSettingsWidgetSmallData (modalCode)
 {
     try
@@ -2055,6 +2092,9 @@ function handleSettingsWidgetSmallData (modalCode)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     localConfig.status.color = "red"
@@ -2083,6 +2123,9 @@ function heartBeatCallback ()
 // ===========================================================================
 //                           FUNCTION: connectTwitch
 // ===========================================================================
+/**
+ *  Connects to the twitch api
+ */
 async function connectTwitch ()
 {
     try
@@ -2169,6 +2212,10 @@ async function connectTwitch ()
 // ===========================================================================
 //                           FUNCTION: getAllGameCategories
 // ===========================================================================
+/**
+ * Collates and sends out the twitch 'Top' category list 
+ * @param {string} id trigger identifier or "twitch"
+ */
 async function getAllGameCategories (id = "twitch")
 {
     try
@@ -2188,6 +2235,10 @@ async function getAllGameCategories (id = "twitch")
 // ===========================================================================
 //                           FUNCTION: addGameToHistoryFromGameName
 // ===========================================================================
+/**
+ * Adds a game by name to the history list
+ * @param {string} gameName 
+ */
 async function addGameToHistoryFromGameName (gameName)
 {
     try
@@ -2254,6 +2305,11 @@ async function addGameToHistoryFromGameName (gameName)
 // ===========================================================================
 //                           FUNCTION: getGameFromId
 // ===========================================================================
+/**
+ * Get a game object from a game Id
+ * @param {number} gameId 
+ * @returns gameobject
+ */
 async function getGameFromId (gameId)
 {
 
@@ -2290,6 +2346,9 @@ async function getGameFromId (gameId)
 // ===========================================================================
 //                           FUNCTION: disconnectTwitch
 // ===========================================================================
+/**
+ * Disconnect the twitch API
+ */
 function disconnectTwitch ()
 {
     eventSubApi.removeSubs()
@@ -2297,6 +2356,10 @@ function disconnectTwitch ()
 // ===========================================================================
 //                           FUNCTION: setStreamTitle
 // ===========================================================================
+/**
+ * Sets the current stream title
+ * @param {string} title 
+ */
 async function setStreamTitle (title)
 {
     localConfig.apiClient.channels.updateChannelInfo(localConfig.streamerData.id, { title: title })
@@ -2304,6 +2367,10 @@ async function setStreamTitle (title)
 // ===========================================================================
 //                           FUNCTION: setStreamGame
 // ===========================================================================
+/**
+ * Sets the current game/category in twitch
+ * @param {number} gameId 
+ */
 async function setStreamGame (gameId)
 {
     if (gameId)
@@ -2315,6 +2382,10 @@ async function setStreamGame (gameId)
 // ===========================================================================
 //                           FUNCTION: startCommercial
 // ===========================================================================
+/**
+ * Start a add/commercial running on twitch
+ * @param {number} length ["30", "60", "90", "120", "150", "180"]
+ */
 async function startCommercial (length)
 {
     try
@@ -2359,6 +2430,9 @@ async function startCommercial (length)
 // ===========================================================================
 //                           FUNCTION: getChannelEditors
 // ===========================================================================
+/**
+ * sends trigger trigger_TwitchEditors containing the chat editors
+ */
 async function getChannelEditors ()
 {
     try
@@ -2382,6 +2456,9 @@ async function getChannelEditors ()
 // ===========================================================================
 //                           FUNCTION: getChannelVIPs
 // ===========================================================================
+/**
+ * send trigger_TwitchVIPs containing chat VIP's
+ */
 async function getChannelVIPs ()
 {
     try
@@ -2405,6 +2482,10 @@ async function getChannelVIPs ()
 // ===========================================================================
 //                           FUNCTION: addVIP
 // ===========================================================================
+/**
+ * Make the username a VIP
+ * @param {string} username 
+ */
 async function addVIP (username)
 {
     try
@@ -2433,6 +2514,10 @@ async function addVIP (username)
 // ===========================================================================
 //                           FUNCTION: removeVIP
 // ===========================================================================
+/**
+ * Remove VIP status from user
+ * @param {string} username 
+ */
 async function removeVIP (username)
 {
     try
@@ -2461,6 +2546,10 @@ async function removeVIP (username)
 // ===========================================================================
 //                           FUNCTION: addMod
 // ===========================================================================
+/**
+ * make username a mod
+ * @param {string} username 
+ */
 async function addMod (username)
 {
     try
@@ -2485,6 +2574,10 @@ async function addMod (username)
 // ===========================================================================
 //                           FUNCTION: removeMod
 // ===========================================================================
+/**
+ * Remove mod status from username
+ * @param {string} username 
+ */
 async function removeMod (username)
 {
     try
@@ -2509,6 +2602,11 @@ async function removeMod (username)
 // ===========================================================================
 //                           FUNCTION: banUser
 // ===========================================================================
+/**
+ * Ban username for given reason
+ * @param {string} username 
+ * @param {string} reason 
+ */
 async function banUser (username, reason)
 {
     try
@@ -2559,6 +2657,11 @@ async function banUser (username, reason)
 // ===========================================================================
 //                           FUNCTION: unbanUser
 // ===========================================================================
+/**
+ * Unban username for give reason
+ * @param {string} username 
+ * @param {string} reason 
+ */
 async function unbanUser (username, reason)
 {
     try
@@ -2607,6 +2710,9 @@ async function unbanUser (username, reason)
 // ===========================================================================
 //                           FUNCTION: followerCount
 // ===========================================================================
+/**
+ * Send trigger_TwitchFollowerCount
+ */
 async function followerCount ()
 {
     try
@@ -2626,6 +2732,9 @@ async function followerCount ()
 // ===========================================================================
 //                           FUNCTION: followedChannels
 // ===========================================================================
+/**
+ * sends trigger_TwitchFollowedChannels
+ */
 async function followedChannels ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2651,6 +2760,9 @@ async function followedChannels ()
 // ===========================================================================
 //                           FUNCTION: cheerEmotes
 // ===========================================================================
+/**
+ * send trigger_TwitchCheerEmotes
+ */
 async function cheerEmotes ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2671,6 +2783,9 @@ async function cheerEmotes ()
 // ===========================================================================
 //                           FUNCTION: leaderboard
 // ===========================================================================
+/**
+ * send trigger_TwitchLeaderboard
+ */
 async function leaderboard ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2698,6 +2813,9 @@ async function leaderboard ()
 // ===========================================================================
 //                           FUNCTION: getPolls
 // ===========================================================================
+/**
+ * send a trigger_TwitchPoll message for each poll running
+ */
 async function getPolls ()
 {
     try
@@ -2734,6 +2852,10 @@ async function getPolls ()
 // ===========================================================================
 //                           FUNCTION: getPoll
 // ===========================================================================
+/**
+ * send trigger_TwitchPoll
+ * @param {number} id 
+ */
 async function getPoll (id)
 {
     try
@@ -2767,6 +2889,10 @@ async function getPoll (id)
 // ===========================================================================
 //                           FUNCTION: createPoll
 // ===========================================================================
+/**
+ * Creates a twitch poll
+ * @param {object} data 
+ */
 async function createPoll (data)
 {
     try
@@ -2797,6 +2923,10 @@ async function createPoll (data)
 // ===========================================================================
 //                           FUNCTION: endPoll
 // ===========================================================================
+/**
+ * Ends the given poll
+ * @param {object} data 
+ */
 async function endPoll (data)
 {
     try
@@ -2820,6 +2950,10 @@ async function endPoll (data)
 // ===========================================================================
 //                           FUNCTION: startPrediction
 // ===========================================================================
+/**
+ * Starts a prediction
+ * @param {object} data 
+ */
 async function startPrediction (data)
 {
     try
@@ -2849,6 +2983,10 @@ async function startPrediction (data)
 // ===========================================================================
 //                           FUNCTION: cancelPrediction
 // ===========================================================================
+/**
+ * Cancels a prediction
+ * @param {object} data 
+ */
 async function cancelPrediction (data)
 {
     try
@@ -2870,8 +3008,12 @@ async function cancelPrediction (data)
     }
 }
 // ===========================================================================
-//                           FUNCTION: getPredictionss
+//                           FUNCTION: getPredictions
 // ===========================================================================
+/**
+ * sends trigger_TwitchPrediction for each current predictions
+ * @param {object} data 
+ */
 async function getPredictions (data)
 {
     try
@@ -2893,6 +3035,10 @@ async function getPredictions (data)
 // ===========================================================================
 //                           FUNCTION: getPrediction
 // ===========================================================================
+/**
+ * Sends trigger_TwitchPrediction for the given prediction
+ * @param {object} data 
+ */
 async function getPrediction (data)
 {
     try
@@ -2943,6 +3089,10 @@ async function getPrediction (data)
 // ===========================================================================
 //                           FUNCTION: lockPrediction
 // ===========================================================================
+/**
+ * Locks a prediction in it's current state
+ * @param {object} data 
+ */
 async function lockPrediction (data)
 {
     try
@@ -2966,6 +3116,10 @@ async function lockPrediction (data)
 // ===========================================================================
 //                           FUNCTION: removePrediction
 // ===========================================================================
+/**
+ * Delete prediction
+ * @param {object} data 
+ */
 async function removePrediction (data)
 {
     try
@@ -2989,6 +3143,10 @@ async function removePrediction (data)
 // ===========================================================================
 //                           FUNCTION: resolvePrediction
 // ===========================================================================
+/**
+ * Resolves the current prediction with the given data
+ * @param {object} data 
+ */
 async function resolvePrediction (data)
 {
     try
@@ -3012,6 +3170,10 @@ async function resolvePrediction (data)
 // ===========================================================================
 //                           FUNCTION: createBlock
 // ===========================================================================
+/**
+ * Block the user given
+ * @param {object} data 
+ */
 async function createBlock (data)
 {
     try
@@ -3042,6 +3204,10 @@ async function createBlock (data)
 // ===========================================================================
 //                           FUNCTION: deleteBlock
 // ===========================================================================
+/**
+ * Remove a Block from the given user
+ * @param {object} data 
+ */
 async function deleteBlock (data)
 {
     try
@@ -3066,6 +3232,11 @@ async function deleteBlock (data)
 // ===========================================================================
 //                           FUNCTION: containsBadChars
 // ===========================================================================
+/**
+ * Tests for unicode charts in a string
+ * @param {string} s 
+ * @returns boolean
+ */
 function containsBadChars (s)
 {
     //return /[\u3040-\uffff]/.test(s);
@@ -3074,6 +3245,10 @@ function containsBadChars (s)
 // ===========================================================================
 //                           FUNCTION: getUser
 // ===========================================================================
+/**
+ * send trigger_TwitchUserDetails message for given user
+ * @param {string} username 
+ */
 async function getUser (username)
 {
 
@@ -3130,6 +3305,9 @@ async function getUser (username)
 // ===========================================================================
 //                           FUNCTION:  getBlockedUsers
 // ===========================================================================
+/**
+ * send a trigger_TwitchUserBlocks message containing current blocked users
+ */
 async function getBlockedUsers ()
 {
     try
@@ -3164,6 +3342,9 @@ async function getBlockedUsers ()
 // ===========================================================================
 //                           FUNCTION:  createClip
 // ===========================================================================
+/**
+ * Create a twitch clip and send out trigger_TwitchClipCreated when done
+ */
 async function createClip ()
 {
     try
@@ -3182,6 +3363,12 @@ async function createClip ()
 // ===========================================================================
 //                           FUNCTION:  getClipById
 // ===========================================================================
+/**
+ * Gets a clip using data.clipName,if clip isn't available yet (i.e. still being processed)
+ * setup a reschedule timer to wait for clip. Sends trigger_TwitchVodClip when found
+ * @param {object} data 
+ * @param {number} [rollbackCount=5] in seconds, reduced by 1 second each rollback
+ */
 async function getClipById (data, rollbackCount = 5)
 {
     try
@@ -3230,6 +3417,12 @@ async function getClipById (data, rollbackCount = 5)
 // ===========================================================================
 //                           FUNCTION:  getClipsByBroadcaster
 // ===========================================================================
+/**
+ * Sends out a trigger_TwitchVodClip message for each clip the broadcaster has
+ * data is formatted from an action. 
+ * @param {object} data 
+ * @param {number} [rollbackCount=5] number of times to check (1 second polls, in case clip is still being processed)
+ */
 async function getClipsByBroadcaster (data, rollbackCount = 5)
 {
     try
@@ -3292,6 +3485,10 @@ async function getClipsByBroadcaster (data, rollbackCount = 5)
 // ===========================================================================
 //                           FUNCTION:  getClipsByBroadcaster
 // ===========================================================================
+/**
+ * sends a trigger_TwitchVodClip for each clip from a game category based on data object
+ * @param {object} data 
+ */
 async function getClipsByGame (data)
 {
     try
@@ -3345,7 +3542,11 @@ async function getClipsByGame (data)
 // ===========================================================================
 //                           FUNCTION: sendGameCategoriesTrigger
 // ===========================================================================
-function sendGameCategoriesTrigger (id)
+/**
+ * sends trigger_TwitchGameCategories containing all games in our category
+ * @param {number} [id="twitch"] ref id from action
+ */
+function sendGameCategoriesTrigger (id = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGameCategories");
     trigger.parameters.id = id;
@@ -3357,6 +3558,10 @@ function sendGameCategoriesTrigger (id)
 // ===========================================================================
 //                           FUNCTION: sendCurrentGameData
 // ===========================================================================
+/**
+ * sends trigger_TwitchGamedChanged
+ * @param {number} [triggerId="twitch"] ref id from action
+ */
 function sendCurrentGameData (triggerId = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
@@ -3370,6 +3575,11 @@ function sendCurrentGameData (triggerId = "twitch")
 // ===========================================================================
 //                           FUNCTION: pubSubTriggerCallback
 // ===========================================================================
+/**
+ * Callback for all triggers used in the twitch pubsub.
+ * gets called whenever the pubsub module needs to create a trigger
+ * @param {object} trigger 
+ */
 function pubSubTriggerCallback (trigger)
 {
     //This gets called whenever the pubsub modules gets a callback from twitch
@@ -3390,6 +3600,10 @@ function pubSubTriggerCallback (trigger)
 // ===========================================================================
 //                           FUNCTION: sendTrigger
 // ===========================================================================
+/**
+ * Sends the given trigger out on our channel
+ * @param {object} trigger 
+ */
 function sendTrigger (trigger)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -3410,6 +3624,14 @@ function sendTrigger (trigger)
 // ============================================================================
 //                           FUNCTION: createDropdownWithSearchableHistory
 // ============================================================================
+/**
+ * Creates an html dropdown list that is searchable using the given information
+ * @param {string} id 
+ * @param {string} categories 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing dropdown code
+ */
 function createDropdownWithSearchableHistory (id, categories = [], history = [], currentSelectedId = -1)
 {
     let dropdownHtml = ""
@@ -3463,6 +3685,14 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
 // ============================================================================
 //                           FUNCTION: getTextboxWithHistoryHTML
 // ============================================================================
+/**
+ * Creates an html dropdown list on a text box is searchable using the given information
+ * @param {string} SelectEleId 
+ * @param {string} TextEleId 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing textbox code
+ */
 function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSelectedId)
 {
     let dropdownHtml = "";
@@ -3502,6 +3732,11 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType
 // ============================================================================
+/**
+ * Finds the trigger using the passed messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
