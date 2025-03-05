@@ -63,7 +63,7 @@ async function parseFileForTriggers (file)
                 if (x.triggersandactions)
                     parseTrigger(x.triggersandactions, file);
                 else
-                    console.log("\x1b[1m\x1b[33mMissing exported 'triggesandactions' for:", file, "\x1b[0m")
+                    console.log("\x1b[1m\x1b[33mMissing exported 'triggersandactions' for:", file, "\x1b[0m")
             })
             .catch((err) =>
             {
@@ -142,7 +142,7 @@ function createReadmeFiles ()
                 if (partFile && partFile != "")
                 {
                     let datestamp = new Date().toUTCString();
-                    partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
+                    partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
                     partFile = partFile.replace("ReplaceTAGForTriggers", header + "\n" + hdivider + "\n" + allExtTriggers)
                     partFile = partFile.replace("ReplaceTAGForActions", header + "\n" + hdivider + "\n" + allExtActions)
                     fs.writeFileSync(extRoot + ext + "/README.md", partFile, {

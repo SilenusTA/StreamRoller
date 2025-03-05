@@ -28,9 +28,9 @@ running and the extension connected.
 </div>
 
 
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
+Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 04 Mar 2025 07:54:50 GMT*
+Table last updated: *Wed, 05 Mar 2025 00:47:17 GMT*
 
 ### Triggers
 
