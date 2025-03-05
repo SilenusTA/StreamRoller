@@ -23,24 +23,11 @@ icon on the desktop and right clicking to set it to run as administrator. Altern
 select run as administrator) and then run StreamRoller from that prompt
 
 ## Triggers/Actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 03:21:16 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| sysInfoCPUData | trigger_sysinfoCPUData | Data about the CPU |
-| sysInfoCPUTemperatures | trigger_sysinfoCPUTemperatures | CPU Temperatures if available (you may need to run StreamRoller as admin to allow windows to read this) |
-| sysInfoGPUData | trigger_sysInfoGPUData | GPU Data |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| sysInfoGetCPUData | action_sysInfoGetCPUData | Sends out a trigger with the CPU Data |
-| sysInfoGetCPUTemperatures | action_sysInfoGetCPUTemperatures | Sends out a trigger with the CPU Temperatures |
-| sysInfoGetGPUData | action_sysInfoGetGPUData | Sends out a trigger with the GPU Data |
+ReplaceTAGForActions
