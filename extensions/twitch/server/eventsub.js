@@ -78,7 +78,7 @@ const localConf = {
     apiClient: null,
     apiEventSub: null,
     eventSubs: [],
-    triggersandactions: null,
+    tAndAs: null,
     channelData: null,
     streamerId: null,
     triggerCAllback: null
@@ -139,7 +139,7 @@ function init (LocalConfig, ServerConfig, tAndAs, triggerCAllback)
 {
     parentLocalConfig = LocalConfig;
     parentServerConfig = ServerConfig;
-    localConf.triggersandactions = tAndAs
+    localConf.tAndAs = tAndAs
     localConf.triggerCAllback = triggerCAllback
 }
 // ============================================================================
@@ -1205,10 +1205,10 @@ function sendTrigger (trigger)
 // ============================================================================
 function findTriggerByMessageType (messagetype)
 {
-    for (let i = 0; i < localConf.triggersandactions.triggers.length; i++)
+    for (let i = 0; i < localConf.tAndAs.triggers.length; i++)
     {
-        if (localConf.triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return localConf.triggersandactions.triggers[i];
+        if (localConf.tAndAs.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return localConf.tAndAs.triggers[i];
     }
     logger.err(parentLocalConfig.SYSTEM_LOGGING_TAG + parentServerConfig.extensionname +
         ".findTriggerByMessageType", "failed to find action", messagetype);
