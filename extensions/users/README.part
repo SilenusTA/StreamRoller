@@ -28,20 +28,12 @@ saved message time the user was in chat.
 
 ## Triggers/Actions
 
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 06:23:14 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| UsersNewChatter | trigger_NewChatter | Someone has posted in the chat for the first time |
-
+ReplaceTAGForTriggers
 
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
+ReplaceTAGForActions

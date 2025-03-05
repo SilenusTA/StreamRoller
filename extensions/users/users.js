@@ -49,16 +49,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 let ServerConnectionAttempts = 0;
 let millisecondsInDay = 86400000;
 const localConfig = {
-    OUR_CHANNEL: "USERS_CHANNEL",
-    EXTENSION_NAME: "users",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
-    MaxServerConnectionAttempts: 20
+    MaxServerConnectionAttempts: 20,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
 };
 const default_serverConfig = {
     __version__: 0.1,
-    extensionname: localConfig.EXTENSION_NAME,
-    channel: localConfig.OUR_CHANNEL,
+    extensionname: "users",
+    channel: "USERS_CHANNEL",
     enableusersextension: "on",
     cleardatausersextension: "off",
     maxuserstokeep: "50",
@@ -103,13 +103,17 @@ const triggersandactions =
  */
 function initialise (app, host, port, heartbeat)
 {
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heartbeat passed:", heartbeat);
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "config.DataCenterSocket connection failed:", err);
     }
 }
 
@@ -122,7 +126,7 @@ function initialise (app, host, port, heartbeat)
  */
 function onDataCenterDisconnect (reason)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -133,17 +137,19 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
+        sr_api.ServerPacket("RequestData", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH_CHAT"));
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH_CHAT"));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH"));
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH"));
+    clearTimeout(localConfig.heartBeatHandle);
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 
     // get a main list of twitch users who are bots
     getTwitchBotStatusList()
@@ -222,7 +228,7 @@ function onDataCenterMessage (server_packet)
             )
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     else if (server_packet.type === "ChannelData")
@@ -297,7 +303,7 @@ function onDataCenterMessage (server_packet)
             }
             catch (error)
             {
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + " packet trigger_TwitchUserDetails", error.message);
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + " packet trigger_TwitchUserDetails", error.message);
             }
         }
         else if (extension_packet.type === "HeartBeat"
@@ -306,25 +312,25 @@ function onDataCenterMessage (server_packet)
             //ignore these
         }
         else
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
     }
     else if (server_packet.type === "UnknownChannel")
     {
         if (ServerConnectionAttempts++ < localConfig.MaxServerConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
     }
     else if (server_packet.type === "InvalidMessage")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
     else if (server_packet.type === "LoggingLevel")
@@ -341,12 +347,16 @@ function onDataCenterMessage (server_packet)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
 //                           FUNCTION: pruneUsers
 // ===========================================================================
+/**
+ * Prune the data to keep data sizes manageable
+ * @param {string} platform 
+ */
 function pruneUsers (platform)
 {
 
@@ -416,7 +426,7 @@ function pruneUsers (platform)
     }
     catch (error)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".pruneUsers", platform, error.message);
     }
 }
@@ -433,7 +443,7 @@ function SendSettingsWidgetSmall (tochannel)
     fs.readFile(__dirname + "/userssettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         //throw err;
         else
@@ -449,14 +459,14 @@ function SendSettingsWidgetSmall (tochannel)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    localConfig.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode", // message type
-                        localConfig.EXTENSION_NAME, //our name
+                        serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
                         tochannel,
-                        localConfig.OUR_CHANNEL
+                        serverConfig.channel
                     ),
                     "",
                     tochannel // in this case we only need the "to" channel as we will send only to the requester
@@ -467,6 +477,10 @@ function SendSettingsWidgetSmall (tochannel)
 // ============================================================================
 //                           FUNCTION: sendNewUserTrigger
 // ============================================================================
+/**
+ * sends trigger_NewChatter message 
+ * @param {object} data 
+ */
 function sendNewUserTrigger (data)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -492,28 +506,29 @@ function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
         "SaveConfig",
-        localConfig.EXTENSION_NAME,
+        serverConfig.extensionname,
         serverConfig))
 }
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
-// Description:save data on backend data store
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
+/**
+ * Save our data to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveData",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             serverData));
 }
 // ===========================================================================
 //                           FUNCTION: getTwitchBotStatusList
 // ===========================================================================
+/**
+ * Update our know twitch bot list
+ */
 async function getTwitchBotStatusList ()
 {
     try
@@ -570,6 +585,10 @@ async function getTwitchBotStatusList ()
 // ===========================================================================
 //                           FUNCTION: setTwitchBotStatus
 // ===========================================================================
+/**
+ * Update user data based on known bot list
+ * @param {string} name 
+ */
 async function setTwitchBotStatus (name)
 {
 
@@ -582,16 +601,20 @@ async function setTwitchBotStatus (name)
 // ===========================================================================
 //                           FUNCTION: getUserIDData
 // ===========================================================================
+/**
+ * sends action_TwitchGetUser to twitch extension to get user data back
+ * @param {string} username 
+ */
 function getUserIDData (username)
 {
     // request user data so we can store the twitch id with the username
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ExtensionMessage",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "action_TwitchGetUser",
-                localConfig.EXTENSION_NAME,
+                serverConfig.extensionname,
                 { "username": username },
                 "",
                 "twitch"
@@ -601,8 +624,39 @@ function getUserIDData (username)
         ));
 }
 // ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
+function heartBeatCallback ()
+{
+    let colour = 'red'
+
+    //is everything conencted and running
+    if (serverConfig.enableusersextension === "on")
+        colour = 'green'
+    else
+        colour = "red"
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                {
+                    color: colour
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
