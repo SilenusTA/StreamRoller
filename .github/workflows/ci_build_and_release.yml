@@ -46,3 +46,6 @@ jobs:
     uses: ./.github/workflows/create_release.yml
     with:
       tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+  UpdateDocs:
+    needs: BuildRelease
+    uses: ./.github/workflows/build_docs.yml
