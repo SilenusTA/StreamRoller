@@ -16,6 +16,8 @@ jobs:
       tag_name: ${{ steps.increment_version.outputs.NEW_VERSION }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: HEAD
       - name: npm install
         run: npm install
       - name: Increment Patch Version
@@ -49,7 +51,7 @@ jobs:
           git config --global user.name "SilenusTA"
           foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
-          git push origin
+          git push
       - name: Pushing tag to repo
         run: |
           echo "Pushing TAG ${{ steps.increment_version.outputs.NEW_VERSION }}"
