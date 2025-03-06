@@ -62,7 +62,7 @@ Send an extension message of type "PostTweet" to the "twitter" extension with th
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 05:55:43 GMT*
+Table last updated: *Thu, 06 Mar 2025 01:18:59 GMT*
 
 ### Triggers
 

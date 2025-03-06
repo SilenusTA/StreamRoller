@@ -23,7 +23,7 @@ This extension provides triggers/actions for twitch to allow things like changin
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+Table last updated: *Thu, 06 Mar 2025 01:18:59 GMT*
 
 ### Triggers
 

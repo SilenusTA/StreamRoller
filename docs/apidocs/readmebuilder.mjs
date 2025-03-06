@@ -32,8 +32,9 @@ const allTAs = [
     //   {triggersString,arrayString}
     // ]
 ]
-let header = "| name | trigger | description |"
-let hdivider = "| --- | --- | --- |"
+const filesUpdated = [];
+const header = "| name | trigger | description |"
+const hdivider = "| --- | --- | --- |"
 // ============================================================================
 //                           parseExtensions
 // ============================================================================
@@ -41,7 +42,8 @@ async function parseExtensions ()
 {
     for (const file of readAllFiles(extRoot))
         await parseFileForTriggers(file)
-    createReadmeFiles()
+    createReadmeFiles();
+    writefileslist()
 }
 // ============================================================================
 //                           parseFileForTriggers
@@ -152,9 +154,11 @@ function createReadmeFiles ()
                     partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
                     partFile = partFile.replace("ReplaceTAGForTriggers", header + "\n" + hdivider + "\n" + allExtTriggers)
                     partFile = partFile.replace("ReplaceTAGForActions", header + "\n" + hdivider + "\n" + allExtActions)
-                    fs.writeFileSync(extRoot + ext + "/README.md", partFile, {
+                    const filename = extRoot + ext + "/README.md";
+                    fs.writeFileSync(filename, partFile, {
                         encoding: "utf8"
                     })
+                    filesUpdated.push(filename)
                 }
             }
             catch (err)
@@ -169,6 +173,16 @@ function createReadmeFiles ()
             }
         }
     }
+}
+function writefileslist ()
+{
+    filesUpdated.forEach((f) =>
+    {
+        console.log("files written", f)
+        fs.writeFileSync("filelist.json", filesUpdated.join('\n'), {
+            encoding: "utf8"
+        })
+    })
 }
 // ============================================================================
 //                           readAllFiles
