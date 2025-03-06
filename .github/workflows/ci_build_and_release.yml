@@ -17,6 +17,7 @@ jobs:
     runs-on: windows-latest
     needs: createReadMe
     steps:
+      - uses: actions/checkout@v4
       - name: Increment Patch Version
         id: increment_version
         run: |
@@ -41,5 +42,5 @@ jobs:
         run: |
           echo "Pushing TAG ${{env.NEW_VERSION}}"
           git tag ${{env.NEW_VERSION}}
-          git push
+          git push --tags
         shell: pwsh

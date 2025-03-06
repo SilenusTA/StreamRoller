@@ -1,13 +1,13 @@
 # trigger on the cix.x.x tag.
-name: Create REadme Files
+name: Create Readme Files
 run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
 on:
   workflow_dispatch:
   workflow_call:
 env:
   #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  #VERSION_TAG: ${{ github.ref_name }}
-  VERSION_TAG: ci0.0.0
+  VERSION_TAG: ${{ github.ref_name }}
+  #VERSION_TAG: ci0.0.0
 jobs:
   creating_readmes:
     runs-on: windows-latest
@@ -31,4 +31,4 @@ jobs:
           git config --global user.name "SilenusTA"
           foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
-          git push
+          git push --tags
