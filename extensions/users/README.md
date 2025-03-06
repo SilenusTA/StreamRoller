@@ -32,7 +32,7 @@ saved message time the user was in chat.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 06 Mar 2025 01:18:59 GMT*
+Table last updated: *Thu, 06 Mar 2025 05:50:57 GMT*
 
 ### Triggers
 
