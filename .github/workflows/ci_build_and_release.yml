@@ -11,7 +11,9 @@ env:
   #VERSION_TAG: ${{ github.ref_name }}
   VERSION_TAG: ci1.1.1
 jobs:
-  creating_readmes:
+  createReadMe:
+    uses: ./.github/workflows/create_readmes.yml
+  createRelease:
     runs-on: windows-latest
     steps:
       - name: Increment Patch Version
@@ -37,5 +39,6 @@ jobs:
       - name: Save New Version
         run: |
           echo "Pushing TAG ${{env.NEW_VERSION}}"
-
+          git tag ${{env.NEW_VERSION}}
+          git push
         shell: pwsh
