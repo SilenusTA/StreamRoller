@@ -24,6 +24,6 @@ jobs:
           node readmebuilder.mjs
       - name: check timestamp for update
         run: |
-          cat checking results
           pwd
           cat ../../extensions/chatbot/README.md
+          cat extensions/chatbot/README.md
