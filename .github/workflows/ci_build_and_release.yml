@@ -34,7 +34,7 @@ jobs:
       - name: Increment Patch Version
         id: increment_version
         run: |
-          $version = $env.VERSION_TAG
+          $version = ${{env.VERSION_TAG}}
           $parts = $version -split "\."
           $major = $parts[0]
           $minor = $parts[1]
@@ -42,8 +42,8 @@ jobs:
           $newVersion = "$major.$minor.$patch"
           echo "New version: $newVersion"
           echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
-          echo $env.NEW_VERSION
-          echo $env.VERSION_TAG
+          echo ${{env.VERSION_TAG}}
+          echo ${{env.NEW_VERSION}}
         shell: pwsh
 
       - name: Save New Version
