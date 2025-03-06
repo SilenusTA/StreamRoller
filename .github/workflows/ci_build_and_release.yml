@@ -25,4 +25,4 @@ jobs:
       - name: check timestamp for update
         run: |
           dir
-          more .\..\..\extensions\users\README.md
+          more extensions\users\README.md
