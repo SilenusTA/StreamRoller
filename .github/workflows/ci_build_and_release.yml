@@ -32,7 +32,6 @@ jobs:
       - name: test output
         run: |
           echo "VERSION_TAG is ${{env.VERSION_TAG}}"
-          echo "NEW_VERSION is ${{env.NEW_VERSION}}"
           echo "NEW_VERSION is ${{ steps.increment_version.outputs.NEW_VERSION }}"
         shell: pwsh
       - name: note time to check it was built later
