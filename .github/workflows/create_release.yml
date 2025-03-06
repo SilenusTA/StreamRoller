@@ -1,9 +1,8 @@
 name: Create a new Release
 run-name: ${{ github.actor }} delivering exe to live repo release
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
+  workflow_call:
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{ github.ref_name }}

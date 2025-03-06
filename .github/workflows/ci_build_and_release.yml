@@ -13,7 +13,7 @@ env:
 jobs:
   createReadMe:
     uses: ./.github/workflows/create_readmes.yml
-  createRelease:
+  createReleaseTag:
     runs-on: windows-latest
     needs: createReadMe
     steps:
@@ -37,3 +37,5 @@ jobs:
           git tag ${{env.NEW_VERSION}}
           git push origin --tags
         shell: pwsh
+  BuildRelease:
+    uses: ./.github/workflows/create_release.yml
