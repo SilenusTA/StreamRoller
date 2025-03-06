@@ -16,6 +16,8 @@ jobs:
   createReleaseTag:
     runs-on: windows-latest
     needs: createReadMe
+    outputs:
+      tag_name: ${{ steps.increment_version.outputs.NEW_VERSION }}
     steps:
       - uses: actions/checkout@v4
       - name: Increment Patch Version
@@ -31,7 +33,7 @@ jobs:
           echo "NEW_VERSION is ${{env.NEW_VERSION}}"
         shell: pwsh
 
-      - name: Save New Version
+      - name: Pushing tag to repo
         run: |
           echo "Pushing TAG ${{env.NEW_VERSION}}"
           git tag ${{env.NEW_VERSION}}
@@ -40,3 +42,5 @@ jobs:
   BuildRelease:
     needs: createReleaseTag
     uses: ./.github/workflows/create_release.yml
+    with:
+      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
