@@ -1,19 +1,22 @@
 name: StreamRoller apidocs
 
 on:
-  workflow_dispatch:
   workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 env:
-  #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  GITHUB_TOKEN: ${{ github.token }}
+  VERSION_TAG: ${{inputs.tag}}
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{inputs.tag}}
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20.16.0"
       - name: Install npm dependencies
