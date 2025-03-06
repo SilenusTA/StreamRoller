@@ -10,15 +10,15 @@ env:
   VERSION_TAG: ${{ github.ref_name }}
   #VERSION_TAG: ci1.1.1
 jobs:
-  createReadMe:
-    uses: ./.github/workflows/create_readmes.yml
   createReleaseTag:
     runs-on: windows-latest
-    needs: createReadMe
     outputs:
       tag_name: ${{ steps.increment_version.outputs.NEW_VERSION }}
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/workflows/create_readmes.yml
+        env:
+          secrets: inherit
       - name: Increment Patch Version
         id: increment_version
         run: |
@@ -32,12 +32,12 @@ jobs:
         run: |
           echo "VERSION_TAG is ${{env.VERSION_TAG}}"
           echo "NEW_VERSION is ${{env.NEW_VERSION}}"
+          echo "NEW_VERSION is ${{ steps.increment_version.outputs.NEW_VERSION }}
         shell: pwsh
-
       - name: Pushing tag to repo
         run: |
-          echo "Pushing TAG ${{env.NEW_VERSION}}"
-          git tag ${{env.NEW_VERSION}}
+          echo "Pushing TAG ${{ steps.increment_version.outputs.NEW_VERSION }}"
+          git tag ${{ steps.increment_version.outputs.NEW_VERSION }}
           git push origin --tags
         shell: pwsh
   BuildRelease:

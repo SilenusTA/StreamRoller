@@ -31,4 +31,4 @@ jobs:
           git config --global user.name "SilenusTA"
           foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
-          git push --tags
+          git push
