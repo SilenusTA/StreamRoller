@@ -14,24 +14,6 @@ jobs:
   creating_readmes:
     runs-on: windows-latest
     steps:
-      #- uses: actions/checkout@v4
-      #- name: npm install
-      #  run: npm install
-      #- name: note time to check it was built later
-      #  run: more .\extensions\users\README.md
-      #- name: running node readmebuilder.mjs
-      #  run: |
-      #    cd docs/apidocs
-      #    node readmebuilder.mjs
-      #- name: check timestamp for update
-      #  run: |
-      #    dir
-      #    more extensions\users\README.md
-      #      - name: adding files to git
-      #        run: |
-      #          for /F "tokens=*" %a in (filelist.json) do git add %a
-      #          git commit -m "autodoc readme update"
-      #          git push
       - name: Increment Patch Version
         id: increment_version
         run: |
@@ -41,9 +23,9 @@ jobs:
           $major = $parts[0]
           $minor = $parts[1]
           $patch = [int]$parts[2] + 1
-          $newVersion = "$major.$minor.$patch"
+          $newVersion = "$major.$minor.$patch".replace("ci","re")
           echo "New version: $newVersion"
-          echo "NEW_VERSION=$newVersion" >> $Env:NEW_VERSION
+          echo $Env:NEW_VERSION = $newVersion
           echo VERSION_TAG is "${{env.VERSION_TAG}}"
           echo NEW_VERSION is "${{env.NEW_VERSION}}"
         shell: pwsh
