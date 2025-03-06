@@ -68,7 +68,7 @@ note: the cookies are large multiline section blocks.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 06 Mar 2025 06:12:14 GMT*
+Table last updated: *Thu, 06 Mar 2025 14:26:04 GMT*
 
 ### Triggers
 
