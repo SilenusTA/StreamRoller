@@ -38,4 +38,5 @@ jobs:
           git push origin --tags
         shell: pwsh
   BuildRelease:
+    needs: createReleaseTag
     uses: ./.github/workflows/create_release.yml
