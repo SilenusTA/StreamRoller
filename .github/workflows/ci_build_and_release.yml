@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: running node readmebuilder.mjs
         run: |
+          npm install
           cd docs/apidocs
           node readmebuilder.mjs
           echo checking results
