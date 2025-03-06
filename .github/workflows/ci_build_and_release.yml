@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: HEAD
+          ref: master
       - name: npm install
         run: npm install
       - name: Increment Patch Version
