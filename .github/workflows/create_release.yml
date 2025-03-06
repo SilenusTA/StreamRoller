@@ -78,7 +78,7 @@ jobs:
           body: Version ${{inputs.tag}} of StreamRoller
           name: "StreamRoller${{inputs.tag}}"
           tag_name: ${{inputs.tag}}
-          token: ${{secrets.API_TOKEN_GITHUB}}
+          token: ${{env.API_TOKEN_GITHUB}}
           repository: SilenusTA/StreamRoller
           files: |
             Release.txt
