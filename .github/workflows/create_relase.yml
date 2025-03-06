@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 env:
   MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+  VERSION_TAG: ${{ github.ref_name }}
 jobs:
   minify_code:
     runs-on: ubuntu-latest
