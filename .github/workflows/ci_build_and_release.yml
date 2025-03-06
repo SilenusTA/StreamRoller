@@ -17,13 +17,12 @@ jobs:
       - name: npm install
         run: npm install
       - name: note time to check it was built later
-        run: cat extensions/chatbot/README.md
+        run: more .\extensions\users\README.md
       - name: running node readmebuilder.mjs
         run: |
           cd docs/apidocs
           node readmebuilder.mjs
       - name: check timestamp for update
         run: |
-          pwd
-          cat ../../extensions/chatbot/README.md
-          cat extensions/chatbot/README.md
+          dir
+          more .\..\..\extensions\users\README.md
