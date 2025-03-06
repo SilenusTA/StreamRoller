@@ -62,7 +62,7 @@ The twitch chat extension will send out any messages sent on the channel provide
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 06 Mar 2025 05:50:57 GMT*
+Table last updated: *Thu, 06 Mar 2025 06:05:34 GMT*
 
 ### Triggers
 
