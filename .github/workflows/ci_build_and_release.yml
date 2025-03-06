@@ -1,0 +1,22 @@
+# trigger on the cix.x.x tag.
+name: CI process chain
+run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "ci*.*.*"
+#env:
+#MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+#VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+jobs:
+  creating_readmes:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: running node readmebuilder.mjs
+        run: |
+          cd docs/apidocs
+          node readmebuilder.mjs
+          echo checking results
+          echo ../../extensions/chatbot/README.md
