@@ -174,12 +174,15 @@ function createReadmeFiles ()
         }
     }
 }
+// ============================================================================
+//                           writefileslist
+// ============================================================================
 function writefileslist ()
 {
     filesUpdated.forEach((f) =>
     {
         console.log("files written", f)
-        fs.writeFileSync("filelist.json", filesUpdated.join('\n'), {
+        fs.writeFileSync("filelist.txt", filesUpdated.join('\n'), {
             encoding: "utf8"
         })
     })
