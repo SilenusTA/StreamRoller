@@ -25,7 +25,9 @@ jobs:
         run: |
           $version = "${{ env.VERSION_TAG }}"
           $newVersion = "$version".replace("ci","v")
-          echo "NEW_VERSION=$newVersion" && echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
+          Write-Output "Generated Tag: $newVersion"
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         shell: pwsh
       - name: test output
         run: |
