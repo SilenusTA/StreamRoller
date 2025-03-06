@@ -8,7 +8,8 @@ on:
       - "ci*.*.*"
 env:
   #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  VERSION_TAG: ${{ github.ref_name }}
+  #VERSION_TAG: ${{ github.ref_name }}
+  VERSION_TAG: ci1.1.1
 jobs:
   creating_readmes:
     runs-on: windows-latest
@@ -34,7 +35,7 @@ jobs:
       - name: Increment Patch Version
         id: increment_version
         run: |
-          $version = "${{ env.VERSION_TAG }}"
+          $version = ${{ env.VERSION_TAG }}
           echo VERSION_TAG is $env.VERSION_TAG
           echo version is $version
           $parts = $version -split "\."
