@@ -15,6 +15,7 @@ jobs:
     uses: ./.github/workflows/create_readmes.yml
   createRelease:
     runs-on: windows-latest
+    needs: createReadMe
     steps:
       - name: Increment Patch Version
         id: increment_version
