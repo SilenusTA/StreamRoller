@@ -35,5 +35,5 @@ jobs:
         run: |
           echo "Pushing TAG ${{env.NEW_VERSION}}"
           git tag ${{env.NEW_VERSION}}
-          git push --tags
+          git push origin --tags
         shell: pwsh
