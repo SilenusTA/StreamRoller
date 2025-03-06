@@ -7,7 +7,6 @@ on:
     tags:
       - "ci*.*.*"
 env:
-  #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{ github.ref_name }}
   #VERSION_TAG: ci1.1.1
 jobs:
@@ -49,3 +48,6 @@ jobs:
   UpdateDocs:
     needs: BuildRelease
     uses: ./.github/workflows/build_docs.yml
+    with:
+      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+    secrets: inherit
