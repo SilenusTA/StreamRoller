@@ -3,6 +3,9 @@ name: StreamRoller apidocs
 on:
   workflow_dispatch:
   workflow_call:
+env:
+  #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  GITHUB_TOKEN: ${{ github.token }}
 jobs:
   build:
     runs-on: ubuntu-latest
