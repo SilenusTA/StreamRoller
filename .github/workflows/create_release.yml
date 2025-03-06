@@ -1,5 +1,5 @@
 name: Create a new Release
-run-name: ${{ github.actor }} delivering exe to live repo release
+run-name: ${{github.actor}} delivering exe to live repo release
 on:
   workflow_call:
     inputs:
@@ -7,15 +7,15 @@ on:
         required: true
         type: string
 env:
-  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  VERSION_TAG: ${{ inputs.tag }}
+  MY_API_TOKEN_GITHUB: ${{secrets.API_TOKEN_GITHUB}}
+  VERSION_TAG: ${{inputs.tag}}
 jobs:
   minify_code:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{inputs.tag}}
       - name: minifying
         uses: nizarmah/auto-minify@v2.1
         with:
@@ -56,7 +56,7 @@ jobs:
           node-version: "20.16.0"
       - name: Create SoftwareVersion.txt
         run: |
-          echo  ${{ inputs.tag }} > SoftwareVersion.txt
+          echo  ${{inputs.tag}} > SoftwareVersion.txt
       - name: Printing version from SoftwareVersion.txt
         run: |
           cat SoftwareVersion.txt
@@ -64,23 +64,23 @@ jobs:
         run: |
           npm i -D caxa
           npm install
-          npx caxa -m "Unpacking " -i . -o StreamRoller ${{ inputs.tag }}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
+          npx caxa -m "Unpacking " -i . -o StreamRoller ${{inputs.tag}}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
       - name: Create Release.txt
         run: |
-          echo Release version  ${{ inputs.tag }} >> Release.txt
+          echo Release version ${{inputs.tag}} >> Release.txt
       - name: Zip up exe
         run: |
-          7z a StreamRoller ${{ inputs.tag }}.zip StreamRoller ${{ inputs.tag }}.exe
+          7z a StreamRoller${{inputs.tag}}.zip StreamRoller${{inputs.tag}}.exe
       - name: Push Release
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          body: Version  ${{ inputs.tag }} of StreamRoller
-          name: "StreamRoller ${{ inputs.tag }}"
-          tag_name: ${{ inputs.tag }}
+          body: Version  ${{inputs.tag}} of StreamRoller
+          name: "StreamRoller ${{inputs.tag}}"
+          tag_name: ${{inputs.tag}}
           token: ${{secrets.API_TOKEN_GITHUB}}
           repository: SilenusTA/StreamRoller
           files: |
             Release.txt
-            StreamRoller ${{ inputs.tag }}.zip
-            StreamRoller ${{ inputs.tag }}.exe
+            StreamRoller ${{inputs.tag}}.zip
+            StreamRoller ${{inputs.tag}}.exe
