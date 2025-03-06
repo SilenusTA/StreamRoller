@@ -2,6 +2,10 @@ name: StreamRoller apidocs
 
 on:
   workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 env:
   VERSION_TAG: ${{inputs.tag}}
 jobs:
