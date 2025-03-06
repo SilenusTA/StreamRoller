@@ -21,6 +21,7 @@ jobs:
           node-version: "20.16.0"
       - name: Install npm dependencies
         run: |
+          echo "inputs.tag is ${{inputs.tag}}"
           cd docs
           cd apidocs
           npm install
