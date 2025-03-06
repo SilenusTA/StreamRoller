@@ -64,7 +64,7 @@ jobs:
         run: |
           npm i -D caxa
           npm install
-          npx caxa -m "Unpacking " -i . -o StreamRoller ${{inputs.tag}}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
+          npx caxa -m "Unpacking " -i . -o StreamRoller${{inputs.tag}}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
       - name: Create Release.txt
         run: |
           echo Release version ${{inputs.tag}} >> Release.txt
@@ -75,12 +75,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          body: Version  ${{inputs.tag}} of StreamRoller
-          name: "StreamRoller ${{inputs.tag}}"
+          body: Version ${{inputs.tag}} of StreamRoller
+          name: "StreamRoller${{inputs.tag}}"
           tag_name: ${{inputs.tag}}
           token: ${{secrets.API_TOKEN_GITHUB}}
           repository: SilenusTA/StreamRoller
           files: |
             Release.txt
-            StreamRoller ${{inputs.tag}}.zip
-            StreamRoller ${{inputs.tag}}.exe
+            StreamRoller${{inputs.tag}}.zip
+            StreamRoller${{inputs.tag}}.exe
