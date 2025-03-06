@@ -27,6 +27,8 @@ jobs:
           more extensions\users\README.md
       - name: adding files to git
         run: |
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "SilenusTA"
           foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
           git push
