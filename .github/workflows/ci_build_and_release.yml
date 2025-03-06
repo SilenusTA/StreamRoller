@@ -34,7 +34,7 @@ jobs:
       - name: Increment Patch Version
         id: increment_version
         run: |
-          $version = "${{ github.GITHUB_REF_NAME }}"
+          $version = $env.VERSION_TAG
           $parts = $version -split "\."
           $major = $parts[0]
           $minor = $parts[1]
