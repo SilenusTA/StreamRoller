@@ -8,7 +8,7 @@ on:
       - "ci*.*.*"
 env:
   #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+  VERSION_TAG: ${{ github.ref_name }}
 jobs:
   creating_readmes:
     runs-on: windows-latest
@@ -43,7 +43,7 @@ jobs:
           $patch = [int]$parts[2] + 1
           $newVersion = "$major.$minor.$patch"
           echo "New version: $newVersion"
-          echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
+          echo "NEW_VERSION=$newVersion" >> $env:NEW_VERSION
           echo VERSION_TAG is ${{env.VERSION_TAG}}
           echo NEW_VERSION is ${{env.NEW_VERSION}}
         shell: pwsh
