@@ -7,7 +7,7 @@ on:
         required: true
         type: string
 env:
-  MY_API_TOKEN_GITHUB: ${{secrets.API_TOKEN_GITHUB}}
+  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
   VERSION_TAG: ${{inputs.tag}}
 jobs:
   minify_code:
