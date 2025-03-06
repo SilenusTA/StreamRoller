@@ -6,9 +6,9 @@ on:
   push:
     tags:
       - "ci*.*.*"
-#env:
-#MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-#VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+env:
+  #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
 jobs:
   creating_readmes:
     runs-on: windows-latest
@@ -42,6 +42,8 @@ jobs:
           $newVersion = "$major.$minor.$patch"
           echo "New version: $newVersion"
           echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
+          echo ${{ env.NEW_VERSION }}
+          echo ${{ env.VERSION_TAG }}
         shell: pwsh
 
       - name: Save New Version
