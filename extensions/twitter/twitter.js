@@ -21,7 +21,8 @@
  */
 /**
  * @extension Twitter
- * Connects to twitter allowing sending of tweets
+ * Connects to twitter allowing sending of tweets. Initial version, needs expanded 
+ * functionality adding when I get time or someone requests it :P
  */
 // ############################# TWITTER.js ##############################
 // Allows posting and reading twitter
@@ -78,8 +79,6 @@ const triggersandactions =
     description: "Send a tweet",
     version: "0.2",
     channel: serverConfig.channel,
-    // these are messages we can sendout that other extensions might want to use to trigger an action
-    // these are messages we can receive to perform an action
     actions:
         [
             {
@@ -283,6 +282,13 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * Connects to the twitter API
+ * @param {object} creds 
+ */
 function connectToTwitter (creds)
 {
     try
@@ -452,6 +458,9 @@ function tweetmessage (message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     let status = false;
@@ -474,5 +483,5 @@ function heartBeatCallback ()
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

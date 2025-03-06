@@ -58,21 +58,12 @@ Send an extension message of type "PostTweet" to the "twitter" extension with th
 
 ## Triggers/Actions
 
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 05:55:43 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-
+ReplaceTAGForTriggers
 
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| TwitterPostTweet | action_PostTweet | Post a message to twtter |
-
+ReplaceTAGForActions

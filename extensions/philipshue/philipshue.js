@@ -408,6 +408,9 @@ function SendSettingsWidgetSmall (tochannel)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Saves our config to the server
+ */
 function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -420,6 +423,9 @@ function SaveConfigToServer ()
 //                           FUNCTION: UpdateCredentials
 //          Update the credentials stored in the encrypted credential file
 // ============================================================================
+/**
+ * Saves our credentials to the server
+ */
 function UpdateCredentials ()
 {
     Object.keys(localCredentials).forEach(key =>
@@ -437,7 +443,6 @@ function UpdateCredentials ()
 
     });
 }
-
 // ============================================================================
 // ============================================================================
 //                           PHILIPS HUE FUNCTIONALITY
@@ -447,6 +452,10 @@ function UpdateCredentials ()
 // ============================================================================
 //                           FUNCTION: initialiseHue
 // ============================================================================
+/**
+ * Initialises the philips hue system and optionally pairs
+ * @param {boolean} force_paring 
+ */
 async function initialiseHue (force_paring = false)
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("initialiseHue()")
@@ -455,14 +464,14 @@ async function initialiseHue (force_paring = false)
     await UpdateHueData();
     processScenes();
     outputScenes();
-
-
-
 }
-
 // ============================================================================
 //                           FUNCTION: connectToHub
 // ============================================================================
+/**
+ * connect to the HueHub 
+ * @param {boolean} perform_pairing 
+*/
 async function connectToHub (perform_pairing = false)
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("connectToHub()")
@@ -526,6 +535,9 @@ async function connectToHub (perform_pairing = false)
 // ============================================================================
 //                           FUNCTION: pair
 // ============================================================================
+/**
+ * Pair with the philips hue hub
+ */
 async function pair ()
 {
 
@@ -590,8 +602,11 @@ async function pair ()
     }
 }
 // ============================================================================
-//                           FUNCTION: discoverBridge
+//                           FUNCTION: discoverBridge_nupnp
 // ============================================================================
+/**
+ * Performs nupnp lookup to find the hub on the network
+ */
 async function discoverBridge_nupnp ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_nupnp()")
@@ -624,8 +639,12 @@ async function discoverBridge_nupnp ()
 }
 
 // ============================================================================
-//                           FUNCTION: getBridge
+//                           FUNCTION: discoverBridge_upnp
 // ============================================================================
+/**
+ * Performs upnp lookup to find the hub on the network
+ * @param {number} timeout 
+ */
 async function discoverBridge_upnp (timeout)
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("discoverBridge_upnp()")
@@ -654,6 +673,9 @@ async function discoverBridge_upnp (timeout)
 // ============================================================================
 //                           FUNCTION: UpdateHueData
 // ============================================================================
+/**
+ * Requests all Hue data
+ */
 async function UpdateHueData ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("UpdateHueData()")
@@ -664,6 +686,9 @@ async function UpdateHueData ()
 // ============================================================================
 //                           FUNCTION: getAllScenes
 // ============================================================================
+/**
+ * gets all scenes from the hue bridge
+ */
 async function getAllScenes ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllScenes()")
@@ -694,7 +719,6 @@ async function getAllScenes ()
                 });
                 localConfig.status.paired = true;
                 outputScenes();
-
                 return
             }
 
@@ -744,6 +768,10 @@ async function getAllScenes ()
 // ============================================================================
 //                           FUNCTION: getAllGroups
 // ============================================================================
+/**
+ * Gets all groups from the hue hub. 
+ * Currently untested and unused needs someone with a philips hue hub to test and report results
+ */
 async function getAllGroups ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("getAllGroups()")
@@ -790,8 +818,10 @@ async function getAllGroups ()
 }
 // ============================================================================
 //                           FUNCTION: processScenes
-// This function will go through the scenes and mark them as on, on_part, or off
 // ============================================================================
+/**
+ * This function will go through the scenes and mark them as on, on_part, or off
+ */
 function processScenes ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("processScenes()")
@@ -800,6 +830,9 @@ function processScenes ()
 // ============================================================================
 //                           FUNCTION: outputScenes
 // ============================================================================
+/**
+ * Sends a message out containing all the scenes in the hue hub
+ */
 function outputScenes ()
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("outputScenes()")
@@ -819,6 +852,10 @@ function outputScenes ()
 // ============================================================================
 //                           FUNCTION: activateSceneById
 // ============================================================================
+/**
+ * Activates the philips hue scene specified by id
+ * @param {number} scenedID 
+ */
 function activateSceneById (scenedID)
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateSceneById()")
@@ -842,6 +879,10 @@ function activateSceneById (scenedID)
 // ============================================================================
 //                           FUNCTION: activateSceneByName
 // ============================================================================
+/**
+ * Activates the philips hue scene specified by name
+ * @param {string} sceneName 
+ */
 function activateSceneByName (sceneName)
 {
     if (serverConfig.PHILIPS_HUE_DEBUG == "on") console.log("activateSceneByName()")
@@ -855,10 +896,12 @@ function activateSceneByName (sceneName)
         }
     })
 }
-
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     // if we are go then set green
@@ -886,5 +929,5 @@ function heartBeatCallback ()
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

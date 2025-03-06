@@ -12,13 +12,13 @@ This was the only way I could find to autoupdate the triggers and actions lists
 - [Twitch](#twitch)
   - [Outgoing channel : TWITCH](#outgoing-channel--twitch)
 - [About](#about)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 # About
 This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect
 
-## Triggers/actions
+## Triggers/Actions
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers

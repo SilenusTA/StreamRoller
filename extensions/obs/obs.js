@@ -32,7 +32,9 @@
 // ============================================================================
 /**
  * @extension OBS
- * Connects to Open Broadcasting Software to allow control/events to be processed
+ * Connects to Open Broadcasting Software to allow control/events to be processed.
+ * <span style="color:red">Note needs triggers and actions updated as a lot of messages are currently
+ * not in the trigger/action list</span>
  */
 // ============================================================================
 //                           IMPORTS/VARIABLES
@@ -47,7 +49,6 @@ import { fileURLToPath } from "url";
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let streamlabsChannelConnectionAttempts = 0;
 // local config
 const localConfig = {
     OUR_CHANNEL: "OBS_CHANNEL",
@@ -94,11 +95,10 @@ const default_serverConfig = {
     cred2value: "4444",
     cred3name: "obspass",
     cred3value: "",
-
 };
 let localCredentials = {};
 let serverConfig = structuredClone(default_serverConfig);
-/* other optionsto look to add, not the complete list available (from types.d.ts )
+/* other options to look to add, not the complete list available (from types.d.ts )
 
 SetVideoSettings
 SetStreamServiceSettings
@@ -264,6 +264,9 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called on connection to the StreamRoller server
+ */
 function onDataCenterConnect ()
 {
     // Request our config from the server
@@ -473,18 +476,15 @@ function onDataCenterMessage (server_packet)
         }
         else if (server_packet.type === "UnknownChannel")
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
-            if (streamlabsChannelConnectionAttempts++ < localConfig.channelConnectionAttempts)
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel,scheduling rejoin", server_packet);
+            setTimeout(() =>
             {
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-                setTimeout(() =>
-                {
-                    sr_api.sendMessage(localConfig.DataCenterSocket,
-                        sr_api.ServerPacket(
-                            "JoinChannel", serverConfig.extensionname, server_packet.data
-                        ));
-                }, 5000);
-            }
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
+                    ));
+            }, 5000);
+
         }    // we have received data from a channel we are listening to
         else if (server_packet.type === "ChannelData")
         {
@@ -664,7 +664,7 @@ function SendCredentialsModal (extensionname)
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
 /**
- * savel config file to the server
+ * save config file to the server
  */
 function SaveConfigToServer ()
 {
@@ -674,7 +674,6 @@ function SaveConfigToServer ()
         serverConfig.extensionname,
         serverConfig))
 }
-
 // ############################################################################
 // ============================================================================
 //                             OBS websockets
@@ -858,7 +857,7 @@ Stats message
 // ============================================================================
 /**
  * process a new list of scenes from OBS
- * @param {Scenes} scenes 
+ * @param {object} scenes 
  */
 function processOBSSceneList (scenes)
 {
@@ -899,6 +898,10 @@ function processOBSSceneList (scenes)
 // ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
+/**
+ * Changes OBS to the given scene
+ * @param {string} scene 
+ */
 function changeScene (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
@@ -908,6 +911,10 @@ function changeScene (scene)
 // ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
+/**
+ * Enables/unhides a source in OBS
+ * @param {object} sourcedata 
+ */
 function enableSource (sourcedata)
 {
     localConfig.obsConnection.call("GetSceneItemId", { sceneName: sourcedata.sceneName, sourceName: sourcedata.sourceName })
@@ -1011,6 +1018,10 @@ localConfig.obsConnection.on("error", err =>
 // ============================================================================
 //                           FUNCTION: onStreamStatus
 // ============================================================================
+/**
+ * Callback from OBS on the status of the stream
+ * @param {object} data 
+ */
 function onStreamStatus (data)
 {
     // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
@@ -1025,6 +1036,10 @@ function onStreamStatus (data)
 // ============================================================================
 //                           FUNCTION: sendStreamStats
 // ============================================================================
+/**
+ * Sends out an OBSStats message on our channel containing the status of OBS
+ * @param {object} data 
+ */
 function sendStreamStats (data)
 {
     // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
@@ -1046,6 +1061,10 @@ function sendStreamStats (data)
 // ============================================================================
 //                           FUNCTION: onScenesListChanged
 // ============================================================================
+/**
+ * Callback from OBS that scenes have changed
+ * @param {object} data 
+ */
 function onScenesListChanged (data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onScenesListChanged", "OBS scenes list has changed");
@@ -1128,7 +1147,7 @@ function StreamStarted ()
 //                           FUNCTION: onOBSScenes
 // ============================================================================
 /**
- * Called with a list of scene (triggered by the get scenes call)
+ * Sends out a scenes list message ScenesList (triggered by the get scenes call)
  */
 function sendScenes ()
 {
@@ -1151,6 +1170,11 @@ function sendScenes ()
 // ============================================================================
 //                           FUNCTION: ToggleMute
 // ============================================================================
+/**
+ * Toggles OBS mute using a scene containing the microphone that is used in all
+ * other scenes needing the mic in them
+ * @param {object} data 
+ */
 function ToggleMute (data)
 {
     if (data.enabled == "true" || data.enabled == "false")
@@ -1171,6 +1195,10 @@ function ToggleMute (data)
 // ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
 // ============================================================================
+/**
+ * Callback from OBS when the mute option changes
+ * @param {object} data 
+ */
 function onSourceMuteStateChanged (data)
 {
     logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'SourceMuteStateChanged' received", data)
@@ -1194,6 +1222,9 @@ function onSourceMuteStateChanged (data)
 // ============================================================================
 //                           FUNCTION: getFilters
 // ============================================================================
+/**
+ * Get all the filters for scenes 
+ */
 async function getFilters ()
 {
     if (typeof localConfig.obsConnection.socket != "undefined" && localConfig.obsConnection.socket._socket == null)
@@ -1257,6 +1288,10 @@ async function getFilters ()
 // ============================================================================
 //                           FUNCTION: activateFilter
 // ============================================================================
+/**
+ * Hide/unhide a filter on an obs sourceName
+ * @param {object} data  {sourceName, filterName, filterEnabled}
+ */
 function activateFilter (data)
 {
     /*if (data.filterEnabled === "")
@@ -1280,6 +1315,14 @@ function activateFilter (data)
 // ============================================================================
 //                           FUNCTION: setSceneItemTransform
 // ============================================================================
+/**
+ * Change the transform parameters for a given scene
+ * @param {object} requestData {
+    alignment, boundsAlignment, boundsHeight, 
+    boundsType, boundsWidth, cropBottom, cropLeft, cropRight, cropTop, 
+    height, positionX, positionY, rotation, scaleX, scaleY, sourceHeight, 
+    sourceWidth, width}
+ */
 function setSceneItemTransform (requestData)
 {
     /* example
@@ -1355,6 +1398,10 @@ function setSceneItemTransform (requestData)
 //                           FUNCTION: onFilterChanged
 //                      update our filter list and send out our scenes list
 // ============================================================================
+/**
+ * Callback from OBS that a filter has changed
+ * @param {object} data 
+ */
 function onFilterChanged (data)
 {
     // find the filter
@@ -1406,6 +1453,9 @@ function onFilterChanged (data)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages allowing other extensions to monitor our status
+ */
 function heartBeatCallback ()
 {
     try
@@ -1494,11 +1544,17 @@ function findSceneData (sceneName)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds the given trigger object by name
+ * @param {string} messagetype 
+ * @returns trigger object found or null
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase()) return triggersandactions.triggers[i];
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
@@ -1507,5 +1563,5 @@ function findtriggerByMessageType (messagetype)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

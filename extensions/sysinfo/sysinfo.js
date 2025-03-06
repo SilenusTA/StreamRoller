@@ -442,7 +442,7 @@ function UpdateMonitoring ()
 // ============================================================================
 /**
  * Requests CPU data and sends out a trigger message to the system
-  * @param {string} reference 
+  * @param {string} [reference="poll"]
  */
 function getCPUData (reference = "poll")
 {
@@ -479,6 +479,7 @@ function getCPUData (reference = "poll")
 // ============================================================================
 /**
  * Requests CPU Temperature data and sends out a trigger message to the system
+ * @param {string} [reference="poll"]
  */
 function getCPUTemperature (reference = "poll")
 {
@@ -536,6 +537,7 @@ function getCPUTemperatureScheduler ()
 // ============================================================================
 /**
  * Requests GPU data and sends out a trigger message to the system
+ * @param {string} [reference="poll"]
  */
 function getGPUData (reference = "poll")
 {
@@ -583,6 +585,8 @@ function getGPUDataScheduler ()
 // ============================================================================
 /**
  * Requests CPU Temperature data and sends out a trigger message to the system
+ * @param {string} trigger_name 
+ * @param {object} trigger_data 
  */
 function sendTrigger (trigger_name, trigger_data)
 {
@@ -612,6 +616,11 @@ function sendTrigger (trigger_name, trigger_data)
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType
 // ============================================================================
+/**
+ * Finds a trigger by name
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -625,6 +634,11 @@ function findTriggerByMessageType (messagetype)
 // ============================================================================
 //                           FUNCTION: flatten
 // ============================================================================
+/**
+ * Flattens an array to move nested objects to the top level
+ * @param {array} data 
+ * @returns 1D array
+ */
 function flatten (data = [])
 {
     var ret = [];
@@ -661,6 +675,11 @@ function flatten (data = [])
 // ============================================================================
 //                           FUNCTION: flatten
 // ============================================================================
+/**
+ * Flattens an object to move nested objects to the top level
+ * @param {object} data 
+ * @returns 1D object
+ */
 function flattenObject (ob)
 {
     var toReturn = {};
@@ -714,4 +733,4 @@ function updateTrigger (trigger, ob)
 // ============================================================================
 //                                  EXPORTS
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };

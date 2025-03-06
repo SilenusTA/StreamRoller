@@ -7,32 +7,29 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
-# RandomFact
+ # Quizbot Extension
 Contents
-- [RandomFact](#randomfact)
-  - [Outgoing channel : "RANDOMFACT\_CHANNEL"](#outgoing-channel--randomfact_channel)
+- [Quizbot Extension](#quizbot-extension)
+  - [Outgoing channel : "QUIZBOT\_CHANNEL"](#outgoing-channel--quizbot_channel)
   - [Description](#description)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "RANDOMFACT_CHANNEL"
+## Outgoing channel : "QUIZBOT_CHANNEL"
 ## Description
-Request a random fact and the result will be posted back.
+Quizbot will ask questions and check answers
+
+The extension runs on triggers so these will need adding for the bot to do anything. 
+An example set of triggers for twitch chat can be seen in the image below.
+
+<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/quizbot/exampletriggers.png" title="example quzbot triggers" alt="example quzbot triggers">
+
 ## Triggers/Actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactPoster | trigger_RandomFact | An interesting or amusing random fact was received |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactRequest | action_RequestRandomFact | Requests a random fact |
+ReplaceTAGForActions

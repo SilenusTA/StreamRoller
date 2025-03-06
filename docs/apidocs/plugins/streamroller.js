@@ -59,6 +59,6 @@ exports.handlers = {
     newDoclet: function (e)
     {
         if (e.doclet.extensions)
-            e.doclet.description = `${e.doclet.description}Some other text for extensions`;
+            e.doclet.description = `${e.doclet.description}`;
     }
 };

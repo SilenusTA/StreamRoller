@@ -63,7 +63,7 @@ async function parseFileForTriggers (file)
                 if (x.triggersandactions)
                     parseTrigger(x.triggersandactions, file);
                 else
-                    console.log("\x1b[1m\x1b[33mMissing exported 'triggesandactions' for:", file, "\x1b[0m")
+                    console.log("\x1b[1m\x1b[33mMissing exported 'triggersandactions' for:", file, "\x1b[0m")
             })
             .catch((err) =>
             {
@@ -90,17 +90,24 @@ function parseTrigger (trigger, filename)
     let hbody = ""
 
     // build trigger/actions strings up
-    for (const t of trigger.triggers)
-        hbody += `| ${t.name} | ${t.messagetype} | ${t.description} |\n`
-    if (trigger.triggers.length > 0)
-        readmeTriggerStringReplacement += hbody
+    if (trigger.triggers)
+    {
+        //console.log("trigger.triggers", JSON.stringify(trigger.triggers, null, 2))
+        for (const t of trigger.triggers)
+            hbody += `| ${t.name} | ${t.messagetype} | ${t.description} |\n`
+        if (trigger.triggers.length > 0)
+            readmeTriggerStringReplacement += hbody
+    }
     hbody = ""
-    for (const a of trigger.actions)
-        hbody += `| ${a.name} | ${a.messagetype} | ${a.description} |\n`
-    if (trigger.actions.length > 0)
-        readmeActionStringReplacement += hbody
+    if (trigger.actions)
+    {
+        for (const a of trigger.actions)
+            hbody += `| ${a.name} | ${a.messagetype} | ${a.description} |\n`
+        if (trigger.actions.length > 0)
+            readmeActionStringReplacement += hbody
+    }
     // if we have anything to process ...
-    if (trigger.actions.length > 0 || trigger.triggers.length > 0)
+    if (trigger.actions && trigger.actions.length > 0 || trigger.triggers && trigger.triggers.length > 0)
     {
         // create new slot if we don't have one already
         if (!allTAs[trigger.extensionname])
@@ -142,7 +149,7 @@ function createReadmeFiles ()
                 if (partFile && partFile != "")
                 {
                     let datestamp = new Date().toUTCString();
-                    partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
+                    partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
                     partFile = partFile.replace("ReplaceTAGForTriggers", header + "\n" + hdivider + "\n" + allExtTriggers)
                     partFile = partFile.replace("ReplaceTAGForActions", header + "\n" + hdivider + "\n" + allExtActions)
                     fs.writeFileSync(extRoot + ext + "/README.md", partFile, {

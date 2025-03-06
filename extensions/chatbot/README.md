@@ -35,7 +35,7 @@ You can also ask a specific question that will get posted to ChatGPT and the res
   - [Using the %%CHATBOTNAME%% Variable](#using-the-chatbotname-variable)
     - [Example:](#example)
     - [Recommendations:](#recommendations)
-  - [Triggers/actions](#triggersactions)
+  - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
 
@@ -148,12 +148,12 @@ Question/Answer 4. General statement to the chat and responding without using th
 
 This format generally replies with the username if asked a direct question, but will avoid using the username if just responding openly to the chat.
 
-## Triggers/actions
+## Triggers/Actions
 
 
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions releating to this specific extension.
+Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 04 Mar 2025 06:26:23 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 ### Triggers
 

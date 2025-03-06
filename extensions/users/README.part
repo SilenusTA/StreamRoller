@@ -7,32 +7,33 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
-# RandomFact
+
+# Users Extension
+
 Contents
-- [RandomFact](#randomfact)
-  - [Outgoing channel : "RANDOMFACT\_CHANNEL"](#outgoing-channel--randomfact_channel)
+
+- [Users Extension](#users-extension)
+  - [Outgoing channel : "USERS\_CHANNEL"](#outgoing-channel--users_channel)
   - [Description](#description)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "RANDOMFACT_CHANNEL"
+
+## Outgoing channel : "USERS_CHANNEL"
+
 ## Description
-Request a random fact and the result will be posted back.
+
+This extension is designed to allow more personal content with users, ie welcome back messages based on the last
+saved message time the user was in chat.
+
 ## Triggers/Actions
 
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactPoster | trigger_RandomFact | An interesting or amusing random fact was received |
+ReplaceTAGForTriggers
 
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactRequest | action_RequestRandomFact | Requests a random fact |
+ReplaceTAGForActions

@@ -628,7 +628,7 @@ const triggersandactions =
         [{
             name: "TwitchChatSendChatMessage",
             displaytitle: "Post Twitch Message",
-            description: "Post a message to twitch chat (Node user is case sensitive",
+            description: "Post a message to twitch chat (Note user is case sensitive)",
             messagetype: "action_SendChatMessage",
             parameters: {
                 account: "",
@@ -679,6 +679,10 @@ function initialise (app, host, port, heartbeat)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
+/**
+ * Called on websocket disconnect
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
@@ -686,14 +690,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Description: Received connect message
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// When we connect to the StreamRoller server the first time (or if we reconnect)
-// we will get this function called. we need to store our clientID here.
-// it is also a good place to create/join channels we wish to use for data
-// monitoring/sending on.
-// ===========================================================================
+/** 
+ * called on connection to the StreamRoller websocket
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     // create our channel
@@ -716,6 +716,10 @@ function onDataCenterConnect (socket)
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
+/**
+ * Called when we receive a message on the websocket from StreamRoller
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
@@ -1230,6 +1234,9 @@ function SendCredentialsModal (extensionname)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Save our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1246,6 +1253,9 @@ function SaveConfigToServer ()
 // ----------------------------- notes ----------------------------------------
 // none
 // ===========================================================================
+/**
+ * Save our data to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1257,6 +1267,9 @@ function SaveDataToServer ()
 // ============================================================================
 //                     FUNCTION: SaveChatMessagesToServerScheduler
 // ============================================================================
+/**
+ * Poll timer to save the data to server to maintain a chat history over restarts
+ */
 function SaveChatMessagesToServerScheduler ()
 {
     SaveDataToServer()
@@ -1268,6 +1281,10 @@ function SaveChatMessagesToServerScheduler ()
 // ============================================================================
 //                     FUNCTION: postChatTrigger
 // ============================================================================
+/**
+ * Posts a trigger of type data.messagetype to our channel
+ * @param {object} data 
+ */
 function postChatTrigger (data)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1287,6 +1304,11 @@ function postChatTrigger (data)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds a trigger by messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -1302,6 +1324,13 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 // Description: receives twitch chat messages
 // ============================================================================
+/**
+ * Constructs a ChatMessage type message from the given data.
+ * TBD needs to be moved to a trigger type message 
+ * @param {string} channel 
+ * @param {object} tags 
+ * @param {string} chatmessage 
+  */
 function process_chat_data (channel, tags, chatmessage)
 {
     let data = {
@@ -1362,6 +1391,12 @@ function process_chat_data (channel, tags, chatmessage)
 // ============================================================================
 // Description: Send message to twitch
 // ===========================================================================
+/**
+ * Send the to twitch on the given channel or fakes a message if debug flag is on
+ * and sends it out as if twitch has sent us the message back from the chat trigger
+ * @param {string} channel 
+ * @param {object} data 
+ */
 function action_SendChatMessage (channel, data)
 {
     let sent = false
@@ -1403,6 +1438,10 @@ function action_SendChatMessage (channel, data)
 // ============================================================================
 //                     FUNCTION: reconnectChat
 // ============================================================================
+/**
+ * reconnect to the IRC client
+ * @param {string} account 
+ */
 function reconnectChat (account)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Reconnecting chat " + serverConfig.streamername + ":" + serverConfig.enabletwitchchat);
@@ -1453,6 +1492,10 @@ function reconnectChat (account)
 // ============================================================================
 //                     FUNCTION: joinChatChannel
 // ============================================================================
+/**
+ * Join the given account to the currently selected streamer IRC chat channel
+ * @param {string} account 
+ */
 function joinChatChannel (account)
 {
     let chatmessagename = "#" + serverConfig.streamername.toLocaleLowerCase();
@@ -1494,6 +1537,10 @@ function joinChatChannel (account)
 // ############################# Initial connection is readonly #########################################
 import * as tmi from "tmi.js";
 
+/**
+ * Connect to the IRC chat channel of the current streamer selected in the settings using the account name given
+ * @param {string} account 
+ */
 function connectToTwitch (account)
 {
     // check for readonly user account login (bot doesn't get logged in if no credentials set)
@@ -1537,6 +1584,10 @@ function connectToTwitch (account)
 // ============================================================================
 //                           FUNCTION: chatLogin
 // ============================================================================
+/**
+ * Login the account provided to the IRC channel
+ * @param {string} account 
+ */
 function chatLogin (account)
 {
     let triggertosend = {};
@@ -2224,6 +2275,9 @@ function file_log (type, tags, message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     let userconnected = localConfig.twitchClient["user"].state.connected
@@ -2268,7 +2322,11 @@ function heartBeatCallback ()
 // ============================================================================
 //                           FUNCTION: sanitiseHTML
 // ============================================================================
-// this will replace the strings with escape versions so it will be shown rather than parsed in html
+/**
+ * This will replace the strings chars with escape versions so it will be shown rather than parsed in html
+ * @param {string} string 
+ * @returns sanitised string
+ */
 function sanitiseHTML (string)
 {
     var entityMap = {
@@ -2289,5 +2347,5 @@ function sanitiseHTML (string)
 // ============================================================================
 //                           EXPORTS: initialise
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

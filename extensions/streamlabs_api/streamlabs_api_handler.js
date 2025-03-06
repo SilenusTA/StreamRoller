@@ -246,7 +246,7 @@ const triggersandactions =
             {
                 name: "StreamlabsDataDump",
                 displaytitle: "StreamLabs data dump",
-                description: "Stream labs data dump, ie subs/month, top10 donaters etc etc",
+                description: "Stream labs data dump, ie subs/month, top10 donators etc etc",
                 messagetype: "trigger_StreamlabsDataDump",
                 parameters: {
                     data: ""
@@ -255,7 +255,7 @@ const triggersandactions =
             {
                 name: "StreamlabsDataDumpUnderlying",
                 displaytitle: "StreamLabs Underlying data dump",
-                description: "Stream labs Underlying data dump, ie subs/month, top10 donaters etc etc",
+                description: "Stream labs Underlying data dump, ie subs/month, top10 donators etc etc",
                 messagetype: "trigger_StreamlabsDataDumpUnderlying",
                 parameters: {
                     data: ""
@@ -267,6 +267,12 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} heartbeat 
+ */
 function start (host, port, heartbeat)
 {
     logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".start", "host", host, "port", port, "heartbeat", heartbeat);
@@ -288,6 +294,10 @@ function start (host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: connectToStreamlabs
 // ============================================================================
+/**
+ * Connect to the streamlabs API
+ * @param {object} creds 
+ */
 function connectToStreamlabs (creds)
 {
     // ########################## SETUP STREAMLABS CONNECTION ###############################
@@ -323,6 +333,10 @@ function connectToStreamlabs (creds)
 // ============================================================================
 //                           FUNCTION: onStreamlabsDisconnect
 // ============================================================================
+/**
+ * Called when Streamlabs API socket has disconnected
+ * @param {string} reason 
+ */
 function onStreamlabsDisconnect (reason)
 {
     localConfig.status.connected = false;
@@ -331,10 +345,9 @@ function onStreamlabsDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onStreamlabsConnect
 // ============================================================================
-// Description: Handles Connect message from the streamlabs api
-// Parameters: reason
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
+/**
+ * Call on Streamlabs API connection
+ */
 function onStreamlabsConnect ()
 {
     localConfig.status.connected = true;
@@ -345,10 +358,10 @@ function onStreamlabsConnect ()
 // ============================================================================
 //                           FUNCTION: onStreamlabsEvent
 // ============================================================================
-// Description: Handles messaged from the streamlabs api
-// Parameters: reason
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
+/**
+ * Handles messaged from the streamlabs api
+ * @param {object} data 
+ */
 function onStreamlabsEvent (data)
 {
     // Send this data to the channel for this
@@ -363,17 +376,17 @@ function onStreamlabsEvent (data)
                 localConfig.OUR_CHANNEL
             ));
         // send alerts using trigger system
-        parseTriggers(data)
+        parseStreamlabsMessage(data)
     }
 }
 // ########################## DATACENTER CONNECTION #######################
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
-// Description: Handles Disconnect message from the datacenter
-// Parameters: reason
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
+/**
+ * Handles websocket disconnect message from StreamRoller
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterDisconnect", reason);
@@ -381,10 +394,9 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Description: Handles Connect message from the datacenter
-// Parameters: reason
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
+/**
+ * Called on connection to StreamRoller websocket
+ */
 function onDataCenterConnect ()
 {
     //store our Id for futre reference
@@ -406,10 +418,10 @@ function onDataCenterConnect ()
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-// Description: Handles messages from the datacenter
-// Parameters: reason
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
+/**
+ * Called when we receive a message from StreamRoller
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
@@ -535,12 +547,11 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ============================================================================
-// Description: Send the modal code back after setting the defaults according 
-// to our server settings
-// Parameters: channel to send data to
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
+
+/**
+ * Send our settings widget code to the given extension
+ * @param {string} toextension 
+ */
 function SendSettingsWidgetSmall (toextension)
 {
     fs.readFile(__dirname + '/streamlabs_apisettingswidgetsmall.html', function (err, filedata)
@@ -634,11 +645,9 @@ function SendCredentialsModal (extensionname)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
-// Description:save config on backend data store
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
+/**
+ * Saves our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -650,8 +659,11 @@ function SaveConfigToServer ()
 }
 
 // ============================================================================
-//                           FUNCTION: heartBeat
+//                           FUNCTION: heartBeatCallback
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     let connected = localConfig.status.connected
@@ -671,10 +683,13 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
-//                           FUNCTION: parseTriggers
+//                           FUNCTION: parseStreamlabsMessage
 // ============================================================================
-//logger.file_log("./", "streamlabstest", data)
-function parseTriggers (data)
+/**
+ * Parses messages from StreamLabs events
+ * @param {object} data 
+ */
+function parseStreamlabsMessage (data)
 {
     let trigger
     // Streamlabs events
@@ -859,14 +874,18 @@ function parseTriggers (data)
     else
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".parseTriggers", "no trigger setup for ", data.for, " message type", data.type);
+            ".parseStreamlabsMessage", "no trigger setup for ", data.for, " message type", data.type);
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".parseTriggers", "data: ", data);
+            ".parseStreamlabsMessage", "data: ", data);
     }
 }
 // ============================================================================
 //                           FUNCTION: outputTrigger
 // ============================================================================
+/**
+ * Broadcast trigger on our channel
+ * @param {object} data 
+ */
 function outputTrigger (data)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -888,5 +907,5 @@ function outputTrigger (data)
 // Description: exports from this module
 // ----------------------------- notes ----------------------------------------
 // ============================================================================
-export { start };
+export { start, triggersandactions };
 

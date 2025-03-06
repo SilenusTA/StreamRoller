@@ -155,6 +155,10 @@ function initialise (app, host, port, heartbeat)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
+/**
+ * CAlled on socket disconnect
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
@@ -162,6 +166,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called on socket connect
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
@@ -180,6 +188,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when a message is received
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     if (server_packet.type === "ConfigFile")
@@ -342,6 +354,10 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
+/**
+ * Sends out out Small settings widget
+ * @param {string} tochannel 
+ */
 function SendSettingsWidgetSmall (tochannel)
 {
     fs.readFile(__dirname + '/quizbotsettingswidgetsmall.html', function (err, filedata)
@@ -383,6 +399,9 @@ function SendSettingsWidgetSmall (tochannel)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Saves our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
@@ -393,6 +412,9 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: readQuizFile
 // ============================================================================
+/**
+ * Reads the question/answer file for the quiz
+ */
 function readQuizFile ()
 {
     try
@@ -423,6 +445,9 @@ function readQuizFile ()
 // ============================================================================
 //                           FUNCTION: sendQuizStarted
 // ============================================================================
+/**
+ * Sends the trigger_QuizbotQuizStarted trigger on quiz start
+ */
 function sendQuizStarted ()
 {
     let QA = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")
@@ -447,6 +472,11 @@ function sendQuizStarted ()
 // ============================================================================
 //                           FUNCTION: sendFirstLine
 // ============================================================================
+/**
+ * Checks an answer to the current question. Sends the triggers trigger_QuizbotIncorrectAnswer
+ * or trigger_QuizbotCorrectAnswer depending on the result
+ * @param {string} userAnswer 
+ */
 function checkAnswer (userAnswer)
 {
     let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim()
@@ -481,6 +511,9 @@ function checkAnswer (userAnswer)
 // ============================================================================
 //                           FUNCTION: startQuiz
 // ============================================================================
+/**
+ * Starts the quiz running
+ */
 function startQuiz ()
 {
     // check if quiz is running
@@ -506,6 +539,10 @@ function startQuiz ()
 // ============================================================================
 //                           FUNCTION: stopQuiz
 // ============================================================================
+/**
+ * Stops the quiz
+ * sends trigger_QuizbotQuizStopped
+ */
 function stopQuiz ()
 {
     // if we are currently turned on trigger a message so we can post the answer to the last question when turning it off
@@ -534,6 +571,9 @@ function stopQuiz ()
 // ============================================================================
 //                           FUNCTION: quizTimeout
 // ============================================================================
+/**
+ * sends trigger_QuizbotQuizTimeout when current question timer expires
+ */
 function quizTimeout ()
 {
     let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
@@ -555,8 +595,11 @@ function quizTimeout ()
     );
 }
 // ============================================================================
-//                           FUNCTION: heartBeat
+//                           FUNCTION: quizTimerCallback
 // ============================================================================
+/**
+ * When the timer for the current question expires this is called to start a new question
+ */
 function quizTimerCallback ()
 {
     clearTimeout(localConfig.quizbotTimerHandle)
@@ -566,7 +609,6 @@ function quizTimerCallback ()
         {
             quizTimeout();
             startQuiz();
-            // if we get here the timer has expired
             quizTimerCallback();
         }, serverConfig.quizbot_duration)
     }
@@ -574,11 +616,17 @@ function quizTimerCallback ()
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds a trigger by messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase()) return triggersandactions.triggers[i];
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
@@ -586,6 +634,9 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     let status = {
@@ -613,5 +664,5 @@ function heartBeatCallback ()
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

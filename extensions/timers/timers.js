@@ -112,7 +112,7 @@ const triggersandactions =
             {
                 name: "TimerStart",
                 displaytitle: "Timer Start",
-                description: "Start a countdown timer, duration in seconds",
+                description: "Start/Restart a countdown timer, duration in seconds",
                 messagetype: "action_TimerStart",
                 parameters: {
                     name: "",
@@ -233,7 +233,7 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
 
                 // check any timers needed
-                CheckTimers(extension_packet.data.TimerName);
+                StartOrRestartTimer(extension_packet.data.TimerName);
             }
         }
         else if (extension_packet.type === "action_TimerStart")
@@ -245,7 +245,7 @@ function onDataCenterMessage (server_packet)
             localConfig.timers[extension_packet.data.name].timeout = extension_packet.data.duration;
             localConfig.timers[extension_packet.data.name].duration = extension_packet.data.duration;
             // This is an extension message from the API. not currently used as timers are started from the settins modals
-            CheckTimers(extension_packet.data.name);
+            StartOrRestartTimer(extension_packet.data.name);
         }
         else if (extension_packet.type === "action_TimerStop")
         {
@@ -374,6 +374,9 @@ function SendSettingsWidgetSmall (tochannel)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Saves our config to the server
+ */
 function SaveConfigToServer ()
 {
     // saves our serverConfig to the server so we can load it again next time we startup
@@ -383,56 +386,69 @@ function SaveConfigToServer ()
             serverConfig))
 }
 // ============================================================================
-//                           FUNCTION: CheckTimers
+//                           FUNCTION: StartOrRestartTimer
 // ============================================================================
-function CheckTimers (timername)
+/**
+ * Starts or restarts a time if one already exists 
+ * @param {string} timerName  
+ */
+function StartOrRestartTimer (timerName)
 {
-    if (!localConfig.timers[timername])
+    if (!localConfig.timers[timerName])
         return;
-    if (localConfig.timers[timername].timeout == localConfig.timers[timername].duration)
-        sendStartTimer(localConfig.timers[timername])
-    Timer(timername)
+    if (localConfig.timers[timerName].timeout == localConfig.timers[timerName].duration)
+        sendStartTimer(localConfig.timers[timerName])
+    Timer(timerName)
 }
 // ============================================================================
 //                           FUNCTION: Timer
 // ============================================================================
-function Timer (timername)
+/**
+ * Poll timer to check for expiry or update the time left value and sends out a 
+ * trigger when the timer is updated or expired
+ * @param {object} timerName 
+ */
+function Timer (timerName)
 {
-    localConfig.timers[timername].timeout = localConfig.timers[timername].timeout - 1;
-    sendTimerData(localConfig.timers[timername]);
+    localConfig.timers[timerName].timeout = localConfig.timers[timerName].timeout - 1;
+    sendTimerData(localConfig.timers[timerName]);
     // write the file
-    clearTimeout(localConfig.timers[timername].Handle);
-    if (localConfig.timers[timername].timeout >= 0)
+    clearTimeout(localConfig.timers[timerName].Handle);
+    if (localConfig.timers[timerName].timeout >= 0)
     {
-        let minutes = Math.floor(localConfig.timers[timername].timeout / 60);
-        let seconds = localConfig.timers[timername].timeout - (minutes * 60);
-        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", localConfig.timers[timername].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
-        localConfig.timers[timername].Handle = setTimeout(() =>
+        let minutes = Math.floor(localConfig.timers[timerName].timeout / 60);
+        let seconds = localConfig.timers[timerName].timeout - (minutes * 60);
+        fs.writeFileSync(__dirname + "/timerfiles/" + timerName + ".txt", localConfig.timers[timerName].message + " " + minutes + ":" + seconds.toString().padStart(2, '0'))
+        localConfig.timers[timerName].Handle = setTimeout(() =>
         {
-            Timer(timername)
+            Timer(timerName)
         }, 1000)
     }
     else
     {   // timer has finished
-        sendEndTimer(localConfig.timers[timername])
-        const index = localConfig.timers.indexOf(timername);
+        sendEndTimer(localConfig.timers[timerName])
+        const index = localConfig.timers.indexOf(timerName);
         if (index > -1)
         { // only splice array when item is found
             localConfig.timers.splice(index, 1); // 2nd parameter means remove one item only
         }
-        fs.writeFileSync(__dirname + "/timerfiles/" + timername + ".txt", " ")
+        fs.writeFileSync(__dirname + "/timerfiles/" + timerName + ".txt", " ")
     }
 }
 // ============================================================================
 //                           FUNCTION: sendTimerData
 // ============================================================================
-function sendTimerData (timedata)
+/**
+ * Sends out a trigger_TimerRunning message containing the current time left
+ * @param {object} timeData 
+ */
+function sendTimerData (timeData)
 {
     let data = findtriggerByMessageType("trigger_TimerRunning")
     data.parameters = {}
-    data.parameters.name = timedata.name
-    data.parameters.timeout = timedata.timeout
-    data.parameters.duration = timedata.duration
+    data.parameters.name = timeData.name
+    data.parameters.timeout = timeData.timeout
+    data.parameters.duration = timeData.duration
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -451,13 +467,17 @@ function sendTimerData (timedata)
 // ============================================================================
 //                           FUNCTION: sendStartTimer
 // ============================================================================
-function sendStartTimer (timedata)
+/**
+ * sends out trigger_TimerStarted when a new timer is started
+ * @param {object} timeData 
+ */
+function sendStartTimer (timeData)
 {
     let data = findtriggerByMessageType("trigger_TimerStarted")
     data.parameters = {}
-    data.parameters.name = timedata.name
-    data.parameters.duration = timedata.duration
-    data.parameters.message = timedata.message
+    data.parameters.name = timeData.name
+    data.parameters.duration = timeData.duration
+    data.parameters.message = timeData.message
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ChannelData",
@@ -474,13 +494,17 @@ function sendStartTimer (timedata)
 // ============================================================================
 //                           FUNCTION: sendEndTimer
 // ============================================================================
-function sendEndTimer (timedata)
+/**
+ * Sends out a trigger_TimerEnded when a timer ends
+ * @param {object} timeData 
+ */
+function sendEndTimer (timeData)
 {
     let data = findtriggerByMessageType("trigger_TimerEnded")
     data.parameters = {}
-    data.parameters.name = timedata.name
-    data.parameters.duration = timedata.duration
-    data.parameters.message = timedata.message
+    data.parameters.name = timeData.name
+    data.parameters.duration = timeData.duration
+    data.parameters.message = timeData.message
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -498,6 +522,11 @@ function sendEndTimer (timedata)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds a trigger by name
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
@@ -511,5 +540,5 @@ function findtriggerByMessageType (messagetype)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 

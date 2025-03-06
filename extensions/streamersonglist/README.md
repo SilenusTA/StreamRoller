@@ -7,37 +7,34 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
- # Discord Chat
+# StreamerSonglist
 Contents
-- [Discord Chat](#discord-chat)
-- [Setup](#setup)
-  - [Outgoing channel : "DISCORD\_CHAT"](#outgoing-channel--discord_chat)
-  - [Authorization fields](#authorization-fields)
+- [StreamerSonglist](#streamersonglist)
+  - [Outgoing channel : "STREAMERSONGLIST\_CHANNEL"](#outgoing-channel--streamersonglist_channel)
+  - [Description](#description)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-# Setup
-
-## Outgoing channel : "DISCORD_CHAT"
-## Authorization fields
-- Name: DISCORD_TOKEN 
-- Value: discord bot token
-
+## Outgoing channel : "STREAMERSONGLIST_CHANNEL"
+## Description
+Handles song request queues from the [StreamerSonglist](http://streamersonglist.com/) website. Shows queue, add/remove/played new songs etc
 ## Triggers/Actions
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+Table last updated: *Wed, 05 Mar 2025 02:48:57 GMT*
 
 ### Triggers
 
 | name | trigger | description |
 | --- | --- | --- |
-| DiscordMessageRecieved | trigger_DiscordMessageReceived | A message was posted to a discord chat room |
+| SSLSongAddedToQueue | trigger_SongAddedToQueue | Song was added to queue |
+| SSLCurrentSongChanged | trigger_CurrentSongChange | Current song changed |
 
 ### Actions
 
 | name | trigger | description |
 | --- | --- | --- |
-| DiscordPostMessage | action_DiscordPostMessage | Post a message to a discord channel |
+| SSLAddSongToQueue | action_AddSongToQueue | Add a song to the queue |
+| SSLPlaySong | action_MarkSongAsPlayed | Mark a song as played |

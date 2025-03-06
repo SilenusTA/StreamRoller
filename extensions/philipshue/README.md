@@ -7,21 +7,18 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
- # Discord Chat
+# Philips Hue Lights
 Contents
-- [Discord Chat](#discord-chat)
-- [Setup](#setup)
-  - [Outgoing channel : "DISCORD\_CHAT"](#outgoing-channel--discord_chat)
-  - [Authorization fields](#authorization-fields)
+- [Philips Hue Lights](#philips-hue-lights)
+  - [Outgoing channel : "PHILIPSHUE\_CHANNEL"](#outgoing-channel--philipshue_channel)
+  - [Pairing](#pairing)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-# Setup
 
-## Outgoing channel : "DISCORD_CHAT"
-## Authorization fields
-- Name: DISCORD_TOKEN 
-- Value: discord bot token
+## Outgoing channel : "PHILIPSHUE_CHANNEL"
+## Pairing
+Pair the extension using the 'pair' option in the small settings dialog and press the button on the philips hue hub.
 
 ## Triggers/Actions
 
@@ -34,10 +31,9 @@ Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
 
 | name | trigger | description |
 | --- | --- | --- |
-| DiscordMessageRecieved | trigger_DiscordMessageReceived | A message was posted to a discord chat room |
 
 ### Actions
 
 | name | trigger | description |
 | --- | --- | --- |
-| DiscordPostMessage | action_DiscordPostMessage | Post a message to a discord channel |
+| PhilipsHueActivateScene | action_ActivateScene | Activates a given scene in the Philips Hue hub |

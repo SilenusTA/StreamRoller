@@ -64,25 +64,12 @@ The Timers has the following features implemented in it
 
 ## Triggers/Actions
 
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 03:43:17 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| TimerStart | trigger_TimerStarted | A timer was started |
-| TimerEnd | trigger_TimerEnded | A timer has finished |
-| TimerRunning | trigger_TimerRunning | A timer is running |
-
+ReplaceTAGForTriggers
 
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| TimerStart | action_TimerStart | Start/Restart a countdown timer, duration in seconds |
-| TimerStop | action_TimerStop | Stop a running timer |
-
+ReplaceTAGForActions

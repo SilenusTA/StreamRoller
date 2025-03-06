@@ -7,32 +7,23 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
-# RandomFact
+# StreamerSonglist
 Contents
-- [RandomFact](#randomfact)
-  - [Outgoing channel : "RANDOMFACT\_CHANNEL"](#outgoing-channel--randomfact_channel)
+- [StreamerSonglist](#streamersonglist)
+  - [Outgoing channel : "STREAMERSONGLIST\_CHANNEL"](#outgoing-channel--streamersonglist_channel)
   - [Description](#description)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "RANDOMFACT_CHANNEL"
+## Outgoing channel : "STREAMERSONGLIST_CHANNEL"
 ## Description
-Request a random fact and the result will be posted back.
+Handles song request queues from the [StreamerSonglist](http://streamersonglist.com/) website. Shows queue, add/remove/played new songs etc
 ## Triggers/Actions
-
-
-Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
-
-Table last updated: *Wed, 05 Mar 2025 02:21:47 GMT*
+ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactPoster | trigger_RandomFact | An interesting or amusing random fact was received |
-
+ReplaceTAGForTriggers
 ### Actions
 
-| name | trigger | description |
-| --- | --- | --- |
-| RandfactRequest | action_RequestRandomFact | Requests a random fact |
+ReplaceTAGForActions
