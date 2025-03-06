@@ -42,11 +42,11 @@ jobs:
           $newVersion = "$major.$minor.$patch"
           echo "New version: $newVersion"
           echo "NEW_VERSION=$newVersion" >> $env:GITHUB_ENV
-          echo ${{ env.NEW_VERSION }}
-          echo ${{ env.VERSION_TAG }}
+          echo $env.NEW_VERSION
+          echo $env.VERSION_TAG
         shell: pwsh
 
       - name: Save New Version
         run: |
-          echo "${{ env.NEW_VERSION }}"
+          echo env.NEW_VERSION
         shell: pwsh
