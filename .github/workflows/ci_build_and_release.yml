@@ -6,9 +6,9 @@ on:
   push:
     tags:
       - "ci*.*.*"
-env:
+#env:
 #MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
+#VERSION_TAG: ${{ github.GITHUB_REF_NAME }}
 jobs:
   creating_readmes:
     runs-on: windows-latest
@@ -34,7 +34,7 @@ jobs:
       - name: Increment Patch Version
         id: increment_version
         run: |
-          $version = "${{ env.VERSION }}"
+          $version = "${{ github.GITHUB_REF_NAME }}"
           $parts = $version -split "\."
           $major = $parts[0]
           $minor = $parts[1]
