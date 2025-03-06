@@ -1,0 +1,17 @@
+C:\repos\StreamRoller\docs\apidocs/../../extensions/autopilot/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/chatbot/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/discordchat/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/msfs2020/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/obs/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/philipshue/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/quizbot/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/randomfact/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/streamersonglist/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/streamlabs_api/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/sysinfo/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/timers/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/twitch/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/twitchchat/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/twitter/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/users/README.md
+C:\repos\StreamRoller\docs\apidocs/../../extensions/youtube/README.md
