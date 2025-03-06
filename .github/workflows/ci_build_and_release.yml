@@ -49,7 +49,7 @@ jobs:
           git config --global user.name "SilenusTA"
           foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
-          git push
+          git push origin
       - name: Pushing tag to repo
         run: |
           echo "Pushing TAG ${{ steps.increment_version.outputs.NEW_VERSION }}"
