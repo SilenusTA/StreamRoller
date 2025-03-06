@@ -14,10 +14,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: npm install
+        run: npm install
+      - name: note time to check it was built later
+        run: cat extensions/chatbot/README.md
       - name: running node readmebuilder.mjs
         run: |
-          npm install
           cd docs/apidocs
           node readmebuilder.mjs
-          echo checking results
-          echo ../../extensions/chatbot/README.md
+      - name: check timestamp for update
+        run: |
+          cat checking results
+          pwd
+          cat ../../extensions/chatbot/README.md
