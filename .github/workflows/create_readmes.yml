@@ -25,8 +25,8 @@ jobs:
         run: |
           dir
           more extensions\users\README.md
-            - name: adding files to git
-              run: |
-                for /F "tokens=*" %a in (filelist.json) do git add %a
-                git commit -m "autodoc readme update"
-                git push
+      - name: adding files to git
+        run: |
+          for /F "tokens=*" %a in (filelist.json) do git add %a
+          git commit -m "autodoc readme update"
+          git push
