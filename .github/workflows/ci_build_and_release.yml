@@ -37,7 +37,6 @@ jobs:
         run: |
           $version = ${{ env.VERSION_TAG }}
           echo VERSION_TAG is $env.VERSION_TAG
-          echo version is $version
           $parts = $version -split "\."
           $major = $parts[0]
           $minor = $parts[1]
