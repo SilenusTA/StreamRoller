@@ -9,8 +9,8 @@ odg/
 *.env
 tmp/
 php/
-README.md
-apidocs/public/
+**/README.md
+**/docs/apidocs/public/**
 test-ext/
 credentialstore/
 configstore/
