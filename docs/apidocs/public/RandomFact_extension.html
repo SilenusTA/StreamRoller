@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: DiscordChat</title>
+    <title>JSDoc: RandomFact</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -133,7 +133,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">DiscordChat</h1>
+    <h1 class="page-title">RandomFact</h1>
 
     
 
@@ -143,109 +143,75 @@
 
 <section>
     <article>    
-        <h1>Discord Chat</h1>
+        <!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+<h1>RandomFact</h1>
 <p>Contents</p>
 <ul>
-<li><a href="#discord-chat">Discord Chat</a></li>
-<li><a href="#setup">Setup</a>
+<li><a href="#randomfact">RandomFact</a>
 <ul>
-<li><a href="#outgoing-channel--discord_chat">Outgoing channel : &quot;DISCORD_CHAT&quot;</a></li>
-<li><a href="#authorization-fields">Authorization fields</a>
+<li><a href="#outgoing-channel--randomfact_channel">Outgoing channel : &quot;RANDOMFACT_CHANNEL&quot;</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#triggersactions">Triggers/Actions</a>
 <ul>
-<li><a href="#field-1">Field 1</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#about">About</a>
-<ul>
-<li><a href="#features">Features</a>
-<ul>
-<li><a href="#channel-messages">Channel messages</a></li>
-<li><a href="#requests">Requests</a></li>
-</ul>
-</li>
-<li><a href="#discord-credentials">Discord credentials</a></li>
-<li><a href="#future-ideas">Future ideas?!?</a></li>
-</ul>
-</li>
-</ul>
-<h1>Setup</h1>
-<h2>Outgoing channel : &quot;DISCORD_CHAT&quot;</h2>
-<h2>Authorization fields</h2>
-<h4>Field 1</h4>
-<ul>
-<li>Name: DISCORD_TOKEN</li>
-<li>Value: bot token</li>
-</ul>
-<h1>About</h1>
-<h2>Features</h2>
-<ul>
-<li>Send alerts to discord. This can be configured in the alerts modal. Channel to use and which alerts to send are currently available</li>
-</ul>
-<h3>Channel messages</h3>
-<p>All messages follow the standard server message with with the message data within the data section.
-These will be broadcast on the outgoing channel</p>
-<ul>
-<li>Discord chat messages - from the assigned channel (can be set in the admind card on the admin page)</li>
-</ul>
-<h3>Requests</h3>
-<ul>
-<li>none</li>
-</ul>
-<p>The discordchat extension currently provides the following features</p>
-<ul>
-<li>Creates a 'DISCORD_CHAT' channel for other extension to consume mesages from</li>
-<li>Reads messages from a discord channel (set in the settings) and sends them out on the 'DISCORD_CHAT' channel with the following format<pre class="prettyprint source"><code>{
-    type: &quot;ChannelData&quot;,
-    from: &quot;discordchat&quot;,
-    {
-        &quot;DiscordModChat&quot;,
-        &quot;discordchat&quot;,
-        {
-          name: &lt;message author>,
-          message: &lt;message sent>,
-        },
-        &quot;DISCORD_CHAT&quot;
-    },
-    dest_channel: &quot;DISCORD_CHAT&quot;,
-}
-</code></pre>
-</li>
-<li>Listents to 'STREAMLABS_ALERT' channel and posts certain events on the discord channel set in the settings</li>
-<li>Discord Channels
-<ul>
-<li>There are two channels the extension utilises.
-<ul>
-<li>mod messages channel - used to read messages and output on our &quot;DISCORD_CHAT' channel for other extension to use</li>
-<li>alerts channel - used to post alerts to</li>
-</ul>
-</li>
-<li>These channel names are defined in the settings files and can be updated buy the provided settings widget small code</li>
-</ul>
-</li>
-<li>SettingsWidgetSmall.
-<ul>
-<li>Provide an settings widget small to the admin page to allow the user to set the following values
-<ul>
-<li>streamlabs alerts to log</li>
-<li>channelname for streamlabs alerts to be post on (on discord)</li>
-<li>channelname to read on discord for message we will post out on our 'DISCORD_CHAT' channel</li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
-<h2>Discord credentials</h2>
-<p>Currnetly the extension reads the environment variable &quot;DISCORD_TOKEN&quot; to be able to connect to the discord needed. You will need to provide a token in your PC's environment variable to use this addon</p>
-<h2>Future ideas?!?</h2>
-<ul>
-<li>send a chat message to discord. This would allow a viewer (using a command) to send a message to a discord channel. Useful for reminders, saving the viewers from having to switch to discord to remind me of things.</li>
-</ul>
+<h2>Outgoing channel : &quot;RANDOMFACT_CHANNEL&quot;</h2>
+<h2>Description</h2>
+<p>Request a random fact and the result will be posted back.</p>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RandfactPoster</td>
+<td>trigger_RandomFact</td>
+<td>An interesting or amusing random fact was received</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RandfactRequest</td>
+<td>action_RequestRandomFact</td>
+<td>Requests a random fact</td>
+</tr>
+</tbody>
+</table>
     </article>
 </section>
-<section><header><h2>"DiscordChat" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Send received discord chat messages. Useful for mod messages during stream<br>as these can be displayed below chat on the liveportal<br>This is useful when you want mod messages not seen by chat.Some other text for extensions</div>
+<section><header><h2>"RandomFact" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Supplies random facts</div>
 
 
 
@@ -285,8 +251,8 @@ These will be broadcast on the outgoing channel</p>
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line36">line 36</a>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line22">line 22</a>
                 </li>
             </ul>
         </dd>
@@ -374,340 +340,8 @@ These will be broadcast on the outgoing channel</p>
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line570">line 570</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="SendCredentialsModal">
-    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send our CredentialsModal to whoever requested it
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>extensionname</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line522">line 522</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="SendSettingsWidgetLarge">
-    SendSettingsWidgetLarge<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send our SettingsWidgetSmall to whoever requested it
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>extensionname</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line473">line 473</a>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line394">line 394</a>
                 </li>
             </ul>
         </dd>
@@ -872,8 +506,8 @@ These will be broadcast on the outgoing channel</p>
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line426">line 426</a>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line269">line 269</a>
                 </li>
             </ul>
         </dd>
@@ -915,8 +549,8 @@ These will be broadcast on the outgoing channel</p>
 
 
 <h4 class="name"
-    id="initialise">
-    initialise<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="findtriggerByMessageType">
+    findtriggerByMessageType<span class="signature">(messagetype)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -929,7 +563,183 @@ These will be broadcast on the outgoing channel</p>
 
 
 <div class="description">
-    mandatory function so that the backend can start us up
+    Find a trigger via it's name
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>messagetype</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line410">line 410</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    trigger
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="heartBeatCallback">
+    heartBeatCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends heartbeat messages so other extensions can monitor status
 </div>
 
 
@@ -981,8 +791,8 @@ These will be broadcast on the outgoing channel</p>
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line136">line 136</a>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line425">line 425</a>
                 </li>
             </ul>
         </dd>
@@ -1024,8 +834,8 @@ These will be broadcast on the outgoing channel</p>
 
 
 <h4 class="name"
-    id="sendChatBuffer">
-    sendChatBuffer<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -1038,7 +848,7 @@ These will be broadcast on the outgoing channel</p>
 
 
 <div class="description">
-    Send our chat buffer to the extension
+    Starts the extension using the given data.
 </div>
 
 
@@ -1076,7 +886,429 @@ These will be broadcast on the outgoing channel</p>
 
         <tr>
             
-            <td class="name"><code>toExtension</code></td>
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line107">line 107</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterConnect">
+    onDataCenterConnect<span class="signature">(socket)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Called when websocket connects
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>socket</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line137">line 137</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterDisconnect">
+    onDataCenterDisconnect<span class="signature">(reason)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Disconnection message sent from the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>reason</code></td>
             
 
             <td class="type">
@@ -1147,8 +1379,340 @@ These will be broadcast on the outgoing channel</p>
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_discordchat_discordchat.js.html">extensions/discordchat/discordchat.js</a>,
-                    <a href="extensions_discordchat_discordchat.js.html#line401">line 401</a>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line126">line 126</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterMessage">
+    onDataCenterMessage<span class="signature">(server_packet)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Called when we receive a websocket message
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>server_packet</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line156">line 156</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendRandomFact">
+    sendRandomFact<span class="signature">(from)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends a random fact to the extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>from</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
+                    <a href="extensions_randomfact_randomfact.js.html#line316">line 316</a>
                 </li>
             </ul>
         </dd>
@@ -1183,13 +1747,13 @@ These will be broadcast on the outgoing channel</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>DiscordChat</h3><ul><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="DiscordChat_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="DiscordChat_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="DiscordChat_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="DiscordChat_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="DiscordChat_extension.html#initialise">initialise</a></li><li><a href="DiscordChat_extension.html#sendChatBuffer">sendChatBuffer</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>RandomFact</h3><ul><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="RandomFact_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="RandomFact_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="RandomFact_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="RandomFact_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="RandomFact_extension.html#initialise">initialise</a></li><li><a href="RandomFact_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="RandomFact_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="RandomFact_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="RandomFact_extension.html#sendRandomFact">sendRandomFact</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:49:38 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

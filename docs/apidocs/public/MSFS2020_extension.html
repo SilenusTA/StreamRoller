@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: TwitchChat</title>
+    <title>JSDoc: MSFS2020</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -133,7 +133,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">TwitchChat</h1>
+    <h1 class="page-title">MSFS2020</h1>
 
     
 
@@ -152,25 +152,13 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
-<h1>Twitch Chat</h1>
+<h1>MSFS2020</h1>
 <p>Contents</p>
 <ul>
-<li><a href="#twitch-chat">Twitch Chat</a></li>
-<li><a href="#setup">Setup</a>
+<li><a href="#msfs2020">MSFS2020</a>
 <ul>
-<li><a href="#outgoing-channel--twitch_chat">Outgoing channel : &quot;TWITCH_CHAT&quot;</a></li>
-<li><a href="#authorization-fields">Authorization fields</a>
-<ul>
-<li><a href="#bot-field-1">(BOT) Field 1</a></li>
-<li><a href="#bot-field-2">(BOT) Field 2</a></li>
-<li><a href="#user-field-1">(USER) Field 1</a></li>
-<li><a href="#user-field-2">(USER) Field 2</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#about">About</a>
-<ul>
+<li><a href="#outgoing-channel--msfs2020_channel">Outgoing channel : &quot;MSFS2020_CHANNEL&quot;</a></li>
+<li><a href="#description">Description</a></li>
 <li><a href="#triggersactions">Triggers/Actions</a>
 <ul>
 <li><a href="#triggers">Triggers</a></li>
@@ -180,33 +168,18 @@ This was the only way I could find to autoupdate the triggers and actions lists
 </ul>
 </li>
 </ul>
-<h1>Setup</h1>
-<h2>Outgoing channel : &quot;TWITCH_CHAT&quot;</h2>
-<h2>Authorization fields</h2>
-<p>There are two sets of credentials needed. One for the user and one for the bot. Future versions will add the ability for multiple users and bots</p>
-<h3>(BOT) Field 1</h3>
-<ul>
-<li>Name: twitchchatbot</li>
-<li>Value: 'botname' ie myChatBot</li>
-</ul>
-<h3>(BOT) Field 2</h3>
-<ul>
-<li>Name: twitchchatbotoauth</li>
-<li>Value: bot oauth token (including the oauth: part, ie &quot;oauth:sdfeicx345324dfsfe3242&quot;)</li>
-</ul>
-<h3>(USER) Field 1</h3>
-<ul>
-<li>Name: twitchchauser</li>
-<li>Value: 'username' ie OldDepressedGamer</li>
-</ul>
-<h3>(USER) Field 2</h3>
-<ul>
-<li>Name: twitchchatuseroauth</li>
-<li>Value: user oauth token (including the oauth: part, ie &quot;oauth:sdfeicx345324dfsfe3242&quot;)</li>
-</ul>
-<h1>About</h1>
-<p>The twitch chat extension will send out any messages sent on the channel provided in the settings (or Admin page settings box) using the username provided or defaults to the bot</p>
+<h2>Outgoing channel : &quot;MSFS2020_CHANNEL&quot;</h2>
+<h2>Description</h2>
+<p>This extension connects to Microsoft Flight Simulator using the simconnect system.
+It will allow the reading and writing of variables to the sim so that you can trigger on them or perfrom actions on them.
+ie you can change your obs settns/overlay/chat based on game variable and also setup chat commands etc to control parts of the game</p>
 <h2>Triggers/Actions</h2>
+<div style="color:red">
+<blockquote>
+<p>Note that there are thousands of options for MSFS2020. These will only appear if the game is
+running and the extension connected.</p>
+</blockquote>
+</div>
 <p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
 <p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
 <h3>Triggers</h3>
@@ -220,179 +193,9 @@ This was the only way I could find to autoupdate the triggers and actions lists
 </thead>
 <tbody>
 <tr>
-<td>TwitchChatChatMessageReceived</td>
-<td>trigger_ChatMessageReceived</td>
-<td>A chat message was received. textMessage field has name and message combined</td>
-</tr>
-<tr>
-<td>TwitchChatActionReceived</td>
-<td>trigger_ChatActionReceived</td>
-<td>A chat action was received (a /me message)</td>
-</tr>
-<tr>
-<td>TwitchChatBanReceived</td>
-<td>trigger_ChatBanReceived</td>
-<td>A chat users was banned</td>
-</tr>
-<tr>
-<td>TwitchChatMessageDeletedReceived</td>
-<td>trigger_ChatMessageDeleted</td>
-<td>A chat message was deleted</td>
-</tr>
-<tr>
-<td>TwitchChatPrimePaidUpgradeReceived</td>
-<td>trigger_ChatPrimePaidUpgrade</td>
-<td>A user paid to upgrade their prime sub</td>
-</tr>
-<tr>
-<td>TwitchChatRaidReceived</td>
-<td>trigger_ChatRaid</td>
-<td>Another streamer raided you</td>
-</tr>
-<tr>
-<td>TwitchChatRedeemReceived</td>
-<td>trigger_ChatRedeem</td>
-<td>Viewer reddemed chat points</td>
-</tr>
-<tr>
-<td>TwitchChatResubReceived</td>
-<td>trigger_ChatResub</td>
-<td>Someone Resubbed</td>
-</tr>
-<tr>
-<td>TwitchChatRitualReceived</td>
-<td>trigger_ChatRitual</td>
-<td>Ritual</td>
-</tr>
-<tr>
-<td>TwitchChatRoomstateReceived</td>
-<td>trigger_ChatRoomstate</td>
-<td>This message contains things like sub-only mode etc</td>
-</tr>
-<tr>
-<td>TwitchChatSubscriptionReceived</td>
-<td>trigger_ChatSubscription</td>
-<td>Someone Subscribed</td>
-</tr>
-<tr>
-<td>TwitchChatTimeoutReceived</td>
-<td>trigger_ChatTimeout</td>
-<td>A viewer was timedout</td>
-</tr>
-<tr>
-<td>TwitchChatSubMysteryGiftReceived</td>
-<td>trigger_ChatSubMysteryGift</td>
-<td>A viewer Gifted a sub</td>
-</tr>
-<tr>
-<td>TwitchChatAutoModReceived</td>
-<td>trigger_ChatAutoMod</td>
-<td>Automod action happened</td>
-</tr>
-<tr>
-<td>TwitchChatReconnect</td>
-<td>trigger_ChatReconnect</td>
-<td>Chat Reconnected</td>
-</tr>
-<tr>
-<td>TwitchChatAnonGiftPaidUpgradeReceived</td>
-<td>trigger_ChatAnonGiftPaidUpgrade</td>
-<td>Your guess is as good as mine on this one</td>
-</tr>
-<tr>
-<td>TwitchChatAnonSubMysteryGiftReceived</td>
-<td>trigger_ChatAnonSubMysteryGift</td>
-<td>Someone Gifted an Sub Anonymously</td>
-</tr>
-<tr>
-<td>TwitchChatAnonSubGiftReceived</td>
-<td>trigger_ChatAnonSubGift</td>
-<td>Someone Gifted an Sub</td>
-</tr>
-<tr>
-<td>TwitchChatCheerReceived</td>
-<td>trigger_ChatCheer</td>
-<td>Someone donated bits</td>
-</tr>
-<tr>
-<td>TwitchChatMod</td>
-<td>trigger_ChatMod</td>
-<td>A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is</td>
-</tr>
-<tr>
-<td>TwitchChatSubGift</td>
-<td>trigger_ChatSubGift</td>
-<td>Someone gifted a sub to another viewer</td>
-</tr>
-<tr>
-<td>TwitchChatSubscribers</td>
-<td>trigger_ChatSubscribers</td>
-<td>Subscribers</td>
-</tr>
-<tr>
-<td>TwitchChatVipss</td>
-<td>trigger_ChatVips</td>
-<td>Channel Vips</td>
-</tr>
-<tr>
-<td>TwitchChatClear</td>
-<td>trigger_ChatClear</td>
-<td>Chat was cleared</td>
-</tr>
-<tr>
-<td>TwitchChatFollowersOnly</td>
-<td>trigger_ChatFollowersOnly</td>
-<td>FollowersOnly mode was changed</td>
-</tr>
-<tr>
-<td>TwitchChatGiftPaidUpgrade</td>
-<td>trigger_ChatGiftPaidUpgrade</td>
-<td>Someone gifted a paid upgrade</td>
-</tr>
-<tr>
-<td>TwitchChatEmoteOnly</td>
-<td>trigger_ChatEmoteOnly</td>
-<td>EmoteOnly mode changed</td>
-</tr>
-<tr>
-<td>TwitchChatr9kbeta</td>
-<td>trigger_Chatr9kbeta</td>
-<td>r9kbeta mode changed</td>
-</tr>
-<tr>
-<td>TwitchChatSlowmode</td>
-<td>trigger_ChatSlowmode</td>
-<td>Slowmode mode changed</td>
-</tr>
-<tr>
-<td>TwitchChatWhisper</td>
-<td>trigger_ChatWhisper</td>
-<td>Someone Whispered you or the bot</td>
-</tr>
-<tr>
-<td>TwitchChatNotice</td>
-<td>trigger_ChatNotice</td>
-<td>You received a notice (ie about chat being in follower mode etc)</td>
-</tr>
-<tr>
-<td>TwitchChatUserNotice</td>
-<td>trigger_ChatUserNotice</td>
-<td>UserNotice received</td>
-</tr>
-<tr>
-<td>TwitchChatDisconnected</td>
-<td>trigger_ChatDisconnected</td>
-<td>Chat was Disconnected</td>
-</tr>
-<tr>
-<td>TwitchChatConnected</td>
-<td>trigger_ChatConnected</td>
-<td>Chat was connected</td>
-</tr>
-<tr>
-<td>TwitchChatJoin</td>
-<td>trigger_ChatJoin</td>
-<td>Someone Joined the chat</td>
+<td>onRequest_PLANE LATITUDE LONGITUDE</td>
+<td>trigger_onRequest_PLANE LATITUDE LONGITUDE</td>
+<td>The current lat long in one message with separate variables</td>
 </tr>
 </tbody>
 </table>
@@ -407,16 +210,16 @@ This was the only way I could find to autoupdate the triggers and actions lists
 </thead>
 <tbody>
 <tr>
-<td>TwitchChatSendChatMessage</td>
-<td>action_SendChatMessage</td>
-<td>Post a message to twitch chat (Note user is case sensitive)</td>
+<td>PLANE LATITUDE LONGITUDE_get</td>
+<td>action_PLANE LATITUDE LONGITUDE_get</td>
+<td>Get the current lat long in one message</td>
 </tr>
 </tbody>
 </table>
     </article>
 </section>
-<section><header><h2>"TwitchChat" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Access to Twitch Chat IRC for sending/receiving message and also some alerts/notifications</div>
+<section><header><h2>"MSFS2020" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Game extension to allow access to control Microsoft Flight simulator and also receive data from on of ten's of thousands of sim variables</div>
 
 
 
@@ -456,8 +259,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line22">line 22</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line29">line 29</a>
                 </li>
             </ul>
         </dd>
@@ -479,8 +282,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <h4 class="name"
-    id="SaveChatMessagesToServerScheduler">
-    SaveChatMessagesToServerScheduler<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="MSFS2020Disconnect">
+    MSFS2020Disconnect<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -493,7 +296,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <div class="description">
-    Poll timer to save the data to server to maintain a chat history over restarts
+    disconnect from the MSFS2020 interface and callbacks
 </div>
 
 
@@ -545,8 +348,174 @@ This was the only way I could find to autoupdate the triggers and actions lists
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1273">line 1273</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line916">line 916</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="MSFS2020RegisterSimvars">
+    <span class="type-signature">(async) </span>MSFS2020RegisterSimvars<span class="signature">(handle)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Registers with MSFS2020 for callbacks on simvars
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>handle</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                simconnecnt handle
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line939">line 939</a>
                 </li>
             </ul>
         </dd>
@@ -602,7 +571,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <div class="description">
-    Save our config to the server
+    Saves our config to the server
 </div>
 
 
@@ -654,8 +623,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1240">line 1240</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line645">line 645</a>
                 </li>
             </ul>
         </dd>
@@ -711,7 +680,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <div class="description">
-    Save our data to the server
+    Saves our data to the server
 </div>
 
 
@@ -763,174 +732,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1259">line 1259</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="SendCredentialsModal">
-    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send our CredentialsModal to whoever requested it
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>extensionname</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1183">line 1183</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line658">line 658</a>
                 </li>
             </ul>
         </dd>
@@ -973,7 +776,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 <h4 class="name"
     id="SendSettingsWidgetLarge">
-    SendSettingsWidgetLarge<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+    SendSettingsWidgetLarge<span class="signature">(to)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -986,7 +789,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <div class="description">
-    Send our SettingsWidgetLarge to the extension
+    Creates and sends our large settings widget html code to the given extension
 </div>
 
 
@@ -1024,7 +827,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
         <tr>
             
-            <td class="name"><code>toExtension</code></td>
+            <td class="name"><code>to</code></td>
             
 
             <td class="type">
@@ -1033,7 +836,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <span class="param-type">
-    String
+    string
 </span>
 
 
@@ -1095,8 +898,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1135">line 1135</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line494">line 494</a>
                 </li>
             </ul>
         </dd>
@@ -1139,7 +942,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 <h4 class="name"
     id="SendSettingsWidgetSmall">
-    SendSettingsWidgetSmall<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+    SendSettingsWidgetSmall<span class="signature">(to)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -1152,7 +955,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
 
 <div class="description">
-    Send our SettingsWidgetSmall to the extension
+    Parses and sends out our small settings widget to the given extension
 </div>
 
 
@@ -1190,370 +993,7 @@ This was the only way I could find to autoupdate the triggers and actions lists
 
         <tr>
             
-            <td class="name"><code>toExtension</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1088">line 1088</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="action_SendChatMessage">
-    action_SendChatMessage<span class="signature">(channel, data)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send the to twitch on the given channel or fakes a message if debug flag is on
-and sends it out as if twitch has sent us the message back from the chat trigger
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>channel</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    string
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-
-        <tr>
-            
-            <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    object
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1400">line 1400</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="chatLogin">
-    chatLogin<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Login the account provided to the IRC channel
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>account</code></td>
+            <td class="name"><code>to</code></td>
             
 
             <td class="type">
@@ -1624,8 +1064,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1591">line 1591</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line372">line 372</a>
                 </li>
             </ul>
         </dd>
@@ -1667,8 +1107,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <h4 class="name"
-    id="connectToTwitch">
-    connectToTwitch<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="addToTriggersArray">
+    addToTriggersArray<span class="signature">(name, index<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -1681,7 +1121,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Connect to the IRC chat channel of the current streamer selected in the settings using the account name given
+    Adds a simvar to our known list of names. A simvar may be an array and have an index (ie engines have an index for each engine)
+others may not have index's
 </div>
 
 
@@ -1707,7 +1148,11 @@ and sends it out as if twitch has sent us the message back from the chat trigger
             <th>Type</th>
 
             
+            <th>Attributes</th>
+            
 
+            
+            <th>Default</th>
             
 
             <th class="last">Description</th>
@@ -1719,7 +1164,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
         <tr>
             
-            <td class="name"><code>account</code></td>
+            <td class="name"><code>name</code></td>
             
 
             <td class="type">
@@ -1736,7 +1181,65 @@ and sends it out as if twitch has sent us the message back from the chat trigger
             </td>
 
             
+            <td class="attributes">
+                
 
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+                &lt;optional><br>
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+                0
+                
+            </td>
             
 
             <td class="description last">
@@ -1790,8 +1293,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1544">line 1544</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1044">line 1044</a>
                 </li>
             </ul>
         </dd>
@@ -1847,7 +1350,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Finds a trigger by messagetype
+    Finds a specific trigger from the given name
 </div>
 
 
@@ -1956,8 +1459,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1312">line 1312</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1323">line 1323</a>
                 </li>
             </ul>
         </dd>
@@ -1983,12 +1486,168 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 
-<h5>Returns:</h5>
 
 
-<div class="param-desc">
-    trigger
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="handleSettingsWidgetLargeData">
+    handleSettingsWidgetLargeData<span class="signature">(modalcode)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Handles user submitted code from our large settings widget/page
 </div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>modalcode</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line415">line 415</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2075,8 +1734,118 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line2281">line 2281</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line672">line 672</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initSimVarsandTriggers">
+    initSimVarsandTriggers<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    initialises our sim variables dynamically creates triggers and actions based on what is available.
+Note there can be thousands of possible options created here
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line724">line 724</a>
                 </li>
             </ul>
         </dd>
@@ -2331,8 +2100,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line656">line 656</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line132">line 132</a>
                 </li>
             </ul>
         </dd>
@@ -2374,8 +2143,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <h4 class="name"
-    id="joinChatChannel">
-    joinChatChannel<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="msfsapiconnect">
+    msfsapiconnect<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -2388,7 +2157,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Join the given account to the currently selected streamer IRC chat channel
+    connect to the MSFS2020 api interface
 </div>
 
 
@@ -2398,63 +2167,6 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>account</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    string
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
 
 
 
@@ -2497,8 +2209,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1499">line 1499</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line889">line 889</a>
                 </li>
             </ul>
         </dd>
@@ -2554,7 +2266,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    called on connection to the StreamRoller websocket
+    Called when server connects
 </div>
 
 
@@ -2663,8 +2375,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line697">line 697</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line166">line 166</a>
                 </li>
             </ul>
         </dd>
@@ -2720,7 +2432,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Called on websocket disconnect
+    Called when connection is lost to StreamRoller
 </div>
 
 
@@ -2829,8 +2541,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line686">line 686</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line155">line 155</a>
                 </li>
             </ul>
         </dd>
@@ -2886,7 +2598,7 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Called when we receive a message on the websocket from StreamRoller
+    Called when we receive a message from the server
 </div>
 
 
@@ -2995,8 +2707,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line723">line 723</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line190">line 190</a>
                 </li>
             </ul>
         </dd>
@@ -3038,8 +2750,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <h4 class="name"
-    id="postChatTrigger">
-    postChatTrigger<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="performAction">
+    performAction<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -3052,7 +2764,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Posts a trigger of type data.messagetype to our channel
+    An action was received to set/change a simvar or retrieve some data
+A "trigger_onRequest_(simvarname)" will be fired on a request
 </div>
 
 
@@ -3161,8 +2874,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1288">line 1288</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1226">line 1226</a>
                 </li>
             </ul>
         </dd>
@@ -3204,8 +2917,8 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <h4 class="name"
-    id="process_chat_data">
-    process_chat_data<span class="signature">(channel, tags, chatmessage)</span><span class="type-signature"></span><span class="type-signature"></span>
+    id="performActionGetLatLong">
+    performActionGetLatLong<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -3218,8 +2931,9 @@ and sends it out as if twitch has sent us the message back from the chat trigger
 
 
 <div class="description">
-    Constructs a ChatMessage type message from the given data.
-TBD needs to be moved to a trigger type message
+    Special simvar just for streamroller :D
+Creates a simvar containing both lat and long rather
+than having to create two requests actions and getting two responses back
 </div>
 
 
@@ -3257,37 +2971,7 @@ TBD needs to be moved to a trigger type message
 
         <tr>
             
-            <td class="name"><code>channel</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    string
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-
-        <tr>
-            
-            <td class="name"><code>tags</code></td>
+            <td class="name"><code>data</code></td>
             
 
             <td class="type">
@@ -3314,10 +2998,371 @@ TBD needs to be moved to a trigger type message
         </tr>
 
         
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1173">line 1173</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="pollMSFS">
+    pollMSFS<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Poll MSFS for data we are monitoring for
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1284">line 1284</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="postTriggers">
+    <span class="type-signature">(async) </span>postTriggers<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    posts a trigger out when a given symvar fires. Will also post a "changed" trigger
+if the value was previously different
+possible message types posted (NAME) is the simvar name and (INDEX) is the 
+index if an indexed simvar
+trigger_(NAME)
+trigger_(NAME):(INDEX)
+trigger_onChange_(NAME)
+trigger_onChange_(NAME):(INDEX)
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1073">line 1073</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendTriggersAndActions">
+    sendTriggersAndActions<span class="signature">(to)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends a list of our current triggers/actions ot the given extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
 
         <tr>
             
-            <td class="name"><code>chatmessage</code></td>
+            <td class="name"><code>to</code></td>
             
 
             <td class="type">
@@ -3388,678 +3433,8 @@ TBD needs to be moved to a trigger type message
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1334">line 1334</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="reconnectChat">
-    reconnectChat<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    reconnect to the IRC client
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>account</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    string
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1445">line 1445</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="sanitiseHTML">
-    sanitiseHTML<span class="signature">(string)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    This will replace the strings chars with escape versions so it will be shown rather than parsed in html
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>string</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    string
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line2330">line 2330</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-
-<div class="param-desc">
-    sanitised string
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="sendAccountNames">
-    sendAccountNames<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>toExtension</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1051">line 1051</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="sendChatBuffer">
-    sendChatBuffer<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send our chat buffer to the extension
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>toExtension</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line1027">line 1027</a>
+                    <a href="extensions_msfs2020_msfs2020.js.html">extensions/msfs2020/msfs2020.js</a>,
+                    <a href="extensions_msfs2020_msfs2020.js.html#line1298">line 1298</a>
                 </li>
             </ul>
         </dd>
@@ -4094,7 +3469,7 @@ TBD needs to be moved to a trigger type message
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>TwitchChat</h3><ul><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="TwitchChat_extension.html#SaveChatMessagesToServerScheduler">SaveChatMessagesToServerScheduler</a></li><li><a href="TwitchChat_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="TwitchChat_extension.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="TwitchChat_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="TwitchChat_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="TwitchChat_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="TwitchChat_extension.html#action_SendChatMessage">action_SendChatMessage</a></li><li><a href="TwitchChat_extension.html#chatLogin">chatLogin</a></li><li><a href="TwitchChat_extension.html#connectToTwitch">connectToTwitch</a></li><li><a href="TwitchChat_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="TwitchChat_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="TwitchChat_extension.html#initialise">initialise</a></li><li><a href="TwitchChat_extension.html#joinChatChannel">joinChatChannel</a></li><li><a href="TwitchChat_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="TwitchChat_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="TwitchChat_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="TwitchChat_extension.html#postChatTrigger">postChatTrigger</a></li><li><a href="TwitchChat_extension.html#process_chat_data">process_chat_data</a></li><li><a href="TwitchChat_extension.html#reconnectChat">reconnectChat</a></li><li><a href="TwitchChat_extension.html#sanitiseHTML">sanitiseHTML</a></li><li><a href="TwitchChat_extension.html#sendAccountNames">sendAccountNames</a></li><li><a href="TwitchChat_extension.html#sendChatBuffer">sendChatBuffer</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>MSFS2020</h3><ul><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="MSFS2020_extension.html#MSFS2020Disconnect">MSFS2020Disconnect</a></li><li><a href="MSFS2020_extension.html#MSFS2020RegisterSimvars">MSFS2020RegisterSimvars</a></li><li><a href="MSFS2020_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="MSFS2020_extension.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="MSFS2020_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="MSFS2020_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="MSFS2020_extension.html#addToTriggersArray">addToTriggersArray</a></li><li><a href="MSFS2020_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="MSFS2020_extension.html#handleSettingsWidgetLargeData">handleSettingsWidgetLargeData</a></li><li><a href="MSFS2020_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="MSFS2020_extension.html#initSimVarsandTriggers">initSimVarsandTriggers</a></li><li><a href="MSFS2020_extension.html#initialise">initialise</a></li><li><a href="MSFS2020_extension.html#msfsapiconnect">msfsapiconnect</a></li><li><a href="MSFS2020_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="MSFS2020_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="MSFS2020_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="MSFS2020_extension.html#performAction">performAction</a></li><li><a href="MSFS2020_extension.html#performActionGetLatLong">performActionGetLatLong</a></li><li><a href="MSFS2020_extension.html#pollMSFS">pollMSFS</a></li><li><a href="MSFS2020_extension.html#postTriggers">postTriggers</a></li><li><a href="MSFS2020_extension.html#sendTriggersAndActions">sendTriggersAndActions</a></li></ul>
 </nav>
 
 <br class="clear">

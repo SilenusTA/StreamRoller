@@ -172,7 +172,9 @@
 // ============================================================================
 /**
  * @extension OBS
- * Connects to Open Broadcasting Software to allow control/events to be processed
+ * Connects to Open Broadcasting Software to allow control/events to be processed.
+ * &lt;span style="color:red">Note needs triggers and actions updated as a lot of messages are currently
+ * not in the trigger/action list&lt;/span>
  */
 // ============================================================================
 //                           IMPORTS/VARIABLES
@@ -187,7 +189,6 @@ import { fileURLToPath } from "url";
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let streamlabsChannelConnectionAttempts = 0;
 // local config
 const localConfig = {
     OUR_CHANNEL: "OBS_CHANNEL",
@@ -234,11 +235,10 @@ const default_serverConfig = {
     cred2value: "4444",
     cred3name: "obspass",
     cred3value: "",
-
 };
 let localCredentials = {};
 let serverConfig = structuredClone(default_serverConfig);
-/* other optionsto look to add, not the complete list available (from types.d.ts )
+/* other options to look to add, not the complete list available (from types.d.ts )
 
 SetVideoSettings
 SetStreamServiceSettings
@@ -404,6 +404,9 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * Called on connection to the StreamRoller server
+ */
 function onDataCenterConnect ()
 {
     // Request our config from the server
@@ -613,18 +616,15 @@ function onDataCenterMessage (server_packet)
         }
         else if (server_packet.type === "UnknownChannel")
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel", server_packet);
-            if (streamlabsChannelConnectionAttempts++ &lt; localConfig.channelConnectionAttempts)
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage UnknownChannel,scheduling rejoin", server_packet);
+            setTimeout(() =>
             {
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-                setTimeout(() =>
-                {
-                    sr_api.sendMessage(localConfig.DataCenterSocket,
-                        sr_api.ServerPacket(
-                            "JoinChannel", serverConfig.extensionname, server_packet.data
-                        ));
-                }, 5000);
-            }
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
+                    ));
+            }, 5000);
+
         }    // we have received data from a channel we are listening to
         else if (server_packet.type === "ChannelData")
         {
@@ -804,7 +804,7 @@ function SendCredentialsModal (extensionname)
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
 /**
- * savel config file to the server
+ * save config file to the server
  */
 function SaveConfigToServer ()
 {
@@ -814,7 +814,6 @@ function SaveConfigToServer ()
         serverConfig.extensionname,
         serverConfig))
 }
-
 // ############################################################################
 // ============================================================================
 //                             OBS websockets
@@ -998,7 +997,7 @@ Stats message
 // ============================================================================
 /**
  * process a new list of scenes from OBS
- * @param {Scenes} scenes 
+ * @param {object} scenes 
  */
 function processOBSSceneList (scenes)
 {
@@ -1039,6 +1038,10 @@ function processOBSSceneList (scenes)
 // ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
+/**
+ * Changes OBS to the given scene
+ * @param {string} scene 
+ */
 function changeScene (scene)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".changeScene", " request come in. changing to ", scene);
@@ -1048,6 +1051,10 @@ function changeScene (scene)
 // ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
+/**
+ * Enables/unhides a source in OBS
+ * @param {object} sourcedata 
+ */
 function enableSource (sourcedata)
 {
     localConfig.obsConnection.call("GetSceneItemId", { sceneName: sourcedata.sceneName, sourceName: sourcedata.sourceName })
@@ -1151,6 +1158,10 @@ localConfig.obsConnection.on("error", err =>
 // ============================================================================
 //                           FUNCTION: onStreamStatus
 // ============================================================================
+/**
+ * Callback from OBS on the status of the stream
+ * @param {object} data 
+ */
 function onStreamStatus (data)
 {
     // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
@@ -1165,6 +1176,10 @@ function onStreamStatus (data)
 // ============================================================================
 //                           FUNCTION: sendStreamStats
 // ============================================================================
+/**
+ * Sends out an OBSStats message on our channel containing the status of OBS
+ * @param {object} data 
+ */
 function sendStreamStats (data)
 {
     // monitor this so we can check if we have connection for the heartbeat(ie are we still receiving data)
@@ -1186,6 +1201,10 @@ function sendStreamStats (data)
 // ============================================================================
 //                           FUNCTION: onScenesListChanged
 // ============================================================================
+/**
+ * Callback from OBS that scenes have changed
+ * @param {object} data 
+ */
 function onScenesListChanged (data)
 {
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onScenesListChanged", "OBS scenes list has changed");
@@ -1268,7 +1287,7 @@ function StreamStarted ()
 //                           FUNCTION: onOBSScenes
 // ============================================================================
 /**
- * Called with a list of scene (triggered by the get scenes call)
+ * Sends out a scenes list message ScenesList (triggered by the get scenes call)
  */
 function sendScenes ()
 {
@@ -1291,6 +1310,11 @@ function sendScenes ()
 // ============================================================================
 //                           FUNCTION: ToggleMute
 // ============================================================================
+/**
+ * Toggles OBS mute using a scene containing the microphone that is used in all
+ * other scenes needing the mic in them
+ * @param {object} data 
+ */
 function ToggleMute (data)
 {
     if (data.enabled == "true" || data.enabled == "false")
@@ -1311,6 +1335,10 @@ function ToggleMute (data)
 // ============================================================================
 //                           FUNCTION: SourceMuteStateChanged
 // ============================================================================
+/**
+ * Callback from OBS when the mute option changes
+ * @param {object} data 
+ */
 function onSourceMuteStateChanged (data)
 {
     logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS 'SourceMuteStateChanged' received", data)
@@ -1334,6 +1362,9 @@ function onSourceMuteStateChanged (data)
 // ============================================================================
 //                           FUNCTION: getFilters
 // ============================================================================
+/**
+ * Get all the filters for scenes 
+ */
 async function getFilters ()
 {
     if (typeof localConfig.obsConnection.socket != "undefined" &amp;&amp; localConfig.obsConnection.socket._socket == null)
@@ -1397,6 +1428,10 @@ async function getFilters ()
 // ============================================================================
 //                           FUNCTION: activateFilter
 // ============================================================================
+/**
+ * Hide/unhide a filter on an obs sourceName
+ * @param {object} data  {sourceName, filterName, filterEnabled}
+ */
 function activateFilter (data)
 {
     /*if (data.filterEnabled === "")
@@ -1420,6 +1455,14 @@ function activateFilter (data)
 // ============================================================================
 //                           FUNCTION: setSceneItemTransform
 // ============================================================================
+/**
+ * Change the transform parameters for a given scene
+ * @param {object} requestData {
+    alignment, boundsAlignment, boundsHeight, 
+    boundsType, boundsWidth, cropBottom, cropLeft, cropRight, cropTop, 
+    height, positionX, positionY, rotation, scaleX, scaleY, sourceHeight, 
+    sourceWidth, width}
+ */
 function setSceneItemTransform (requestData)
 {
     /* example
@@ -1495,6 +1538,10 @@ function setSceneItemTransform (requestData)
 //                           FUNCTION: onFilterChanged
 //                      update our filter list and send out our scenes list
 // ============================================================================
+/**
+ * Callback from OBS that a filter has changed
+ * @param {object} data 
+ */
 function onFilterChanged (data)
 {
     // find the filter
@@ -1546,6 +1593,9 @@ function onFilterChanged (data)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages allowing other extensions to monitor our status
+ */
 function heartBeatCallback ()
 {
     try
@@ -1634,11 +1684,17 @@ function findSceneData (sceneName)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * Finds the given trigger object by name
+ * @param {string} messagetype 
+ * @returns trigger object found or null
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i &lt; triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase()) return triggersandactions.triggers[i];
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
@@ -1647,7 +1703,7 @@ function findtriggerByMessageType (messagetype)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
 </code></pre>
         </article>
@@ -1655,13 +1711,13 @@ export { initialise };
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckTriggers">CheckTriggers</a></li><li><a href="global.html#ConnectToDataCenter">ConnectToDataCenter</a></li><li><a href="global.html#ProcessReceivedTrigger">ProcessReceivedTrigger</a></li><li><a href="global.html#ProcessUserPairings">ProcessUserPairings</a></li><li><a href="global.html#RequestChList">RequestChList</a></li><li><a href="global.html#RequestExtList">RequestExtList</a></li><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="global.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="global.html#SendMacroImages">SendMacroImages</a></li><li><a href="global.html#SendMacros">SendMacros</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SendUserPairings">SendUserPairings</a></li><li><a href="global.html#TriggerAction">TriggerAction</a></li><li><a href="global.html#actionAction_SetGroupPauseState">actionAction_SetGroupPauseState</a></li><li><a href="global.html#addGameToHistoryFromGameName">addGameToHistoryFromGameName</a></li><li><a href="global.html#addMod">addMod</a></li><li><a href="global.html#addToLogfile">addToLogfile</a></li><li><a href="global.html#addTriggerEntries">addTriggerEntries</a></li><li><a href="global.html#addVIP">addVIP</a></li><li><a href="global.html#banUser">banUser</a></li><li><a href="global.html#broadcastMessage">broadcastMessage</a></li><li><a href="global.html#cancelPrediction">cancelPrediction</a></li><li><a href="global.html#cheerEmotes">cheerEmotes</a></li><li><a href="global.html#connectTwitch">connectTwitch</a></li><li><a href="global.html#containsBadChars">containsBadChars</a></li><li><a href="global.html#createBlock">createBlock</a></li><li><a href="global.html#createChannel">createChannel</a></li><li><a href="global.html#createClip">createClip</a></li><li><a href="global.html#createDropdownWithSearchableHistory">createDropdownWithSearchableHistory</a></li><li><a href="global.html#createPoll">createPoll</a></li><li><a href="global.html#createPredictionString">createPredictionString</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#deleteBlock">deleteBlock</a></li><li><a href="global.html#deleteConfig">deleteConfig</a></li><li><a href="global.html#deleteCredentials">deleteCredentials</a></li><li><a href="global.html#disconnectTwitch">disconnectTwitch</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#endPoll">endPoll</a></li><li><a href="global.html#err">err</a></li><li><a href="global.html#errorMessage">errorMessage</a></li><li><a href="global.html#extra">extra</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#followedChannels">followedChannels</a></li><li><a href="global.html#followerCount">followerCount</a></li><li><a href="global.html#forwardMessage">forwardMessage</a></li><li><a href="global.html#getAllGameCategories">getAllGameCategories</a></li><li><a href="global.html#getBlockedUsers">getBlockedUsers</a></li><li><a href="global.html#getChannelEditors">getChannelEditors</a></li><li><a href="global.html#getChannelVIPs">getChannelVIPs</a></li><li><a href="global.html#getClipById">getClipById</a></li><li><a href="global.html#getClipsByBroadcaster">getClipsByBroadcaster</a></li><li><a href="global.html#getClipsByGame">getClipsByGame</a></li><li><a href="global.html#getGameFromId">getGameFromId</a></li><li><a href="global.html#getLoggingLevel">getLoggingLevel</a></li><li><a href="global.html#getPoll">getPoll</a></li><li><a href="global.html#getPolls">getPolls</a></li><li><a href="global.html#getPrediction">getPrediction</a></li><li><a href="global.html#getPredictions">getPredictions</a></li><li><a href="global.html#getTextboxWithHistoryHTML">getTextboxWithHistoryHTML</a></li><li><a href="global.html#getUser">getUser</a></li><li><a href="global.html#handleSettingsWidgetSmallData">handleSettingsWidgetSmallData</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#info">info</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initTriggersAndActions">initTriggersAndActions</a></li><li><a href="global.html#joinChannel">joinChannel</a></li><li><a href="global.html#leaderboard">leaderboard</a></li><li><a href="global.html#leaveChannel">leaveChannel</a></li><li><a href="global.html#loadConfig">loadConfig</a></li><li><a href="global.html#loadCredentials">loadCredentials</a></li><li><a href="global.html#loadSoftwareVersion">loadSoftwareVersion</a></li><li><a href="global.html#lockPrediction">lockPrediction</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#onChannelBan">onChannelBan</a></li><li><a href="global.html#onChannelCharityCampaignProgress">onChannelCharityCampaignProgress</a></li><li><a href="global.html#onChannelCharityCampaignStart">onChannelCharityCampaignStart</a></li><li><a href="global.html#onChannelCharityCampaignStop">onChannelCharityCampaignStop</a></li><li><a href="global.html#onChannelCharityDonation">onChannelCharityDonation</a></li><li><a href="global.html#onChannelCheer">onChannelCheer</a></li><li><a href="global.html#onChannelFollow">onChannelFollow</a></li><li><a href="global.html#onChannelGoalBegin">onChannelGoalBegin</a></li><li><a href="global.html#onChannelGoalEnd">onChannelGoalEnd</a></li><li><a href="global.html#onChannelGoalProgress">onChannelGoalProgress</a></li><li><a href="global.html#onChannelHypeTrainBegin">onChannelHypeTrainBegin</a></li><li><a href="global.html#onChannelHypeTrainEnd">onChannelHypeTrainEnd</a></li><li><a href="global.html#onChannelHypeTrainProgress">onChannelHypeTrainProgress</a></li><li><a href="global.html#onChannelModeratorAdd">onChannelModeratorAdd</a></li><li><a href="global.html#onChannelModeratorRemove">onChannelModeratorRemove</a></li><li><a href="global.html#onChannelPollBegin">onChannelPollBegin</a></li><li><a href="global.html#onChannelPollEnd">onChannelPollEnd</a></li><li><a href="global.html#onChannelPollProgress">onChannelPollProgress</a></li><li><a href="global.html#onChannelPredictionBegin">onChannelPredictionBegin</a></li><li><a href="global.html#onChannelPredictionEnd">onChannelPredictionEnd</a></li><li><a href="global.html#onChannelPredictionLock">onChannelPredictionLock</a></li><li><a href="global.html#onChannelPredictionProgress">onChannelPredictionProgress</a></li><li><a href="global.html#onChannelRaidFrom">onChannelRaidFrom</a></li><li><a href="global.html#onChannelRaidTo">onChannelRaidTo</a></li><li><a href="global.html#onChannelRedemptionAdd">onChannelRedemptionAdd</a></li><li><a href="global.html#onChannelRedemptionUpdate">onChannelRedemptionUpdate</a></li><li><a href="global.html#onChannelRewardAdd">onChannelRewardAdd</a></li><li><a href="global.html#onChannelRewardRemove">onChannelRewardRemove</a></li><li><a href="global.html#onChannelRewardUpdate">onChannelRewardUpdate</a></li><li><a href="global.html#onChannelShieldModeBegin">onChannelShieldModeBegin</a></li><li><a href="global.html#onChannelShieldModeEnd">onChannelShieldModeEnd</a></li><li><a href="global.html#onChannelShoutoutCreate">onChannelShoutoutCreate</a></li><li><a href="global.html#onChannelShoutoutReceive">onChannelShoutoutReceive</a></li><li><a href="global.html#onChannelSubscription">onChannelSubscription</a></li><li><a href="global.html#onChannelSubscriptionEnd">onChannelSubscriptionEnd</a></li><li><a href="global.html#onChannelSubscriptionGift">onChannelSubscriptionGift</a></li><li><a href="global.html#onChannelSubscriptionMessage">onChannelSubscriptionMessage</a></li><li><a href="global.html#onChannelUnban">onChannelUnban</a></li><li><a href="global.html#onChannelUpdate">onChannelUpdate</a></li><li><a href="global.html#onConnect">onConnect</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#onDisconnect">onDisconnect</a></li><li><a href="global.html#onMessage">onMessage</a></li><li><a href="global.html#onStreamOffline">onStreamOffline</a></li><li><a href="global.html#onStreamOnline">onStreamOnline</a></li><li><a href="global.html#output">output</a></li><li><a href="global.html#parseUserRequestSaveDataFile">parseUserRequestSaveDataFile</a></li><li><a href="global.html#pubSubTriggerCallback">pubSubTriggerCallback</a></li><li><a href="global.html#receivedTrigger">receivedTrigger</a></li><li><a href="global.html#registerSubs">registerSubs</a></li><li><a href="global.html#removeMod">removeMod</a></li><li><a href="global.html#removePrediction">removePrediction</a></li><li><a href="global.html#removeSubs">removeSubs</a></li><li><a href="global.html#removeVIP">removeVIP</a></li><li><a href="global.html#resolvePrediction">resolvePrediction</a></li><li><a href="global.html#saveConfig">saveConfig</a></li><li><a href="global.html#saveCredentials">saveCredentials</a></li><li><a href="global.html#saveData">saveData</a></li><li><a href="global.html#sendChannelList">sendChannelList</a></li><li><a href="global.html#sendConfig">sendConfig</a></li><li><a href="global.html#sendCurrentGameData">sendCurrentGameData</a></li><li><a href="global.html#sendData">sendData</a></li><li><a href="global.html#sendDataLoad">sendDataLoad</a></li><li><a href="global.html#sendExtensionList">sendExtensionList</a></li><li><a href="global.html#sendGameCategoriesTrigger">sendGameCategoriesTrigger</a></li><li><a href="global.html#sendLoggingLevel">sendLoggingLevel</a></li><li><a href="global.html#sendSoftwareVersion">sendSoftwareVersion</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setLoggingLevel">setLoggingLevel</a></li><li><a href="global.html#setStreamGame">setStreamGame</a></li><li><a href="global.html#setStreamTitle">setStreamTitle</a></li><li><a href="global.html#start">start</a></li><li><a href="global.html#startCommercial">startCommercial</a></li><li><a href="global.html#startEventSub">startEventSub</a></li><li><a href="global.html#startPrediction">startPrediction</a></li><li><a href="global.html#startServer">startServer</a></li><li><a href="global.html#triggerMacroButton">triggerMacroButton</a></li><li><a href="global.html#unbanUser">unbanUser</a></li><li><a href="global.html#usecoloredlogs">usecoloredlogs</a></li><li><a href="global.html#warn">warn</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:49:38 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -144,16 +144,31 @@
 <section>
     <article>    
         <h1>Chatbot Extension</h1>
+<!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
 <h2>Features</h2>
 <p>The bot will run on a timer every few seconds (can be set in the config) and monitors x number of messages before sending these to chatGPT to be processed. The return is sent to the twitchchat extension to post the response
 You can also ask a specific question that will get posted to ChatGPT and the responce posted to the chat.</p>
 <h1>Chatbot Extension Configuration Guide</h1>
 <h2>Contents</h2>
 <ul>
+<li><a href="#chatbot-extension">Chatbot Extension</a>
+<ul>
+<li><a href="#features">Features</a></li>
+</ul>
+</li>
 <li><a href="#chatbot-extension-configuration-guide">Chatbot Extension Configuration Guide</a>
 <ul>
+<li><a href="#contents">Contents</a></li>
 <li><a href="#overview">Overview</a></li>
-<li><a href="#features">Features</a></li>
+<li><a href="#features-1">Features</a></li>
 <li><a href="#configuration-options">Configuration Options</a>
 <ul>
 <li><a href="#general-settings">General Settings</a></li>
@@ -166,8 +181,19 @@ You can also ask a specific question that will get posted to ChatGPT and the res
 <li><a href="#personality-settings">Personality Settings</a></li>
 </ul>
 </li>
-<li><a href="#using-the-chatbotname-variable">Using the %%CHATBOTNAME%% Variable</a></li>
-<li><a href="#faq">FAQ</a></li>
+<li><a href="#this-should-not-include-the-bots-username-if-you-want-the-bot-to-include-the-username-in-the-response-use-the-username-in-question-1-in-the-reply-keep-in-mind-the-response-is-probablistic-so-it-is-not-guaranteed-to-be-included">This should not include the bot's username. If you want the bot to include the username in the response, use the username in Question 1 in the reply. Keep in mind the response is probablistic so it is not guaranteed to be included.</a></li>
+<li><a href="#using-the-chatbotname-variable">Using the %%CHATBOTNAME%% Variable</a>
+<ul>
+<li><a href="#example">Example:</a></li>
+<li><a href="#recommendations">Recommendations:</a></li>
+</ul>
+</li>
+<li><a href="#triggersactions">Triggers/Actions</a>
+<ul>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -265,14 +291,62 @@ Question/Answer 2. General question to the chat and responding without using the
 Question/Answer 3. General statement to the chat and responding without using the user's name.<br>
 Question/Answer 4. General statement to the chat and responding without using the user's name.</p>
 <p>This format generally replies with the username if asked a direct question, but will avoid using the username if just responding openly to the chat.</p>
-<hr>
-<h2>FAQ</h2>
-<p><em>This section is under construction.</em></p>
-<hr>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAIChatbotResponseReceived</td>
+<td>trigger_chatbotResponse</td>
+<td>The OpenAI chatbot returned a response</td>
+</tr>
+<tr>
+<td>OpenAIImageResponseReceived</td>
+<td>trigger_imageResponse</td>
+<td>The OpenAI chatbot returned a image</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAIChatbotProcessText</td>
+<td>action_ProcessText</td>
+<td>Send some text through the chatbot (users in original message on the ignore list will not get processed)</td>
+</tr>
+<tr>
+<td>OpenAIChatbotProcessImage</td>
+<td>action_ProcessImage</td>
+<td>Send some text through the chatbot to create an image</td>
+</tr>
+<tr>
+<td>OpenAIChatbotSwitchProfile</td>
+<td>action_ChangeProfile</td>
+<td>Switches the chatbot to the given profile</td>
+</tr>
+</tbody>
+</table>
     </article>
 </section>
 <section><header><h2>"chatbot" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">An extension using OpenAI to provide chatbot facilities for streaming.<br>Features<br>Customisable personalities<br>auto chatting bot, question bot, translation bot<br>Requires OpenAI account.Some other text for extensions</div>
+                <div class="container-overview"><div class="description">An extension using OpenAI to provide chatbot facilities for streaming.<br>Features<br>Customisable personalities<br>auto chatting bot, question bot, translation bot<br>Requires OpenAI account.</div>
 
 
 
@@ -402,7 +476,174 @@ Question/Answer 4. General statement to the chat and responding without using th
             <ul class="dummy">
                 <li>
                     <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
-                    <a href="extensions_chatbot_chatbot.js.html#line1087">line 1087</a>
+                    <a href="extensions_chatbot_chatbot.js.html#line1103">line 1103</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendCredentialsModal">
+    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends our extensions model html code for the credentials dialog to be displayed
+to allow the user to enter credentials for login/oauth
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1055">line 1055</a>
                 </li>
             </ul>
         </dd>
@@ -445,7 +686,7 @@ Question/Answer 4. General statement to the chat and responding without using th
 
 <h4 class="name"
     id="SendSettingsWidgetLarge">
-    SendSettingsWidgetLarge<span class="signature">(tochannel)</span><span class="type-signature"></span><span class="type-signature"></span>
+    SendSettingsWidgetLarge<span class="signature">(to)</span><span class="type-signature"></span><span class="type-signature"></span>
 </h4>
 
 
@@ -458,7 +699,10 @@ Question/Answer 4. General statement to the chat and responding without using th
 
 
 <div class="description">
-    send some modal code to be displayed on the admin page or somewhere elsethis is done as part of the webpage request for modal message we get from extension. It is a way of getting some user feedback via submitted formsfrom a page that supports the modal system
+    send some modal code to be displayed on the admin page or somewhere else
+this is done as part of the webpage request for modal message we get from 
+extension. It is a way of getting some user feedback via submitted forms
+from a page that supports the modal system
 </div>
 
 
@@ -496,7 +740,7 @@ Question/Answer 4. General statement to the chat and responding without using th
 
         <tr>
             
-            <td class="name"><code>tochannel</code></td>
+            <td class="name"><code>to</code></td>
             
 
             <td class="type">
@@ -568,7 +812,2165 @@ Question/Answer 4. General statement to the chat and responding without using th
             <ul class="dummy">
                 <li>
                     <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
-                    <a href="extensions_chatbot_chatbot.js.html#line913">line 913</a>
+                    <a href="extensions_chatbot_chatbot.js.html#line919">line 919</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetSmall">
+    SendSettingsWidgetSmall<span class="signature">(to)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends our small settings widget html code to the extension provided
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>to</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line846">line 846</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="addPersonality">
+    addPersonality<span class="signature">(username, message<span class="signature-attributes">opt</span>, profile)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Adds a presonality string to prepair for sending to OpenAI.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>username</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+
+                
+
+                
+            </td>
+            
+
+            
+
+            <td class="description last">
+                username of the requester
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+                &lt;optional><br>
+                
+
+                
+
+                
+            </td>
+            
+
+            
+
+            <td class="description last">
+                message data if data is "" then uses chat history for the message
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>profile</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+
+                
+
+                
+            </td>
+            
+
+            
+
+            <td class="description last">
+                profile to attatch to the message
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1893">line 1893</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    message with included personality
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="callOpenAI">
+    <span class="type-signature">(async) </span>callOpenAI<span class="signature">(string_array, modelToUse)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Calls OpenAI with the given strings using the model data provided
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>string_array</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                array of strings to send to openAI
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>modelToUse</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                The openAI model detailsto use
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1790">line 1790</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    OpenAI response or error message
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="changeBotName">
+    changeBotName<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Used to change the bot name. ie after startup and login we update our name
+in all the strings we use to what the user has configured
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2321">line 2321</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="createImageFromAction">
+    <span class="type-signature">(async) </span>createImageFromAction<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Takes a messages and tries to get an openAI dall-e-3 image generated. if successful
+we then send a trigger out with the details of the image (filename,prompt etc)
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                action_ProcessImage params {usechatbot,prompt,message,append,requester}
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2000">line 2000</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    error messages
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="createfolder">
+    createfolder<span class="signature">(folder)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    creates a new folder on the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>folder</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2378">line 2378</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="findtriggerByMessageType">
+    findtriggerByMessageType<span class="signature">(messagetype)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    finds a trigger based off the message type
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>messagetype</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2400">line 2400</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    trigger if found
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="handleSettingsWidgetLargeData">
+    handleSettingsWidgetLargeData<span class="signature">(modalcode)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Handles data sent when a user submits the small settings widget
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>modalcode</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line781">line 781</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="handleSettingsWidgetSmallData">
+    handleSettingsWidgetSmallData<span class="signature">(modalcode)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Handles data sent when a user submits the small settings widget
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>modalcode</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line741">line 741</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="heartBeatCallback">
+    heartBeatCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends a regular heartbeat message out so other extensions can check our status
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1117">line 1117</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    Number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    Number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line420">line 420</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="moveImagefilesToFolder">
+    moveImagefilesToFolder<span class="signature">(from, to)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Used to move image files generated by openAI to a new folder
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>from</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>to</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2335">line 2335</a>
                 </li>
             </ul>
         </dd>
@@ -734,7 +3136,7 @@ Question/Answer 4. General statement to the chat and responding without using th
             <ul class="dummy">
                 <li>
                     <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
-                    <a href="extensions_chatbot_chatbot.js.html#line453">line 453</a>
+                    <a href="extensions_chatbot_chatbot.js.html#line451">line 451</a>
                 </li>
             </ul>
         </dd>
@@ -900,7 +3302,7 @@ Question/Answer 4. General statement to the chat and responding without using th
             <ul class="dummy">
                 <li>
                     <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
-                    <a href="extensions_chatbot_chatbot.js.html#line438">line 438</a>
+                    <a href="extensions_chatbot_chatbot.js.html#line439">line 439</a>
                 </li>
             </ul>
         </dd>
@@ -1066,7 +3468,7 @@ Question/Answer 4. General statement to the chat and responding without using th
             <ul class="dummy">
                 <li>
                     <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
-                    <a href="extensions_chatbot_chatbot.js.html#line483">line 483</a>
+                    <a href="extensions_chatbot_chatbot.js.html#line481">line 481</a>
                 </li>
             </ul>
         </dd>
@@ -1097,17 +3499,1918 @@ Question/Answer 4. General statement to the chat and responding without using th
 
 
 
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="parseData">
+    parseData<span class="signature">(data, translation)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Parses twitch chat data object creating a string with emotes and removing non ascii chars
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+            <td class="default">
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>translation</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    boolean
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+            <td class="default">
+                
+                false
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1932">line 1932</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    null or parsed data
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="parseUserRequestSaveDataFile">
+    parseUserRequestSaveDataFile<span class="signature">(extensions_message)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Saves data the user has loaded and sent us. Contains profiles etc.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensions_message</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2417">line 2417</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="postMessageToTwitch">
+    postMessageToTwitch<span class="signature">(message)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends a action_SendChatMessage to twitchchat to post a twitch message to chat
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2253">line 2253</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="processChatMessage">
+    processChatMessage<span class="signature">(data, maxRollbackCount<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    This function is called we we see a chat message posted from twitchchat extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>maxRollbackCount</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+                &lt;optional><br>
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+                20
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1281">line 1281</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="processTextMessage">
+    processTextMessage<span class="signature">(data, triggerresponse<span class="signature-attributes">opt</span>, maxRollbackCount<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+            <th>Attributes</th>
+            
+
+            
+            <th>Default</th>
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+            </td>
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>triggerresponse</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    boolean
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+                &lt;optional><br>
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+                false
+                
+            </td>
+            
+
+            <td class="description last">
+                send a trigger out when completed processing
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>maxRollbackCount</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+            <td class="attributes">
+                
+                &lt;optional><br>
+                
+
+                
+
+                
+            </td>
+            
+
+            
+            <td class="default">
+                
+                20
+                
+            </td>
+            
+
+            <td class="description last">
+                used for spam relief
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1146">line 1146</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendErrorMessageToChannel">
+    sendErrorMessageToChannel<span class="signature">(err)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends an error message out on our channel.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>err</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2148">line 2148</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendImageTiggerResponse">
+    sendImageTiggerResponse<span class="signature">(image_url, requester, tmp_file_name, message, rev_prompt)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends out a trigger_imageResponse trigger with the given data
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>image_url</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>requester</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>tmp_file_name</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>rev_prompt</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2218">line 2218</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="startChatbotTimer">
+    startChatbotTimer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Setup the timer for a random interval for bot to join chat based on user settings
+This is used to add a delay in between chat processing to cut down on the bot spamming
+chat
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2277">line 2277</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="startProcessing">
+    startProcessing<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts processing chat for messages to build a history and send to openAI for an
+automatic chat response
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line2302">line 2302</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="stringParser">
+    stringParser<span class="signature">(str)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Parses a string replacing items with the equivalent html code
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_chatbot_chatbot.js.html">extensions/chatbot/chatbot.js</a>,
+                    <a href="extensions_chatbot_chatbot.js.html#line1035">line 1035</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    string with replaced chars
+</div>
+
+
+
+
+
+
+
+
+
 </article ></section >
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>chatbot</h3><ul><li><a href="chatbot_extension.html#chatbot">chatbot</a></li><li><a href="chatbot_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="chatbot_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="chatbot_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="chatbot_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="chatbot_extension.html#onDataCenterMessage">onDataCenterMessage</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>chatbot</h3><ul><li><a href="chatbot_extension.html#chatbot">chatbot</a></li><li><a href="chatbot_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="chatbot_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="chatbot_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="chatbot_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="chatbot_extension.html#addPersonality">addPersonality</a></li><li><a href="chatbot_extension.html#callOpenAI">callOpenAI</a></li><li><a href="chatbot_extension.html#changeBotName">changeBotName</a></li><li><a href="chatbot_extension.html#createImageFromAction">createImageFromAction</a></li><li><a href="chatbot_extension.html#createfolder">createfolder</a></li><li><a href="chatbot_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="chatbot_extension.html#handleSettingsWidgetLargeData">handleSettingsWidgetLargeData</a></li><li><a href="chatbot_extension.html#handleSettingsWidgetSmallData">handleSettingsWidgetSmallData</a></li><li><a href="chatbot_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="chatbot_extension.html#initialise">initialise</a></li><li><a href="chatbot_extension.html#moveImagefilesToFolder">moveImagefilesToFolder</a></li><li><a href="chatbot_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="chatbot_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="chatbot_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="chatbot_extension.html#parseData">parseData</a></li><li><a href="chatbot_extension.html#parseUserRequestSaveDataFile">parseUserRequestSaveDataFile</a></li><li><a href="chatbot_extension.html#postMessageToTwitch">postMessageToTwitch</a></li><li><a href="chatbot_extension.html#processChatMessage">processChatMessage</a></li><li><a href="chatbot_extension.html#processTextMessage">processTextMessage</a></li><li><a href="chatbot_extension.html#sendErrorMessageToChannel">sendErrorMessageToChannel</a></li><li><a href="chatbot_extension.html#sendImageTiggerResponse">sendImageTiggerResponse</a></li><li><a href="chatbot_extension.html#startChatbotTimer">startChatbotTimer</a></li><li><a href="chatbot_extension.html#startProcessing">startProcessing</a></li><li><a href="chatbot_extension.html#stringParser">stringParser</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:49:38 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

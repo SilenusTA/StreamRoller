@@ -143,79 +143,69 @@
 
 <section>
     <article>    
-        <h1>Demo Extension</h1>
+        <!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+<h1>Users Extension</h1>
 <p>Contents</p>
 <ul>
-<li><a href="#demo-extension">Demo Extension</a>
+<li><a href="#users-extension">Users Extension</a>
 <ul>
-<li><a href="#outgoing-channel--demoext_channel">Outgoing channel : &quot;DEMOEXT_CHANNEL&quot;</a></li>
+<li><a href="#outgoing-channel--users_channel">Outgoing channel : &quot;USERS_CHANNEL&quot;</a></li>
 <li><a href="#description">Description</a></li>
-<li><a href="#features">Features</a>
+<li><a href="#triggersactions">Triggers/Actions</a>
 <ul>
-<li><a href="#standard-features">Standard Features</a></li>
-<li><a href="#extended-features-working-with-adminpage-extension">Extended features (working with adminpage extension)</a></li>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
-<h2>Outgoing channel : &quot;DEMOEXT_CHANNEL&quot;</h2>
+<h2>Outgoing channel : &quot;USERS_CHANNEL&quot;</h2>
 <h2>Description</h2>
-<p>The demo extension is designed to give a starting point for you to copy and paste into your own extension.</p>
-<p>The idea is to save the ammount of time/code needed to get up and running with you own extension</p>
-<h2>Features</h2>
-<p>The demo has the following features implemented in it</p>
-<h3>Standard Features</h3>
-<ul>
-<li>
-<p>Connect to server and consume messages</p>
-</li>
-<li>
-<p>Saving/Loading config settings from the server for persistance for the next run.</p>
-</li>
-<li>
-<p>Logging commands to show the preferred way of logging messages (log,info,warn,err)</p>
-<ul>
-<li>It is recommended to use 'log' for most messages to trace where the code is and what it is doing and then add 'info' to expand on these. The 'log' messages are mostly to track down where the code is in case of errors or to report status of the code. Recommended format of messages is currently</li>
-</ul>
-<pre class="prettyprint source"><code>log(&quot;Extension &quot; + EXTENSION_NAME + &quot;.&quot; &lt;filename> + &quot;.&quot; &lt;functionname>, message);
-</code></pre>
-</li>
-<li>
-<p>Creating a channel to broadcast your data on</p>
-<ul>
-<li>This is effectivly your channel (&quot;DEMOEXT_CHANNEL&quot;) to send out data on that you are providing to the system. ie if you are a chat application then you would send chat message out on this channel</li>
-</ul>
-</li>
-<li>
-<p>Joining a Channel</p>
-<ul>
-<li>These are other extensions channels that you want to consume data from. in this case we join the 'STREAMLABS_ALERT' channel so we can consume and process these messages. All we do at the moment is log that data to the console</li>
-</ul>
-<p>You can always browse other extensions to see how they implement things in the system to get other ideas</p>
-</li>
-</ul>
-<h3>Extended features (working with adminpage extension)</h3>
-<ul>
-<li>
-<p>Provide an SettingsWidgetSmall</p>
-<ul>
-<li>SettingsWidgetSmalls are something that the adminpage extension can use to display a popup box (a modal) with code you provide. These are normally used for settings. This feature of the adminpage will put your code onto a link so that when a user clicks it your modal will be shown. If the modal is a form then when the user clicks the form the data will be sent back to you. Usefull for settings etc.</li>
-</ul>
-</li>
-<li>
-<p>Process SettingsWidgetSmall data</p>
-<ul>
-<li>This is the data sent back from the modal (popup) when the user clicks the submit button. in this case our modal just has a checkbox and text field and all we do is save the data</li>
-</ul>
-<p>Note that the SettingsWidgetSmall part of this extension is something that is only needed by the settingswidgetsmall page extension. It is not requied at all if you don't want any settings to be shown or changed from the admin page.</p>
-<p>Other extension can implement their own style of this data. ie an Overaly could reqest code to be displayed. the livestreampage addon will probably use these to display status information in future.</p>
-</li>
-</ul>
+<p>This extension is designed to allow more personal content with users, ie welcome back messages based on the last
+saved message time the user was in chat.</p>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UsersNewChatter</td>
+<td>trigger_NewChatter</td>
+<td>Someone has posted in the chat for the first time</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+</table>
     </article>
 </section>
 <section><header><h2>"Users" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Collects data on users.i.e. last seen, a buffer of messages etc. <br>TBD. needs more work due to size of data and finding a useful reason (from a streamers perspective)<br>Awaiting requests for what it should do before advancing the extensionSome other text for extensions</div>
+                <div class="container-overview"><div class="description">Collects data on users.i.e. last seen, a buffer of messages etc. <br>TBD. needs more work due to size of data and finding a useful reason (from a streamers perspective)<br>Awaiting requests for what it should do before advancing the extension</div>
 
 
 
@@ -345,7 +335,116 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
-                    <a href="extensions_users_users.js.html#line491">line 491</a>
+                    <a href="extensions_users_users.js.html#line505">line 505</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveDataToServer">
+    SaveDataToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Save our data to the server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line518">line 518</a>
                 </li>
             </ul>
         </dd>
@@ -511,7 +610,391 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
-                    <a href="extensions_users_users.js.html#line430">line 430</a>
+                    <a href="extensions_users_users.js.html#line440">line 440</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="getTwitchBotStatusList">
+    <span class="type-signature">(async) </span>getTwitchBotStatusList<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Update our know twitch bot list
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line532">line 532</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="getUserIDData">
+    getUserIDData<span class="signature">(username)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends action_TwitchGetUser to twitch extension to get user data back
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>username</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line608">line 608</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="heartBeatCallback">
+    heartBeatCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends out heartbeat messages so other extensions can see our status
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line632">line 632</a>
                 </li>
             </ul>
         </dd>
@@ -933,7 +1416,7 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
-                    <a href="extensions_users_users.js.html#line134">line 134</a>
+                    <a href="extensions_users_users.js.html#line138">line 138</a>
                 </li>
             </ul>
         </dd>
@@ -1099,7 +1582,7 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
-                    <a href="extensions_users_users.js.html#line123">line 123</a>
+                    <a href="extensions_users_users.js.html#line127">line 127</a>
                 </li>
             </ul>
         </dd>
@@ -1265,7 +1748,505 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
-                    <a href="extensions_users_users.js.html#line158">line 158</a>
+                    <a href="extensions_users_users.js.html#line164">line 164</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="pruneUsers">
+    pruneUsers<span class="signature">(platform)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Prune the data to keep data sizes manageable
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>platform</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line360">line 360</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendNewUserTrigger">
+    sendNewUserTrigger<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    sends trigger_NewChatter message
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line484">line 484</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="setTwitchBotStatus">
+    <span class="type-signature">(async) </span>setTwitchBotStatus<span class="signature">(name)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Update user data based on known bot list
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_users_users.js.html">extensions/users/users.js</a>,
+                    <a href="extensions_users_users.js.html#line592">line 592</a>
                 </li>
             </ul>
         </dd>
@@ -1300,13 +2281,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Users</h3><ul><li><a href="Users_extension.html#Users">Users</a></li><li><a href="Users_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="Users_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="Users_extension.html#initialise">initialise</a></li><li><a href="Users_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="Users_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="Users_extension.html#onDataCenterMessage">onDataCenterMessage</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Users</h3><ul><li><a href="Users_extension.html#Users">Users</a></li><li><a href="Users_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="Users_extension.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="Users_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="Users_extension.html#getTwitchBotStatusList">getTwitchBotStatusList</a></li><li><a href="Users_extension.html#getUserIDData">getUserIDData</a></li><li><a href="Users_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="Users_extension.html#initialise">initialise</a></li><li><a href="Users_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="Users_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="Users_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="Users_extension.html#pruneUsers">pruneUsers</a></li><li><a href="Users_extension.html#sendNewUserTrigger">sendNewUserTrigger</a></li><li><a href="Users_extension.html#setTwitchBotStatus">setTwitchBotStatus</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:49:38 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

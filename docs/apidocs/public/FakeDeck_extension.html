@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: RandomFact</title>
+    <title>JSDoc: FakeDeck</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -133,7 +133,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">RandomFact</h1>
+    <h1 class="page-title">FakeDeck</h1>
 
     
 
@@ -143,29 +143,27 @@
 
 <section>
     <article>    
-        <h1>RandomFact</h1>
-<p>Contents</p>
+        <h1>FakeDeck Web Page</h1>
+<h2>Outgoing channel : none</h2>
 <ul>
-<li><a href="#demo-extension">Demo Extension</a>
+<li><a href="#fakedeck-web-page">FakeDeck Web Page</a>
 <ul>
-<li><a href="#outgoing-channel--demoext_channel">Outgoing channel : &quot;RANDOMFACT_CHANNEL&quot;</a></li>
-<li><a href="#description">Description</a></li>
-<li><a href="#features">Features</a>
+<li><a href="#outgoing-channel--none">Outgoing channel : none</a></li>
+</ul>
+</li>
+<li><a href="#about">About</a>
 <ul>
-<li><a href="#standard-features">Standard Features</a></li>
-<li><a href="#extended-features-working-with-adminpage-extension">Extended features (working with adminpage extension)</a></li>
+<li><a href="#tbd">TBD.</a></li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
-<h2>Outgoing channel : &quot;RANDOMFACT_CHANNEL&quot;</h2>
-<h2>Description</h2>
-<p>Request a random fact and the result will be posted back.</p>
+<h1>About</h1>
+<p>Fake Streamdeck style webpage for loading onto tablets etc</p>
+<h2>TBD.</h2>
     </article>
 </section>
-<section><header><h2>"RandomFact" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Supplies random factsSome other text for extensions</div>
+<section><header><h2>"FakeDeck" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">A single webpage that displays the macro buttons to act as a streamdeck. This could be run on any device with access to the streamroller server.<br>if the server is running on 1.2.3.4 port 3000 then you can access it using http://1.2.3.4:3000/fakedeck/<br>TBD still needs testing and a better startup to enable entry of the StreamRoller server/IP details</div>
 
 
 
@@ -205,8 +203,8 @@
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line22">line 22</a>
+                    <a href="extensions_fakedeck_fakedeck.js.html">extensions/fakedeck/fakedeck.js</a>,
+                    <a href="extensions_fakedeck_fakedeck.js.html#line29">line 29</a>
                 </li>
             </ul>
         </dd>
@@ -218,281 +216,6 @@
 
         
     </dl></div><h3 class="subsection-title">Methods</h3>
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="SaveConfigToServer">
-    SaveConfigToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    save our config to the server
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line386">line 386</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="SendSettingsWidgetSmall">
-    SendSettingsWidgetSmall<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Send our SettingsWidgetSmall to whoever requested it
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>extensionname</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line261">line 261</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -716,340 +439,8 @@
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line107">line 107</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="onDataCenterDisconnect">
-    onDataCenterDisconnect<span class="signature">(reason)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    Disconnection message sent from the server
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>reason</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line126">line 126</a>
-                </li>
-            </ul>
-        </dd>
-        
-
-        
-
-        
-
-        
-    </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h4 class="name"
-    id="sendRandomFact">
-    sendRandomFact<span class="signature">(from)</span><span class="type-signature"></span><span class="type-signature"></span>
-</h4>
-
-
-
-
-
-
-
-
-
-
-<div class="description">
-    sends a random fact to the extension
-</div>
-
-
-
-
-
-
-
-
-
-<h5>Parameters:</h5>
-
-
-
-
-<table class="params">
-    <thead>
-        <tr>
-            
-            <th>Name</th>
-            
-
-            <th>Type</th>
-
-            
-
-            
-
-            <th class="last">Description</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        
-
-        <tr>
-            
-            <td class="name"><code>from</code></td>
-            
-
-            <td class="type">
-                
-                
-
-
-<span class="param-type">
-    String
-</span>
-
-
-                
-            </td>
-
-            
-
-            
-
-            <td class="description last">
-                
-                
-            </td>
-        </tr>
-
-        
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-    <dl class="details">
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-        <dt class="tag-source">Source:</dt>
-        <dd class="tag-source">
-            <ul class="dummy">
-                <li>
-                    <a href="extensions_randomfact_randomfact.js.html">extensions/randomfact/randomfact.js</a>,
-                    <a href="extensions_randomfact_randomfact.js.html#line308">line 308</a>
+                    <a href="extensions_fakedeck_fakedeck.js.html">extensions/fakedeck/fakedeck.js</a>,
+                    <a href="extensions_fakedeck_fakedeck.js.html#line66">line 66</a>
                 </li>
             </ul>
         </dd>
@@ -1084,13 +475,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>RandomFact</h3><ul><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="RandomFact_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="RandomFact_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="RandomFact_extension.html#initialise">initialise</a></li><li><a href="RandomFact_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="RandomFact_extension.html#sendRandomFact">sendRandomFact</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>FakeDeck</h3><ul><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="FakeDeck_extension.html#initialise">initialise</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:49:38 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
