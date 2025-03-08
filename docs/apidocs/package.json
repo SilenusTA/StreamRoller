@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "apidocs.mjs",
   "scripts": {
+    "start": "node apidocs.mjs",
     "test": "echo \"Error: no test specified\" && exit 1",
     "builddocs": "node readmebuilder.mjs && del /Q public\\* && jsdoc --verbose -c jsdoc.json",
     "builddocslinux": "rm -fr ./public/* && jsdoc --verbose -c jsdoc.json"
