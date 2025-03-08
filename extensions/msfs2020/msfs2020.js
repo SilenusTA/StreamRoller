@@ -61,7 +61,8 @@ const localConfig = {
     //msfs_api_recveventhandler: null,
     //maintain a list of trigger handles for deregistering
     EventCallabackHandles: [],
-    previousValue: [] // holds the last value read so we can provide 'onchange' only triggers
+    previousValue: [], // holds the last value read so we can provide 'onchange' only triggers
+    dumpTriggers: false //autodocs needs to manually parse this so we dump it to file and manually create the readme triggers and actions table
 };
 
 const default_serverConfig = {
@@ -1011,12 +1012,25 @@ async function MSFS2020RegisterSimvars (handle)
                     outOfRange();
                 });
                 */
+        if (localConfig.dumpTriggers)
+            dumpTriggersActions()
     }
     catch (err)
     {
         localConfig.state.msfsconnected = false;
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".MSFS2020RegisterSimvars", "Error ", err.message);
     }
+}
+// ============================================================================
+//                           FUNCTION: addToTriggersArray
+// ============================================================================
+function dumpTriggersActions ()
+{
+    setTimeout(() =>
+    {
+        file_log("", "", true)
+    }, 10000);
+
 }
 // ============================================================================
 //                           FUNCTION: addToTriggersArray
@@ -1321,43 +1335,54 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 let filestreams = [];
 let basedir = "msfsdata/";
-function file_log (type, data)
+function file_log (type, data, apidoc = false)
 {
     try
     {
-        //console.log("file_log", type, tags, message)
-
-        var newfile = false;
-        var filename = "__noname__";
-        var buffer = "\n//#################################\n";
-        // sometimes tags are a string, lets create an object for it to log
-        if (typeof tags != "object")
-            data = { data: data }
-        if (!fs.existsSync(basedir))
+        if (apidoc)
         {
-            newfile = true;
-            fs.mkdirSync(basedir, { recursive: true });
-        }
-
-        // check if we already have this handler
-        if (!filestreams.type)
-        {
-
-            filename = type;
-            filestreams[type] = fs.createWriteStream(basedir + filename + ".js", { flags: 'a' });
-
-        }
-        if (newfile)
-        {
-            buffer += "let " + type + ";\n";
-            buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+            let filename = serverConfig.extensionname + "_apidoctriggers.json"
+            fs.writeFileSync(filename, JSON.stringify(triggersandactions, null, 2), {
+                encoding: "utf8",
+                flag: "w+",
+            });
         }
         else
-            buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+        {
+            //console.log("file_log", type, tags, message)
 
-        filestreams[type].write(buffer);
-        //bad coding but can't end it here (due to async stuff) and it is just debug code (just left as a reminder we have a dangling pointer)
-        filestreams[type].end("")
+            var newfile = false;
+            var filename = "__noname__";
+            var buffer = "\n//#################################\n";
+            // sometimes tags are a string, lets create an object for it to log
+            if (typeof tags != "object")
+                data = { data: data }
+            if (!fs.existsSync(basedir))
+            {
+                newfile = true;
+                fs.mkdirSync(basedir, { recursive: true });
+            }
+
+            // check if we already have this handler
+            if (!filestreams.type)
+            {
+
+                filename = type;
+                filestreams[type] = fs.createWriteStream(basedir + filename + ".js", { flags: 'a' });
+
+            }
+            if (newfile)
+            {
+                buffer += "let " + type + ";\n";
+                buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+            }
+            else
+                buffer += "let message=" + JSON.stringify(data, null, 2) + "\n"
+
+            filestreams[type].write(buffer);
+            //bad coding but can't end it here (due to async stuff) and it is just debug code (just left as a reminder we have a dangling pointer)
+            filestreams[type].end("")
+        }
 
     }
     catch (error)

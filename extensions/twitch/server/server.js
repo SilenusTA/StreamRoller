@@ -2405,7 +2405,14 @@ async function startCommercial (length)
                         trigger.parameters.duration = length;
                         sendTrigger(trigger)
                     })
-                    .catch(err => logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message))
+                    .catch((err) =>
+                    {
+                        if (err && err._body, JSON.parse(err._body).message)
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message)
+                        else
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.stringify(err, null, 2))
+
+                    })
             }
             catch (err)
             {
