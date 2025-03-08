@@ -135,8 +135,93 @@
 
     <h1 class="page-title">StreamerSongList</h1>
 
-    <section><header><h2>"StreamerSongList" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Connects to the StreamerSongList service to allow adding/removing/viewing songlist data.<br>Mostly used by music streamers to queue music for viewers.Some other text for extensions</div>
+    
+
+
+
+
+
+<section>
+    <article>    
+        <!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+<h1>StreamerSonglist</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#streamersonglist">StreamerSonglist</a>
+<ul>
+<li><a href="#outgoing-channel--streamersonglist_channel">Outgoing channel : &quot;STREAMERSONGLIST_CHANNEL&quot;</a></li>
+<li><a href="#description">Description</a></li>
+<li><a href="#triggersactions">Triggers/Actions</a>
+<ul>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Outgoing channel : &quot;STREAMERSONGLIST_CHANNEL&quot;</h2>
+<h2>Description</h2>
+<p>Handles song request queues from the <a href="http://streamersonglist.com/">StreamerSonglist</a> website. Shows queue, add/remove/played new songs etc</p>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SSLSongAddedToQueue</td>
+<td>trigger_SongAddedToQueue</td>
+<td>Song was added to queue</td>
+</tr>
+<tr>
+<td>SSLCurrentSongChanged</td>
+<td>trigger_CurrentSongChange</td>
+<td>Current song changed</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SSLAddSongToQueue</td>
+<td>action_AddSongToQueue</td>
+<td>Add a song to the queue</td>
+</tr>
+<tr>
+<td>SSLPlaySong</td>
+<td>action_MarkSongAsPlayed</td>
+<td>Mark a song as played</td>
+</tr>
+</tbody>
+</table>
+    </article>
+</section>
+<section><header><h2>"StreamerSongList" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Connects to the StreamerSongList service to allow adding/removing/viewing songlist data.<br>Mostly used by music streamers to queue music for viewers.</div>
 
 
 
@@ -213,7 +298,7 @@
 
 
 <div class="description">
-    savel config file to the server
+    save config file to the server
 </div>
 
 
@@ -266,7 +351,7 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
-                    <a href="extensions_streamersonglist_streamersonglist.js.html#line515">line 515</a>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line519">line 519</a>
                 </li>
             </ul>
         </dd>
@@ -432,7 +517,7 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
-                    <a href="extensions_streamersonglist_streamersonglist.js.html#line470">line 470</a>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line474">line 474</a>
                 </li>
             </ul>
         </dd>
@@ -488,7 +573,10 @@
 
 
 <div class="description">
-    send some modal code to be displayed on the admin page or somewhere elsethis is done as part of the webpage request for modal message we get from extension. It is a way of getting some user feedback via submitted formsfrom a page that supports the modal system
+    send some modal code to be displayed on the admin page or somewhere else
+this is done as part of the webpage request for modal message we get from 
+extension. It is a way of getting some user feedback via submitted forms
+from a page that supports the modal system
 </div>
 
 
@@ -598,7 +686,842 @@
             <ul class="dummy">
                 <li>
                     <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
-                    <a href="extensions_streamersonglist_streamersonglist.js.html#line424">line 424</a>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line428">line 428</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="addSongToQueueById">
+    addSongToQueueById<span class="signature">(songId)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Adds a song by id to the songlist queue on the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>songId</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line862">line 862</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="addSongToQueuebyName">
+    addSongToQueuebyName<span class="signature">(songName)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Adds a song by name to the songlist queue on the server
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>songName</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line838">line 838</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="fetchSongList">
+    fetchSongList<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Fetches the full songlist from the StreamerSonglist server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line805">line 805</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="fetchSongQueue">
+    fetchSongQueue<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Fetches the current song queue from the StreamerSonglist server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line657">line 657</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="findtriggerByMessageType">
+    findtriggerByMessageType<span class="signature">(messagetype)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Find a trigger by messagetype
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>messagetype</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line1077">line 1077</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    trigger
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="heartBeatCallback">
+    heartBeatCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends out heartbeat messages so other extensions can see our status
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line1047">line 1047</a>
                 </li>
             </ul>
         </dd>
@@ -855,6 +1778,281 @@
                 <li>
                     <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
                     <a href="extensions_streamersonglist_streamersonglist.js.html#line179">line 179</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="joinSslServer">
+    joinSslServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Joins the StreamerSonglist service
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line534">line 534</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="markSongAsPlayed">
+    markSongAsPlayed<span class="signature">(queueId)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Mark a song in the current queue as being played
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>queueId</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line938">line 938</a>
                 </li>
             </ul>
         </dd>
@@ -1383,17 +2581,1283 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="outputSongList">
+    outputSongList<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Outputs the full songlist on our channel
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line782">line 782</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="outputSongQueue">
+    outputSongQueue<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends the current songQueue out on our channel
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line634">line 634</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="pollSongListCallback">
+    pollSongListCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Timer for polling the songlist
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line1024">line 1024</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="pollSongQueueCallback">
+    pollSongQueueCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Callback from the song queue timer
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line1001">line 1001</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="removeSongFromQueue">
+    removeSongFromQueue<span class="signature">(queueId)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Removes a songqueue song using it's queueId
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>queueId</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                Queue id of item to remove
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line901">line 901</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendCurrentSongChange">
+    sendCurrentSongChange<span class="signature">(extension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends a trigger_CurrentSongChange message to given extensionextension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line731">line 731</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendSongQueue">
+    sendSongQueue<span class="signature">(extensionsname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends the current songQueue to the given extension name
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionsname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line608">line 608</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendSonglist">
+    sendSonglist<span class="signature">(extension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends the full songlist to given extensionextension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line703">line 703</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendTriggersAndActions">
+    sendTriggersAndActions<span class="signature">(from)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends out triggers and actions out to the given extension name
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>from</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_streamersonglist_streamersonglist.js.html">extensions/streamersonglist/streamersonglist.js</a>,
+                    <a href="extensions_streamersonglist_streamersonglist.js.html#line401">line 401</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </article ></section >
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>StreamerSongList</h3><ul><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamerSongList_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="StreamerSongList_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="StreamerSongList_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="StreamerSongList_extension.html#initialise">initialise</a></li><li><a href="StreamerSongList_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="StreamerSongList_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="StreamerSongList_extension.html#onDataCenterMessage">onDataCenterMessage</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>StreamerSongList</h3><ul><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamerSongList_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="StreamerSongList_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="StreamerSongList_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="StreamerSongList_extension.html#addSongToQueueById">addSongToQueueById</a></li><li><a href="StreamerSongList_extension.html#addSongToQueuebyName">addSongToQueuebyName</a></li><li><a href="StreamerSongList_extension.html#fetchSongList">fetchSongList</a></li><li><a href="StreamerSongList_extension.html#fetchSongQueue">fetchSongQueue</a></li><li><a href="StreamerSongList_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="StreamerSongList_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="StreamerSongList_extension.html#initialise">initialise</a></li><li><a href="StreamerSongList_extension.html#joinSslServer">joinSslServer</a></li><li><a href="StreamerSongList_extension.html#markSongAsPlayed">markSongAsPlayed</a></li><li><a href="StreamerSongList_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="StreamerSongList_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="StreamerSongList_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="StreamerSongList_extension.html#outputSongList">outputSongList</a></li><li><a href="StreamerSongList_extension.html#outputSongQueue">outputSongQueue</a></li><li><a href="StreamerSongList_extension.html#pollSongListCallback">pollSongListCallback</a></li><li><a href="StreamerSongList_extension.html#pollSongQueueCallback">pollSongQueueCallback</a></li><li><a href="StreamerSongList_extension.html#removeSongFromQueue">removeSongFromQueue</a></li><li><a href="StreamerSongList_extension.html#sendCurrentSongChange">sendCurrentSongChange</a></li><li><a href="StreamerSongList_extension.html#sendSongQueue">sendSongQueue</a></li><li><a href="StreamerSongList_extension.html#sendSonglist">sendSonglist</a></li><li><a href="StreamerSongList_extension.html#sendTriggersAndActions">sendTriggersAndActions</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:04:00 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

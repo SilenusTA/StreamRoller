@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>JSDoc: Source: extensions/autopilot/server/server.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/autopilot/server/server.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Copyright (C) 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see &lt;http://www.gnu.org/licenses/>.
+ */
+import * as logger from "../../../backend/data_center/modules/logger.js";
+import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+import fs from "fs";
+import { default_serverData } from "./default_data.js"
+
+const localConfig = {
+    host: "http://localhost",
+    port: "3000",
+    heartBeatHandle: null,
+    heartBeatTimeout: "5000",
+    DataCenterSocket: null,
+}
+// defaults for the serverConfig (our saved persistant data)
+const default_serverConfig = {
+    __version__: "0.1.1",
+    extensionname: "autopilot",
+    channel: "AUTOPILOT_BE",
+    autopilotenabled: "on",
+    autopilotresetdefaults: "off"
+}
+let serverConfig = structuredClone(default_serverConfig);
+let serverData = structuredClone(default_serverData);
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Autopilot handles triggers/actions that allow the user to perform interesting interactions betewen extensions",
+    // these are messages we can send out that other extensions might want to use to trigger an action
+    version: "0.1.1",
+    channel: serverConfig.channel,
+    triggers:
+        [
+            {
+                name: "Macro Triggered",
+                displaytitle: "Macro Triggered",
+                description: "A Macro was triggered",
+                messagetype: "trigger_MacroTriggered",
+                parameters: {}
+            },
+            {
+                name: "AllTriggers",
+                displaytitle: "AllTriggers",
+                description: "Catches all triggers (for debugging)",
+                messagetype: "trigger_AllTriggers",
+                parameters: {}
+            }
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "Activate Macro",
+                displaytitle: "Activate Macro",
+                description: "Activate a macro function",
+                messagetype: "action_ActivateMacro",
+                parameters: { name: "" }
+            },
+            {
+                name: "Set Group Pause State",
+                displaytitle: "Set Group Pause State",
+                description: "Pause/Unpause groups",
+                messagetype: "action_SetGroupPauseState",
+                parameters: {
+                    group: "",
+                    state: "unpaused"
+                }
+            },
+            {
+                name: "LogToConsole",
+                displaytitle: "LogToConsole",
+                description: "Log triggers to console",
+                messagetype: "action_LogToConsole",
+                parameters: {}
+            },
+        ],
+}
+// ============================================================================
+//                           FUNCTION: startClient
+// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {String} host 
+ * @param {Number} port 
+ * @param {Number} heartbeat 
+ */
+async function startServer (host, port, heartbeat)
+{
+    // setup the express app that will handle client side page requests
+    //app.use("/images/", express.static(__dirname + '/public/images'));
+    localConfig.host = host;
+    localConfig.port = port;
+    try
+    {
+        ConnectToDataCenter(localConfig.host, localConfig.port);
+    }
+    catch (err)
+    {
+        logger.err(serverConfig.extensionname + "autopilot.startServer", "initialise failed:", err);
+    }
+}
+// ============================================================================
+//                           FUNCTION: ConnectToDataCenter
+// ============================================================================
+/**
+ * Connect to the StreamRoller websocket
+ * @param {string} host 
+ * @param {number} port 
+ */
+function ConnectToDataCenter (host, port)
+{
+    try
+    {
+        localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
+            host, port);
+    } catch (err)
+    {
+        logger.err(serverConfig.extensionname + "datahandler.initialise", "DataCenterSocket connection failed:", err);
+    }
+}
+/**
+ * Called when the StreamRoller websocket disconnects
+ * @param {string} reason 
+ */
+function onDataCenterDisconnect (reason)
+{
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterConnect
+// ============================================================================
+/**
+ * Called when the StreaRoller websocket connection starts
+ * @param {object} socket 
+ */
+function onDataCenterConnect (socket)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestConfig",
+            serverConfig.extensionname
+        ));
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestData",
+            serverConfig.extensionname
+        ));
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+    );
+    RequestExtList();
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * Handles all streamroller inbound messages
+ * @param {object} server_packet 
+ */
+function onDataCenterMessage (server_packet)
+{
+    // -------------------------------------------------------------------------------------------------
+    //                  RECEIVED CONFIG
+    // -------------------------------------------------------------------------------------------------
+    if (server_packet.type === "ConfigFile")
+    {
+        // check it is our config
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname
+                    + " ConfigFile Updated", "The config file has been Updated to the latest version v"
+                    + default_serverConfig.__version__ + ". Your settings may have changed " + "\x1b[0m");
+            }
+            else
+            {
+                // update our config
+                if (server_packet.data != "")
+                    serverConfig = structuredClone(server_packet.data)
+            }
+            // update server log, mainly here if we have added new default options when a user
+            // updates their version of StreamRoller
+            SaveConfigToServer();
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED DATA File
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "DataFile")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            if (server_packet.data.__version__ != default_serverData.__version__)
+            {
+                serverData = structuredClone(default_serverData);
+                console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                SaveDataToServer()
+                SendUserPairings("");
+                SendMacros()
+            }
+            else
+            {
+                if (server_packet.data != "")
+                {
+                    serverData = structuredClone(server_packet.data);
+                    SendUserPairings("");
+                    SendMacros()
+                }
+            }
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED EXTENSION LIST
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ExtensionList")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            localConfig.extensions = server_packet.data
+            RequestChList();
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                  RECEIVED CHANNEL LIST
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ChannelList")
+    {
+        if (server_packet.to === serverConfig.extensionname)
+        {
+            localConfig.channels = server_packet.data
+            localConfig.channels.forEach(element =>
+            {
+                if (element != serverConfig.channel)
+                    sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket(
+                            "JoinChannel",
+                            serverConfig.extensionname,
+                            element
+                        ));
+            });
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                      ### EXTENSION MESSAGE ###
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ExtensionMessage")
+    {
+        let extension_packet = server_packet.data;
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR SETTINGS DIALOG
+        // -------------------------------------------------------------------------------------------------
+        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+        {
+            SendSettingsWidgetSmall(extension_packet.from);
+        }
+        else if (extension_packet.type.startsWith("action_LogToConsole"))
+        {
+            console.log("--------- action_LogToConsole -------------")
+            console.log(JSON.stringify(extension_packet.data, null, 2))
+            console.log("-------------------------------------------")
+        }
+        else if (extension_packet.type.startsWith("action_ActivateMacro"))
+        {
+            if (extension_packet.to == serverConfig.extensionname)
+                triggerMacroButton(extension_packet.data.name)
+        }
+
+        else if (extension_packet.type.startsWith("action_SetGroupPauseState"))
+        {
+            if (extension_packet.to == serverConfig.extensionname)
+                actionAction_SetGroupPauseState(extension_packet.data.group, extension_packet.data.state)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   SETTINGS DIALOG DATA
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "SettingsWidgetSmallData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                if (extension_packet.data.autopilotresetdefaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    serverData = structuredClone(default_serverData);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
+                    SaveConfigToServer();
+                    SaveDataToServer();
+                }
+                else
+                {
+                    handleSettingsWidgetSmallData(extension_packet.data);
+                    SendUserPairings("");
+                    SendMacros();
+                    SaveConfigToServer();
+                }
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestUserTriggers")
+        {
+            SendUserPairings(extension_packet.from)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST FOR USER TRIGGERS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestMacroImages")
+        {
+            SendMacroImages(extension_packet.from)
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   UPDATED USER PAIRINGS RECEIVED
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "UpdateUserPairings")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                ProcessUserPairings(extension_packet.data)
+                SaveDataToServer()
+                SendUserPairings("");
+                SendMacros()
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST MACROS
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestMacros")
+        {
+            if (server_packet.to === serverConfig.extensionname)
+                SendMacros()
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST SERVER DATA FILE
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "RequestServerDataFile")
+        {
+            //This is used on the front end so users can save off a full data file of the server prior to updating
+
+            if (server_packet.to === serverConfig.extensionname &amp;&amp; server_packet.from === "autopilot_frontend")
+            {
+
+                sr_api.sendMessage(
+                    localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage",
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "AutopilotServerData",
+                            serverConfig.extensionname,
+                            serverData,
+                            "",
+                            "autopilot_frontend"
+                        ),
+                        "",
+                        "autopilot_frontend"
+                    ));
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST SERVER DATA FILE
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "userRequestSaveDataFile")
+        {
+            //This is used on the front end so users can save off a full data file of the server prior to updating
+
+            if (server_packet.to === serverConfig.extensionname &amp;&amp; server_packet.from === "autopilot_frontend")
+            {
+                parseUserRequestSaveDataFile(extension_packet.data)
+            }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   RECEIVED Unhandled extension message
+        // -------------------------------------------------------------------------------------------------
+        else
+        {
+            //console.log("ExtensionMessage not handled ", extension_packet)
+            //    logger.log(serverConfig.extensionname + ".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------------
+    //                   RECEIVED CHANNEL DATA
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "ChannelData")
+    {
+        let extension_packet = server_packet.data;
+        // -------------------------------------------------------------------------------------------------
+        //                           CheckForTrigger
+        //                   These are triggers in other extensions
+        // -------------------------------------------------------------------------------------------------
+        if (extension_packet.type.startsWith("trigger_"))
+        {
+            CheckTriggers(extension_packet)
+        }
+    }
+    // -------------------------------------------------------------------------------------------------
+    //                           UNKNOWN CHANNEL MESSAGE RECEIVED
+    // -------------------------------------------------------------------------------------------------
+    else if (server_packet.type === "UnknownChannel")
+    {
+        // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
+        // need to add some sort of flood control here so we are only attempting to join one at a time
+        console.log("UnknownChannel", server_packet)
+
+        if (server_packet.data != "" &amp;&amp; server_packet.channel != undefined)
+        {
+            setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        serverConfig.extensionname,
+                        server_packet.data
+                    ));
+            }, 10000);
+
+        }
+    }
+    else if (server_packet.type === "ChannelJoined"
+        || server_packet.type === "ChannelCreated"
+        || server_packet.type === "ChannelLeft"
+        || server_packet.type === "HeartBeat"
+        || server_packet.type === "UnknownExtension"
+        || server_packet.type === "ChannelJoined"
+        || server_packet.type === "LoggingLevel"
+    )
+    {
+        // just a blank handler for items we are not using to avoid message from the catchall
+    }
+    // ------------------------------------------------ unknown message type received -----------------------------------------------
+    else
+        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled message type:", server_packet);
+
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+/**
+ * Saves our config on the server
+ */
+function SaveConfigToServer ()
+{
+    // saves our serverConfig to the server so we can load it again next time we startup
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveConfig",
+            serverConfig.extensionname,
+            serverConfig,
+        ));
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetSmall
+// ===========================================================================
+/**
+ * Sends our small settins widget to the given channel 
+ * 
+ * @param {string} tochannel 
+ */
+function SendSettingsWidgetSmall (tochannel)
+{
+    fs.readFile(__dirname + "/autopilotsettingswidgetsmall.html", function (err, filedata)
+    {
+        if (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".SendSettingsWidgetSmall", "failed to load modal", err);
+            //throw err;
+        }
+        else
+        {
+            //get the file as a string
+            let modalstring = filedata.toString();
+
+            // mormal replaces
+            for (const [key, value] of Object.entries(serverConfig))
+            {
+                // checkboxes
+                if (value === "on")
+                    modalstring = modalstring.replace(key + "checked", "checked");
+                else if (typeof (value) === "string" || typeof (value) === "number")
+                    modalstring = modalstring.replaceAll(key + "text", value);
+            }
+            // send the modified modal data to the server
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "SettingsWidgetSmallCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalstring,// data
+                        "",
+                        tochannel,
+                        serverConfig.channel
+                    ),
+                    "",
+                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                ))
+        }
+    });
+}
+// ===========================================================================
+//                           FUNCTION: handleSettingsWidgetSmallData
+// ===========================================================================
+/**
+ * Handles data sent when a user submits our small setting dialog box
+ * @param {object} modalcode 
+ */
+function handleSettingsWidgetSmallData (modalcode)
+{
+    serverConfig.autopilotenabled = "off";
+    serverConfig.autopilotresetdefaults = "off";
+    for (const [key, value] of Object.entries(modalcode))
+        serverConfig[key] = value;
+}
+// ============================================================================
+//                           FUNCTION: CheckTriggers
+// ============================================================================
+/**
+ * Handles received triggers checking if we have any matching trigger/action pairs
+ * @param {object} data 
+ */
+function CheckTriggers (data)
+{
+    if (Object.keys(serverData.userPairings).length != 0 &amp;&amp; serverData.userPairings.pairings != undefined)
+    {
+        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
+        {
+            //console.log("value.trigger.messagetype", value.trigger.messagetype)
+            if (value.trigger.messagetype == data.data.messagetype || value.trigger.messagetype == "trigger_AllTriggers")
+                ProcessReceivedTrigger(value, data)
+        }
+    }
+}
+// ============================================================================
+//                           FUNCTION: ProcessReceivedTrigger
+// ============================================================================
+/**
+ * Processes a triger action pairing that has been triggered.
+ * @param {object} pairing 
+ * @param {object} receivedTrigger 
+ */
+function ProcessReceivedTrigger (pairing, receivedTrigger)
+{
+    //check if the event fields match the trigger fields we have set for this entry
+
+    // if parameters are entered we need to check that they all match
+    // before we trigger the action (ie if one fails to match then we must ignore this trigger)
+    // IE ALL CHECKS BELOW SHOULD BE FOR FAILURES TO MATCH
+    let match = true
+    // we have the correct extension, channel and message type
+    // lets check the variables to see if those are a match
+    pairing.trigger.data.forEach((param) =>
+    {
+        for (var i in param)
+        {
+            try
+            {
+                // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
+                if (i.indexOf("MATCHER_") != 0 &amp;&amp; i != "cooldown" &amp;&amp; i != "lastrun")
+                {
+                    // get the relevant matcher for this value
+                    let searchtype = param["MATCHER_" + i]
+                    if (typeof (receivedTrigger.data.parameters[i]) == "string")// &amp;&amp; typeof param[i] === "string")
+                    {
+                        switch (searchtype)
+                        {
+                            case "2"://match anywhere
+                                if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                    match = false;
+                                break;
+                            case "3"://match start of line only
+                                if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
+                                    match = false;
+                                break;
+                            case "4"://doesn't match
+                                if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
+                                    match = false;
+                                break;
+                            case "5"://match complete word only
+                                if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                {
+                                    match = false;
+                                }
+                                else
+                                {
+                                    let wordArray = receivedTrigger.data.parameters[i].split(" ")
+                                    match = false;
+                                    if (wordArray.includes(param[i]))
+                                        match = true;
+                                }
+                                break;
+                            default:
+                                // check for exact match
+                                if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                    match = false;
+                        }
+                    }
+                    //check non string types for not matching
+                    else if (param[i] != "" &amp;&amp; receivedTrigger.data.parameters[i] != param[i])
+                        match = false;
+                }
+            }
+            catch (err)
+            {
+                console.log("ProcessReceivedTrigger ERROR", pairing.trigger.data)
+                console.log("ProcessReceivedTrigger error", err)
+                match = false;
+            }
+            if (!match)
+                break;
+        }
+
+    })
+    if (match)
+    {
+        // if we have a cooldown see if we have matched it
+        if (pairing.trigger.cooldown > 0)
+        {
+            const d = new Date();
+            let now = d.getTime()
+            // are we still in the the cooldown period
+            if (pairing.trigger.lastrun + (pairing.trigger.cooldown * 1000) > now)
+                return
+            else
+                pairing.trigger.lastrun = now
+        }
+        TriggerAction(pairing.action, receivedTrigger)
+    }
+
+}
+// ============================================================================
+//                           FUNCTION: TriggerAction
+// ============================================================================
+/**
+ * Causes an action to be triggered.
+ * @param {object} action action to be triggered
+ * @param {object} triggerParams received trigger parameters
+ */
+function TriggerAction (action, triggerParams)
+{
+    if (action.paused)
+        return
+    if (serverConfig.autopilotenabled != "on")
+    {
+        console.log("autopilot turned off, ignoring triggers")
+        return;
+    }
+    // regular expression to test if input is a mathmatical equasion
+    // note this seems to get confused if a string has -1 in it.
+    // BUG::: need a better regex
+    const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
+    // tests to get round the bug above
+    const bannedRegex = ["process", "system", "for", "while", "loop"];
+
+    let params = {}
+    // store the trigger params in the action in case the extension has use for them
+    params.triggerparams = triggerParams.data
+    // loop through each action field
+    for (var i in action.data)
+    {
+        //loop through each action field name
+        for (const property in action.data[i])
+        {
+            // store the undmodifed field data
+            let tempAction = action.data[i][property]
+            // *************************
+            // check for user variables
+            // we need a better way to do this. messy code
+            // *************************
+            // check if we have %%var%% in the field
+            let nextVarIndex = action.data[i][property].indexOf("%%")
+            // loop through all %%vars%%
+            while (nextVarIndex > -1)
+            {
+                let endVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                // we have a user variable
+                if (endVarIndex > -1)
+                {
+                    // get the full variable
+                    let sourceVar = tempAction.substr(nextVarIndex + 2, endVarIndex - (nextVarIndex + 2))
+                    // at this point we will have either (example uses the message field and word number 2)
+                    // message, 
+                    // message:2 
+                    // message:2*
+                    // check if we have a word number option 
+                    if (sourceVar.indexOf(":") > -1)
+                    {
+                        // get the position of the :
+                        let stringIndex = sourceVar.indexOf(":")
+                        // get the number the user entered after the : (minus one as non programmers don't count from 0 :P)
+                        // (note currently only works with 1 digit so 0-9 words can be selected)
+                        let wordNumber = (sourceVar.substr(stringIndex + 1, 1)) - 1
+                        // check if we have the *
+                        if ((sourceVar.substr(stringIndex + 2) == "*"))
+                        {
+                            // get the trigger field (ie the named variable data)
+                            let sourceData = triggerParams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            sourceData.replaceAll("%%", "")
+                            const sourceArray = sourceData.split(" ");
+                            // remove the first number of words the user specified
+                            for (var x = 0; x &lt; wordNumber; x++)
+                                sourceArray.splice(0, 1)
+                            tempAction = sourceArray.join(" ").trim()
+                        }
+                        else
+                        {
+                            // get the trigger field (ie the named variable data)
+                            let sourceData = triggerParams.data.parameters[tempAction.substr(nextVarIndex + 2, stringIndex)]
+                            sourceData.replaceAll("%%", "")
+                            // split the data into an array so we can index the work the user wants
+                            const sourceArray = sourceData.split(" ");
+                            tempAction = sourceArray[wordNumber]
+                        }
+                    }
+                    else
+                    {
+                        let tmpData = triggerParams.data.parameters[sourceVar]
+                        if (typeof triggerParams.data.parameters[sourceVar] == "string")
+                            tmpData = tmpData.replaceAll("%%", "")
+                        tempAction = tempAction.replace("%%" + sourceVar + "%%", tmpData)
+                    }
+                }
+                if (typeof tempAction == "string")
+                    nextVarIndex = tempAction.indexOf("%%", nextVarIndex + 2)
+                else
+                    nextVarIndex = -1;
+
+            }
+            // is this a mathmatical expression
+            if (re.test(tempAction) &amp;&amp; !bannedRegex.includes(tempAction))
+            {
+                try
+                {
+                    tempAction = eval(tempAction).toString()
+                }
+                catch (err)
+                {
+                    // this is for when the regex fails and we try to eval a string
+                    tempAction = tempAction.toString()
+                }
+            }
+            params[property] = tempAction
+        }
+    }
+    // all actions are handled through the SR socket interface
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                action.messagetype,
+                serverConfig.extensionname,
+                params,
+                "",
+                action.extension),
+            "",
+            action.extension
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: ProcessUserPairings
+// ============================================================================
+/**
+ * Updates our userPairings array with the date received from the frontend webpage
+ * when a user changes/adds a new item
+ * @param {object} userPairings 
+ */
+function ProcessUserPairings (userPairings)
+{
+    if (userPairings != null
+        &amp;&amp; typeof (userPairings) != "undefined"
+        &amp;&amp; userPairings != ""
+        &amp;&amp; Object.keys(userPairings).length != 0)
+    {
+        serverData.userPairings = structuredClone(userPairings);
+    }
+    else
+        logger.err(serverConfig.extensionname + ".ProcessUserPairings", "empty userPairings received");
+}
+// ============================================================================
+//                           FUNCTION: RequestExtList
+// ============================================================================
+/**
+ * Requests a list of extensions connected from the server
+ */
+function RequestExtList ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestExtensionsList",
+            serverConfig.extensionname,
+        ));
+}
+/**
+ * Requests a channel list from the server
+ */
+// ============================================================================
+//                           FUNCTION: RequestChList
+// ============================================================================
+function RequestChList ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "RequestChannelsList",
+            serverConfig.extensionname,
+        ));
+}
+// ============================================================================
+//                           FUNCTION: SendUserPairings
+// ============================================================================
+/**
+ * Sends our user pairing lists to the given extension or broadcasts if we have 
+ * just made a change and want to let everyone know
+ * @param {string} to 
+ */
+function SendUserPairings (to)
+{
+    if (to != "")
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "UserPairings",
+                    serverConfig.extensionname,
+                    serverData.userPairings,
+                    serverConfig.channel,
+                    to),
+                serverConfig.channel,
+                to
+            ),
+        );
+    else
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "UserPairings",
+                    serverConfig.extensionname,
+                    serverData.userPairings,
+                    serverConfig.channel,
+                    to),
+                serverConfig.channel,
+                to
+            ),
+        );
+}
+// ============================================================================
+//                           FUNCTION: SaveDataToServer
+// ============================================================================
+/**
+ * Save our data JSON to the server
+ */
+function SaveDataToServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "SaveData",
+            serverConfig.extensionname,
+            serverData));
+}
+// ============================================================================
+//                           FUNCTION: SendMacros
+// ============================================================================
+/**
+ * Sends out the current list of marcos
+ */
+function SendMacros ()
+{
+    if (serverData.userPairings.macrotriggers != undefined)
+    {
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ChannelData",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "UserMacros",
+                    serverConfig.extensionname,
+                    serverData.userPairings.macrotriggers.triggers,
+                    serverConfig.channel),
+                serverConfig.channel
+            ),
+        );
+    }
+}
+// ============================================================================
+//                           FUNCTION: SendMacroImages
+// ============================================================================
+/**
+ * Sends out the current list of macro images the user can chose from
+ * @param {string} to
+ */
+function SendMacroImages (to)
+{
+    let imagelist = fs.readdirSync(__dirname + "/../public/images/deckicons")
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "MacroImages",
+                serverConfig.extensionname,
+                imagelist,
+                "",
+                to),
+            "",
+            to
+        ),
+    );
+}
+// ============================================================================
+//                           FUNCTION: actionAction_SetGroupPauseState
+// ============================================================================
+/**
+ * Handles the paused state actions to pause/unpause a trigger action pair
+ * @param {string} group group to toggle
+ * @param {string} state state to move to
+ */
+function actionAction_SetGroupPauseState (group, state)
+{
+    if (Object.keys(serverData.userPairings).length != 0 &amp;&amp; serverData.userPairings.pairings != undefined)
+    {
+        for (const [key, value] of Object.entries(serverData.userPairings.pairings))
+        {
+            //console.log("value.trigger.messagetype", value.trigger.messagetype)
+            if (value.group == group)
+            {
+                if (state == "paused")
+                    value.action.paused = true;
+                else if (state == "unpaused")
+                    value.action.paused = false;
+                else
+                    logger.err(serverConfig.extensionname + ".actionAction_SetGroupPauseState", "group pause should be 'paused' or 'unpaused'. State was set to", state);
+            }
+        }
+    }
+    SaveDataToServer();
+    SendUserPairings("");
+    SendMacros()
+}
+// ============================================================================
+//                           FUNCTION: triggerMacroButton
+// ============================================================================
+/**
+ * Triggers the given actions mapped to a macro button trigger
+ * @param {string} name 
+ */
+function triggerMacroButton (name)
+{
+    for (var i in serverData.userPairings.pairings)
+    {
+        if (serverData.userPairings.pairings[i].trigger.name == name)
+        {
+            let params = {}
+            for (var j in serverData.userPairings.pairings[i].action.data)
+            {
+                for (const property in serverData.userPairings.pairings[i].action.data[j])
+                    params[property] = serverData.userPairings.pairings[i].action.data[j][property]
+            }
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        serverData.userPairings.pairings[i].action.messagetype,
+                        serverConfig.extensionname,
+                        params,
+                        "",
+                        serverData.userPairings.pairings[i].action.extension),
+                    "",
+                    serverData.userPairings.pairings[i].action.extension
+                ),
+            );
+        }
+    }
+
+}
+// ============================================================================
+//                           FUNCTION: parseUserRequestSaveDataFile
+// ============================================================================
+/**
+ * Handles a 'userRequestSaveDataFile' message triggered when a user uploads a new
+ * JSON data file containing the trigger/action pairings
+ * @param {object} data 
+ */
+function parseUserRequestSaveDataFile (data)
+{
+    //do something with the file. ie check version etc.
+    let response = "No Response from Server, please try again.";
+    try
+    {
+        if (data.__version__ === default_serverData.__version__)
+        {
+            // overwrite our data and save it to the server.
+            serverData = structuredClone(data);
+            SaveDataToServer()//we have the same version of the file so we should save it over our current one.
+            response = "Data saved."
+        }
+        else
+
+            response = "received file version doesn't match current version: " + data.__version__ + " == " + default_serverData.__version__
+    }
+    catch (err)
+    {
+        logger.err(serverConfig.extensionname + ".parseUserRequestSaveDataFile", "Error saving data to server.Error:", err, err.message);
+        response = "Error saving data to server.Error:", err, err.message;
+    }
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "AutopilotUserSaveServerDataResponse",
+                serverConfig.extensionname,
+                { response: response },
+                "",
+                "autopilot_frontend"
+            ),
+            "",
+            "autopilot_frontend"
+        ));
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+/**
+ * Sends out our heartbeat message so others can monitor the extensions status
+ */
+function heartBeatCallback ()
+{
+    let status = false;
+    if (serverConfig.autopilotenabled == "on")
+        status = true;
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                { connected: status },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+export { startServer, triggersandactions };</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckTriggers">CheckTriggers</a></li><li><a href="global.html#ConnectToDataCenter">ConnectToDataCenter</a></li><li><a href="global.html#ProcessReceivedTrigger">ProcessReceivedTrigger</a></li><li><a href="global.html#ProcessUserPairings">ProcessUserPairings</a></li><li><a href="global.html#RequestChList">RequestChList</a></li><li><a href="global.html#RequestExtList">RequestExtList</a></li><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="global.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="global.html#SendMacroImages">SendMacroImages</a></li><li><a href="global.html#SendMacros">SendMacros</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SendUserPairings">SendUserPairings</a></li><li><a href="global.html#TriggerAction">TriggerAction</a></li><li><a href="global.html#actionAction_SetGroupPauseState">actionAction_SetGroupPauseState</a></li><li><a href="global.html#addGameToHistoryFromGameName">addGameToHistoryFromGameName</a></li><li><a href="global.html#addMod">addMod</a></li><li><a href="global.html#addToLogfile">addToLogfile</a></li><li><a href="global.html#addTriggerEntries">addTriggerEntries</a></li><li><a href="global.html#addVIP">addVIP</a></li><li><a href="global.html#banUser">banUser</a></li><li><a href="global.html#broadcastMessage">broadcastMessage</a></li><li><a href="global.html#cancelPrediction">cancelPrediction</a></li><li><a href="global.html#cheerEmotes">cheerEmotes</a></li><li><a href="global.html#connectTwitch">connectTwitch</a></li><li><a href="global.html#containsBadChars">containsBadChars</a></li><li><a href="global.html#createBlock">createBlock</a></li><li><a href="global.html#createChannel">createChannel</a></li><li><a href="global.html#createClip">createClip</a></li><li><a href="global.html#createDropdownWithSearchableHistory">createDropdownWithSearchableHistory</a></li><li><a href="global.html#createPoll">createPoll</a></li><li><a href="global.html#createPredictionString">createPredictionString</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#deleteBlock">deleteBlock</a></li><li><a href="global.html#deleteConfig">deleteConfig</a></li><li><a href="global.html#deleteCredentials">deleteCredentials</a></li><li><a href="global.html#disconnectTwitch">disconnectTwitch</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#endPoll">endPoll</a></li><li><a href="global.html#err">err</a></li><li><a href="global.html#errorMessage">errorMessage</a></li><li><a href="global.html#extra">extra</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#followedChannels">followedChannels</a></li><li><a href="global.html#followerCount">followerCount</a></li><li><a href="global.html#forwardMessage">forwardMessage</a></li><li><a href="global.html#getAllGameCategories">getAllGameCategories</a></li><li><a href="global.html#getBlockedUsers">getBlockedUsers</a></li><li><a href="global.html#getChannelEditors">getChannelEditors</a></li><li><a href="global.html#getChannelVIPs">getChannelVIPs</a></li><li><a href="global.html#getClipById">getClipById</a></li><li><a href="global.html#getClipsByBroadcaster">getClipsByBroadcaster</a></li><li><a href="global.html#getClipsByGame">getClipsByGame</a></li><li><a href="global.html#getGameFromId">getGameFromId</a></li><li><a href="global.html#getLoggingLevel">getLoggingLevel</a></li><li><a href="global.html#getPoll">getPoll</a></li><li><a href="global.html#getPolls">getPolls</a></li><li><a href="global.html#getPrediction">getPrediction</a></li><li><a href="global.html#getPredictions">getPredictions</a></li><li><a href="global.html#getTextboxWithHistoryHTML">getTextboxWithHistoryHTML</a></li><li><a href="global.html#getUser">getUser</a></li><li><a href="global.html#handleSettingsWidgetSmallData">handleSettingsWidgetSmallData</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#info">info</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initTriggersAndActions">initTriggersAndActions</a></li><li><a href="global.html#joinChannel">joinChannel</a></li><li><a href="global.html#leaderboard">leaderboard</a></li><li><a href="global.html#leaveChannel">leaveChannel</a></li><li><a href="global.html#loadConfig">loadConfig</a></li><li><a href="global.html#loadCredentials">loadCredentials</a></li><li><a href="global.html#loadSoftwareVersion">loadSoftwareVersion</a></li><li><a href="global.html#lockPrediction">lockPrediction</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#onChannelBan">onChannelBan</a></li><li><a href="global.html#onChannelCharityCampaignProgress">onChannelCharityCampaignProgress</a></li><li><a href="global.html#onChannelCharityCampaignStart">onChannelCharityCampaignStart</a></li><li><a href="global.html#onChannelCharityCampaignStop">onChannelCharityCampaignStop</a></li><li><a href="global.html#onChannelCharityDonation">onChannelCharityDonation</a></li><li><a href="global.html#onChannelCheer">onChannelCheer</a></li><li><a href="global.html#onChannelFollow">onChannelFollow</a></li><li><a href="global.html#onChannelGoalBegin">onChannelGoalBegin</a></li><li><a href="global.html#onChannelGoalEnd">onChannelGoalEnd</a></li><li><a href="global.html#onChannelGoalProgress">onChannelGoalProgress</a></li><li><a href="global.html#onChannelHypeTrainBegin">onChannelHypeTrainBegin</a></li><li><a href="global.html#onChannelHypeTrainEnd">onChannelHypeTrainEnd</a></li><li><a href="global.html#onChannelHypeTrainProgress">onChannelHypeTrainProgress</a></li><li><a href="global.html#onChannelModeratorAdd">onChannelModeratorAdd</a></li><li><a href="global.html#onChannelModeratorRemove">onChannelModeratorRemove</a></li><li><a href="global.html#onChannelPollBegin">onChannelPollBegin</a></li><li><a href="global.html#onChannelPollEnd">onChannelPollEnd</a></li><li><a href="global.html#onChannelPollProgress">onChannelPollProgress</a></li><li><a href="global.html#onChannelPredictionBegin">onChannelPredictionBegin</a></li><li><a href="global.html#onChannelPredictionEnd">onChannelPredictionEnd</a></li><li><a href="global.html#onChannelPredictionLock">onChannelPredictionLock</a></li><li><a href="global.html#onChannelPredictionProgress">onChannelPredictionProgress</a></li><li><a href="global.html#onChannelRaidFrom">onChannelRaidFrom</a></li><li><a href="global.html#onChannelRaidTo">onChannelRaidTo</a></li><li><a href="global.html#onChannelRedemptionAdd">onChannelRedemptionAdd</a></li><li><a href="global.html#onChannelRedemptionUpdate">onChannelRedemptionUpdate</a></li><li><a href="global.html#onChannelRewardAdd">onChannelRewardAdd</a></li><li><a href="global.html#onChannelRewardRemove">onChannelRewardRemove</a></li><li><a href="global.html#onChannelRewardUpdate">onChannelRewardUpdate</a></li><li><a href="global.html#onChannelShieldModeBegin">onChannelShieldModeBegin</a></li><li><a href="global.html#onChannelShieldModeEnd">onChannelShieldModeEnd</a></li><li><a href="global.html#onChannelShoutoutCreate">onChannelShoutoutCreate</a></li><li><a href="global.html#onChannelShoutoutReceive">onChannelShoutoutReceive</a></li><li><a href="global.html#onChannelSubscription">onChannelSubscription</a></li><li><a href="global.html#onChannelSubscriptionEnd">onChannelSubscriptionEnd</a></li><li><a href="global.html#onChannelSubscriptionGift">onChannelSubscriptionGift</a></li><li><a href="global.html#onChannelSubscriptionMessage">onChannelSubscriptionMessage</a></li><li><a href="global.html#onChannelUnban">onChannelUnban</a></li><li><a href="global.html#onChannelUpdate">onChannelUpdate</a></li><li><a href="global.html#onConnect">onConnect</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#onDisconnect">onDisconnect</a></li><li><a href="global.html#onMessage">onMessage</a></li><li><a href="global.html#onStreamOffline">onStreamOffline</a></li><li><a href="global.html#onStreamOnline">onStreamOnline</a></li><li><a href="global.html#output">output</a></li><li><a href="global.html#parseUserRequestSaveDataFile">parseUserRequestSaveDataFile</a></li><li><a href="global.html#pubSubTriggerCallback">pubSubTriggerCallback</a></li><li><a href="global.html#receivedTrigger">receivedTrigger</a></li><li><a href="global.html#registerSubs">registerSubs</a></li><li><a href="global.html#removeMod">removeMod</a></li><li><a href="global.html#removePrediction">removePrediction</a></li><li><a href="global.html#removeSubs">removeSubs</a></li><li><a href="global.html#removeVIP">removeVIP</a></li><li><a href="global.html#resolvePrediction">resolvePrediction</a></li><li><a href="global.html#saveConfig">saveConfig</a></li><li><a href="global.html#saveCredentials">saveCredentials</a></li><li><a href="global.html#saveData">saveData</a></li><li><a href="global.html#sendChannelList">sendChannelList</a></li><li><a href="global.html#sendConfig">sendConfig</a></li><li><a href="global.html#sendCurrentGameData">sendCurrentGameData</a></li><li><a href="global.html#sendData">sendData</a></li><li><a href="global.html#sendDataLoad">sendDataLoad</a></li><li><a href="global.html#sendExtensionList">sendExtensionList</a></li><li><a href="global.html#sendGameCategoriesTrigger">sendGameCategoriesTrigger</a></li><li><a href="global.html#sendLoggingLevel">sendLoggingLevel</a></li><li><a href="global.html#sendSoftwareVersion">sendSoftwareVersion</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setLoggingLevel">setLoggingLevel</a></li><li><a href="global.html#setStreamGame">setStreamGame</a></li><li><a href="global.html#setStreamTitle">setStreamTitle</a></li><li><a href="global.html#start">start</a></li><li><a href="global.html#startCommercial">startCommercial</a></li><li><a href="global.html#startEventSub">startEventSub</a></li><li><a href="global.html#startPrediction">startPrediction</a></li><li><a href="global.html#startServer">startServer</a></li><li><a href="global.html#triggerMacroButton">triggerMacroButton</a></li><li><a href="global.html#unbanUser">unbanUser</a></li><li><a href="global.html#usecoloredlogs">usecoloredlogs</a></li><li><a href="global.html#warn">warn</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:04:00 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

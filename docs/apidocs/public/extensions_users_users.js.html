@@ -189,16 +189,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 let ServerConnectionAttempts = 0;
 let millisecondsInDay = 86400000;
 const localConfig = {
-    OUR_CHANNEL: "USERS_CHANNEL",
-    EXTENSION_NAME: "users",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
-    MaxServerConnectionAttempts: 20
+    MaxServerConnectionAttempts: 20,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
 };
 const default_serverConfig = {
     __version__: 0.1,
-    extensionname: localConfig.EXTENSION_NAME,
-    channel: localConfig.OUR_CHANNEL,
+    extensionname: "users",
+    channel: "USERS_CHANNEL",
     enableusersextension: "on",
     cleardatausersextension: "off",
     maxuserstokeep: "50",
@@ -243,13 +243,17 @@ const triggersandactions =
  */
 function initialise (app, host, port, heartbeat)
 {
+    if (typeof (heartbeat) != "undefined")
+        localConfig.heartBeatTimeout = heartbeat;
+    else
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heartbeat passed:", heartbeat);
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
     } catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "config.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "config.DataCenterSocket connection failed:", err);
     }
 }
 
@@ -262,7 +266,7 @@ function initialise (app, host, port, heartbeat)
  */
 function onDataCenterDisconnect (reason)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -273,17 +277,19 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
+        sr_api.ServerPacket("RequestData", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH_CHAT"));
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH_CHAT"));
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "TWITCH"));
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "TWITCH"));
+    clearTimeout(localConfig.heartBeatHandle);
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 
     // get a main list of twitch users who are bots
     getTwitchBotStatusList()
@@ -362,7 +368,7 @@ function onDataCenterMessage (server_packet)
             )
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     else if (server_packet.type === "ChannelData")
@@ -437,7 +443,7 @@ function onDataCenterMessage (server_packet)
             }
             catch (error)
             {
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + " packet trigger_TwitchUserDetails", error.message);
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + " packet trigger_TwitchUserDetails", error.message);
             }
         }
         else if (extension_packet.type === "HeartBeat"
@@ -446,25 +452,25 @@ function onDataCenterMessage (server_packet)
             //ignore these
         }
         else
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
     }
     else if (server_packet.type === "UnknownChannel")
     {
         if (ServerConnectionAttempts++ &lt; localConfig.MaxServerConnectionAttempts)
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             setTimeout(() =>
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
     }
     else if (server_packet.type === "InvalidMessage")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
     else if (server_packet.type === "LoggingLevel")
@@ -481,12 +487,16 @@ function onDataCenterMessage (server_packet)
     }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
     else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
 //                           FUNCTION: pruneUsers
 // ===========================================================================
+/**
+ * Prune the data to keep data sizes manageable
+ * @param {string} platform 
+ */
 function pruneUsers (platform)
 {
 
@@ -556,7 +566,7 @@ function pruneUsers (platform)
     }
     catch (error)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".pruneUsers", platform, error.message);
     }
 }
@@ -573,7 +583,7 @@ function SendSettingsWidgetSmall (tochannel)
     fs.readFile(__dirname + "/userssettingswidgetsmall.html", function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         //throw err;
         else
@@ -589,14 +599,14 @@ function SendSettingsWidgetSmall (tochannel)
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    localConfig.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode", // message type
-                        localConfig.EXTENSION_NAME, //our name
+                        serverConfig.extensionname, //our name
                         modalstring,// data
                         "",
                         tochannel,
-                        localConfig.OUR_CHANNEL
+                        serverConfig.channel
                     ),
                     "",
                     tochannel // in this case we only need the "to" channel as we will send only to the requester
@@ -607,6 +617,10 @@ function SendSettingsWidgetSmall (tochannel)
 // ============================================================================
 //                           FUNCTION: sendNewUserTrigger
 // ============================================================================
+/**
+ * sends trigger_NewChatter message 
+ * @param {object} data 
+ */
 function sendNewUserTrigger (data)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -632,28 +646,29 @@ function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket(
         "SaveConfig",
-        localConfig.EXTENSION_NAME,
+        serverConfig.extensionname,
         serverConfig))
 }
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
 // ============================================================================
-// Description:save data on backend data store
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
-// ===========================================================================
+/**
+ * Save our data to the server
+ */
 function SaveDataToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveData",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             serverData));
 }
 // ===========================================================================
 //                           FUNCTION: getTwitchBotStatusList
 // ===========================================================================
+/**
+ * Update our know twitch bot list
+ */
 async function getTwitchBotStatusList ()
 {
     try
@@ -710,6 +725,10 @@ async function getTwitchBotStatusList ()
 // ===========================================================================
 //                           FUNCTION: setTwitchBotStatus
 // ===========================================================================
+/**
+ * Update user data based on known bot list
+ * @param {string} name 
+ */
 async function setTwitchBotStatus (name)
 {
 
@@ -722,16 +741,20 @@ async function setTwitchBotStatus (name)
 // ===========================================================================
 //                           FUNCTION: getUserIDData
 // ===========================================================================
+/**
+ * sends action_TwitchGetUser to twitch extension to get user data back
+ * @param {string} username 
+ */
 function getUserIDData (username)
 {
     // request user data so we can store the twitch id with the username
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "ExtensionMessage",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "action_TwitchGetUser",
-                localConfig.EXTENSION_NAME,
+                serverConfig.extensionname,
                 { "username": username },
                 "",
                 "twitch"
@@ -741,10 +764,41 @@ function getUserIDData (username)
         ));
 }
 // ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
+function heartBeatCallback ()
+{
+    let colour = 'red'
+
+    //is everything conencted and running
+    if (serverConfig.enableusersextension === "on")
+        colour = 'green'
+    else
+        colour = "red"
+
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                {
+                    color: colour
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
 </code></pre>
         </article>
@@ -752,13 +806,13 @@ export { initialise };
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#CheckTriggers">CheckTriggers</a></li><li><a href="global.html#ConnectToDataCenter">ConnectToDataCenter</a></li><li><a href="global.html#ProcessReceivedTrigger">ProcessReceivedTrigger</a></li><li><a href="global.html#ProcessUserPairings">ProcessUserPairings</a></li><li><a href="global.html#RequestChList">RequestChList</a></li><li><a href="global.html#RequestExtList">RequestExtList</a></li><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="global.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="global.html#SendMacroImages">SendMacroImages</a></li><li><a href="global.html#SendMacros">SendMacros</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SendUserPairings">SendUserPairings</a></li><li><a href="global.html#TriggerAction">TriggerAction</a></li><li><a href="global.html#actionAction_SetGroupPauseState">actionAction_SetGroupPauseState</a></li><li><a href="global.html#addGameToHistoryFromGameName">addGameToHistoryFromGameName</a></li><li><a href="global.html#addMod">addMod</a></li><li><a href="global.html#addToLogfile">addToLogfile</a></li><li><a href="global.html#addTriggerEntries">addTriggerEntries</a></li><li><a href="global.html#addVIP">addVIP</a></li><li><a href="global.html#banUser">banUser</a></li><li><a href="global.html#broadcastMessage">broadcastMessage</a></li><li><a href="global.html#cancelPrediction">cancelPrediction</a></li><li><a href="global.html#cheerEmotes">cheerEmotes</a></li><li><a href="global.html#connectTwitch">connectTwitch</a></li><li><a href="global.html#containsBadChars">containsBadChars</a></li><li><a href="global.html#createBlock">createBlock</a></li><li><a href="global.html#createChannel">createChannel</a></li><li><a href="global.html#createClip">createClip</a></li><li><a href="global.html#createDropdownWithSearchableHistory">createDropdownWithSearchableHistory</a></li><li><a href="global.html#createPoll">createPoll</a></li><li><a href="global.html#createPredictionString">createPredictionString</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#deleteBlock">deleteBlock</a></li><li><a href="global.html#deleteConfig">deleteConfig</a></li><li><a href="global.html#deleteCredentials">deleteCredentials</a></li><li><a href="global.html#disconnectTwitch">disconnectTwitch</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#endPoll">endPoll</a></li><li><a href="global.html#err">err</a></li><li><a href="global.html#errorMessage">errorMessage</a></li><li><a href="global.html#extra">extra</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#followedChannels">followedChannels</a></li><li><a href="global.html#followerCount">followerCount</a></li><li><a href="global.html#forwardMessage">forwardMessage</a></li><li><a href="global.html#getAllGameCategories">getAllGameCategories</a></li><li><a href="global.html#getBlockedUsers">getBlockedUsers</a></li><li><a href="global.html#getChannelEditors">getChannelEditors</a></li><li><a href="global.html#getChannelVIPs">getChannelVIPs</a></li><li><a href="global.html#getClipById">getClipById</a></li><li><a href="global.html#getClipsByBroadcaster">getClipsByBroadcaster</a></li><li><a href="global.html#getClipsByGame">getClipsByGame</a></li><li><a href="global.html#getGameFromId">getGameFromId</a></li><li><a href="global.html#getLoggingLevel">getLoggingLevel</a></li><li><a href="global.html#getPoll">getPoll</a></li><li><a href="global.html#getPolls">getPolls</a></li><li><a href="global.html#getPrediction">getPrediction</a></li><li><a href="global.html#getPredictions">getPredictions</a></li><li><a href="global.html#getTextboxWithHistoryHTML">getTextboxWithHistoryHTML</a></li><li><a href="global.html#getUser">getUser</a></li><li><a href="global.html#handleSettingsWidgetSmallData">handleSettingsWidgetSmallData</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#info">info</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initTriggersAndActions">initTriggersAndActions</a></li><li><a href="global.html#joinChannel">joinChannel</a></li><li><a href="global.html#leaderboard">leaderboard</a></li><li><a href="global.html#leaveChannel">leaveChannel</a></li><li><a href="global.html#loadConfig">loadConfig</a></li><li><a href="global.html#loadCredentials">loadCredentials</a></li><li><a href="global.html#loadSoftwareVersion">loadSoftwareVersion</a></li><li><a href="global.html#lockPrediction">lockPrediction</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#onChannelBan">onChannelBan</a></li><li><a href="global.html#onChannelCharityCampaignProgress">onChannelCharityCampaignProgress</a></li><li><a href="global.html#onChannelCharityCampaignStart">onChannelCharityCampaignStart</a></li><li><a href="global.html#onChannelCharityCampaignStop">onChannelCharityCampaignStop</a></li><li><a href="global.html#onChannelCharityDonation">onChannelCharityDonation</a></li><li><a href="global.html#onChannelCheer">onChannelCheer</a></li><li><a href="global.html#onChannelFollow">onChannelFollow</a></li><li><a href="global.html#onChannelGoalBegin">onChannelGoalBegin</a></li><li><a href="global.html#onChannelGoalEnd">onChannelGoalEnd</a></li><li><a href="global.html#onChannelGoalProgress">onChannelGoalProgress</a></li><li><a href="global.html#onChannelHypeTrainBegin">onChannelHypeTrainBegin</a></li><li><a href="global.html#onChannelHypeTrainEnd">onChannelHypeTrainEnd</a></li><li><a href="global.html#onChannelHypeTrainProgress">onChannelHypeTrainProgress</a></li><li><a href="global.html#onChannelModeratorAdd">onChannelModeratorAdd</a></li><li><a href="global.html#onChannelModeratorRemove">onChannelModeratorRemove</a></li><li><a href="global.html#onChannelPollBegin">onChannelPollBegin</a></li><li><a href="global.html#onChannelPollEnd">onChannelPollEnd</a></li><li><a href="global.html#onChannelPollProgress">onChannelPollProgress</a></li><li><a href="global.html#onChannelPredictionBegin">onChannelPredictionBegin</a></li><li><a href="global.html#onChannelPredictionEnd">onChannelPredictionEnd</a></li><li><a href="global.html#onChannelPredictionLock">onChannelPredictionLock</a></li><li><a href="global.html#onChannelPredictionProgress">onChannelPredictionProgress</a></li><li><a href="global.html#onChannelRaidFrom">onChannelRaidFrom</a></li><li><a href="global.html#onChannelRaidTo">onChannelRaidTo</a></li><li><a href="global.html#onChannelRedemptionAdd">onChannelRedemptionAdd</a></li><li><a href="global.html#onChannelRedemptionUpdate">onChannelRedemptionUpdate</a></li><li><a href="global.html#onChannelRewardAdd">onChannelRewardAdd</a></li><li><a href="global.html#onChannelRewardRemove">onChannelRewardRemove</a></li><li><a href="global.html#onChannelRewardUpdate">onChannelRewardUpdate</a></li><li><a href="global.html#onChannelShieldModeBegin">onChannelShieldModeBegin</a></li><li><a href="global.html#onChannelShieldModeEnd">onChannelShieldModeEnd</a></li><li><a href="global.html#onChannelShoutoutCreate">onChannelShoutoutCreate</a></li><li><a href="global.html#onChannelShoutoutReceive">onChannelShoutoutReceive</a></li><li><a href="global.html#onChannelSubscription">onChannelSubscription</a></li><li><a href="global.html#onChannelSubscriptionEnd">onChannelSubscriptionEnd</a></li><li><a href="global.html#onChannelSubscriptionGift">onChannelSubscriptionGift</a></li><li><a href="global.html#onChannelSubscriptionMessage">onChannelSubscriptionMessage</a></li><li><a href="global.html#onChannelUnban">onChannelUnban</a></li><li><a href="global.html#onChannelUpdate">onChannelUpdate</a></li><li><a href="global.html#onConnect">onConnect</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#onDisconnect">onDisconnect</a></li><li><a href="global.html#onMessage">onMessage</a></li><li><a href="global.html#onStreamOffline">onStreamOffline</a></li><li><a href="global.html#onStreamOnline">onStreamOnline</a></li><li><a href="global.html#output">output</a></li><li><a href="global.html#parseUserRequestSaveDataFile">parseUserRequestSaveDataFile</a></li><li><a href="global.html#pubSubTriggerCallback">pubSubTriggerCallback</a></li><li><a href="global.html#receivedTrigger">receivedTrigger</a></li><li><a href="global.html#registerSubs">registerSubs</a></li><li><a href="global.html#removeMod">removeMod</a></li><li><a href="global.html#removePrediction">removePrediction</a></li><li><a href="global.html#removeSubs">removeSubs</a></li><li><a href="global.html#removeVIP">removeVIP</a></li><li><a href="global.html#resolvePrediction">resolvePrediction</a></li><li><a href="global.html#saveConfig">saveConfig</a></li><li><a href="global.html#saveCredentials">saveCredentials</a></li><li><a href="global.html#saveData">saveData</a></li><li><a href="global.html#sendChannelList">sendChannelList</a></li><li><a href="global.html#sendConfig">sendConfig</a></li><li><a href="global.html#sendCurrentGameData">sendCurrentGameData</a></li><li><a href="global.html#sendData">sendData</a></li><li><a href="global.html#sendDataLoad">sendDataLoad</a></li><li><a href="global.html#sendExtensionList">sendExtensionList</a></li><li><a href="global.html#sendGameCategoriesTrigger">sendGameCategoriesTrigger</a></li><li><a href="global.html#sendLoggingLevel">sendLoggingLevel</a></li><li><a href="global.html#sendSoftwareVersion">sendSoftwareVersion</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setLoggingLevel">setLoggingLevel</a></li><li><a href="global.html#setStreamGame">setStreamGame</a></li><li><a href="global.html#setStreamTitle">setStreamTitle</a></li><li><a href="global.html#start">start</a></li><li><a href="global.html#startCommercial">startCommercial</a></li><li><a href="global.html#startEventSub">startEventSub</a></li><li><a href="global.html#startPrediction">startPrediction</a></li><li><a href="global.html#startServer">startServer</a></li><li><a href="global.html#triggerMacroButton">triggerMacroButton</a></li><li><a href="global.html#unbanUser">unbanUser</a></li><li><a href="global.html#usecoloredlogs">usecoloredlogs</a></li><li><a href="global.html#warn">warn</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:04:00 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

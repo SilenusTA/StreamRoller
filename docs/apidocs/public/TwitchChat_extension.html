@@ -136,16 +136,3971 @@
     <h1 class="page-title">TwitchChat</h1>
 
     
+
+
+
+
+
+<section>
+    <article>    
+        <!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+<h1>Twitch Chat</h1>
+<p>Contents</p>
+<ul>
+<li><a href="#twitch-chat">Twitch Chat</a></li>
+<li><a href="#setup">Setup</a>
+<ul>
+<li><a href="#outgoing-channel--twitch_chat">Outgoing channel : &quot;TWITCH_CHAT&quot;</a></li>
+<li><a href="#authorization-fields">Authorization fields</a>
+<ul>
+<li><a href="#bot-field-1">(BOT) Field 1</a></li>
+<li><a href="#bot-field-2">(BOT) Field 2</a></li>
+<li><a href="#user-field-1">(USER) Field 1</a></li>
+<li><a href="#user-field-2">(USER) Field 2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#about">About</a>
+<ul>
+<li><a href="#triggersactions">Triggers/Actions</a>
+<ul>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1>Setup</h1>
+<h2>Outgoing channel : &quot;TWITCH_CHAT&quot;</h2>
+<h2>Authorization fields</h2>
+<p>There are two sets of credentials needed. One for the user and one for the bot. Future versions will add the ability for multiple users and bots</p>
+<h3>(BOT) Field 1</h3>
+<ul>
+<li>Name: twitchchatbot</li>
+<li>Value: 'botname' ie myChatBot</li>
+</ul>
+<h3>(BOT) Field 2</h3>
+<ul>
+<li>Name: twitchchatbotoauth</li>
+<li>Value: bot oauth token (including the oauth: part, ie &quot;oauth:sdfeicx345324dfsfe3242&quot;)</li>
+</ul>
+<h3>(USER) Field 1</h3>
+<ul>
+<li>Name: twitchchauser</li>
+<li>Value: 'username' ie OldDepressedGamer</li>
+</ul>
+<h3>(USER) Field 2</h3>
+<ul>
+<li>Name: twitchchatuseroauth</li>
+<li>Value: user oauth token (including the oauth: part, ie &quot;oauth:sdfeicx345324dfsfe3242&quot;)</li>
+</ul>
+<h1>About</h1>
+<p>The twitch chat extension will send out any messages sent on the channel provided in the settings (or Admin page settings box) using the username provided or defaults to the bot</p>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TwitchChatChatMessageReceived</td>
+<td>trigger_ChatMessageReceived</td>
+<td>A chat message was received. textMessage field has name and message combined</td>
+</tr>
+<tr>
+<td>TwitchChatActionReceived</td>
+<td>trigger_ChatActionReceived</td>
+<td>A chat action was received (a /me message)</td>
+</tr>
+<tr>
+<td>TwitchChatBanReceived</td>
+<td>trigger_ChatBanReceived</td>
+<td>A chat users was banned</td>
+</tr>
+<tr>
+<td>TwitchChatMessageDeletedReceived</td>
+<td>trigger_ChatMessageDeleted</td>
+<td>A chat message was deleted</td>
+</tr>
+<tr>
+<td>TwitchChatPrimePaidUpgradeReceived</td>
+<td>trigger_ChatPrimePaidUpgrade</td>
+<td>A user paid to upgrade their prime sub</td>
+</tr>
+<tr>
+<td>TwitchChatRaidReceived</td>
+<td>trigger_ChatRaid</td>
+<td>Another streamer raided you</td>
+</tr>
+<tr>
+<td>TwitchChatRedeemReceived</td>
+<td>trigger_ChatRedeem</td>
+<td>Viewer reddemed chat points</td>
+</tr>
+<tr>
+<td>TwitchChatResubReceived</td>
+<td>trigger_ChatResub</td>
+<td>Someone Resubbed</td>
+</tr>
+<tr>
+<td>TwitchChatRitualReceived</td>
+<td>trigger_ChatRitual</td>
+<td>Ritual</td>
+</tr>
+<tr>
+<td>TwitchChatRoomstateReceived</td>
+<td>trigger_ChatRoomstate</td>
+<td>This message contains things like sub-only mode etc</td>
+</tr>
+<tr>
+<td>TwitchChatSubscriptionReceived</td>
+<td>trigger_ChatSubscription</td>
+<td>Someone Subscribed</td>
+</tr>
+<tr>
+<td>TwitchChatTimeoutReceived</td>
+<td>trigger_ChatTimeout</td>
+<td>A viewer was timedout</td>
+</tr>
+<tr>
+<td>TwitchChatSubMysteryGiftReceived</td>
+<td>trigger_ChatSubMysteryGift</td>
+<td>A viewer Gifted a sub</td>
+</tr>
+<tr>
+<td>TwitchChatAutoModReceived</td>
+<td>trigger_ChatAutoMod</td>
+<td>Automod action happened</td>
+</tr>
+<tr>
+<td>TwitchChatReconnect</td>
+<td>trigger_ChatReconnect</td>
+<td>Chat Reconnected</td>
+</tr>
+<tr>
+<td>TwitchChatAnonGiftPaidUpgradeReceived</td>
+<td>trigger_ChatAnonGiftPaidUpgrade</td>
+<td>Your guess is as good as mine on this one</td>
+</tr>
+<tr>
+<td>TwitchChatAnonSubMysteryGiftReceived</td>
+<td>trigger_ChatAnonSubMysteryGift</td>
+<td>Someone Gifted an Sub Anonymously</td>
+</tr>
+<tr>
+<td>TwitchChatAnonSubGiftReceived</td>
+<td>trigger_ChatAnonSubGift</td>
+<td>Someone Gifted an Sub</td>
+</tr>
+<tr>
+<td>TwitchChatCheerReceived</td>
+<td>trigger_ChatCheer</td>
+<td>Someone donated bits</td>
+</tr>
+<tr>
+<td>TwitchChatMod</td>
+<td>trigger_ChatMod</td>
+<td>A Mod message was received, someone modded maybe or a mod action was performed. let me know if you know which it is</td>
+</tr>
+<tr>
+<td>TwitchChatSubGift</td>
+<td>trigger_ChatSubGift</td>
+<td>Someone gifted a sub to another viewer</td>
+</tr>
+<tr>
+<td>TwitchChatSubscribers</td>
+<td>trigger_ChatSubscribers</td>
+<td>Subscribers</td>
+</tr>
+<tr>
+<td>TwitchChatVipss</td>
+<td>trigger_ChatVips</td>
+<td>Channel Vips</td>
+</tr>
+<tr>
+<td>TwitchChatClear</td>
+<td>trigger_ChatClear</td>
+<td>Chat was cleared</td>
+</tr>
+<tr>
+<td>TwitchChatFollowersOnly</td>
+<td>trigger_ChatFollowersOnly</td>
+<td>FollowersOnly mode was changed</td>
+</tr>
+<tr>
+<td>TwitchChatGiftPaidUpgrade</td>
+<td>trigger_ChatGiftPaidUpgrade</td>
+<td>Someone gifted a paid upgrade</td>
+</tr>
+<tr>
+<td>TwitchChatEmoteOnly</td>
+<td>trigger_ChatEmoteOnly</td>
+<td>EmoteOnly mode changed</td>
+</tr>
+<tr>
+<td>TwitchChatr9kbeta</td>
+<td>trigger_Chatr9kbeta</td>
+<td>r9kbeta mode changed</td>
+</tr>
+<tr>
+<td>TwitchChatSlowmode</td>
+<td>trigger_ChatSlowmode</td>
+<td>Slowmode mode changed</td>
+</tr>
+<tr>
+<td>TwitchChatWhisper</td>
+<td>trigger_ChatWhisper</td>
+<td>Someone Whispered you or the bot</td>
+</tr>
+<tr>
+<td>TwitchChatNotice</td>
+<td>trigger_ChatNotice</td>
+<td>You received a notice (ie about chat being in follower mode etc)</td>
+</tr>
+<tr>
+<td>TwitchChatUserNotice</td>
+<td>trigger_ChatUserNotice</td>
+<td>UserNotice received</td>
+</tr>
+<tr>
+<td>TwitchChatDisconnected</td>
+<td>trigger_ChatDisconnected</td>
+<td>Chat was Disconnected</td>
+</tr>
+<tr>
+<td>TwitchChatConnected</td>
+<td>trigger_ChatConnected</td>
+<td>Chat was connected</td>
+</tr>
+<tr>
+<td>TwitchChatJoin</td>
+<td>trigger_ChatJoin</td>
+<td>Someone Joined the chat</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TwitchChatSendChatMessage</td>
+<td>action_SendChatMessage</td>
+<td>Post a message to twitch chat (Note user is case sensitive)</td>
+</tr>
+</tbody>
+</table>
+    </article>
+</section>
+<section><header><h2>"TwitchChat" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Access to Twitch Chat IRC for sending/receiving message and also some alerts/notifications</div>
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line22">line 22</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveChatMessagesToServerScheduler">
+    SaveChatMessagesToServerScheduler<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Poll timer to save the data to server to maintain a chat history over restarts
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1273">line 1273</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveConfigToServer">
+    SaveConfigToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Save our config to the server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1240">line 1240</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SaveDataToServer">
+    SaveDataToServer<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Save our data to the server
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1259">line 1259</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendCredentialsModal">
+    SendCredentialsModal<span class="signature">(extensionname)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our CredentialsModal to whoever requested it
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>extensionname</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1183">line 1183</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetLarge">
+    SendSettingsWidgetLarge<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our SettingsWidgetLarge to the extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>toExtension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1135">line 1135</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="SendSettingsWidgetSmall">
+    SendSettingsWidgetSmall<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our SettingsWidgetSmall to the extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>toExtension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1088">line 1088</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="action_SendChatMessage">
+    action_SendChatMessage<span class="signature">(channel, data)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send the to twitch on the given channel or fakes a message if debug flag is on
+and sends it out as if twitch has sent us the message back from the chat trigger
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>channel</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1400">line 1400</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="chatLogin">
+    chatLogin<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Login the account provided to the IRC channel
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>account</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1591">line 1591</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="connectToTwitch">
+    connectToTwitch<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Connect to the IRC chat channel of the current streamer selected in the settings using the account name given
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>account</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1544">line 1544</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="findtriggerByMessageType">
+    findtriggerByMessageType<span class="signature">(messagetype)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Finds a trigger by messagetype
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>messagetype</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1312">line 1312</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    trigger
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="heartBeatCallback">
+    heartBeatCallback<span class="signature">()</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Sends out heartbeat messages so other extensions can see our status
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line2281">line 2281</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line656">line 656</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="joinChatChannel">
+    joinChatChannel<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Join the given account to the currently selected streamer IRC chat channel
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>account</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1499">line 1499</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterConnect">
+    onDataCenterConnect<span class="signature">(socket)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    called on connection to the StreamRoller websocket
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>socket</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line697">line 697</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterDisconnect">
+    onDataCenterDisconnect<span class="signature">(reason)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Called on websocket disconnect
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>reason</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line686">line 686</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="onDataCenterMessage">
+    onDataCenterMessage<span class="signature">(server_packet)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Called when we receive a message on the websocket from StreamRoller
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>server_packet</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line723">line 723</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="postChatTrigger">
+    postChatTrigger<span class="signature">(data)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Posts a trigger of type data.messagetype to our channel
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1288">line 1288</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="process_chat_data">
+    process_chat_data<span class="signature">(channel, tags, chatmessage)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Constructs a ChatMessage type message from the given data.
+TBD needs to be moved to a trigger type message
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>channel</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>tags</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>chatmessage</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1334">line 1334</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="reconnectChat">
+    reconnectChat<span class="signature">(account)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    reconnect to the IRC client
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>account</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1445">line 1445</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sanitiseHTML">
+    sanitiseHTML<span class="signature">(string)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    This will replace the strings chars with escape versions so it will be shown rather than parsed in html
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line2330">line 2330</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+
+<div class="param-desc">
+    sanitised string
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendAccountNames">
+    sendAccountNames<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>toExtension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1051">line 1051</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="sendChatBuffer">
+    sendChatBuffer<span class="signature">(toExtension)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Send our chat buffer to the extension
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>toExtension</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    String
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
+                    <a href="extensions_twitchchat_twitchchat.js.html#line1027">line 1027</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>TwitchChat</h3><ul><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="TwitchChat_extension.html#SaveChatMessagesToServerScheduler">SaveChatMessagesToServerScheduler</a></li><li><a href="TwitchChat_extension.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="TwitchChat_extension.html#SaveDataToServer">SaveDataToServer</a></li><li><a href="TwitchChat_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="TwitchChat_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="TwitchChat_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="TwitchChat_extension.html#action_SendChatMessage">action_SendChatMessage</a></li><li><a href="TwitchChat_extension.html#chatLogin">chatLogin</a></li><li><a href="TwitchChat_extension.html#connectToTwitch">connectToTwitch</a></li><li><a href="TwitchChat_extension.html#findtriggerByMessageType">findtriggerByMessageType</a></li><li><a href="TwitchChat_extension.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="TwitchChat_extension.html#initialise">initialise</a></li><li><a href="TwitchChat_extension.html#joinChatChannel">joinChatChannel</a></li><li><a href="TwitchChat_extension.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="TwitchChat_extension.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="TwitchChat_extension.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="TwitchChat_extension.html#postChatTrigger">postChatTrigger</a></li><li><a href="TwitchChat_extension.html#process_chat_data">process_chat_data</a></li><li><a href="TwitchChat_extension.html#reconnectChat">reconnectChat</a></li><li><a href="TwitchChat_extension.html#sanitiseHTML">sanitiseHTML</a></li><li><a href="TwitchChat_extension.html#sendAccountNames">sendAccountNames</a></li><li><a href="TwitchChat_extension.html#sendChatBuffer">sendChatBuffer</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:04:00 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

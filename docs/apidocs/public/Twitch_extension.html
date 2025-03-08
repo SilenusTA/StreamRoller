@@ -143,27 +143,547 @@
 
 <section>
     <article>    
-        <h1>Twitch API</h1>
+        <!-- this file will be auto updated for triggers and actions when the apidocs automatic
+document builder is run.
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load hte file and use the exported 'triggersandactions' variable
+to create the tables shown in the parsed README.md files
+This was the only way I could find to autoupdate the triggers and actions lists
+ -->
+<h1>Twitch</h1>
 <h2>Outgoing channel : TWITCH</h2>
 <ul>
-<li><a href="#twitch-api">Twitch API</a>
+<li><a href="#twitch">Twitch</a>
 <ul>
 <li><a href="#outgoing-channel--twitch">Outgoing channel : TWITCH</a></li>
 </ul>
 </li>
 <li><a href="#about">About</a>
 <ul>
-<li><a href="#tbd">TBD.</a></li>
+<li><a href="#triggersactions">Triggers/Actions</a>
+<ul>
+<li><a href="#triggers">Triggers</a></li>
+<li><a href="#actions">Actions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 <h1>About</h1>
-<p>All things twitch</p>
-<h2>TBD.</h2>
+<p>This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect</p>
+<h2>Triggers/Actions</h2>
+<p>Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.</p>
+<p>Table last updated: <em>Sat, 08 Mar 2025 02:51:29 GMT</em></p>
+<h3>Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UserBanned</td>
+<td>trigger_TwitchUserBanned</td>
+<td>A user was banned</td>
+</tr>
+<tr>
+<td>CharityCampaignProgress</td>
+<td>trigger_TwitchCharityCampaignProgress</td>
+<td>Progress of a charity Campaign</td>
+</tr>
+<tr>
+<td>CharityCampaignStart</td>
+<td>trigger_TwitchCharityCampaignStart</td>
+<td>Start of a charity campaign</td>
+</tr>
+<tr>
+<td>CharityCampaignStop</td>
+<td>trigger_TwitchCharityCampaignStop</td>
+<td>Charity campaign stopped</td>
+</tr>
+<tr>
+<td>CharityDonation</td>
+<td>trigger_TwitchCharityDonation</td>
+<td>Charity Donation</td>
+</tr>
+<tr>
+<td>Cheer</td>
+<td>trigger_TwitchCheer</td>
+<td>Someone donated some bits</td>
+</tr>
+<tr>
+<td>Follow</td>
+<td>trigger_TwitchFollow</td>
+<td>Someone Followed</td>
+</tr>
+<tr>
+<td>GoalBegin</td>
+<td>trigger_TwitchGoalBegin</td>
+<td>A stream goal began</td>
+</tr>
+<tr>
+<td>GoalEnd</td>
+<td>trigger_TwitchGoalEnd</td>
+<td>A stream goal Ended</td>
+</tr>
+<tr>
+<td>GoalProgress</td>
+<td>trigger_TwitchGoalProgress</td>
+<td>A stream goal Progress</td>
+</tr>
+<tr>
+<td>HypeTrainBegin</td>
+<td>trigger_TwitchHypeTrainBegin</td>
+<td>A Hype Train Started</td>
+</tr>
+<tr>
+<td>HypeTrainEnd</td>
+<td>trigger_TwitchHypeTrainEnd</td>
+<td>A Hype Train Ended</td>
+</tr>
+<tr>
+<td>HypeTrainProgress</td>
+<td>trigger_TwitchHypeTrainProgress</td>
+<td>A hypeTrain is in progress</td>
+</tr>
+<tr>
+<td>ModAdded</td>
+<td>trigger_TwitchModAdded</td>
+<td>A User was added to the Mod list</td>
+</tr>
+<tr>
+<td>ModRemoved</td>
+<td>trigger_TwitchModRemoved</td>
+<td>A User was removed to the Mod list</td>
+</tr>
+<tr>
+<td>PollBegin</td>
+<td>trigger_TwitchPollBegin</td>
+<td>A Poll Started</td>
+</tr>
+<tr>
+<td>PollEnd</td>
+<td>trigger_TwitchPollEnd</td>
+<td>A Poll Ended</td>
+</tr>
+<tr>
+<td>PollProgress</td>
+<td>trigger_TwitchPollProgress</td>
+<td>A Poll Progressed</td>
+</tr>
+<tr>
+<td>PredictionBegin</td>
+<td>trigger_TwitchPredictionBegin</td>
+<td>A Prediction Began</td>
+</tr>
+<tr>
+<td>Prediction</td>
+<td>trigger_TwitchPrediction</td>
+<td>A Prediction</td>
+</tr>
+<tr>
+<td>PredictionEnd</td>
+<td>trigger_TwitchPredictionEnd</td>
+<td>A Prediction Ended</td>
+</tr>
+<tr>
+<td>PredictionLock</td>
+<td>trigger_TwitchPredictionLock</td>
+<td>A Prediction Locked</td>
+</tr>
+<tr>
+<td>PredictionProgress</td>
+<td>trigger_TwitchPredictionProgress</td>
+<td>A Prediction Progressed</td>
+</tr>
+<tr>
+<td>RaidFrom</td>
+<td>trigger_TwitchRaidFrom</td>
+<td>Another streamer raided the channel</td>
+</tr>
+<tr>
+<td>RaidTo</td>
+<td>trigger_TwitchRaidTo</td>
+<td>A raid was started</td>
+</tr>
+<tr>
+<td>RedemptionAdd</td>
+<td>trigger_TwitchRedemptionAdd</td>
+<td>A user used channel points for a redemption</td>
+</tr>
+<tr>
+<td>RedemptionUpdate</td>
+<td>trigger_TwitchRedemptionUpdate</td>
+<td>A user used channel points for a redemption update??</td>
+</tr>
+<tr>
+<td>RewardAdd</td>
+<td>trigger_TwitchRewardAdd</td>
+<td>Reward added by streamer to channel</td>
+</tr>
+<tr>
+<td>RewardRemove</td>
+<td>trigger_TwitchRewardRemove</td>
+<td>Reward removed by streamer to channel</td>
+</tr>
+<tr>
+<td>RewardUpdate</td>
+<td>trigger_TwitchRewardUpdate</td>
+<td>Reward updated by streamer to channel</td>
+</tr>
+<tr>
+<td>ShieldModeBegin</td>
+<td>trigger_TwitchShieldModeBegin</td>
+<td>Shield mode was started</td>
+</tr>
+<tr>
+<td>ShieldModeEnd</td>
+<td>trigger_TwitchShieldModeEnd</td>
+<td>Shield mode was ended</td>
+</tr>
+<tr>
+<td>ShoutoutSent</td>
+<td>trigger_TwitchShoutoutCreate</td>
+<td>A shoutout was performed by the streamer</td>
+</tr>
+<tr>
+<td>ShoutoutReceive</td>
+<td>trigger_TwitchShoutoutReceive</td>
+<td>A shoutout was received for the streamer</td>
+</tr>
+<tr>
+<td>Subscription</td>
+<td>trigger_TwitchSubscription</td>
+<td>Someone subscribed</td>
+</tr>
+<tr>
+<td>SubscriptionEnd</td>
+<td>trigger_TwitchSubscriptionEnd</td>
+<td>Someone subscription ended</td>
+</tr>
+<tr>
+<td>SubscriptionGift</td>
+<td>trigger_TwitchSubscriptionGift</td>
+<td>Someone gifted a subscription</td>
+</tr>
+<tr>
+<td>SubscriptionMessage</td>
+<td>trigger_TwitchSubscriptionMessage</td>
+<td>Announcement of a channel subscription by the subscriber</td>
+</tr>
+<tr>
+<td>UserUnBanned</td>
+<td>trigger_TwitchUserUnBanned</td>
+<td>A user was unbanned</td>
+</tr>
+<tr>
+<td>TitleChanged</td>
+<td>trigger_TwitchTitleChanged</td>
+<td>The Stream title was changed</td>
+</tr>
+<tr>
+<td>GamedChanged</td>
+<td>trigger_TwitchGamedChanged</td>
+<td>The Game was changed</td>
+</tr>
+<tr>
+<td>StreamIdChanged</td>
+<td>trigger_TwitchStreamIdChanged</td>
+<td>The stream ID has changed</td>
+</tr>
+<tr>
+<td>StreamLanguageChanged</td>
+<td>trigger_TwitchStreamLanguageChanged</td>
+<td>The stream language has changed</td>
+</tr>
+<tr>
+<td>StreamerNameChanged</td>
+<td>trigger_TwitchStreamerNameChanged</td>
+<td>The streamer name has changed</td>
+</tr>
+<tr>
+<td>StreamStarted</td>
+<td>trigger_TwitchStreamStarted</td>
+<td>The Stream Started</td>
+</tr>
+<tr>
+<td>StreamEnded</td>
+<td>trigger_TwitchStreamEnded</td>
+<td>The Stream Ended</td>
+</tr>
+<tr>
+<td>CommercialStarted</td>
+<td>trigger_TwitchCommercialStarted</td>
+<td>A Commercial was started</td>
+</tr>
+<tr>
+<td>VIPAdded</td>
+<td>trigger_TwitchVIPAdded</td>
+<td>A User was added to the VIP list</td>
+</tr>
+<tr>
+<td>VIPRemoved</td>
+<td>trigger_TwitchVIPRemoved</td>
+<td>A User was removed to the VIP list</td>
+</tr>
+<tr>
+<td>Editors</td>
+<td>trigger_TwitchEditors</td>
+<td>A list of editors for the channel</td>
+</tr>
+<tr>
+<td>VIPs</td>
+<td>trigger_TwitchVIPs</td>
+<td>A list of VIPs for the channel</td>
+</tr>
+<tr>
+<td>FollowerCount</td>
+<td>trigger_TwitchFollowerCount</td>
+<td>Follower count</td>
+</tr>
+<tr>
+<td>FollowedChannels</td>
+<td>trigger_TwitchFollowedChannels</td>
+<td>Followed channels</td>
+</tr>
+<tr>
+<td>CheerEmotes</td>
+<td>trigger_TwitchCheerEmotes</td>
+<td>Cheer emotes</td>
+</tr>
+<tr>
+<td>Leaderboard</td>
+<td>trigger_TwitchLeaderboard</td>
+<td>Bits leaderboard</td>
+</tr>
+<tr>
+<td>Poll</td>
+<td>trigger_TwitchPoll</td>
+<td>A poll</td>
+</tr>
+<tr>
+<td>UserBlocks</td>
+<td>trigger_TwitchUserBlocks</td>
+<td>Who this user has blocked</td>
+</tr>
+<tr>
+<td>ClipCreated</td>
+<td>trigger_TwitchClipCreated</td>
+<td>A twitch clip</td>
+</tr>
+<tr>
+<td>VodClip</td>
+<td>trigger_TwitchVodClip</td>
+<td>A twitch vod clip</td>
+</tr>
+<tr>
+<td>UserDetails</td>
+<td>trigger_TwitchUserDetails</td>
+<td>Twitch User Data</td>
+</tr>
+<tr>
+<td>GameCategories</td>
+<td>trigger_TwitchGameCategories</td>
+<td>Updated list of games</td>
+</tr>
+</tbody>
+</table>
+<h3>Actions</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>trigger</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ChangeTitle</td>
+<td>action_TwitchChangeTitle</td>
+<td>Change channel title</td>
+</tr>
+<tr>
+<td>StartCommercial</td>
+<td>action_TwitchStartCommercial</td>
+<td>Start a Commercial for (30, 60, 90, 120, 150, 180) seconds</td>
+</tr>
+<tr>
+<td>GetEditors</td>
+<td>action_TwitchGetEditors</td>
+<td>Get a list of editors for the channel</td>
+</tr>
+<tr>
+<td>GetVIPs</td>
+<td>action_TwitchGetVIPs</td>
+<td>Get a list of VIPs for the channel</td>
+</tr>
+<tr>
+<td>AddVIP</td>
+<td>action_TwitchAddVIP</td>
+<td>Promote user to VIP</td>
+</tr>
+<tr>
+<td>RemoveVIP</td>
+<td>action_TwitchRemoveVIP</td>
+<td>Demote user from VIP</td>
+</tr>
+<tr>
+<td>AddMod</td>
+<td>action_TwitchAddMod</td>
+<td>Promote user to Mod</td>
+</tr>
+<tr>
+<td>RemoveMod</td>
+<td>action_TwitchRemoveMod</td>
+<td>Demote user from Mod</td>
+</tr>
+<tr>
+<td>Ban</td>
+<td>action_TwitchBan</td>
+<td>Bans a user from the stream</td>
+</tr>
+<tr>
+<td>Unban</td>
+<td>action_TwitchUnban</td>
+<td>Unbans a user from the stream</td>
+</tr>
+<tr>
+<td>FollowerCount</td>
+<td>action_TwitchFollowerCount</td>
+<td>Get follower count</td>
+</tr>
+<tr>
+<td>FollowedChannels</td>
+<td>action_TwitchFollowedChannels</td>
+<td>Get followed channels</td>
+</tr>
+<tr>
+<td>CheerEmotes</td>
+<td>action_TwitchCheerEmotes</td>
+<td>Get cheer emotes</td>
+</tr>
+<tr>
+<td>Leaderboard</td>
+<td>action_TwitchLeaderboard</td>
+<td>Get bits leaderboard</td>
+</tr>
+<tr>
+<td>GetPolls</td>
+<td>action_TwitchGetPolls</td>
+<td>Gets a list of polls</td>
+</tr>
+<tr>
+<td>GetPoll</td>
+<td>action_TwitchGetPoll</td>
+<td>Get a poll</td>
+</tr>
+<tr>
+<td>CreatePoll</td>
+<td>action_TwitchCreatePoll</td>
+<td>Create a poll</td>
+</tr>
+<tr>
+<td>EndPoll</td>
+<td>action_TwitchEndPoll</td>
+<td>End a poll</td>
+</tr>
+<tr>
+<td>StartPrediction</td>
+<td>action_TwitchStartPrediction</td>
+<td>Start a prediction</td>
+</tr>
+<tr>
+<td>CancelPrediction</td>
+<td>action_TwitchCancelPrediction</td>
+<td>Cancel a prediction</td>
+</tr>
+<tr>
+<td>GetPredictions</td>
+<td>action_TwitchGetPredictions</td>
+<td>Gets a list of predictions</td>
+</tr>
+<tr>
+<td>GetPrediction</td>
+<td>action_TwitchGetPrediction</td>
+<td>Get a prediction</td>
+</tr>
+<tr>
+<td>LockPrediction</td>
+<td>action_TwitchLockPrediction</td>
+<td>Lock a prediction</td>
+</tr>
+<tr>
+<td>RemovePrediction</td>
+<td>action_TwitchLRemovePrediction</td>
+<td>Remove a prediction</td>
+</tr>
+<tr>
+<td>ResolvePrediction</td>
+<td>action_TwitchLResolvePrediction</td>
+<td>Resolve a prediction</td>
+</tr>
+<tr>
+<td>CreateUserBlock</td>
+<td>action_TwitchCreateBlock</td>
+<td>Block a user</td>
+</tr>
+<tr>
+<td>DeleteUserBlock</td>
+<td>action_TwitchDeleteBlock</td>
+<td>Unblock a user</td>
+</tr>
+<tr>
+<td>GetUser</td>
+<td>action_TwitchGetUser</td>
+<td>Gets a Users Details</td>
+</tr>
+<tr>
+<td>GetBlocks</td>
+<td>action_TwitchGetBlocks</td>
+<td>Get a list of blocked users</td>
+</tr>
+<tr>
+<td>CreateClip</td>
+<td>action_TwitchCreateClip</td>
+<td>Create a twitch clip</td>
+</tr>
+<tr>
+<td>GetClipById</td>
+<td>action_TwitchGetClipById</td>
+<td>Get clip by id</td>
+</tr>
+<tr>
+<td>GetClipsForBroadcaster</td>
+<td>action_TwitchGetClipsForBroadcaster</td>
+<td>Get clips for a broadcaster</td>
+</tr>
+<tr>
+<td>GetClipsForGame</td>
+<td>action_TwitchGetClipsForGame</td>
+<td>Get clips for a game</td>
+</tr>
+<tr>
+<td>TwitchGameCategories</td>
+<td>action_GetTwitchGameCategories</td>
+<td>Get the list of games</td>
+</tr>
+<tr>
+<td>TwitchGetStats</td>
+<td>action_GetTwitchStats</td>
+<td>Return will be a set of triggers for current game etc</td>
+</tr>
+</tbody>
+</table>
     </article>
 </section>
-<section><header><h2>"TwitchChat" Extension Details... <span class="type-signature"></span></h2></header><article>
-                <div class="container-overview"><div class="description">Access to Twitch Chat IRC for sending/receiving message and also some alerts/notificationsSome other text for extensions</div>
+<section><header><h2>"Twitch" Extension Details... <span class="type-signature"></span></h2></header><article>
+                <div class="container-overview"><div class="description">Connection to the Twitch pub/sub api. Allows full admin access over your streaming acccount from banning users, setting stream titles to more complex features like vods, clips etc.</div>
 
 
 
@@ -203,8 +723,8 @@
         <dd class="tag-source">
             <ul class="dummy">
                 <li>
-                    <a href="extensions_twitchchat_twitchchat.js.html">extensions/twitchchat/twitchchat.js</a>,
-                    <a href="extensions_twitchchat_twitchchat.js.html#line22">line 22</a>
+                    <a href="extensions_twitch_twitch.js.html">extensions/twitch/twitch.js</a>,
+                    <a href="extensions_twitch_twitch.js.html#line23">line 23</a>
                 </li>
             </ul>
         </dd>
@@ -215,17 +735,273 @@
         
 
         
-    </dl></div></article ></section >
+    </dl></div><h3 class="subsection-title">Methods</h3>
+
+
+
+
+
+
+
+
+
+<h4 class="name"
+    id="initialise">
+    initialise<span class="signature">(app, host, port, heartbeat)</span><span class="type-signature"></span><span class="type-signature"></span>
+</h4>
+
+
+
+
+
+
+
+
+
+
+<div class="description">
+    Starts the extension using the given data.
+</div>
+
+
+
+
+
+
+
+
+
+<h5>Parameters:</h5>
+
+
+
+
+<table class="params">
+    <thead>
+        <tr>
+            
+            <th>Name</th>
+            
+
+            <th>Type</th>
+
+            
+
+            
+
+            <th class="last">Description</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        
+
+        <tr>
+            
+            <td class="name"><code>app</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    object:Express
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>host</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    string
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>port</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+
+        <tr>
+            
+            <td class="name"><code>heartbeat</code></td>
+            
+
+            <td class="type">
+                
+                
+
+
+<span class="param-type">
+    number
+</span>
+
+
+                
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                
+                
+            </td>
+        </tr>
+
+        
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+    <dl class="details">
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        <dt class="tag-source">Source:</dt>
+        <dd class="tag-source">
+            <ul class="dummy">
+                <li>
+                    <a href="extensions_twitch_twitch.js.html">extensions/twitch/twitch.js</a>,
+                    <a href="extensions_twitch_twitch.js.html#line54">line 54</a>
+                </li>
+            </ul>
+        </dd>
+        
+
+        
+
+        
+
+        
+    </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article ></section >
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Twitch</h3><ul><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#SendCredentialsModal">SendCredentialsModal</a></li><li><a href="Twitch_extension.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="Twitch_extension.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="Twitch_extension.html#initialise">initialise</a></li><li><a href="Twitch_extension.html#sendAccountNames">sendAccountNames</a></li><li><a href="Twitch_extension.html#sendChatBuffer">sendChatBuffer</a></li></ul>
+    <h2><a href="index.html">StreamRoller Extension</a></h2><h3>Twitch</h3><ul><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#initialise">initialise</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 19:04:00 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
