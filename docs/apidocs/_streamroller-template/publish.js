@@ -921,7 +921,6 @@ function add_doclet_extensions_for_StreamRoller (data)
                 rootPath: doclet.meta.path,
             });
     });
-    console.log("Debug for CI build tree")
     data().each((doclet) =>
     {
         let extNameAndFolder;
@@ -930,17 +929,13 @@ function add_doclet_extensions_for_StreamRoller (data)
             extNameAndFolder = extensionRootPaths.find(
                 (e) =>
                 {
-                    console.log("e.rootPath", e.rootPath)
-                    console.log(".meta.path", doclet.meta.path)
-                    console.log('doclet.meta.path.indexOf(e.rootPath + "/")', doclet.meta.path.indexOf(e.rootPath + "/"))
-                    console.log('doclet.meta.path.indexOf(e.rootPath + "\\")', doclet.meta.path.indexOf(e.rootPath + "\\"))
                     // is it an exact match?
                     if (doclet.meta.path == e.rootPath)
                     {
                         console.log("true exact match")
                         return true;
                     }
-                    //check for partial match
+                    //check for partial match on windows and linux
                     else if ((doclet.meta.path.indexOf(e.rootPath + "/") == 0)
                         || (doclet.meta.path.indexOf(e.rootPath + "\\") == 0))
                     {
