@@ -9,6 +9,8 @@ odg/
 *.env
 tmp/
 php/
+README.md
+apidocs/public/
 test-ext/
 credentialstore/
 configstore/
@@ -24,3 +26,4 @@ extensions/chatbot/savedimages/**
 extensions/chatbot/currentstreamimages/**
 extensions/chatbot/satisfactory/sml/**
 extensions/chatbot/satisfactory/socketio/**
+
