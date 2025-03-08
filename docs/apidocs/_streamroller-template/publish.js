@@ -932,14 +932,24 @@ function add_doclet_extensions_for_StreamRoller (data)
                 {
                     console.log("e.rootPath", e.rootPath)
                     console.log(".meta.path", doclet.meta.path)
+                    console.log('doclet.meta.path.indexOf(e.rootPath + "\\")', doclet.meta.path.indexOf(e.rootPath + "\\"))
                     // is it an exact match?
                     if (doclet.meta.path == e.rootPath)
+                    {
+                        console.log("true exact match")
                         return true;
+                    }
                     //check for partial match
                     else if (doclet.meta.path.indexOf(e.rootPath + "\\") == 0)
+                    {
+                        console.log("true subfolder")
                         return true;
+                    }
                     else
+                    {
+                        console.log("false")
                         return false;
+                    }
                     //return doclet.meta.path.indexOf(e.rootPath) == 0
                 }
             );
