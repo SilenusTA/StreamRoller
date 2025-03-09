@@ -3936,25 +3936,29 @@
     // ============================================================================
     function banUserClicked (username)
     {
-        if (!localConfig.bannedUsersList.includes(username))
+        let reason = prompt(`Ban ${username}?`, "Chat Spam")
+        if (reason != null)
         {
-            localConfig.bannedUsersList.push(username);
-            // request the twitch chat buffer so our display code will update the icons correctly
-            RequestChatBuffer("twitchchat");
+            if (!localConfig.bannedUsersList.includes(username))
+            {
+                localConfig.bannedUsersList.push(username);
+                // request the twitch chat buffer so our display code will update the icons correctly
+                RequestChatBuffer("twitchchat");
 
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "action_TwitchBan",
+                sr_api.sendMessage(DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
-                        { user: username, reason: "banned by streamer" },
+                        sr_api.ExtensionPacket(
+                            "action_TwitchBan",
+                            serverConfig.extensionname,
+                            { user: username, reason: reason },
+                            "",
+                            "twitch"),
                         "",
-                        "twitch"),
-                    "",
-                    "twitch"
-                ),
-            );
+                        "twitch"
+                    ),
+                );
+            }
         }
     }
     // ============================================================================
