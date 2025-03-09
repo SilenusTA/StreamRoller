@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: StreamRoller</title>
+    <title>StreamRoller</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -155,6 +155,13 @@
     <article>    
         <h1>StreamRoller (current dev. stage: Alpha)</h1>
 <p><strong>StreamRoller</strong> is a versatile streaming backend system designed to integrate and manage various tools essential for live streaming. By consolidating functionalities such as chat management, alerts, and OBS control into a single interface, StreamRoller enhances the streaming experience for both creators and their audiences.</p>
+<p><strong>StreamRoller</strong> provides an easy way to gain control your stream using triggers and actions to combine features of these<br>
+tools together, ie select a trigger and tell it what actions you want it to perform</p>
+<p>(ie twitch donation -&gt; show obs donation clip + post message to twitter/chat)</p>
+<p><a href="https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md">See <strong>all Trigger/Actions</strong> Available here</a></p>
+<p>Current user configurable Trigger / Action available: <code>5,275 </code></p>
+<p>No. of possible combinations for a single trigger-&gt;action <code>5,816,850 </code></p>
+<p>No. of possible chained commands <code>infinite</code></p>
 <h2>Key Features</h2>
 <ul>
 <li><strong>Unified Control Interface</strong>: Access and manage all your streaming tools from a centralized web portal, reducing the need to switch between multiple applications.</li>
@@ -194,7 +201,7 @@
 <li><a href="#featuredatahander-extensions">Feature/Datahander extensions</a>
 <ul>
 <li><a href="#twitchchat">twitchchat</a></li>
-<li><a href="extensions/chatbot">Chatbot</a> <a href="extensions/chatbot/README.md">README</a></li>
+<li><a href="#chatbot-the-ai-chatbot">chatbot (The AI chatbot)</a></li>
 <li><a href="#discordchat">discordchat</a></li>
 <li><a href="#streamlabs_api">streamlabs_api</a></li>
 <li><a href="#twitter">twitter</a></li>
@@ -345,13 +352,13 @@ It mostly handles routing messages from one extension to another as well as stor
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

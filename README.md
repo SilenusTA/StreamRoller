@@ -7,7 +7,7 @@ tools together, ie select a trigger and tell it what actions you want it to perf
 
 (ie twitch donation -> show obs donation clip + post message to twitter/chat)
 
-[See **all Trigger/Actions** Available here](README_ALL_TRIGGERS.md)
+[See **all Trigger/Actions** Available here](https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md)
 
 Current user configurable Trigger / Action available: ```5,275 ```
 

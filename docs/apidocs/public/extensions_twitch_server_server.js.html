@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: Source: extensions/twitch/server/server.js</title>
+    <title>Source: extensions/twitch/server/server.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -1343,6 +1343,14 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {string} host 
+ * @param {number} port 
+ * @param {number} nonce
+ * @param {number} clientId
+ * @param {number} heartbeat 
+ */
 function start (host, port, nonce, clientId, heartbeat)
 {
     localConfig.host = host;
@@ -1364,6 +1372,11 @@ function start (host, port, nonce, clientId, heartbeat)
 // ============================================================================
 //                           FUNCTION: ConnectToDataCenter
 // ============================================================================
+/**
+ * Connects to the StreamRoller server
+ * @param {string} host 
+ * @param {number} port 
+ */
 function ConnectToDataCenter (host, port)
 {
     try
@@ -1378,6 +1391,10 @@ function ConnectToDataCenter (host, port)
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
+/**
+ * called on StreamRoller websocket disconnect
+ * @param {string} reason 
+ */
 function onDataCenterDisconnect (reason)
 {
     logger.err(serverConfig.extensionname + " server.initialise", "DataCenterSocket connection failed:", reason);
@@ -1385,6 +1402,10 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
+/**
+ * called on StreamRoller websocket connect
+ * @param {object} socket 
+ */
 function onDataCenterConnect (socket)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1402,6 +1423,10 @@ function onDataCenterConnect (socket)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
+/**
+ * Called when we receive a StreamRoller message
+ * @param {object} server_packet 
+ */
 function onDataCenterMessage (server_packet)
 {
     try
@@ -1964,6 +1989,9 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
+/**
+ * Save our config to the server
+ */
 function SaveConfigToServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1976,6 +2004,10 @@ function SaveConfigToServer ()
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
+/**
+ * Send our small settings widget html code to the given extension
+ * @param {string} toChannel 
+ */
 function SendSettingsWidgetSmall (toChannel = "")
 {
     fs.readFile(__dirname + "/twitchsettingswidgetsmall.html", function (err, filedata)
@@ -2059,7 +2091,7 @@ function SendSettingsWidgetSmall (toChannel = "")
 // ===========================================================================
 /**
  * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
+ * @param {string} extensionname 
  */
 function SendCredentialsModal (extensionname)
 {
@@ -2099,12 +2131,17 @@ function SendCredentialsModal (extensionname)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
+/**
+ * Handles data from a user submit on our small settings widget
+ * @param {object} modalCode 
+ * @returns boolean restart connection needed due to data change
+ */
 function handleSettingsWidgetSmallData (modalCode)
 {
     try
     {
-        /* enable disable checkbox */
         let restartConnection = false;
+        /* check enabled change */
         if (serverConfig.twitchenabled != modalCode.twitchenabled)
         {
             restartConnection = true;
@@ -2113,14 +2150,14 @@ function handleSettingsWidgetSmallData (modalCode)
             else
                 serverConfig.twitchenabled = "off"
         }
-        /* streamername */
+        /* check streamername change */
         if (modalCode.twitchstreamername != serverConfig.twitchstreamername)
         {
             restartConnection = true;
             serverConfig.twitchstreamername = modalCode["twitchstreamername"]
         }
 
-        /* Clear History */
+        /* check clear history/cagegories flag */
         let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"]
         let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"]
 
@@ -2133,6 +2170,7 @@ function handleSettingsWidgetSmallData (modalCode)
                 serverConfig.twitchTitlesHistory = [];
                 localConfig.currentTwitchGameCategoryId = -1
             }
+            // return now to clear options
             return restartConnection;
         }
         // search for game on twitch
@@ -2153,9 +2191,12 @@ function handleSettingsWidgetSmallData (modalCode)
                 {
                     if (game)
                     {
+                        // found game check if we have it in our history already
                         const inHistory = serverConfig.twitchCategoriesHistory.findIndex(e => e.id === game.id);
+                        // add to history if not already there
                         if (inHistory == -1)
                             serverConfig.twitchCategoriesHistory.push(game)
+                        //  set game if we are connected and the game is different
                         if (localConfig.status.connected &amp;&amp; localConfig.currentTwitchGameCategoryId != game.id)
                             setStreamGame(game.id)
                     }
@@ -2191,6 +2232,9 @@ function handleSettingsWidgetSmallData (modalCode)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     localConfig.status.color = "red"
@@ -2219,6 +2263,9 @@ function heartBeatCallback ()
 // ===========================================================================
 //                           FUNCTION: connectTwitch
 // ===========================================================================
+/**
+ *  Connects to the twitch api
+ */
 async function connectTwitch ()
 {
     try
@@ -2283,7 +2330,7 @@ async function connectTwitch ()
                 //to start up (if we have just started the server)
                 setTimeout(() =>
                 {
-                    sendCurrentGameData()
+                    sendCurrentGameData("twitch")
                 }, 5000);
 
             })
@@ -2305,6 +2352,10 @@ async function connectTwitch ()
 // ===========================================================================
 //                           FUNCTION: getAllGameCategories
 // ===========================================================================
+/**
+ * Collates and sends out the twitch 'Top' category list 
+ * @param {string} id trigger identifier or "twitch"
+ */
 async function getAllGameCategories (id = "twitch")
 {
     try
@@ -2324,6 +2375,10 @@ async function getAllGameCategories (id = "twitch")
 // ===========================================================================
 //                           FUNCTION: addGameToHistoryFromGameName
 // ===========================================================================
+/**
+ * Adds a game by name to the history list
+ * @param {string} gameName 
+ */
 async function addGameToHistoryFromGameName (gameName)
 {
     try
@@ -2390,6 +2445,11 @@ async function addGameToHistoryFromGameName (gameName)
 // ===========================================================================
 //                           FUNCTION: getGameFromId
 // ===========================================================================
+/**
+ * Get a game object from a game Id
+ * @param {number} gameId 
+ * @returns gameobject
+ */
 async function getGameFromId (gameId)
 {
 
@@ -2426,6 +2486,9 @@ async function getGameFromId (gameId)
 // ===========================================================================
 //                           FUNCTION: disconnectTwitch
 // ===========================================================================
+/**
+ * Disconnect the twitch API
+ */
 function disconnectTwitch ()
 {
     eventSubApi.removeSubs()
@@ -2433,6 +2496,10 @@ function disconnectTwitch ()
 // ===========================================================================
 //                           FUNCTION: setStreamTitle
 // ===========================================================================
+/**
+ * Sets the current stream title
+ * @param {string} title 
+ */
 async function setStreamTitle (title)
 {
     localConfig.apiClient.channels.updateChannelInfo(localConfig.streamerData.id, { title: title })
@@ -2440,6 +2507,10 @@ async function setStreamTitle (title)
 // ===========================================================================
 //                           FUNCTION: setStreamGame
 // ===========================================================================
+/**
+ * Sets the current game/category in twitch
+ * @param {number} gameId 
+ */
 async function setStreamGame (gameId)
 {
     if (gameId)
@@ -2451,6 +2522,10 @@ async function setStreamGame (gameId)
 // ===========================================================================
 //                           FUNCTION: startCommercial
 // ===========================================================================
+/**
+ * Start a add/commercial running on twitch
+ * @param {number} length ["30", "60", "90", "120", "150", "180"]
+ */
 async function startCommercial (length)
 {
     try
@@ -2470,7 +2545,14 @@ async function startCommercial (length)
                         trigger.parameters.duration = length;
                         sendTrigger(trigger)
                     })
-                    .catch(err => logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message))
+                    .catch((err) =>
+                    {
+                        if (err &amp;&amp; err._body, JSON.parse(err._body).message)
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message)
+                        else
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.stringify(err, null, 2))
+
+                    })
             }
             catch (err)
             {
@@ -2495,6 +2577,9 @@ async function startCommercial (length)
 // ===========================================================================
 //                           FUNCTION: getChannelEditors
 // ===========================================================================
+/**
+ * sends trigger trigger_TwitchEditors containing the chat editors
+ */
 async function getChannelEditors ()
 {
     try
@@ -2518,6 +2603,9 @@ async function getChannelEditors ()
 // ===========================================================================
 //                           FUNCTION: getChannelVIPs
 // ===========================================================================
+/**
+ * send trigger_TwitchVIPs containing chat VIP's
+ */
 async function getChannelVIPs ()
 {
     try
@@ -2541,6 +2629,10 @@ async function getChannelVIPs ()
 // ===========================================================================
 //                           FUNCTION: addVIP
 // ===========================================================================
+/**
+ * Make the username a VIP
+ * @param {string} username 
+ */
 async function addVIP (username)
 {
     try
@@ -2569,6 +2661,10 @@ async function addVIP (username)
 // ===========================================================================
 //                           FUNCTION: removeVIP
 // ===========================================================================
+/**
+ * Remove VIP status from user
+ * @param {string} username 
+ */
 async function removeVIP (username)
 {
     try
@@ -2597,6 +2693,10 @@ async function removeVIP (username)
 // ===========================================================================
 //                           FUNCTION: addMod
 // ===========================================================================
+/**
+ * make username a mod
+ * @param {string} username 
+ */
 async function addMod (username)
 {
     try
@@ -2621,6 +2721,10 @@ async function addMod (username)
 // ===========================================================================
 //                           FUNCTION: removeMod
 // ===========================================================================
+/**
+ * Remove mod status from username
+ * @param {string} username 
+ */
 async function removeMod (username)
 {
     try
@@ -2645,6 +2749,11 @@ async function removeMod (username)
 // ===========================================================================
 //                           FUNCTION: banUser
 // ===========================================================================
+/**
+ * Ban username for given reason
+ * @param {string} username 
+ * @param {string} reason 
+ */
 async function banUser (username, reason)
 {
     try
@@ -2695,6 +2804,11 @@ async function banUser (username, reason)
 // ===========================================================================
 //                           FUNCTION: unbanUser
 // ===========================================================================
+/**
+ * Unban username for give reason
+ * @param {string} username 
+ * @param {string} reason 
+ */
 async function unbanUser (username, reason)
 {
     try
@@ -2743,6 +2857,9 @@ async function unbanUser (username, reason)
 // ===========================================================================
 //                           FUNCTION: followerCount
 // ===========================================================================
+/**
+ * Send trigger_TwitchFollowerCount
+ */
 async function followerCount ()
 {
     try
@@ -2762,6 +2879,9 @@ async function followerCount ()
 // ===========================================================================
 //                           FUNCTION: followedChannels
 // ===========================================================================
+/**
+ * sends trigger_TwitchFollowedChannels
+ */
 async function followedChannels ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2787,6 +2907,9 @@ async function followedChannels ()
 // ===========================================================================
 //                           FUNCTION: cheerEmotes
 // ===========================================================================
+/**
+ * send trigger_TwitchCheerEmotes
+ */
 async function cheerEmotes ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2807,6 +2930,9 @@ async function cheerEmotes ()
 // ===========================================================================
 //                           FUNCTION: leaderboard
 // ===========================================================================
+/**
+ * send trigger_TwitchLeaderboard
+ */
 async function leaderboard ()
 {
     // TBD need to use teh paginator to get all the channels.
@@ -2834,6 +2960,9 @@ async function leaderboard ()
 // ===========================================================================
 //                           FUNCTION: getPolls
 // ===========================================================================
+/**
+ * send a trigger_TwitchPoll message for each poll running
+ */
 async function getPolls ()
 {
     try
@@ -2870,6 +2999,10 @@ async function getPolls ()
 // ===========================================================================
 //                           FUNCTION: getPoll
 // ===========================================================================
+/**
+ * send trigger_TwitchPoll
+ * @param {number} id 
+ */
 async function getPoll (id)
 {
     try
@@ -2903,6 +3036,10 @@ async function getPoll (id)
 // ===========================================================================
 //                           FUNCTION: createPoll
 // ===========================================================================
+/**
+ * Creates a twitch poll
+ * @param {object} data 
+ */
 async function createPoll (data)
 {
     try
@@ -2933,6 +3070,10 @@ async function createPoll (data)
 // ===========================================================================
 //                           FUNCTION: endPoll
 // ===========================================================================
+/**
+ * Ends the given poll
+ * @param {object} data 
+ */
 async function endPoll (data)
 {
     try
@@ -2956,6 +3097,10 @@ async function endPoll (data)
 // ===========================================================================
 //                           FUNCTION: startPrediction
 // ===========================================================================
+/**
+ * Starts a prediction
+ * @param {object} data 
+ */
 async function startPrediction (data)
 {
     try
@@ -2985,6 +3130,10 @@ async function startPrediction (data)
 // ===========================================================================
 //                           FUNCTION: cancelPrediction
 // ===========================================================================
+/**
+ * Cancels a prediction
+ * @param {object} data 
+ */
 async function cancelPrediction (data)
 {
     try
@@ -3006,8 +3155,12 @@ async function cancelPrediction (data)
     }
 }
 // ===========================================================================
-//                           FUNCTION: getPredictionss
+//                           FUNCTION: getPredictions
 // ===========================================================================
+/**
+ * sends trigger_TwitchPrediction for each current predictions
+ * @param {object} data 
+ */
 async function getPredictions (data)
 {
     try
@@ -3029,6 +3182,10 @@ async function getPredictions (data)
 // ===========================================================================
 //                           FUNCTION: getPrediction
 // ===========================================================================
+/**
+ * Sends trigger_TwitchPrediction for the given prediction
+ * @param {object} data 
+ */
 async function getPrediction (data)
 {
     try
@@ -3079,6 +3236,10 @@ async function getPrediction (data)
 // ===========================================================================
 //                           FUNCTION: lockPrediction
 // ===========================================================================
+/**
+ * Locks a prediction in it's current state
+ * @param {object} data 
+ */
 async function lockPrediction (data)
 {
     try
@@ -3102,6 +3263,10 @@ async function lockPrediction (data)
 // ===========================================================================
 //                           FUNCTION: removePrediction
 // ===========================================================================
+/**
+ * Delete prediction
+ * @param {object} data 
+ */
 async function removePrediction (data)
 {
     try
@@ -3125,6 +3290,10 @@ async function removePrediction (data)
 // ===========================================================================
 //                           FUNCTION: resolvePrediction
 // ===========================================================================
+/**
+ * Resolves the current prediction with the given data
+ * @param {object} data 
+ */
 async function resolvePrediction (data)
 {
     try
@@ -3148,6 +3317,10 @@ async function resolvePrediction (data)
 // ===========================================================================
 //                           FUNCTION: createBlock
 // ===========================================================================
+/**
+ * Block the user given
+ * @param {object} data 
+ */
 async function createBlock (data)
 {
     try
@@ -3178,6 +3351,10 @@ async function createBlock (data)
 // ===========================================================================
 //                           FUNCTION: deleteBlock
 // ===========================================================================
+/**
+ * Remove a Block from the given user
+ * @param {object} data 
+ */
 async function deleteBlock (data)
 {
     try
@@ -3202,6 +3379,11 @@ async function deleteBlock (data)
 // ===========================================================================
 //                           FUNCTION: containsBadChars
 // ===========================================================================
+/**
+ * Tests for unicode charts in a string
+ * @param {string} s 
+ * @returns boolean
+ */
 function containsBadChars (s)
 {
     //return /[\u3040-\uffff]/.test(s);
@@ -3210,6 +3392,10 @@ function containsBadChars (s)
 // ===========================================================================
 //                           FUNCTION: getUser
 // ===========================================================================
+/**
+ * send trigger_TwitchUserDetails message for given user
+ * @param {string} username 
+ */
 async function getUser (username)
 {
 
@@ -3266,6 +3452,9 @@ async function getUser (username)
 // ===========================================================================
 //                           FUNCTION:  getBlockedUsers
 // ===========================================================================
+/**
+ * send a trigger_TwitchUserBlocks message containing current blocked users
+ */
 async function getBlockedUsers ()
 {
     try
@@ -3300,6 +3489,9 @@ async function getBlockedUsers ()
 // ===========================================================================
 //                           FUNCTION:  createClip
 // ===========================================================================
+/**
+ * Create a twitch clip and send out trigger_TwitchClipCreated when done
+ */
 async function createClip ()
 {
     try
@@ -3318,6 +3510,12 @@ async function createClip ()
 // ===========================================================================
 //                           FUNCTION:  getClipById
 // ===========================================================================
+/**
+ * Gets a clip using data.clipName,if clip isn't available yet (i.e. still being processed)
+ * setup a reschedule timer to wait for clip. Sends trigger_TwitchVodClip when found
+ * @param {object} data 
+ * @param {number} [rollbackCount=5] in seconds, reduced by 1 second each rollback
+ */
 async function getClipById (data, rollbackCount = 5)
 {
     try
@@ -3366,6 +3564,12 @@ async function getClipById (data, rollbackCount = 5)
 // ===========================================================================
 //                           FUNCTION:  getClipsByBroadcaster
 // ===========================================================================
+/**
+ * Sends out a trigger_TwitchVodClip message for each clip the broadcaster has
+ * data is formatted from an action. 
+ * @param {object} data 
+ * @param {number} [rollbackCount=5] number of times to check (1 second polls, in case clip is still being processed)
+ */
 async function getClipsByBroadcaster (data, rollbackCount = 5)
 {
     try
@@ -3428,6 +3632,10 @@ async function getClipsByBroadcaster (data, rollbackCount = 5)
 // ===========================================================================
 //                           FUNCTION:  getClipsByBroadcaster
 // ===========================================================================
+/**
+ * sends a trigger_TwitchVodClip for each clip from a game category based on data object
+ * @param {object} data 
+ */
 async function getClipsByGame (data)
 {
     try
@@ -3481,7 +3689,11 @@ async function getClipsByGame (data)
 // ===========================================================================
 //                           FUNCTION: sendGameCategoriesTrigger
 // ===========================================================================
-function sendGameCategoriesTrigger (id)
+/**
+ * sends trigger_TwitchGameCategories containing all games in our category
+ * @param {number} [id="twitch"] ref id from action
+ */
+function sendGameCategoriesTrigger (id = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGameCategories");
     trigger.parameters.id = id;
@@ -3493,19 +3705,28 @@ function sendGameCategoriesTrigger (id)
 // ===========================================================================
 //                           FUNCTION: sendCurrentGameData
 // ===========================================================================
-function sendCurrentGameData (id)
+/**
+ * sends trigger_TwitchGamedChanged
+ * @param {number} [triggerId="twitch"] ref id from action
+ */
+function sendCurrentGameData (triggerId = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
     const game = serverConfig.twitchCategoriesHistory.find(e => e.id === localConfig.currentTwitchGameCategoryId);
     if (game)
     {
-        trigger.parameters = { triggerId: "InitialTwitchConnection", id: game.id, name: game.name, imageURL: game.imageURL }
+        trigger.parameters = { triggerId: triggerId, id: game.id, name: game.name, imageURL: game.imageURL }
         sendTrigger(trigger)
     }
 }
 // ===========================================================================
 //                           FUNCTION: pubSubTriggerCallback
 // ===========================================================================
+/**
+ * Callback for all triggers used in the twitch pubsub.
+ * gets called whenever the pubsub module needs to create a trigger
+ * @param {object} trigger 
+ */
 function pubSubTriggerCallback (trigger)
 {
     //This gets called whenever the pubsub modules gets a callback from twitch
@@ -3526,6 +3747,10 @@ function pubSubTriggerCallback (trigger)
 // ===========================================================================
 //                           FUNCTION: sendTrigger
 // ===========================================================================
+/**
+ * Sends the given trigger out on our channel
+ * @param {object} trigger 
+ */
 function sendTrigger (trigger)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -3546,6 +3771,14 @@ function sendTrigger (trigger)
 // ============================================================================
 //                           FUNCTION: createDropdownWithSearchableHistory
 // ============================================================================
+/**
+ * Creates an html dropdown list that is searchable using the given information
+ * @param {string} id 
+ * @param {string} categories 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing dropdown code
+ */
 function createDropdownWithSearchableHistory (id, categories = [], history = [], currentSelectedId = -1)
 {
     let dropdownHtml = ""
@@ -3599,6 +3832,14 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
 // ============================================================================
 //                           FUNCTION: getTextboxWithHistoryHTML
 // ============================================================================
+/**
+ * Creates an html dropdown list on a text box is searchable using the given information
+ * @param {string} SelectEleId 
+ * @param {string} TextEleId 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing textbox code
+ */
 function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSelectedId)
 {
     let dropdownHtml = "";
@@ -3638,6 +3879,11 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
 // ============================================================================
 //                           FUNCTION: findTriggerByMessageType
 // ============================================================================
+/**
+ * Finds the trigger using the passed messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
 function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i &lt; triggersandactions.triggers.length; i++)
@@ -3649,20 +3895,20 @@ function findTriggerByMessageType (messagetype)
         ".findTriggerByMessageType", "failed to find trigger", messagetype);
 }
 
-export { start };
+export { start, triggersandactions };
 </code></pre>
         </article>
     </section> 
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

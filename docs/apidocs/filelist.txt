@@ -15,3 +15,5 @@ C:\repos\StreamRoller\docs\apidocs/../../extensions/twitchchat/README.md
 C:\repos\StreamRoller\docs\apidocs/../../extensions/twitter/README.md
 C:\repos\StreamRoller\docs\apidocs/../../extensions/users/README.md
 C:\repos\StreamRoller\docs\apidocs/../../extensions/youtube/README.md
+C:\repos\StreamRoller\docs\apidocs/../../README_All_TRIGGERS.md
+C:\repos\StreamRoller\docs\apidocs/../../README.md

@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: Source: extensions/chatbot/chatbot.js</title>
+    <title>Source: extensions/chatbot/chatbot.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -550,12 +550,13 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Description: Starts the extension
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// this funcion is required by the backend to start the extensions.
-// creates the connection to the data server and registers our message handlers
-// ============================================================================
+/**
+ * Starts the extension using the given data.
+ * @param {Express} app 
+ * @param {String} host 
+ * @param {Number} port 
+ * @param {Number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     try
@@ -583,9 +584,6 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
 // ============================================================================
-// Description: Received connect message
-// Parameters: socket 
-// ===========================================================================
 /**
  * Connection message handler
  * @param {*} socket 
@@ -876,7 +874,10 @@ function onDataCenterMessage (server_packet)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
-
+/**
+ * Handles data sent when a user submits the small settings widget
+ * @param {object} modalcode 
+ */
 function handleSettingsWidgetSmallData (modalcode)
 {
     serverConfig.chatbotenabled = "off";
@@ -913,9 +914,10 @@ function handleSettingsWidgetSmallData (modalcode)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetLargeData
 // ===========================================================================
-// due to the dropdown selector we have used we need special code to handle the 
-// return from the modal.
-// =========================================================================== 
+/**
+ * Handles data sent when a user submits the small settings widget
+ * @param {object} modalcode 
+ */
 function handleSettingsWidgetLargeData (modalcode)
 {
     if (modalcode.chatbot_restore_defaults == "on")
@@ -977,7 +979,11 @@ function handleSettingsWidgetLargeData (modalcode)
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
 // ===========================================================================
-function SendSettingsWidgetSmall (tochannel)
+/**
+ * sends our small settings widget html code to the extension provided
+ * @param {string} to 
+ */
+function SendSettingsWidgetSmall (to)
 {
     fs.readFile(__dirname + "/chatbotsettingswidgetsmall.html", function (err, filedata)
     {
@@ -1030,11 +1036,11 @@ function SendSettingsWidgetSmall (tochannel)
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
-                        tochannel,
+                        to,
                         localConfig.OUR_CHANNEL
                     ),
                     "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    to // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
     });
@@ -1048,9 +1054,9 @@ function SendSettingsWidgetSmall (tochannel)
  * this is done as part of the webpage request for modal message we get from 
  * extension. It is a way of getting some user feedback via submitted forms
  * from a page that supports the modal system
- * @param {String} tochannel 
+ * @param {String} to 
  */
-function SendSettingsWidgetLarge (tochannel)
+function SendSettingsWidgetLarge (to)
 {
     fs.readFile(__dirname + "/chatbotsettingswidgetlarge.html", function (err, filedata)
     {
@@ -1148,11 +1154,11 @@ function SendSettingsWidgetLarge (tochannel)
                         localConfig.EXTENSION_NAME, //our name
                         modalstring,// data
                         "",
-                        tochannel,
+                        to,
                         localConfig.OUR_CHANNEL
                     ),
                     "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    to // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
     });
@@ -1161,6 +1167,11 @@ function SendSettingsWidgetLarge (tochannel)
 //                           FUNCTION: stringParser
 //                          stringParser
 // ===========================================================================
+/**
+ * Parses a string replacing items with the equivalent html code
+ * @param {string} str 
+ * @returns string with replaced chars
+ */
 function stringParser (str)
 {
     // blatantly stolen from stack overflow
@@ -1176,6 +1187,11 @@ function stringParser (str)
 // ===========================================================================
 //                           FUNCTION: SendCredentialsModal
 // ===========================================================================
+/**
+ * Sends our extensions model html code for the credentials dialog to be displayed
+ * to allow the user to enter credentials for login/oauth
+ * @param {string} extensionname 
+ */
 function SendCredentialsModal (extensionname)
 {
     fs.readFile(__dirname + "/chatbotcredentialsmodal.html", function (err, filedata)
@@ -1235,6 +1251,9 @@ function SaveConfigToServer ()
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * sends a regular heartbeat message out so other extensions can check our status
+ */
 function heartBeatCallback ()
 {
     let connected = true
@@ -1257,8 +1276,13 @@ function heartBeatCallback ()
 }
 // ============================================================================
 //                           FUNCTION: processTextMessage
-//            A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
 // ============================================================================
+/**
+ * A message sent direct to extension is processed here instead of the normal one (which outputs to twitchchat automatically)
+ * @param {object} data 
+ * @param {boolean} [triggerresponse=false] send a trigger out when completed processing
+ * @param {number} [maxRollbackCount=20] used for spam relief 
+ */
 function processTextMessage (data, triggerresponse = false, maxRollbackCount = 20)
 {
     try
@@ -1388,8 +1412,12 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
 }
 // ============================================================================
 //                    FUNCTION: processChatMessage
-// This function is called by monitoring the twitch chat output
 // ============================================================================
+/**
+ * This function is called we we see a chat message posted from twitchchat extension
+ * @param {object} data 
+ * @param {number} [maxRollbackCount =20]
+ */
 function processChatMessage (data, maxRollbackCount = 20)
 {
     // debug message colors
@@ -1893,6 +1921,12 @@ function processChatMessage (data, maxRollbackCount = 20)
 // ============================================================================
 //                           FUNCTION: callOpenAI
 // ============================================================================
+/**
+ * Calls OpenAI with the given strings using the model data provided
+ * @param {string} string_array array of strings to send to openAI
+ * @param {object} modelToUse The openAI model detailsto use
+ * @returns OpenAI response or error message
+ */
 async function callOpenAI (string_array, modelToUse)
 {
     if (serverConfig.DEBUG_MODE === "on")
@@ -1943,8 +1977,6 @@ async function callOpenAI (string_array, modelToUse)
 
             if (response.data.choices[0].finish_reason == 'stop' || response.data.choices[0].finish_reason == 'length')
             {
-
-                // ######################## SUCCESSFULL REQUEST LETS POST BACK TO CHAT ###########################
                 //chatbottypingdelay
                 openAIResponce = openAIResponce.trim()
 
@@ -1990,9 +2022,14 @@ async function callOpenAI (string_array, modelToUse)
 }
 // ============================================================================
 //                           FUNCTION: addPersonality
-//          if message passed return that message with the profile
-//          if message == "" return localConfig.chatHistory with the profile
 // ============================================================================
+/**
+ * Adds a presonality string to prepair for sending to OpenAI.
+ * @param {string} username username of the requester
+ * @param {string} [message] message data if data is "" then uses chat history for the message
+ * @param {string} profile profile to attatch to the message
+ * @returns message with included personality
+ */
 function addPersonality (username, message, profile)
 {
     let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
@@ -2026,6 +2063,12 @@ function addPersonality (username, message, profile)
 // ============================================================================
 //                           FUNCTION: parseData
 // ============================================================================
+/**
+ * Parses twitch chat data object creating a string with emotes and removing non ascii chars
+ * @param {object} data 
+ * @param {boolean} translation 
+ * @returns null or parsed data
+ */
 function parseData (data, translation = false)
 {
     let messageEmotes = data.data.emotes;
@@ -2088,6 +2131,12 @@ function parseData (data, translation = false)
 //                           FUNCTION: createImageFromAction
 //            Creates an image from a description
 // ============================================================================
+/**
+ * Takes a messages and tries to get an openAI dall-e-3 image generated. if successful
+ * we then send a trigger out with the details of the image (filename,prompt etc)
+ * @param {object} data action_ProcessImage params {usechatbot,prompt,message,append,requester}
+ * @returns error messages
+ */
 async function createImageFromAction (data)
 {
     if (serverConfig.generateimages != "on")
@@ -2232,6 +2281,10 @@ async function createImageFromAction (data)
 // ============================================================================
 //                           FUNCTION: sendErrorMessageToChannel
 // ============================================================================
+/**
+ * sends an error message out on our channel.
+ * @param {object} err 
+ */
 function sendErrorMessageToChannel (err)
 {
     try
@@ -2294,6 +2347,14 @@ function sendErrorMessageToChannel (err)
 // ============================================================================
 //                           FUNCTION: sendImageTiggerResponse
 // ============================================================================
+/**
+ * Sends out a trigger_imageResponse trigger with the given data
+ * @param {string} image_url 
+ * @param {string} requester 
+ * @param {string} tmp_file_name 
+ * @param {string} message 
+ * @param {string} rev_prompt 
+ */
 function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, rev_prompt)
 {
     let msg = findtriggerByMessageType("trigger_imageResponse")
@@ -2325,6 +2386,10 @@ function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, 
 // ============================================================================
 //                           FUNCTION: postMessageToTwitch
 // ============================================================================
+/**
+ * sends a action_SendChatMessage to twitchchat to post a twitch message to chat
+ * @param {string} message 
+ */
 function postMessageToTwitch (message)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -2343,8 +2408,12 @@ function postMessageToTwitch (message)
 }
 // ============================================================================
 //                           FUNCTION: startChatbotTimer
-//  Setup the timer for a random interval for bot to join chat
 // ============================================================================
+/**
+ * Setup the timer for a random interval for bot to join chat based on user settings
+ * This is used to add a delay in between chat processing to cut down on the bot spamming
+ * chat
+ */
 function startChatbotTimer ()
 {
     localConfig.inTimerWindow = false;
@@ -2365,8 +2434,11 @@ function startChatbotTimer ()
 }
 // ============================================================================
 //                           FUNCTION: startProcessing
-// triggered after a specified timeout
 // ============================================================================
+/**
+ * Starts processing chat for messages to build a history and send to openAI for an
+ * automatic chat response
+ */
 function startProcessing ()
 {
     if (serverConfig.DEBUG_MODE === "on")
@@ -2381,9 +2453,11 @@ function startProcessing ()
 }
 // ============================================================================
 //                           FUNCTION: changeBotName
-// Used to change the bot name. ie after startup and login we update our name
-// in all the strings we use
 // ============================================================================
+/**
+ * Used to change the bot name. ie after startup and login we update our name
+ * in all the strings we use to what the user has configured
+ */
 function changeBotName ()
 {
     serverConfig.chatbotnametriggertag = serverConfig.chatbotnametriggertag.replaceAll(/TWITCHCHATBOTNAME/g, serverConfig.chatbotname);
@@ -2393,6 +2467,11 @@ function changeBotName ()
 // ============================================================================
 //                           FUNCTION: moveImagefilesToFolder
 // ============================================================================
+/**
+ * Used to move image files generated by openAI to a new folder
+ * @param {string} from 
+ * @param {string} to 
+ */
 function moveImagefilesToFolder (from, to)
 {
     try
@@ -2432,6 +2511,10 @@ function moveImagefilesToFolder (from, to)
 // ============================================================================
 //                           FUNCTION: createfolder
 // ============================================================================
+/**
+ * creates a new folder on the server
+ * @param {string} folder 
+ */
 function createfolder (folder)
 {
     // This code will ignore any folder that already exists so can be called instead of an check if needed
@@ -2449,6 +2532,11 @@ function createfolder (folder)
 // ============================================================================
 //                           FUNCTION: findtriggerByMessageType
 // ============================================================================
+/**
+ * finds a trigger based off the message type
+ * @param {string} messagetype 
+ * @returns trigger if found
+ */
 function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i &lt; triggersandactions.triggers.length; i++)
@@ -2462,6 +2550,10 @@ function findtriggerByMessageType (messagetype)
 // ============================================================================
 //                           FUNCTION: triggerMacroButton
 // ============================================================================
+/**
+ * Saves data the user has loaded and sent us. Contains profiles etc.
+ * @param {object} extensions_message 
+ */
 function parseUserRequestSaveDataFile (extensions_message)
 {
     //do something with the file. ie check version etc.
@@ -2503,20 +2595,20 @@ function parseUserRequestSaveDataFile (extensions_message)
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 </code></pre>
         </article>
     </section> 
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

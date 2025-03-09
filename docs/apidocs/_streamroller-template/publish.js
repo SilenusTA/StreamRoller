@@ -447,7 +447,7 @@ function linktoExternal (longName, name)
 function buildNav (members)
 {
     let globalNav;
-    let nav = '<h2><a href="index.html">StreamRoller</a></h2>';
+    let nav = '<h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3>';
     const seen = {};
     const seenTutorials = {};
     let extensionDoclets = members.extensions.filter(
@@ -928,14 +928,25 @@ function add_doclet_extensions_for_StreamRoller (data)
         {
             extNameAndFolder = extensionRootPaths.find(
                 (e) =>
-                {                    // is it an exact match?
+                {
+                    // is it an exact match?
                     if (doclet.meta.path == e.rootPath)
+                    {
+                        console.log("true exact match")
                         return true;
-                    //check for partial match
-                    else if (doclet.meta.path.indexOf(e.rootPath + "\\") == 0)
+                    }
+                    //check for partial match on windows and linux
+                    else if ((doclet.meta.path.indexOf(e.rootPath + "/") == 0)
+                        || (doclet.meta.path.indexOf(e.rootPath + "\\") == 0))
+                    {
+                        console.log("true subfolder")
                         return true;
+                    }
                     else
+                    {
+                        console.log("false")
                         return false;
+                    }
                     //return doclet.meta.path.indexOf(e.rootPath) == 0
                 }
             );

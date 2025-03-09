@@ -6,7 +6,7 @@
                       width=device-width, initial-scale=1.0, 
                       minimum-scale=1.0, maximum-scale=1.0, 
                       user-scalable=no, target-densitydpi=device-dpi">
-    <title>JSDoc: Source: extensions/twitter/twitter.js</title>
+    <title>Source: extensions/twitter/twitter.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -161,7 +161,8 @@
  */
 /**
  * @extension Twitter
- * Connects to twitter allowing sending of tweets
+ * Connects to twitter allowing sending of tweets. Initial version, needs expanded 
+ * functionality adding when I get time or someone requests it :P
  */
 // ############################# TWITTER.js ##############################
 // Allows posting and reading twitter
@@ -218,8 +219,6 @@ const triggersandactions =
     description: "Send a tweet",
     version: "0.2",
     channel: serverConfig.channel,
-    // these are messages we can sendout that other extensions might want to use to trigger an action
-    // these are messages we can receive to perform an action
     actions:
         [
             {
@@ -325,8 +324,9 @@ function onDataCenterMessage (server_packet)
             connectToTwitter(server_packet.data);
         else
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
+            if (serverConfig.twitterenabled == "on")
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                    serverConfig.extensionname + " CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
         }
 
     }
@@ -422,6 +422,13 @@ function onDataCenterMessage (server_packet)
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
+// ============================================================================
+//                           FUNCTION: onDataCenterMessage
+// ============================================================================
+/**
+ * Connects to the twitter API
+ * @param {object} creds 
+ */
 function connectToTwitter (creds)
 {
     try
@@ -591,6 +598,9 @@ function tweetmessage (message)
 // ============================================================================
 //                           FUNCTION: heartBeat
 // ============================================================================
+/**
+ * Sends out heartbeat messages so other extensions can see our status
+ */
 function heartBeatCallback ()
 {
     let status = false;
@@ -613,7 +623,7 @@ function heartBeatCallback ()
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
 </code></pre>
         </article>
@@ -621,13 +631,13 @@ export { initialise };
 </div>
 
 <nav>
-    <h2><a href="index.html">StreamRoller</a></h2><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="Twitch_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sun Feb 23 2025 03:46:29 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
