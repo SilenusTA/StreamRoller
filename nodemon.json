@@ -1,12 +1,13 @@
 {
-  "ignore": [
-    "datastore/*",
-    "configstore/*",
-    "credentialstore/*",
-    "test-ext/*",
-    "chatdata/*",
-    "msfsdata/*",
-    "docs/*"
-  ],
-  "ext": "js, json, html,ejs,cjs,mjs"
+    "ignore": [
+        "datastore/*",
+        "configstore/*",
+        "credentialstore/*",
+        "test-ext/*",
+        "chatdata/*",
+        "msfsdata/*",
+        "docs/*",
+        "debug_logging.json"
+    ],
+    "ext": "js, json, html,ejs,cjs,mjs"
 }
