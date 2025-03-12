@@ -68,7 +68,7 @@ The Timers has the following features implemented in it
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 12 Mar 2025 05:15:14 GMT*
+Table last updated: *Wed, 12 Mar 2025 05:38:02 GMT*
 
 ### Triggers
 
