@@ -707,7 +707,7 @@ function onDataCenterMessage (server_packet)
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
-        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {

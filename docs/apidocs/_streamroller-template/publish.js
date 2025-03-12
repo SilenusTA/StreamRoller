@@ -447,7 +447,7 @@ function linktoExternal (longName, name)
 function buildNav (members)
 {
     let globalNav;
-    let nav = '<h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3>';
+    let nav = '<h2><a href="/index.html">StreamRoller Home</a></h2><h3><a href="/apidocs/index.html">API Docs</a></h3>';
     const seen = {};
     const seenTutorials = {};
     let extensionDoclets = members.extensions.filter(

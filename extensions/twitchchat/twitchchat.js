@@ -725,7 +725,7 @@ function onDataCenterMessage (server_packet)
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
-        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
@@ -952,7 +952,7 @@ function onDataCenterMessage (server_packet)
                 let name = ""
                 if (extension_packet.data.account == "bot" || extension_packet.data.account == "user")
                     name = localConfig.usernames[extension_packet.data.account].name
-                else if (extension_packet.data.account == "")
+                else if (localConfig.usernames.bot && localConfig.usernames.bot.name && extension_packet.data.account == "")
                     name = localConfig.usernames.bot.name
                 else
                     name = extension_packet.data.account
