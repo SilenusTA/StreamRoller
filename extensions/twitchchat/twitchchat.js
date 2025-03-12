@@ -1201,14 +1201,14 @@ function SendCredentialsModal (extensionname)
                 // note oauth are stored in localConfig so we don't store them in plain text on the users machine
                 // so we need to add edge cases for the values of these (stored in cred2value and cred4value)
                 // add oauth to the user auth field
-                else if (typeof (value) == "string" && key == "cred1value")
+                else if (typeof (value) == "string" && key == "cred1value" && localConfig.usernames.bot)
                     modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.name);
-                else if (typeof (value) == "string" && key == "cred2value")
+                else if (typeof (value) == "string" && key == "cred2value" && localConfig.usernames.bot)
                     modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.oauth);
-                else if (typeof (value) == "string" && key == "cred3value")
+                else if (typeof (value) == "string" && key == "cred3value" && localConfig.usernames.user)
                     modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.name);
                 // add oauth to the user bot field
-                else if (typeof (value) == "string" && key == "cred4value")
+                else if (typeof (value) == "string" && key == "cred4value" && localConfig.usernames.user)
                     modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.oauth);
                 else if (typeof (value) == "string")
                     modalstring = modalstring.replaceAll(key + "text", value);
