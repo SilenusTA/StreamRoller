@@ -514,8 +514,11 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
-                serverConfig.chatbotname = extension_packet.data.bot
-                changeBotName();
+                if (extension_packet.data && extension_packet.data.bot)
+                {
+                    serverConfig.chatbotname = extension_packet.data.bot
+                    changeBotName();
+                }
             }
         }
         else if (extension_packet.type === "action_ProcessText")
@@ -1359,7 +1362,7 @@ function processChatMessage (data, maxRollbackCount = 20)
     {
         // check for the name at the start of line only (remove any @ symbols from his name as well.@for)
         let directChatbotTriggerTagTestMessage = data.message.replace("@", "").toLowerCase();
-        if (serverConfig.chatbotnametriggertagstartofline == "on")
+        if (serverConfig.chatbotname && serverConfig.chatbotnametriggertagstartofline == "on")
         {
             directChatbotTriggerTag =
                 // check for trigger

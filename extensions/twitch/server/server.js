@@ -1296,21 +1296,23 @@ function onDataCenterMessage (server_packet)
         // -----------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-            // breakdown the version number to major/minor numbers
-            let configSubVersions = server_packet.data.__version__.split('.')
-            let defaultSubVersions = default_serverConfig.__version__.split('.')
             // check it is our config
             if (server_packet.data
                 && server_packet.data.extensionname
                 && server_packet.data.extensionname === serverConfig.extensionname)
             {
+                let configSubVersions = 0;
+                let defaultSubVersions = default_serverConfig.__version__.split('.');
                 if (server_packet.data == "")
                 {
                     // server data is empty, possibly the first run of the code so just default it
                     serverConfig = structuredClone(default_serverConfig);
                     SaveConfigToServer();
                 }
-                else if (configSubVersions[0] != defaultSubVersions[0])
+                else
+                    configSubVersions = server_packet.data.__version__.split('.')
+
+                if (configSubVersions[0] != defaultSubVersions[0])
                 {
                     // Major version number change. Replace config with defaults
                     // perform a deep clone overwriting our server config.
