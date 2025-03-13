@@ -1103,6 +1103,7 @@ function EditPairingButton (event, g, i)
         if (usertriggerslist.groups[i].name == g)
             selectgroup.value = g
     }
+    td.innerHTML = "Select Group<BR>" + td.innerHTML
     td.appendChild(selectgroup)
     // start trigger table
     tr = table.insertRow().insertCell().outerHTML = "<Th colspan='3'><H3>Trigger</h3></Th>"
