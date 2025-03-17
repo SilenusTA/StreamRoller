@@ -398,19 +398,23 @@
         // -------------------------------------------------------------------------------------------------
         if (server_packet.type === "ConfigFile")
         {
-            let configSubVersions = server_packet.data.__version__.split('.')
-            let defaultSubVersions = default_serverConfig.__version__.split('.')
+
             // check it is our config
             if (server_packet.data && server_packet.data.extensionname
                 && server_packet.data.extensionname === serverConfig.extensionname)
             {
+                let configSubVersions = 0;
+                let defaultSubVersions = default_serverConfig.__version__.split('.');
                 if (server_packet.data == "")
                 {
                     // server data is empty, possibly the first run of the code so just default it
                     serverConfig = structuredClone(default_serverConfig);
                     SaveConfigToServer();
                 }
-                else if (configSubVersions[0] != defaultSubVersions[0])
+                else
+                    configSubVersions = server_packet.data.__version__.split('.')
+
+                if (configSubVersions[0] != defaultSubVersions[0])
                 {
                     // Major version number change. Replace config with defaults
                     // perform a deep clone overwriting our server config.
@@ -864,7 +868,14 @@
                 {
                     if (serverConfig.winttstwitchenabled == "on")
                     {
-                        if (serverConfig.twitchBlackList.toLowerCase().indexOf(extension_packet.data.data.username.toLowerCase()) == -1)
+                        //check for username or Displayname (timeout/ban messgges don't seem to have username field)
+                        let username = ""
+                        if (extension_packet.data.data.username)
+                            username = extension_packet.data.data.username
+                        else if (extension_packet.data["display-name"])
+                            username = extension_packet.data["display-name"]
+                        if (
+                            serverConfig.twitchBlackList && serverConfig.twitchBlackList.toLowerCase().indexOf(username) == -1)
                             TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message, serverConfig.twitchTTSVolume)
                     }
                     parseTwitchChatMessage(extension_packet.data);
@@ -2480,8 +2491,36 @@
     // ============================================================================
     function parseTwitchChatMessage (chatdata)
     {
+        // chat message data structure fields that are currently used/requried
+        // if data = ? then it is optional
+        /*
+        chatdata.data["display-name"]
+        chatdata = 
+        {
+            dateStamp = ?
+            message = ...
+            channel = ...
+            data = 
+            {
+                username = ...
+                "display-name" = ...
+                "message-type" = ...
+                mod = ?
+                color = ?
+                "system-msg" = ?
+                "message-id" = ?
+                "msg-param-category" = ?
+                "custom-reward-id" = ?
+                emotes = ?
+                
+            }
+        }
+        
+        */
+
         try
         {
+            //console.log("received chatdata.data['message-type']", chatdata.data["message-type"], chatdata.message)
             // Message we have currently handled, use this to develope handling of new messages yet to be seen
             // hard to test all messages as we can't generate them
             var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected", "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "usernotice", "viewermilestone", "redeem"]
@@ -2489,7 +2528,7 @@
             var modactions = ["messagedeleted", "timeout", "ban", "notice"]
 
             if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System" && chatdata.data["display-name"].indexOf("(localpost)") == -1)
-                console.log("not handling these messages yet, still work in progress", chatdata.data)
+                console.log("parseTwitchChatMessage() not handling these messages yet, still work in progress", chatdata.data)
 
             // setup the time fields
             var today = new Date();
