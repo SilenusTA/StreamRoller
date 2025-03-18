@@ -1810,7 +1810,8 @@ function chatLogin (account)
             });
             localConfig.twitchClient[account].connection.on("timeout", (channel, username, reason, duration, userstate) => 
             {
-                file_log("timeout", userstate, reason); userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
+                file_log("timeout", userstate, reason);
+                userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
                 process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
                 triggertosend = findtriggerByMessageType("trigger_ChatTimeout")
                 triggertosend.parameters.type = "trigger_ChatTimeout"
