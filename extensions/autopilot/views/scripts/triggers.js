@@ -126,33 +126,55 @@ function addTriggerEntries ()
 {
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")
     let triggerextensionnames = ""
+    let previousExtensionName = localStorage.getItem("selectedtriggerextension")
+    let description = ""
+    if (fulltriggerslist.triggers[0])
+        description = fulltriggerslist.triggers[0]
+    if (extensionlist[previousExtensionName])
+        description = extensionlist[previousExtensionName].description
+
     let triggers = fulltriggerslist.triggers;
     if (Object.keys(triggers).length > 0)
     {
         for (var trigger in triggers)
         {
-            if (triggerextensionnames == "")
+
+            if (description == "")
+                description = trigger
+            // if we have a previous extension name set we need to set that one as selected
+            if (previousExtensionName != "")
             {
-                triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value=" + trigger + " selected>" + trigger + "</option>";
-                TriggersExtensionChoser.title = trigger
+                // check if this trigger is the previous one selected
+                if (trigger == previousExtensionName)
+                    triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "' selected>" + trigger + "</option>";
+                // if not previously selected then don't select it
+                else
+                    triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "'>" + trigger + "</option>";
             }
-            else
-                triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value=" + trigger + ">" + trigger + "</option>";
+            else 
+            {
+                // if we don't have a previously selected name then use the first one in the list as selected
+                // if first run though an no previous extension selected use the first in the list
+                if (triggerextensionnames == "")
+                    triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "' selected>" + trigger + "</option>";
+                else
+                    triggerextensionnames += "<option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "'>" + trigger + "</option>";
+            }
 
         }
 
         TriggersExtensionChoser.innerHTML = triggerextensionnames;
 
         // check if we have stored a trigger extension name previously (adds memory to selected options for user)
-        let extensionname = localStorage.getItem("selectedtriggerextension")
-        if (extensionname)
+        if (previousExtensionName)
         {
-            triggersLoadTriggers(extensionname)// just load the first one to start with
-            TriggersExtensionChoser.value = extensionname
+            triggersLoadTriggers(previousExtensionName)// just load the first one to start with
+            TriggersExtensionChoser.value = previousExtensionName
         }
         else
             triggersLoadTriggers(fulltriggerslist.triggers[0])// just load the first one to start with
 
+        TriggersExtensionChoser.title = description
         TriggersExtensionChoser.dispatchEvent(new Event('change'))
     }
 }
@@ -179,10 +201,9 @@ function triggersLoadTriggers (name)
     let TriggerExtensionTriggers = document.getElementById("triggerExtensionTriggers")
     let selectedTrigger = fulltriggerslist.triggers[name]
     let triggerextensiontriggers = ""
-    // set the title of the calling dropdown
-
+    // set the description of the calling dropdown
     document.getElementById("triggerExtensionChoserLabel").innerHTML = extensionlist[name].description;
-    document.getElementById("triggerExtensionChoser").title = name
+    document.getElementById("triggerExtensionChoser").title = extensionlist[name].description
 
     for (var key in selectedTrigger)
     {
@@ -212,48 +233,73 @@ function triggersLoadParameters (id)
         let params = fulltriggerslist.triggers[extensionname][id].parameters
         let triggername = fulltriggerslist.triggers[extensionname][id].name;
         let triggerextensionparameters = ""
-        TriggerExtensionTriggerParameters.title = fulltriggerslist.triggers[extensionname][id].description
+        let titleDescription = "";
+        //TriggerExtensionTriggerParameters.title = fulltriggerslist.triggers[extensionname][id].description
         // set the title of the calling dropdown
         document.getElementById("triggerExtensionTriggers").title = fulltriggerslist.triggers[extensionname][id].description
         document.getElementById("triggerExtensionChoserChannel").value = extensionlist[extensionname].channel;
         document.getElementById("triggerExtensionChoserTriggerName").value = fulltriggerslist.triggers[extensionname][id].name;
+
+        let descriptions = []
+        // get a list of descriptions for this trigger
+        for (var descParamsKey in params)
+        {
+            if (descParamsKey.indexOf("_UIDescription") != -1)
+            {
+                descriptions[descParamsKey] = params[descParamsKey]
+            }
+        }
         for (var key in params)
         {
-            // Row
-            triggerextensionparameters += "<div class='row'>"
-            // Variable name text
-            triggerextensionparameters += "<div class='col-2'>"
-            triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
-            triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
-            triggerextensionparameters += "</div>"
-            // variable data to match text box
-            triggerextensionparameters += "</div>"
-            triggerextensionparameters += "<div class='col-7'>"
-            triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
-            triggerextensionparameters += "</div>"
-            triggerextensionparameters += "<div class='col-3'>"
-            // add the matcher dropdown to each variable name
-            triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
-            triggerextensionparameters += "<option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
-            triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
-            triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option>";
-            triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option>";
-            triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option>";
-            triggerextensionparameters += "</select>"
-            triggerextensionparameters += "</div>"
-            triggerextensionparameters += "</div>"
+            // check if we have a description for this key
+            if (descriptions[key + "_UIDescription"] != undefined)
+            {
+                if (descriptions[key + "_UIDescription"] == "")
+                    titleDescription = key
+                else
+                    titleDescription = descriptions[key + "_UIDescription"]
+            }
+            else
+                titleDescription = key
+            if (key.indexOf("_UIDescription") == -1)
+            {
+                // Row
+                triggerextensionparameters += "<div class='row' title='" + titleDescription + "'>"
+                // Variable name text
+                triggerextensionparameters += "<div class='col-2'>"
+                triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
+                triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
+                triggerextensionparameters += "</div>"
+                // variable data to match text box
+                triggerextensionparameters += "</div>"
+                triggerextensionparameters += "<div class='col-7'>"
+                triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+                triggerextensionparameters += "</div>"
+                triggerextensionparameters += "<div class='col-3'>"
+                // add the matcher dropdown to each variable name
+                triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
+                triggerextensionparameters += "<option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
+                triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
+                triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option>";
+                triggerextensionparameters += "<option data='Doesn't Match' class='form-control' value='4'>Doesn't match</option>";
+                triggerextensionparameters += "<option data='Specific word' class='form-control' value='5'>Match a specific whole word</option>";
+                triggerextensionparameters += "</select>"
+                triggerextensionparameters += "</div>"
+                triggerextensionparameters += "</div>"
+            }
         }
         // cooldown timer
-        triggerextensionparameters += "<div class='row'>"
+        triggerextensionparameters += "<HR>";
+        triggerextensionparameters += "<div class='row' title='Ignore any future triggers for this number of seconds'>"
 
         triggerextensionparameters += "<div class='col-2'>"
-        triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
+        triggerextensionparameters += "<div class='d-flex form-row >"
         triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_cooldown>cooldown</label>"
         triggerextensionparameters += "</div>"
         triggerextensionparameters += "</div>"
 
         triggerextensionparameters += "<div class='col-3'>"
-        triggerextensionparameters += "<div class='input-group'>"
+        triggerextensionparameters += "<div class='input-group''>"
         triggerextensionparameters += "<input type='text' class='form-control' name='" + triggername + "_cooldown' id='" + triggername + "__cooldown' placeholder='cooldown' value='0'>seconds"
         triggerextensionparameters += "</div>"
         triggerextensionparameters += "</div>"
@@ -366,8 +412,8 @@ function actionLoadParameters (id)
     {
         actionextensionparameters += "<div class='row'>"
         actionextensionparameters += "<div class='col-2'>"
-        actionextensionparameters += "<div class='d-flex form-row align-items-center'>"
-        actionextensionparameters += "<label class='form-label px-2 align-middle' for=" + actionname + "_" + key + ">" + key + "</label>"
+        actionextensionparameters += "<div class='d-flex form-row'>"
+        actionextensionparameters += "<label class='form-label px-2' for=" + actionname + "_" + key + ">" + key + "</label>"
         actionextensionparameters += "</div>"
         actionextensionparameters += "</div>"
         actionextensionparameters += "<div class='col-10'>"

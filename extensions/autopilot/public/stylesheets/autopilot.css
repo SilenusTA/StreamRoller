@@ -18,6 +18,10 @@ input {
   background-color: rgb(189, 189, 189);
 }
 
+.input-group {
+  align-items: center;
+}
+
 table {
   height: 100%;
 }
@@ -115,6 +119,7 @@ td {
 
 .box .row {
   border: 1px dotted grey;
+  align-items: center;
 }
 
 .box .row.header {

@@ -90,7 +90,7 @@ const localCredentials =
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Twitch handles messages to and from twitch",
+    description: "Connects to the twitch Pub/Sub API to provide functions to control your twitch stream",
     version: "0.1",
     channel: serverConfig.channel,
     triggers:
@@ -469,22 +469,31 @@ const triggersandactions =
                     viewers: "",
                 }
             },
-
             {
                 name: "RedemptionAdd",
-                displaytitle: "Points Redemption Add",
-                description: "A user used channel points for a redemption",
+                displaytitle: "Redemption by viewer (channel points)",
+                description: "A user used channel points for a redemption (id and rewardID appear to be the same number)",
                 messagetype: "trigger_TwitchRedemptionAdd",
                 parameters: {
-                    streamer: "",
-                    id: "",
-                    message: "",
-                    rewardId: "",
-                    cost: "",
-                    prompt: "",
                     title: "",
+                    title_UIDescription: "The title of the redeemed item",
+                    cost: "",
+                    cost_UIDescription: "How much this redemption costs the viewer",
+                    prompt: "",
+                    prompt_UIDescription: "Prompt set in the redemption when you created it.",
+                    user: "",
+                    user_UIDescription: "The viewer name who redeemed this item",
+                    streamer: "",
+                    streamer_UIDescription: "Name of the streamers channel that the redemption was redeemed in",
+                    id: "",
+                    id_UIDescription: "Twitch ID for the redemption",
+                    message: "",
+                    message_UIDescription: "Viewer added text for redemptions with user input",
+                    rewardId: "",
+                    rewardId_UIDescription: "Reward ID, normally same as the id field but there might be a use for this, Please let me know if you find one that is different so I can update this description",
                     status: "",
-                    user: ""
+                    status_UIDescription: "Status of the redemption",
+                    triggerActionRef: "twitch"
                 }
             },
             {

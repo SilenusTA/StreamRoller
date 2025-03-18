@@ -7,6 +7,11 @@
   - [Contacts: (For questions, suggestions etc.)](#contacts-for-questions-suggestions-etc)
   - [Standards/FAQ's](#standardsfaqs)
   - [Basic FAQ's](#basic-faqs)
+  - [Triggers and Actions](#triggers-and-actions)
+    - [Mandatory Trigger/Action Top level definition](#mandatory-triggeraction-top-level-definition)
+    - [Mandatory Trigger/Action fields](#mandatory-triggeraction-fields)
+    - [Example single Trigger/action with parameters](#example-single-triggeraction-with-parameters)
+    - [Example trigger/action template](#example-triggeraction-template)
 
 ## Contacts: (For questions, suggestions etc.)
 
@@ -36,24 +41,27 @@ When loading a saved config from the server, you should always check the version
 - major version number change, reset to defaults and let the user know via a console.log message (still need to add an error trigger message so it can be displayed on the live portal etc).
 - minor version number change, users saved file should be loaded over the top of the default one (this means modifying the version number after merging). This will keep the users settings but also keep the new variables added. Always save immediately after merging the files.
 
-```
+```javascript
 if (server_packet.type === "ConfigFile")
 {
     // breakdown the version number to major/minor numbers
-    let ConfigSubVersions = server_packet.data.__version__.split('.')
-    let defaultSubVersions = default_serverConfig.__version__.split('.')
     
     // check it is our config
     if (server_packet.data && server_packet.data.extensionname
         && server_packet.data.extensionname === serverConfig.extensionname)
     {
+        let configSubVersions = 0;
+        let defaultSubVersions = default_serverConfig.__version__.split('.');
         if (server_packet.data == "")
-        {
-            // server data is empty, possibly the first run of the code so just default it
-            serverConfig = structuredClone(default_serverConfig);
-            SaveConfigToServer();
-        }
-        else if (ConfigSubVersions[0] != defaultSubVersions[0])
+            {
+                // server data is empty, possibly the first run of the code so just default it
+                serverConfig = structuredClone(default_serverConfig);
+                SaveConfigToServer();
+            }
+            else
+                configSubVersions = server_packet.data.__version__.split('.')
+        
+        if (ConfigSubVersions[0] != defaultSubVersions[0])
         {
             // Major version number change. Replace config with defaults
             // perform a deep clone overwriting our server config.
@@ -80,4 +88,112 @@ if (server_packet.type === "ConfigFile")
         ...
     }
 }
+```
+
+## Triggers and Actions
+
+Triggers and actions should be defined as below.
+
+Some fields are mandatory, some are optional, the top level variables are a streamroller scoped spec, the parameters are defined in the extension that creates this trigger.
+
+Note that any changes to the triggers can cause the user to lose their saved data. if you are only adding fields
+that (if missing) won't break the code then only update the minor version number (ie 1.x), this will cause the users date to be merged in so you might receive triggers/actions with these fields missing.
+
+If the change needs all triggers/actions to have the new data then update the major **version number** (ie x.2). This will cause the user
+to lose any data they might have setup (ie autopilot pairings get deleted) so try and avoid this where possible (or group these changes into a release cycle).
+
+### Mandatory Trigger/Action Top level definition
+
+The variable name "triggersandactions" is mandatory as this is extracted in the automatic documentation we use for StreamRoller
+
+- extensionname: is the name of the extension that these trigger/actions belong to
+- description: used to describe this extensions purpose
+- version: used to avoid issues with old definitions breaking code, changing this can wipe users settings so change with caution
+- channel: the default broadcast channel for this extension
+- triggers: array of triggers provided by this extension
+- actions: array of actions provided by this extension
+
+```javascript
+const triggersandactions =
+{
+    extensionname: serverConfig.extensionname,
+    description: "Twitch handles messages to and from twitch",
+    version: "0.1",
+    channel: serverConfig.channel,
+    triggers: [],
+    actions: []
+}
+        
+```
+
+### Mandatory Trigger/Action fields
+
+Triggers and actions both have the same mandatory fieldsparameters field to define your data
+
+- name: internal name, should not be used for user displa
+- messagetype: should always start with either "trigger_" or "action_" as this is how code will detect what message type it is
+- triggerActionRef: used as a reference as to the source of this trigger, if triggered as a result of a "action_..." message then this field should be copied though. This allows the user to specify a name for an action and then filter out triggers based on this name.
+- displaytitle: This is what will be displayed to the user as the title of this trigger/action.
+- description: Used to describe what this trigger/action is from/does
+- parameters: the data for this trigger, defined by the extension.
+
+```javascript
+triggers: [
+    {
+        name:"",
+        triggerActionRef:""
+        messagetype:""
+        displaytitle:""
+        description:""
+        parameters:{...}
+    },
+    ...
+    ]
+```
+
+### Example single Trigger/action with parameters
+
+This example is a single element in the trigger array
+
+If you want popup descriptions for a specific field add a "_UIDescription" variable to add extra info. This variable is optional but highly recommended for describing to the user what this field contains
+
+### Example trigger/action template
+
+```javascript
+...
+triggers: 
+[
+    {
+        // name of this action, should only be used to internal checks if needed. Ideally use the messagetype
+        name: "RedemptionAdd",
+        // Title used to display to the user, should be descriptive of what this trigger does
+        displaytitle: "Chat Points Redeemed",
+        description: "A user used channel points for a redemption (id and rewardID appear to be the same number)",
+        messagetype: "trigger_TwitchRedemptionAdd",
+        parameters: 
+        {
+            title: "",
+            title_UIDescription:"",
+            cost: "",
+            cost_UIDescription:"",
+            prompt: "",
+            prompt_UIDescription:"",
+            user: "",
+            user_UIDescription:"",
+            streamer: "",
+            streamer_UIDescription:"",
+            id: "",
+            id_UIDescription:"",
+            message: "",
+            message_UIDescription:"",
+            rewardId: "",
+            rewardId_UIDescription:"",
+            status: "",
+            status_UIDescription:"",
+            triggerActionRef:"",
+            triggerActionRef_UIDescription:""
+        }
+    },
+    ...
+]
 ```
