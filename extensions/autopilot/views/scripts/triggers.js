@@ -267,8 +267,8 @@ function triggersLoadParameters (id)
                 triggerextensionparameters += "<div class='row' title='" + titleDescription + "'>"
                 // Variable name text
                 triggerextensionparameters += "<div class='col-2'>"
-                triggerextensionparameters += "<div class='d-flex form-row align-items-center'>"
-                triggerextensionparameters += "<label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
+                triggerextensionparameters += "<div class='d-flex form-row'>"
+                triggerextensionparameters += "<label class='form-label px-2 text-right' for=" + triggername + "_" + key + ">" + key + "</label>"
                 triggerextensionparameters += "</div>"
                 // variable data to match text box
                 triggerextensionparameters += "</div>"
@@ -316,8 +316,6 @@ function addActionEntries ()
 {
     let ActionExtensionChoser = document.getElementById("actionExtensionChoser")
     let actionextensionnames = ""
-    let temparray = []
-    let tempobject = {}
 
     let actions = fulltriggerslist.actions;
     if (Object.keys(actions).length > 0)
@@ -373,7 +371,7 @@ function actionLoadAction (name)
     let actionextensionaction = ""
 
     document.getElementById("actionExtensionChoserLabel").innerHTML = name
-    document.getElementById("actionExtensionChoser").title = name
+    document.getElementById("actionExtensionChoser").title = extensionlist[name].description
 
     for (var key in selectedAction)
     {
@@ -404,22 +402,45 @@ function actionLoadParameters (id)
     let params = fulltriggerslist.actions[extensionname][id].parameters
     let actionname = fulltriggerslist.actions[extensionname][id].name;
     let actionextensionparameters = ""
+    let titleDescription = "";
+    let descriptions = [];
     // set the title of the calling dropdown
     document.getElementById("actionExtensionAction").title = fulltriggerslist.actions[extensionname][id].description
     document.getElementById("actionExtensionChoserChannel").value = extensionlist[extensionname].channel;
     document.getElementById("actionExtensionChoserActionName").value = fulltriggerslist.actions[extensionname][id].name;
+
+    // get a list of descriptions for this trigger
+    for (var descParamsKey in params)
+    {
+        if (descParamsKey.indexOf("_UIDescription") != -1)
+            descriptions[descParamsKey] = params[descParamsKey]
+    }
+
     for (var key in params)
     {
-        actionextensionparameters += "<div class='row'>"
-        actionextensionparameters += "<div class='col-2'>"
-        actionextensionparameters += "<div class='d-flex form-row'>"
-        actionextensionparameters += "<label class='form-label px-2' for=" + actionname + "_" + key + ">" + key + "</label>"
-        actionextensionparameters += "</div>"
-        actionextensionparameters += "</div>"
-        actionextensionparameters += "<div class='col-10'>"
-        actionextensionparameters += "<input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
-        actionextensionparameters += "</div>"
-        actionextensionparameters += "</div>"
+        // check if we have a description for this key
+        if (descriptions[key + "_UIDescription"] != undefined)
+        {
+            if (descriptions[key + "_UIDescription"] == "")
+                titleDescription = key
+            else
+                titleDescription = descriptions[key + "_UIDescription"]
+        }
+        else
+            titleDescription = key
+        if (key.indexOf("_UIDescription") == -1)
+        {
+            actionextensionparameters += "<div class='row' title='" + titleDescription + "'>"
+            actionextensionparameters += "<div class='col-2'>"
+            actionextensionparameters += "<div class='d-flex form-row'>"
+            actionextensionparameters += "<label class='form-label px-2' for=" + actionname + "_" + key + ">" + key + "</label>"
+            actionextensionparameters += "</div>"
+            actionextensionparameters += "</div>"
+            actionextensionparameters += "<div class='col-10'>"
+            actionextensionparameters += "<input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value=''>"
+            actionextensionparameters += "</div>"
+            actionextensionparameters += "</div>"
+        }
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
 

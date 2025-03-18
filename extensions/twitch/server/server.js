@@ -925,10 +925,13 @@ const triggersandactions =
         [
             {
                 name: "ChangeTitle",
-                displaytitle: "Change Title",
-                description: "Change channel title",
+                displaytitle: "Change Title of the Stream",
+                description: "Change stream title",
                 messagetype: "action_TwitchChangeTitle",
-                parameters: { title: "" }
+                parameters: {
+                    title: "",
+                    title_UIDescription: "New Title to change to"
+                }
             },
             {
                 name: "StartCommercial",
