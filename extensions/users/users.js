@@ -227,8 +227,11 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
+        // add this in to see all messages that are not handled
+        /*
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        */
 
     }
     else if (server_packet.type === "ChannelData")
@@ -306,13 +309,11 @@ function onDataCenterMessage (server_packet)
                 logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + " packet trigger_TwitchUserDetails", error.message);
             }
         }
-        else if (extension_packet.type === "HeartBeat"
-            || extension_packet.dest_channel === "TWITCH_CHAT")
-        {
-            //ignore these
-        }
-        else
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
+        // add this in to see all messages that are not handled
+        /*
+    else
+        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.type, server_packet.channel, extension_packet.type);
+    */
     }
     else if (server_packet.type === "UnknownChannel")
     {
@@ -337,18 +338,14 @@ function onDataCenterMessage (server_packet)
     {
         logger.setLoggingLevel(server_packet.data)
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-    )
-    {
 
-        // just a blank handler for items we are not using to avoid message from the catchall
-    }
     // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+    // add this in to see all messages that are not handled
+    /*
+else
+    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+        ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+        */
 }
 // ===========================================================================
 //                           FUNCTION: pruneUsers
