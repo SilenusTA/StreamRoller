@@ -350,13 +350,11 @@ function onDataCenterMessage (server_packet)
                 sendTriggersAndActions(server_packet.from)
             }
         }
-        else if (extension_packet.type === "RequestSettingsWidgetLargeCode"
-            || extension_packet.type === "TriggerAndActions")
-        {
-            // we don't handle these yet
-        }
+        // add next section back in to monitor all messages received including ones we don't care about
+        /*
         else
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+        */
     }
     else if (server_packet.type === "UnknownChannel")
     {
