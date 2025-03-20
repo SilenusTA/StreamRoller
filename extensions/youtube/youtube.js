@@ -43,18 +43,23 @@ const localConfig = {
     DataCenterSocket: null,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
-    liveChatMessagePageToken: null,
     youtubeAPI: null,
     liveChatAPI: null,
-    youtubevideoid: "",
-    ytInfo: null,
-    info: { views: -1, likes: -1, date: -1 },
-    connectedToLiveStream: false,
+    liveVideoId: null,
+    youtubeSchedulerHandle: null,
+    youtubeSchedulerTimer: 5000,//run the monitor every 5 seconds when enabled
+
+
     credentialsSet: false,
     signedIn: false,
     youtubeBrowserCookieStatus: "Cookie not set",
     startupTimerBufferHandle: null, //have a startup buffer to stop multiple stars (workaround for settings credentials)
-    connectedAsUsername: null
+    connectedAsUsername: null,
+    monitorForLiveSTreamTimeout: 10000,
+    monitorForLiveSTreamTimeoutHandle: null,
+    // filters for live stream search
+    filters: { features: ["live"] }
+    //filters: {}
 };
 
 const default_serverConfig = {
@@ -423,73 +428,18 @@ function startYoutubeMonitor ()
 {
     if (serverConfig.youtubeenabled == "on")
     {
-        // if we don't have an api handle create one
-        if (!localConfig.youtubeAPI && localConfig.credentialsSet)
-            connectToAPI();
 
-        // if we haven't received the api yet then reschedule the start until we have one back
-        if (!localConfig.youtubeAPI || !localConfig.credentialsSet)
+        if (localConfig.youtubeSchedulerHandle)
+            clearTimeout(localConfig.youtubeSchedulerHandle)
+        localConfig.youtubeSchedulerHandle = setTimeout(() =>
         {
-            if (localConfig.startupTimerBufferHandle)
-                clearTimeout(localConfig.startupTimerBufferHandle)
-            localConfig.startupTimerBufferHandle = setTimeout(() =>
-            {
-                startYoutubeMonitor();
-            }, 5000);
-        }
-        else
-        {
-            if (localConfig.liveChatAPI)
-                localConfig.liveChatAPI.start();
-            else
-            {
-                console.log("Couldn't start monitoring, is there a live video available?")
-                MonitorForLiveStream()
-            }
-        }
-        SendSettingsWidgetSmall();
+            youtubeScheduler();
+            // re-call ourselves to check if we are still enabled and set the next scheduled item 
+            // could use a setInterval but this feels easier to read and understand to anyone looking
+            // at the code
+            startYoutubeMonitor()
+        }, localConfig.youtubeSchedulerTimer);
     }
-}
-// ============================================================================
-//                     FUNCTION: MonitorForLiveStream
-// ============================================================================
-/**
- * Monitor for a stream going live on our channel
- */
-function MonitorForLiveStream ()
-{
-    const monitorTimeout = 10000;
-    let filters = { features: ["live"] }
-    localConfig.youtubeAPI.search(serverConfig.youtubechannelname, filters)
-        .then((search) =>
-        {
-            if (search.videos.length < 1)
-            {
-                console.log("no live videos found yet, monitoring")
-                if (localConfig.youtubeenabled == "on")
-                {
-                    setTimeout(() =>
-                    {
-                        MonitorForLiveStream()
-                    }, monitorTimeout);
-                }
-            }
-            else
-                connectToAPI();
-            // check for found live and call the start function (to save duplicating code)
-        })
-        .catch((err) =>
-        {
-            console.log("Error searching for live stream", err, err.message)
-            console.error(err)
-            if (localConfig.youtubeenabled == "on") 
-            {
-                setTimeout(() =>
-                {
-                    MonitorForLiveStream()
-                }, monitorTimeout);
-            }
-        })
 }
 // ============================================================================
 //                     FUNCTION: stopYoutubeMonitor
@@ -501,102 +451,153 @@ function stopYoutubeMonitor ()
 {
     try
     {
-        localConfig.connectedToLiveStream = false;
-
-        if (localConfig.liveChatAPI)
-            localConfig.liveChatAPI.stop();
+        if (localConfig.youtubeSchedulerHandle)
+            clearTimeout(localConfig.youtubeSchedulerHandle)
         localConfig.youtubeAPI = null;
+        localConfig.liveChatAPI = null;
+        localConfig.liveVideoId = null;
+
         SendSettingsWidgetSmall();
     }
     catch (error)
     {
-        console.log("stopYoutubeMonitor Error", error.status, error.message)
-        console.log(error)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".stopYoutubeMonitor() Error", error.status, error.message, error);
     }
 }
 
 // ============================================================================
-//                     FUNCTION: startYoutubeMonitor
+//                     FUNCTION: youtubeScheduler
 // ============================================================================
 /**
- * Connects and starts monitoring YouTube chat
+ * scheduler to monitor for live streams and connection setup
+ * will set localConfig vars depending on status (null if no valid data available)
+ * 1) Sets/removes localConfig.youtubeAPI 
+ * 2) Sets/removes localConfig.liveVideoId
+ * 3) Sets/removes localConfig.liveChatAPI
+ *
+ * Notes
+ * info.basic_info.is_live
+ *  Only set to true when video is live and 'public' (if unlisted this doesn't get set). 
+ *  Once set remains true until stream ends even if set to unlisted
+ * info.basic_info.is_live_content
+ *  Always set to true if this video was/is from a live recording
+ * info.basic_info.is_unlisted
+ *  we can't use this to check for an unlisted live stream as the live flag only gets set once
+ *  a live stream has been 'public' at some point.
  */
-function connectToAPI ()
+async function youtubeScheduler ()
 {
-    let cookie = ""
-    if (serverCredentials && serverCredentials.youtubeCookie && serverCredentials.youtubeCookie != "")
-        cookie = serverCredentials.youtubeCookie
-    Innertube.create({ cache: new UniversalCache(false), cookie: cookie })
-        .then(async (handle) =>
+    let settingsUpdateNeeded = false;
+    if (serverConfig.youtubeenabled == "on")
+    {
+        //
+        // check for youtubeAPI
+        //
+        if (!localConfig.youtubeAPI)
         {
-            if (handle)
+            let cookie = ""
+            if (serverCredentials && serverCredentials.youtubeCookie && serverCredentials.youtubeCookie != "")
+                cookie = serverCredentials.youtubeCookie
+
+            file_log("//youtubeScheduler Getting Innertube handle for localConfig.youtubeAPI");
+            localConfig.youtubeAPI = await Innertube.create({ cache: new UniversalCache(false), cookie: cookie })
+
+            if (!localConfig.youtubeAPI)
             {
-                localConfig.youtubeAPI = handle;
-                // search for videos on channel. first will be the live video if it exists
-
-                let filters = { features: ["live"] }// note live doesn't include funderaiser live videos, need to add all types of live options here.
-                //filters = {};
-                const search = await localConfig.youtubeAPI.search(serverConfig.youtubechannelname, filters);
-                file_log(JSON.stringify(search.videos, null, 2))
-                if (search.videos.length < 1)
-                {
-                    console.log("No live video found for channel name", serverConfig.youtubechannelname)
-                }
-                if (search.videos[0] && search.videos[0] != [])
-                {
-                    localConfig.youtubevideoid = search.videos[0].id;
-                    localConfig.youtubeAPI.getInfo(localConfig.youtubevideoid)
-                        .then((info) =>
-                        {
-                            file_log("let " + serverConfig.youtubechannelname + "=" + JSON.stringify(info, null, 2))
-                            if (info.basic_info.is_live)
-                            {
-                                localConfig.ytInfo = info;
-                                localConfig.liveChatAPI = localConfig.ytInfo.getLiveChat()
-                                localConfig.liveChatAPI.on('start', (initial_data) =>
-                                {
-                                    // filter on live chat rather than TOP_CHAT
-                                    localConfig.liveChatAPI.applyFilter("LIVE_CHAT");
-                                    chatStart(initial_data)
-                                });
-
-                                localConfig.liveChatAPI.on('error', (error) =>
-                                {
-                                    chatError(error)
-
-                                });
-
-                                localConfig.liveChatAPI.on('end', () => { chatEnd() });
-                                localConfig.liveChatAPI.on('chat-update', (action) => chatMessage(action));
-                                localConfig.liveChatAPI.on('metadata-update', (metadata) => metaUpdate(metadata));
-                            }
-                            else
-                                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                                    ".youtubeAPI.getInfo", "Stream is not live");
-                        })
-                        .catch((err) =>
-                        {
-                            console.log("Error:", JSON.stringify(err))
-                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                                ".startYoutubeMonitor.getLiveChat", "failed to load getLiveChat", err);
-                        })
-                }
-                else
-                    console.log("No live video found")
-
+                file_log("//youtubeScheduler Innertube failed to return handle");
+                //no localConfig.youtubeAPI so lets clear the other handles till we get one
+                localConfig.liveChatAPI = null;
+                localConfig.liveVideoId = null;
+                settingsUpdateNeeded = true
             }
-            else
-                console.log("YoutubeAPI returned null handle");
+        }
 
-        })
-        .catch((err) =>
+        //
+        // check for liveVideoId
+        //
+        if (localConfig.youtubeAPI && !localConfig.liveVideoId)
         {
-            console.error(err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".startYoutubeMonitor", "failed to load YoutubeAPI", err);
-        })
-}
 
+            file_log("//youtubeScheduler looking for liveVideoId");
+            // if we don't have a video we shouldn't have a chatAPI so clear it
+            localConfig.liveChatAPI = null;
+            let search = await localConfig.youtubeAPI.search(serverConfig.youtubechannelname, localConfig.filters)
+            file_log("//youtubeScheduler got video list length = " + search.videos.length)
+            if (search.videos && search.videos.length > 0)
+            {
+                // find the live video. Might be more than one if not using live flag
+                for (let index = 0; index < search.videos.length; ++index)
+                {
+                    let info = await localConfig.youtubeAPI.getInfo(search.videos[index].id)
+                    if (info.basic_info.is_live)
+                    {
+                        file_log("//youtubeScheduler found live video for id " + search.videos[index].id)
+                        localConfig.liveVideoId = search.videos[0].id;
+                        settingsUpdateNeeded = true; // settings displays a link to the current video so need to update
+                        break;
+                    }
+                }
+            }//search.videos && search.videos.length > 0
+        }//localConfig.youtubeAPI & !localConfig.liveVideoId
+
+        //
+        // check for liveChatAPI
+        //
+        if (localConfig.youtubeAPI && localConfig.liveVideoId && !localConfig.liveChatAPI)
+        {
+            file_log("//youtubeScheduler getting liveChatAPI ")
+            let info = await localConfig.youtubeAPI.getInfo(localConfig.liveVideoId)
+            if (info)
+            {
+                file_log("//youtubeScheduler found liveChatAPI ")
+                localConfig.liveChatAPI = info.getLiveChat()
+                // as we have a new liveChatAPI lets setup the handlers
+                localConfig.liveChatAPI.on('start', (initial_data) =>
+                {
+                    file_log("//callback 'start' ");
+                    file_log(JSON.stringify(initial_data, null, 2))
+                    // filter on live chat rather than TOP_CHAT
+                    localConfig.liveChatAPI.applyFilter("LIVE_CHAT");
+                    chatStart(initial_data)
+                });
+
+                localConfig.liveChatAPI.on('error', (error) =>
+                {
+                    file_log("//callback 'error' \n" + JSON.stringify(error, null, 2));
+                    chatAPIError(error)
+                });
+
+                localConfig.liveChatAPI.on('end', () => 
+                {
+                    file_log("//callback 'end' ");
+                    chatEnd()
+                });
+                localConfig.liveChatAPI.on('chat-update', (action) => chatMessage(action));
+                localConfig.liveChatAPI.on('metadata-update', (metadata) => metaUpdate(metadata));
+                // need to stop if we are reconnecting to remove callbacks
+                if (localConfig.liveChatAPI.running)
+                    localConfig.liveChatAPI.stop();
+                file_log("// Starting live chat API");
+                localConfig.liveChatAPI.start();
+            }
+        }//!localConfig.liveChatAPI
+        if (localConfig.youtubeAPI && localConfig.liveVideoId)
+        {
+            let info = await localConfig.youtubeAPI.getInfo(localConfig.liveVideoId)
+            file_log("info.basic_info.is_live" + info.basic_info.is_live)
+            if (!info.basic_info.is_live)
+            {
+                settingsUpdateNeeded = true
+                localConfig.liveVideoId = null;
+            }
+        }
+    }//serverConfig.youtubeenabled == "on"
+
+    // if we change data we display in our settings page we need to send a new one out.
+    if (settingsUpdateNeeded)
+        SendSettingsWidgetSmall();
+}
 // ============================================================================
 //                     FUNCTION: chatStart
 // ============================================================================
@@ -606,7 +607,6 @@ function connectToAPI ()
  */
 function chatStart (initial_data)
 {
-    localConfig.connectedToLiveStream = true;
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
     localConfig.connectedAsUsername = initial_data.viewer_name
@@ -617,21 +617,34 @@ function chatStart (initial_data)
  * @param {object} error 
  */
 // ============================================================================
-//                     FUNCTION: chatError
+//                     FUNCTION: chatAPIError
 // ============================================================================
 /**
- * Called when a chatError occurs
+ * Called when a chatAPIError occurs
  * @param {object} error 
  */
-function chatError (error)
+function chatAPIError (error)
 {
-    localConfig.connectedToLiveStream = false;
-    console.log('Live chat error:');
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
+    else
+        localConfig.signedIn = false
+
+    if (error && error.info && error.info != {})
+    {
+        console.log("chatAPIError error, possible live stream ended.", error.info)
+    }
+    else
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".chatAPIError error", error);
+
+        if (error && error.info)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".chatAPIError error.info", error.info);
+    }
     stopYoutubeMonitor()
-    if (error && error.info)
-        console.log("error.code", error.info)
+
 }
 // ============================================================================
 //                     FUNCTION: metaUpdate
@@ -642,15 +655,9 @@ function chatError (error)
  */
 function metaUpdate (metadata)
 {
-    localConfig.connectedToLiveStream = true;
+    file_log("// metaUpdate() metadata.views.is_live = " + metadata.views.is_live);
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
-    localConfig.info =
-    {
-        views: metadata.views?.view_count.toString(),
-        likes: metadata.likes?.default_text,
-        date: metadata.date?.date_text
-    }
 }
 // ============================================================================
 //                     FUNCTION: chatEnd
@@ -660,10 +667,10 @@ function metaUpdate (metadata)
  */
 function chatEnd ()
 {
-    localConfig.connectedToLiveStream = false;
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
     localConfig.liveChatAPI = null;
+    localConfig.liveVideoId = null;
 }
 // ============================================================================
 //                     FUNCTION: chatMessage
@@ -674,9 +681,12 @@ function chatEnd ()
  */
 function chatMessage (action)
 {
-    localConfig.connectedToLiveStream = true;
+    file_log("//################### chatMessage()  \n" + JSON.stringify(action, null, 2));
+    // set our status flags as appropriate
+
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
+
     if (action.is(YTNodes.AddChatItemAction))
     {
         const item = action.as(YTNodes.AddChatItemAction).item;
@@ -702,7 +712,8 @@ function chatMessage (action)
                 sendLiveChatPaidSticker(item.as(YTNodes.LiveChatPaidSticker), hours)
                 break;
             default:
-                console.debug(action);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                    ".chatMessage Item type needs handling", item.type);
                 break;
         }
     }
@@ -752,6 +763,12 @@ function SendSettingsWidgetSmall (toExtension = "")
                 modalString = modalString.replace("YouTubeConnectedAs", `Connected as '${localConfig.connectedAsUsername || 'Guest'}'`);
             else
                 modalString = modalString.replace("YouTubeConnectedAs", "Connected as 'Guest'}");
+
+            //Update live video link
+            if (localConfig.liveVideoId)
+                modalString = modalString.replace("LiveVideoLinkPlaceholder", "<a href='https://www.youtube.com/watch?v=" + localConfig.liveVideoId + "' target='SRYTVideo'>Live Video Link</a>")
+            else
+                modalString = modalString.replace("LiveVideoLinkPlaceholder", "No current live video<BR>")
 
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -820,7 +837,6 @@ function sendChatMessageTrigger (ytmessage, time)
 {
     try
     {
-        //file_log(JSON.stringify(ytmessage, null, 2))
         let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
         let safemessage = sanitiseHTML(ytmessage.message);
         safemessage = ytmessage.message.text.replace(/[^\x00-\x7F]/g, "");
@@ -874,7 +890,7 @@ function postLiveChatMessages (data)
             })
             .catch((err) =>
             {
-                console.log("comment error", JSON.stringify(err, null, 2))
+                console.log("Error: postLiveChatMessages()", JSON.stringify(err, null, 2))
             })
     }
 }
@@ -960,8 +976,7 @@ function heartBeatCallback ()
     if (serverConfig.youtubeenabled === "on")
     {
         connected = true;
-
-        if (localConfig.connectedToLiveStream && localConfig.signedIn)
+        if (localConfig.liveVideoId && localConfig.signedIn)
             color = "green"
         else
             color = "orange"
@@ -986,22 +1001,16 @@ function heartBeatCallback ()
 //                           FUNCTION: file_log
 //             For debug purposes. logs performance data
 // ============================================================================
-function file_log (data, override_debug)
+function file_log (data, override_debug = false)
 {
     if (!DEBUG_LOGGING && !override_debug)
         return;
     try
     {
         //console.log("logging data");
-        //var filename = __dirname + "\\debug_logging.txt";
         var filename = __dirname + "/debug_logging.json";
-        var buffer = "";
-        // first line write the headings (csv)
-        //if (!fs.existsSync(filename))
-        console.log("writing file:", filename)
 
-        fs.writeFileSync(filename, "\\############################################\n"
-            + data + "\n\\---------------------------------------------\n", {
+        fs.writeFileSync(filename, data + "\n", {
             encoding: "utf8",
             flag: "a+",
         });
