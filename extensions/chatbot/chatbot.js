@@ -1961,13 +1961,11 @@ function parseData (data, translation = false)
     {
         if (data.message)
             data.message = data.message.replace("@", "");
-        else if (!data.data['emote-only'])
-            console.log("sub message empty", data)
     }
     catch (error)
     {
         // debugging why we fail here. prob message is empty but it shouldn't be
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure again", error, error.message, JSON.stringify(data, null, 2));
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure", error, error.message, JSON.stringify(data, null, 2));
     }
     try
     {
