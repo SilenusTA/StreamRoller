@@ -29,6 +29,7 @@ table {
 td {
   padding: 4px;
   height: 1px;
+  align-content: center
 }
 
 .card-title {

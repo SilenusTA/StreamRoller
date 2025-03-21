@@ -476,12 +476,14 @@ function populateGroupNamesDropdown ()
 // ============================================================================
 function createTriggerAction (e)
 {
+    let pairingTitle = document.getElementById("pairingTitle").value
     let groupname = document.getElementById("triggerExtensionGroupName").value
     let extname = document.getElementById("triggerExtensionChoser").value
     let channel = document.getElementById("triggerExtensionChoserChannel").value
 
     localStorage.setItem("selectedgroup", groupname)
     let SingleEvent = {
+        pairingTitle: pairingTitle,
         group: groupname,
         trigger:
         {
@@ -698,7 +700,7 @@ function checkTriggerIsValid (trigger)
 }
 // ============================================================================
 //                       FUNCTION: populateTriggersTable
-//                  Shows the current tirgger pairings on screen 
+//                  Shows the current trigger pairings on screen 
 // ============================================================================
 function populateTriggersTable ()
 {
@@ -770,6 +772,9 @@ function populateTriggersTable ()
         let triggertitlerow = tbody.insertRow()
         let titlecell = triggertitlerow.insertCell()
         titlecell.classList = "text-center"
+        titlecell.innerHTML = "<h3>Title</h3>"
+        titlecell = triggertitlerow.insertCell()
+        titlecell.classList = "text-center"
         titlecell.innerHTML = "<h3>Triggers</h3>"
         titlecell = triggertitlerow.insertCell()
         titlecell.classList = "text-center"
@@ -782,16 +787,37 @@ function populateTriggersTable ()
             {
                 //triggers/actions row
                 let tr = tbody.insertRow()
+
+                let pairingTitle = tr.insertCell()
+                pairingTitle.style.width = "20%"
+                if (!usertriggerslist.pairings[i].pairingTitle || usertriggerslist.pairings[i].pairingTitle == "")
+                {
+                    //pairingTitle.innerHTML = "Not set"
+                    /*
+                    pairingTitle.innerHTML = usertriggerslist.pairings[i].trigger.extension
+                    pairingTitle.innerHTML += "."
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].trigger.messagetype.replace("trigger_", "").replace("_get", "")
+                    pairingTitle.innerHTML += " >> "
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].action.extension
+                    pairingTitle.innerHTML += "."
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].action.messagetype.replace("action_", "").replace("_get", "")
+                    */
+
+
+                }
+                else
+                    pairingTitle.innerHTML = usertriggerslist.pairings[i].pairingTitle
+
                 //split row into triggers and action cells
                 let triggerdatacell = tr.insertCell()
-                triggerdatacell.style.width = "50%"
+                triggerdatacell.style.width = "40%"
                 let triggersdatacelltable = document.createElement("table")
                 triggerdatacell.appendChild(triggersdatacelltable)
                 let triggerdatacellrow = triggersdatacelltable.insertRow()
 
 
                 let actiondatacell = tr.insertCell()
-                actiondatacell.style.width = "50%"
+                actiondatacell.style.width = "40%"
                 let actiondatacelltable = document.createElement("table")
                 actiondatacell.appendChild(actiondatacelltable)
                 let actiondatacellrow = actiondatacelltable.insertRow()
@@ -1158,7 +1184,17 @@ function EditPairingButton (event, g, i)
     editform.appendChild(createInputElement('triggerpairingidinputfield', 'triggerpairingid', 'hidden', i))
     // start table
     let table = document.createElement("table")
+
+
     let tr = table.insertRow()
+    let titleCell = tr.insertCell()
+    //let titleData = tr.insertCell()
+    titleCell.innerHTML = "Title<BR>" + titleCell.innerHTML
+    if (!pairing.pairingTitle)
+        titleCell.appendChild(createInputElement("triggerExtensionPairingModalPairingTitle", "triggerExtensionPairingModalPairingTitle", "text", ""))
+    else
+        titleCell.appendChild(createInputElement("triggerExtensionPairingModalPairingTitle", "triggerExtensionPairingModalPairingTitle", "text", pairing.pairingTitle))
+
     let td = tr.insertCell()
     // group selection box    
     let selectgroup = createSelectGroup("triggerExtensionPairingModalGroupName", "selectpicker btn btn-secondary", "triggerExtensionPairingModalGroupName", "Select new group")
@@ -1388,6 +1424,11 @@ function UpdatePairingButton (event)
         {
             usertriggerslist.pairings[pairingID].group = value;
         }
+        else if (key.indexOf("triggerExtensionPairingModalPairingTitle") == 0)
+        {
+            usertriggerslist.pairings[pairingID].pairingTitle = value;
+        }
+
         else if (key.indexOf("triggerpairingid") == 0)
         {
             //ignore the id as we have already used it

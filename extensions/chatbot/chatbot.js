@@ -1683,8 +1683,15 @@ function processChatMessage (data, maxRollbackCount = 20)
     }
     else
     {
-        localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
-        localConfig.chatMessageCount++;
+        if (chatdata && chatdata.message && chatdata.message != "")
+        {
+            localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
+            localConfig.chatMessageCount++;
+        }
+        else
+        {
+            console.log("chatbot.processChatMessage chatdata.message error, chatdata, data", chatdata, data)
+        }
     }
 
     if (!directChatbotTriggerTag && ((localConfig.chatMessageCount < serverConfig.chatbotMessageMaxLines) || (localConfig.chatMessageCount < 1)))

@@ -1,7 +1,5 @@
-<div id="TriggersPageCard"
-  class="card bg-light text-dark">
-  <div class='tab-content px-2 content'
-    id="TriggersPageContent">
+<div id="TriggersPageCard" class="card bg-light text-dark">
+  <div class='tab-content px-2 content' id="TriggersPageContent">
     <h1>Triggers and Actions</h1>
     <p>This page allows you to control the triggers for events that happen within StreamRoller.
       Ie you may want to post a chat message when someone donates, or change the hue lights or obs scene depending
@@ -50,70 +48,35 @@
     <HR class="hrbold">
     <h4>Macro's</h4>
     <p>A Macro is a user defined trigger for use on buttons etc (ie on the live portal page) used to invoke an action.
-      You can also add a color to use for the button on liveportal page here ie. the # value from <a
-        href="https://htmlcolorcodes.com/">htmlcolorcodes.com</a>. ie '#FF0000' for red, or use simple colors such as
+      You can also add a color to use for the button on liveportal page here ie. the # value from <a href="https://htmlcolorcodes.com/">htmlcolorcodes.com</a>.
+      ie '#FF0000' for red, or use simple colors such as
       'red','green'
     </p>
     <div class="row">
       <div class="col-3 px-3">
-        <form class="form-inline"
-          onsubmit="return createMacro(this)">
+        <form class="form-inline" onsubmit="return createMacro(this)">
           <div class=" form-group d-flex">
             <div class="form-group">
               <div class="d-flex form-row align-items-center">
-                <label class="form-label px-2 align-middle col-6"
-                  for="macroName">Name</label>
-                <input type="text"
-                  class="form-control "
-                  name="macroName"
-                  id="macroName"
-                  placeholder="Name"
-                  value=""
-                  title="Name">
+                <label class="form-label px-2 align-middle col-6" for="macroName">Name</label>
+                <input type="text" class="form-control " name="macroName" id="macroName" placeholder="Name" value="" title="Name">
               </div>
               <div class="d-flex form-row align-items-center">
-                <label class="form-label px-2 align-middle col-6"
-                  for="macroDescription">Description</label>
-                <input type="text"
-                  class="form-control "
-                  name="macroDescription"
-                  id="macroDescription"
-                  placeholder="Description"
-                  value=""
-                  title="Description">
+                <label class="form-label px-2 align-middle col-6" for="macroDescription">Description</label>
+                <input type="text" class="form-control " name="macroDescription" id="macroDescription" placeholder="Description" value="" title="Description">
               </div>
               <div class="d-flex form-row align-items-center">
-                <label class="form-label px-2 align-middle col-6"
-                  for="macroColor">Color</label>
-                <input type="text"
-                  class="form-control"
-                  name="macroColor"
-                  id="macroColor"
-                  placeholder="Color"
-                  value=""
-                  title="Color">
+                <label class="form-label px-2 align-middle col-6" for="macroColor">Color</label>
+                <input type="text" class="form-control" name="macroColor" id="macroColor" placeholder="Color" value="" title="Color">
               </div>
               <div class="d-flex form-row align-items-center">
-                <label class="form-label px-2 align-middle col-6"
-                  for="macroBackgroundColor">Background Color</label>
-                <input type="text"
-                  class="form-control"
-                  name="macroBackgroundColor"
-                  id="macroBackgroundColor"
-                  placeholder="BackgroundColor"
-                  value=""
+                <label class="form-label px-2 align-middle col-6" for="macroBackgroundColor">Background Color</label>
+                <input type="text" class="form-control" name="macroBackgroundColor" id="macroBackgroundColor" placeholder="BackgroundColor" value=""
                   title="BackgroundColor">
               </div>
               <div class="d-flex form-row align-items-center">
-                <label class="form-label px-2 align-middle col-6"
-                  for="macroimagename">Image</label>
-                <input type="text"
-                  class="form-control"
-                  name="macroimagename"
-                  id="macroimagename"
-                  placeholder="Image"
-                  value=""
-                  title="Image">
+                <label class="form-label px-2 align-middle col-6" for="macroimagename">Image</label>
+                <input type="text" class="form-control" name="macroimagename" id="macroimagename" placeholder="Image" value="" title="Image">
               </div>
               <div class="d-flex form-row align-items-center">
                 <div id="imageplaceholder">
@@ -123,22 +86,16 @@
                 <%- include('../modals/imagepicker'); %>
               </div>
               <div class="my-2 d-flex justify-content-center">
-                <button type="submit"
-                  data-bs-dismiss="modal"
-                  class="btn btn-success">Add</button>
-                <button type="button"
-                  class="btn btn-secondary"
-                  onclick="return deleteMacro()">Delete Macro</button>
+                <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Add</button>
+                <button type="button" class="btn btn-secondary" onclick="return deleteMacro()">Delete Macro</button>
               </div>
             </div>
           </div>
         </form>
       </div>
       <div class="col-9 px-3">
-        <div id="MacroButtons"
-          class="container1">
-          <div id="existing_macro_list"
-            class="my-1 row">
+        <div id="MacroButtons" class="container1">
+          <div id="existing_macro_list" class="my-1 row">
           </div>
         </div>
       </div>
@@ -165,11 +122,8 @@
         <div class="col-6 px-3">
           <div class="form-group">
             <!--<h5>Download the autopilot Server Data File</h5>-->
-            <label class="form-label"
-              for="uploadAutopilotFileButton">Download the autopilot Server Data File</label>
-            <form id="uploadAutopilotFileButton"
-              class="form-inline"><button type="button"
-                class="btn btn-secondary"
+            <label class="form-label" for="uploadAutopilotFileButton">Download the autopilot Server Data File</label>
+            <form id="uploadAutopilotFileButton" class="form-inline"><button type="button" class="btn btn-secondary"
                 onclick="return downloadServerDataClicked()">Download</button>
             </form>
           </div>
@@ -177,18 +131,11 @@
         <div class="col-6 px-3">
           <div class="form-group">
             <!-- <h5>Upload a Server Data File</h5>-->
-            <label class="form-label"
-              for="AutoPilotDatFileUploadElement">Upload an autopilot Server Data File</label>
+            <label class="form-label" for="AutoPilotDatFileUploadElement">Upload an autopilot Server Data File</label>
             <form class="form-inline">
-              <input type="file"
-                name=""
-                class="form-control"
-                id="AutoPilotDatFileUploadElement">
+              <input type="file" name="" class="form-control" id="AutoPilotDatFileUploadElement">
               <BR>
-              <button type="button"
-                id="Upload"
-                class="btn btn-secondary"
-                onclick="uploadServerDataClicked()">Upload AutoPilot data file</button>
+              <button type="button" id="Upload" class="btn btn-secondary" onclick="uploadServerDataClicked()">Upload AutoPilot data file</button>
               <div id="AutoPilotDatFileUploadMessage"></div>
             </form>
           </div>
@@ -202,8 +149,15 @@
     <HR class="hrbold">
     <div class="container-fluid">
       <H3>Add new Trigger/Action pairing</H3>
-      <form class="form-inline"
-        onsubmit="return createTriggerAction(this)">
+      <form class="form-inline" onsubmit="return createTriggerAction(this)">
+        <div class="row" style="width: 100%;display: flex;justify-content: space-around;">
+          <div class="d-flex form-row align-items-center" style="width: 60%">
+            <label class="form-label px-2 align-middle col-4" for="pairingTitle">
+              <h4 class="align-middle">Name/description/Notes for this pairing</h4>
+            </label>
+            <input type="text" class="form-control" name="pairingTitle" id="pairingTitle" placeholder="Name" value="" title="Name">
+          </div>
+        </div>
         <div class="row">
           <div class="col-6 px-3">
             <h4 style="width:100px; margin: auto;">Trigger</h4>
@@ -211,50 +165,27 @@
             <div class="form-group">
               <!-- hidden varialbes set when user changes the options -->
               <div class="row">
-                <input id="triggerExtensionChoserTriggerName"
-                  type="hidden"
-                  name="triggerExtensionChoserTriggerName"
-                  class="form-control"
-                  value="somevalue"
+                <input id="triggerExtensionChoserTriggerName" type="hidden" name="triggerExtensionChoserTriggerName" class="form-control" value="somevalue"
                   tabindex="-1" />
               </div>
               <div class="row">
-                <input id="triggerExtensionChoserChannel"
-                  type="hidden"
-                  name="triggerExtensionChoserChannel"
-                  class="form-control"
-                  value="somevalue"
+                <input id="triggerExtensionChoserChannel" type="hidden" name="triggerExtensionChoserChannel" class="form-control" value="somevalue"
                   tabindex="-1" />
               </div>
               <div class="row">
-                <select id="triggerExtensionChoser"
-                  class="selectpicker btn btn-secondary"
-                  data-style="btn-danger"
-                  title=""
-                  value="1"
-                  name="triggerExtensionChoser"
-                  onchange="triggersLoadTriggers(this.value)">
+                <select id="triggerExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title="" value="1"
+                  name="triggerExtensionChoser" onchange="triggersLoadTriggers(this.value)">
                 </select>
-                <div id="triggerExtensionChoserLabel"
-                  class="my-1"></div>
+                <div id="triggerExtensionChoserLabel" class="my-1"></div>
               </div>
               <div class="row">
-                <select id="triggerExtensionTriggers"
-                  class="selectpicker btn btn-secondary"
-                  data-style="btn-danger"
-                  title=""
-                  value="1"
-                  name="triggerExtensionTriggers"
-                  onchange="triggersLoadParameters(this.value)">
+                <select id="triggerExtensionTriggers" class="selectpicker btn btn-secondary" data-style="btn-danger" title="" value="1"
+                  name="triggerExtensionTriggers" onchange="triggersLoadParameters(this.value)">
                 </select>
               </div>
               <div class="row">
                 <div class="col">
-                  <div id="triggerExtensionTriggerParameters"
-                    class="form-group"
-                    title=""
-                    value="1"
-                    name="triggerExtensionTriggerParameters">
+                  <div id="triggerExtensionTriggerParameters" class="form-group" title="" value="1" name="triggerExtensionTriggerParameters">
                   </div>
                 </div>
               </div>
@@ -264,50 +195,27 @@
             <h4 style="width:100px; margin: auto;">Action</h4>
             <div class="form-group">
               <div class="row">
-                <input id="actionExtensionChoserActionName"
-                  type="hidden"
-                  name="actionExtensionChoserActionName"
-                  class="form-control"
-                  value="somevalue"
+                <input id="actionExtensionChoserActionName" type="hidden" name="actionExtensionChoserActionName" class="form-control" value="somevalue"
                   tabindex="-1" />
               </div>
               <div class="row">
-                <input id="actionExtensionChoserChannel"
-                  type="hidden"
-                  name="actionExtensionChoserChannel"
-                  class="form-control"
-                  value="somevalue"
+                <input id="actionExtensionChoserChannel" type="hidden" name="actionExtensionChoserChannel" class="form-control" value="somevalue"
                   tabindex="-1" />
               </div>
               <div class="row">
-                <select id="actionExtensionChoser"
-                  class="selectpicker btn btn-secondary"
-                  data-style="btn-danger"
-                  title=""
-                  value="1"
-                  name="actionExtensionChoser"
-                  onchange="actionLoadAction(this.value)">
+                <select id="actionExtensionChoser" class="selectpicker btn btn-secondary" data-style="btn-danger" title="" value="1"
+                  name="actionExtensionChoser" onchange="actionLoadAction(this.value)">
                 </select>
               </div>
-              <div id="actionExtensionChoserLabel"
-                class="my-1"></div>
+              <div id="actionExtensionChoserLabel" class="my-1"></div>
               <div class="row">
-                <select id="actionExtensionAction"
-                  class="selectpicker btn btn-secondary"
-                  data-style="btn-danger"
-                  title=""
-                  value="1"
-                  name="actionExtensionAction"
-                  onchange="return actionLoadParameters(this.value)">
+                <select id="actionExtensionAction" class="selectpicker btn btn-secondary" data-style="btn-danger" title="" value="1"
+                  name="actionExtensionAction" onchange="return actionLoadParameters(this.value)">
                 </select>
               </div>
               <div class="row">
                 <div class="col">
-                  <div id="actionExtensionActionParameters"
-                    class="form-group"
-                    title=""
-                    value="1"
-                    name="actionExtensionActionParameters">
+                  <div id="actionExtensionActionParameters" class="form-group" title="" value="1" name="actionExtensionActionParameters">
                   </div>
                 </div>
               </div>
@@ -325,32 +233,19 @@
             <div class=" form-group d-flex">
               <div class="form-group">
                 <!-- group option list-->
-                <select id="triggerExtensionGroupName"
-                  class="selectpicker btn btn-secondary"
-                  data-style="btn-danger"
-                  title="Select Group to add to"
-                  value="1"
+                <select id="triggerExtensionGroupName" class="selectpicker btn btn-secondary" data-style="btn-danger" title="Select Group to add to" value="1"
                   name="triggerExtensionGroupName">
                 </select>
               </div>
               <div class='col-xs-1 px-3'>
-                New Group name :<input type='text'
-                  id='triggergroupcreatename'
-                  style='width: 200px;'
-                  onkeypress='return /[0-9a-zA-Z]/i.test(event.key)'>
+                New Group name :<input type='text' id='triggergroupcreatename' style='width: 200px;' onkeypress='return /[0-9a-zA-Z]/i.test(event.key)'>
               </div>
-              <a class='btn btn-success'
-                href='javascript:createNewTriggerGroup();'
-                role='button'> Create</a>
+              <a class='btn btn-success' href='javascript:createNewTriggerGroup();' role='button'> Create</a>
             </div>
           </form>
           <div class="my-2 d-flex justify-content-center">
-            <button type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal">Cancel</button>
-            <button type="submit"
-              data-bs-dismiss="modal"
-              class="btn btn-success">Update</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-success">Update</button>
           </div>
         </div>
 
@@ -365,8 +260,7 @@
       -->
     <HR class="hrbold">
     <h3>Current Triggers and actions</h3>
-    <table id="TriggersAndActionsTable"
-      class="table  bg-light text-dark">
+    <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
     </table>
     </form>
   </div>

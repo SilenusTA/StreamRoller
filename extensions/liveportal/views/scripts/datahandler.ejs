@@ -1812,7 +1812,7 @@
             // add coloring if we drop too many frames and we also truncat the numbers if over 10k
             if (missedframes > 1000)
             {
-                if (missedframes > 10000)
+                if (missedframes > 1000)
                     missedframestxt = (~~(missedframes / 1000)) + "k"
                 missedframestxt = "<span style='color:red'>Render errors:<BR>" + missedframestxt + "</span>";
             }
