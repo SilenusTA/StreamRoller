@@ -310,6 +310,23 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall("");
             }
         }
+        else if (extension_packet.type === "SendTriggerAndActions")
+        {
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket("ExtensionMessage",
+                    serverConfig.extensionname,
+                    sr_api.ExtensionPacket(
+                        "TriggerAndActions",
+                        serverConfig.extensionname,
+                        triggersandactions,
+                        "",
+                        server_packet.from
+                    ),
+                    "",
+                    server_packet.from
+                )
+            )
+        }
         else if (extension_packet.type === "action_DemoextensionDoStuff")
         {
             //do something with your action here
