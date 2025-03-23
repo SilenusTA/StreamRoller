@@ -310,7 +310,7 @@ function saveCredentials (data)
         saveConfig(data.ExtensionName, encryptedcreds, credentialFilesPath)
     }
     else
-        console.log("common.js: SaveCredentials failed, missing field in data", data.ExtensionName)
+        console.log("common.js: SaveCredentials failed, missing field in data", data.ExtensionName, "missing field 'CredentialName' or 'CredentialValue'")
 }
 // ============================================================================
 //                           EXPORTS: 
