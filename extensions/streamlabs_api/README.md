@@ -39,7 +39,7 @@ The following features are provided
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 13 Mar 2025 01:00:53 GMT*
+Table last updated: *Tue, 25 Mar 2025 05:02:28 GMT*
 
 ### Triggers
 
