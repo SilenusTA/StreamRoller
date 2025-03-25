@@ -931,22 +931,13 @@ function add_doclet_extensions_for_StreamRoller (data)
                 {
                     // is it an exact match?
                     if (doclet.meta.path == e.rootPath)
-                    {
-                        console.log("true exact match")
                         return true;
-                    }
                     //check for partial match on windows and linux
                     else if ((doclet.meta.path.indexOf(e.rootPath + "/") == 0)
                         || (doclet.meta.path.indexOf(e.rootPath + "\\") == 0))
-                    {
-                        console.log("true subfolder")
                         return true;
-                    }
                     else
-                    {
-                        console.log("false")
                         return false;
-                    }
                     //return doclet.meta.path.indexOf(e.rootPath) == 0
                 }
             );
