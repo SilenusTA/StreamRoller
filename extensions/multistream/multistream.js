@@ -1399,49 +1399,50 @@ async function downloadFFMPEG ()
                     try { fs.unlinkSync(localConfig.ffmpegFolder + value); }
                     catch (err) { installSuccess = false; logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: clearing out old files before replacing", err); }
                 }
-                // move new files in
-                files.forEach((value, index) =>
-                {
-                    console.log("moving in new files")
-                    fs.renameSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value,
-                        localConfig.ffmpegFolder + value, function (err)
-                    {
-                        if (err) { installSuccess = false; logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: moving file ", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value, err); }
-                        //console.log('Successfully renamed!', localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value)
-                    })
-                })
-                // delete downloaded files
-                // uncomment once tested it doesn't delete my hd :D :D
-                console.log("removing folder ffmpeg-master-latest-win64-gpl-shared")
-                try { fs.rmSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", { recursive: true, force: true }); }
-                catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: removing directory", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", err); }
-
-                // finally delete the zip file we downloaded
-                console.log("removing old zip")
-                if (fs.existsSync(localConfig.ffmpegDownloadZip))
-                {
-                    try { fs.unlinkSync(localConfig.ffmpegDownloadZip); }
-                    catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: clearing out downloaded ffmpeg.zip before replacing", err); }
-                }
-
-            });
-            writer.on('error', err =>
-            {
-                installSuccess = false;
-                console.error('❌ Failed to download:', err)
-            });
-        })
-            .catch(err =>
-            {
-                installSuccess = false;
-                console.log("err", err)
             })
-        if (!installSuccess)
-            localConfig.StreamRollerFfmpeg = true;
-        else
-            localConfig.StreamRollerFfmpeg = false;
+            // move new files in
+            files.forEach((value, index) =>
+            {
+                console.log("moving in new file", value)
+                fs.renameSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value,
+                    localConfig.ffmpegFolder + value, function (err)
+                {
+                    if (err) { installSuccess = false; logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: moving file ", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value, err); }
+                    //console.log('Successfully renamed!', localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value)
+                })
+            })
+            // delete downloaded files
+            // uncomment once tested it doesn't delete my hd :D :D
+            console.log("removing folder ffmpeg-master-latest-win64-gpl-shared")
+            try { fs.rmSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", { recursive: true, force: true }); }
+            catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: removing directory", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", err); }
 
+            // finally delete the zip file we downloaded
+            console.log("removing old zip")
+            if (fs.existsSync(localConfig.ffmpegDownloadZip))
+            {
+                try { fs.unlinkSync(localConfig.ffmpegDownloadZip); }
+                catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: clearing out downloaded ffmpeg.zip before replacing", err); }
+            }
+
+        });
+        writer.on('error', err =>
+        {
+            installSuccess = false;
+            console.error('❌ Failed to download:', err)
+        });
     })
+        .catch(err =>
+        {
+            installSuccess = false;
+            console.log("err", err)
+        })
+    if (!installSuccess)
+        localConfig.StreamRollerFfmpeg = true;
+    else
+        localConfig.StreamRollerFfmpeg = false;
+
+
 }
 // ============================================================================
 //                           FUNCTION: unzipfile
