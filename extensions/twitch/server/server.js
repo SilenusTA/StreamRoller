@@ -106,7 +106,9 @@ const triggersandactions =
                     isPermanent: "",
                     moderator: "",
                     reason: "",
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -123,6 +125,8 @@ const triggersandactions =
                     currentAmount: "",
                     targetAmount: "",
                     id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -139,7 +143,9 @@ const triggersandactions =
                     currentAmount: "",
                     targetAmount: "",
                     id: "",
-                    startDate: ""
+                    startDate: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -156,7 +162,9 @@ const triggersandactions =
                     currentAmount: "",
                     targetAmount: "",
                     id: "",
-                    endDate: ""
+                    endDate: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -172,7 +180,9 @@ const triggersandactions =
                     charityDescription: "",
                     charityWebsite: "",
                     charityLogo: "",
-                    donor: ""
+                    donor: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -186,6 +196,8 @@ const triggersandactions =
                     isAnonymous: "",
                     message: "",
                     user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -196,6 +208,8 @@ const triggersandactions =
                 parameters: {
                     streamer: "",
                     user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -210,6 +224,8 @@ const triggersandactions =
                     startDate: "",
                     targetAmount: "",
                     type: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -225,7 +241,9 @@ const triggersandactions =
                     endDate: "",
                     targetAmount: "",
                     type: "",
-                    isAchieved: ""
+                    isAchieved: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -240,6 +258,8 @@ const triggersandactions =
                     startDate: "",
                     targetAmount: "",
                     type: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -258,6 +278,8 @@ const triggersandactions =
                     startDate: "",
                     topContributors: "",
                     total: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -274,6 +296,8 @@ const triggersandactions =
                     startDate: "",
                     topContributors: "",
                     total: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -292,6 +316,8 @@ const triggersandactions =
                     startDate: "",
                     topContributors: "",
                     total: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -300,7 +326,9 @@ const triggersandactions =
                 description: "A User was added to the Mod list",
                 messagetype: "trigger_TwitchModAdded",
                 parameters: {
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -309,7 +337,9 @@ const triggersandactions =
                 description: "A User was removed to the Mod list",
                 messagetype: "trigger_TwitchModRemoved",
                 parameters: {
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -328,6 +358,8 @@ const triggersandactions =
                     isChannelPointsVotingEnabled: "",
                     startDate: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -347,6 +379,8 @@ const triggersandactions =
                     startDate: "",
                     status: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -365,6 +399,8 @@ const triggersandactions =
                     isChannelPointsVotingEnabled: "",
                     startDate: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -380,6 +416,8 @@ const triggersandactions =
                     predictions: "",
                     startDate: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -398,6 +436,8 @@ const triggersandactions =
                     winnerId: "",
                     lockDate: "",
                     endDate: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -414,7 +454,9 @@ const triggersandactions =
                     startDate: "",
                     title: "",
                     winningOutcome: "",
-                    winningOutcomeId: ""
+                    winningOutcomeId: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -430,6 +472,8 @@ const triggersandactions =
                     predictions: "",
                     startDate: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -445,6 +489,8 @@ const triggersandactions =
                     predictions: "",
                     startDate: "",
                     title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -456,6 +502,8 @@ const triggersandactions =
                     streamer: "",
                     raider: "",
                     viewers: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -467,6 +515,8 @@ const triggersandactions =
                     streamer: "",
                     raider: "",
                     viewers: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -493,7 +543,8 @@ const triggersandactions =
                     rewardId_UIDescription: "Reward ID, normally same as the id field but there might be a use for this, Please let me know if you find one that is different so I can update this description",
                     status: "",
                     status_UIDescription: "Status of the redemption",
-                    triggerActionRef: "twitch"
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -508,7 +559,9 @@ const triggersandactions =
                     id: "",
                     prompt: "",
                     title: "",
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -534,7 +587,9 @@ const triggersandactions =
                     prompt: "",
                     redemptionsThisStream: "",
                     title: "",
-                    userInputRequired: ""
+                    userInputRequired: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -560,7 +615,9 @@ const triggersandactions =
                     prompt: "",
                     redemptionsThisStream: "",
                     title: "",
-                    userInputRequired: ""
+                    userInputRequired: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -584,7 +641,9 @@ const triggersandactions =
                     prompt: "",
                     redemptionsThisStream: "",
                     title: "",
-                    inputRequired: ""
+                    inputRequired: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -595,6 +654,8 @@ const triggersandactions =
                 parameters: {
                     streamer: "",
                     moderator: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -605,6 +666,8 @@ const triggersandactions =
                 parameters: {
                     streamer: "",
                     moderator: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -619,6 +682,8 @@ const triggersandactions =
                     targetName: "",
                     targetCooldown: "",
                     viewerCount: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -642,6 +707,8 @@ const triggersandactions =
                     isGift: "",
                     tier: "",
                     userDisplayName: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -654,6 +721,8 @@ const triggersandactions =
                     isGift: "",
                     tier: "",
                     user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -669,6 +738,8 @@ const triggersandactions =
                     gifter: "",
                     anon: "",
                     tier: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
 
                 }
             },
@@ -685,7 +756,9 @@ const triggersandactions =
                     message: "",
                     streakMonths: "",
                     tier: "",
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
 
                 }
             },
@@ -697,7 +770,9 @@ const triggersandactions =
                 parameters: {
                     streamer: "",
                     moderator: "",
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -706,7 +781,9 @@ const triggersandactions =
                 description: "The Stream title was changed",
                 messagetype: "trigger_TwitchTitleChanged",
                 parameters: {
-                    title: ""
+                    title: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -718,7 +795,9 @@ const triggersandactions =
                     triggerId: "",
                     gameId: "",
                     name: "",
-                    imageURL: ""
+                    imageURL: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -727,7 +806,9 @@ const triggersandactions =
                 description: "The stream ID has changed",
                 messagetype: "trigger_TwitchStreamIdChanged",
                 parameters: {
-                    id: ""
+                    id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -736,7 +817,9 @@ const triggersandactions =
                 description: "The stream language has changed",
                 messagetype: "trigger_TwitchStreamLanguageChanged",
                 parameters: {
-                    language: ""
+                    language: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -745,7 +828,9 @@ const triggersandactions =
                 description: "The streamer name has changed",
                 messagetype: "trigger_TwitchStreamerNameChanged",
                 parameters: {
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -753,14 +838,20 @@ const triggersandactions =
                 displaytitle: "Stream Started",
                 description: "The Stream Started",
                 messagetype: "trigger_TwitchStreamStarted",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {
                 name: "StreamEnded",
                 displaytitle: "Stream Ended",
                 description: "The Stream Ended",
                 messagetype: "trigger_TwitchStreamEnded",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {// triggered from here as eventsub doesn't have this event
                 name: "CommercialStarted",
@@ -768,7 +859,9 @@ const triggersandactions =
                 description: "A Commercial was started",
                 messagetype: "trigger_TwitchCommercialStarted",
                 parameters: {
-                    duration: ""
+                    duration: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {// triggered from here as eventsub doesn't have this event
@@ -777,7 +870,9 @@ const triggersandactions =
                 description: "A User was added to the VIP list",
                 messagetype: "trigger_TwitchVIPAdded",
                 parameters: {
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {// triggered from here as eventsub doesn't have this event
@@ -786,7 +881,9 @@ const triggersandactions =
                 description: "A User was removed to the VIP list",
                 messagetype: "trigger_TwitchVIPRemoved",
                 parameters: {
-                    user: ""
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -795,7 +892,9 @@ const triggersandactions =
                 description: "A list of editors for the channel",
                 messagetype: "trigger_TwitchEditors",
                 parameters: {
-                    editors: ""
+                    editors: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -804,7 +903,9 @@ const triggersandactions =
                 description: "A list of VIPs for the channel",
                 messagetype: "trigger_TwitchVIPs",
                 parameters: {
-                    VIPs: ""
+                    VIPs: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -812,28 +913,44 @@ const triggersandactions =
                 displaytitle: "Follower Count",
                 description: "Follower count",
                 messagetype: "trigger_TwitchFollowerCount",
-                parameters: { count: "" }
+                parameters: {
+                    count: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {
                 name: "FollowedChannels",
                 displaytitle: "Followed Channels",
                 description: "Followed channels",
                 messagetype: "trigger_TwitchFollowedChannels",
-                parameters: { channels: "" }
+                parameters: {
+                    channels: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {
                 name: "CheerEmotes",
                 displaytitle: "Cheer Emotes",
                 description: "Cheer emotes",
                 messagetype: "trigger_TwitchCheerEmotes",
-                parameters: { emotes: "" }
+                parameters: {
+                    emotes: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {
                 name: "Leaderboard",
                 displaytitle: "Leaderboard",
                 description: "Bits leaderboard",
                 messagetype: "trigger_TwitchLeaderboard",
-                parameters: { leaderboard: "" }
+                parameters: {
+                    leaderboard: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
             },
             {
                 name: "Poll",
@@ -850,6 +967,8 @@ const triggersandactions =
                     pointsPerVote: "",
                     startDate: "",
                     endDate: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -859,7 +978,9 @@ const triggersandactions =
                 messagetype: "trigger_TwitchUserBlocks",
                 parameters: {
                     username: "",
-                    blocked: ""
+                    blocked: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -868,7 +989,9 @@ const triggersandactions =
                 description: "A twitch clip",
                 messagetype: "trigger_TwitchClipCreated",
                 parameters: {
-                    clipName: ""
+                    clipName: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -890,7 +1013,9 @@ const triggersandactions =
                     url: "",
                     videoId: "",
                     views: "",
-                    vodOffset: ""
+                    vodOffset: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -907,7 +1032,9 @@ const triggersandactions =
                     description: "",
                     offlinePlaceholderUrl: "",
                     profilePictureUrl: "",
-                    type: ""
+                    type: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
             {
@@ -917,7 +1044,9 @@ const triggersandactions =
                 messagetype: "trigger_TwitchGameCategories",
                 parameters: {
                     id: 0,
-                    games: []
+                    games: [],
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
         ],
@@ -931,111 +1060,166 @@ const triggersandactions =
                 parameters: {
                     title: "",
                     title_UIDescription: "New Title to change to"
-                }
+                },
+                triggerActionRef: "twitch",
+                triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
             },
             {
                 name: "StartCommercial",
                 displaytitle: "Start Commercial",
                 description: "Start a Commercial for (30, 60, 90, 120, 150, 180) seconds",
                 messagetype: "action_TwitchStartCommercial",
-                parameters: { duration: "" }
+                parameters: {
+                    duration: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetEditors",
                 displaytitle: "GetEditors",
                 description: "Get a list of editors for the channel",
                 messagetype: "action_TwitchGetEditors",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetVIPs",
                 displaytitle: "GetVIPs",
                 description: "Get a list of VIPs for the channel",
                 messagetype: "action_TwitchGetVIPs",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "AddVIP",
                 displaytitle: "Add VIP",
                 description: "Promote user to VIP",
                 messagetype: "action_TwitchAddVIP",
-                parameters: { user: "" }
+                parameters: {
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "RemoveVIP",
                 displaytitle: "Remove VIP",
                 description: "Demote user from VIP",
                 messagetype: "action_TwitchRemoveVIP",
-                parameters: { user: "" }
+                parameters: {
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "AddMod",
                 displaytitle: "Add Mod",
                 description: "Promote user to Mod",
                 messagetype: "action_TwitchAddMod",
-                parameters: { user: "" }
+                parameters: {
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "RemoveMod",
                 displaytitle: "Remove Mod",
                 description: "Demote user from Mod",
                 messagetype: "action_TwitchRemoveMod",
-                parameters: { user: "" }
+                parameters: {
+                    user: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "Ban",
                 displaytitle: "Ban a user",
                 description: "Bans a user from the stream",
                 messagetype: "action_TwitchBan",
-                parameters: { user: "", reason: "" }
+                parameters: {
+                    user: "", reason: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "Unban",
                 displaytitle: "Unban a user",
                 description: "Unbans a user from the stream",
                 messagetype: "action_TwitchUnban",
-                parameters: { user: "", reason: "" }
+                parameters: {
+                    user: "", reason: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             }, {
                 name: "FollowerCount",
                 displaytitle: "Follower Count",
                 description: "Get follower count",
                 messagetype: "action_TwitchFollowerCount",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "FollowedChannels",
                 displaytitle: "Followed Channels",
                 description: "Get followed channels",
                 messagetype: "action_TwitchFollowedChannels",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "CheerEmotes",
                 displaytitle: "Cheer Emotes",
                 description: "Get cheer emotes",
                 messagetype: "action_TwitchCheerEmotes",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "Leaderboard",
                 displaytitle: "Leaderboard",
                 description: "Get bits leaderboard",
                 messagetype: "action_TwitchLeaderboard",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetPolls",
                 displaytitle: "Get Polls",
                 description: "Gets a list of polls",
                 messagetype: "action_TwitchGetPolls",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetPoll",
                 displaytitle: "Get Poll",
                 description: "Get a poll",
                 messagetype: "action_TwitchGetPoll",
-                parameters: { id: "" }
+                parameters: {
+                    id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "CreatePoll",
@@ -1046,7 +1230,9 @@ const triggersandactions =
                     title: "",
                     duration: "",
                     choices: "",//comma separated
-                    points: ""
+                    points: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1056,7 +1242,9 @@ const triggersandactions =
                 messagetype: "action_TwitchEndPoll",
                 parameters: {
                     id: "",
-                    display: ""
+                    display: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1067,7 +1255,9 @@ const triggersandactions =
                 parameters: {
                     title: "",
                     choices: "",
-                    duration: ""
+                    duration: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1077,6 +1267,8 @@ const triggersandactions =
                 messagetype: "action_TwitchCancelPrediction",
                 parameters: {
                     id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1085,7 +1277,9 @@ const triggersandactions =
                 description: "Gets a list of predictions",
                 messagetype: "action_TwitchGetPredictions",
                 parameters: {
-                    state: ""
+                    state: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1093,21 +1287,33 @@ const triggersandactions =
                 displaytitle: "Get Prediction",
                 description: "Get a prediction",
                 messagetype: "action_TwitchGetPrediction",
-                parameters: { id: "" }
+                parameters: {
+                    id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "LockPrediction",
                 displaytitle: "Lock Prediction",
                 description: "Lock a prediction",
                 messagetype: "action_TwitchLockPrediction",
-                parameters: { id: "" }
+                parameters: {
+                    id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "RemovePrediction",
                 displaytitle: "Remove Prediction",
                 description: "Remove a prediction",
                 messagetype: "action_TwitchLRemovePrediction",
-                parameters: { id: "" }
+                parameters: {
+                    id: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "ResolvePrediction",
@@ -1116,7 +1322,9 @@ const triggersandactions =
                 messagetype: "action_TwitchLResolvePrediction",
                 parameters: {
                     id: "",
-                    outcomeId: ""
+                    outcomeId: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             //users
@@ -1128,7 +1336,9 @@ const triggersandactions =
                 parameters: {
                     username: "",
                     reason: "",
-                    context: ""
+                    context: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1138,6 +1348,8 @@ const triggersandactions =
                 messagetype: "action_TwitchDeleteBlock",
                 parameters: {
                     username: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1148,6 +1360,8 @@ const triggersandactions =
                 parameters: {
                     username: "",
                     data: null,
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1155,21 +1369,31 @@ const triggersandactions =
                 displaytitle: "Get blocked users",
                 description: "Get a list of blocked users",
                 messagetype: "action_TwitchGetBlocks",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "CreateClip",
                 displaytitle: "Create clip",
                 description: "Create a twitch clip",
                 messagetype: "action_TwitchCreateClip",
-                parameters: {}
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetClipById",
                 displaytitle: "Get Clip By Id",
                 description: "Get clip by id",
                 messagetype: "action_TwitchGetClipById",
-                parameters: { clipName: "" }
+                parameters: {
+                    clipName: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
             },
             {
                 name: "GetClipsForBroadcaster",
@@ -1178,7 +1402,9 @@ const triggersandactions =
                 messagetype: "action_TwitchGetClipsForBroadcaster",
                 parameters: {
                     name: "",
-                    count: ""
+                    count: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1188,7 +1414,9 @@ const triggersandactions =
                 messagetype: "action_TwitchGetClipsForGame",
                 parameters: {
                     game: "",
-                    count: ""
+                    count: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1198,6 +1426,8 @@ const triggersandactions =
                 messagetype: "action_GetTwitchGameCategories",
                 parameters: {
                     id: 0,
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
             {
@@ -1207,6 +1437,8 @@ const triggersandactions =
                 messagetype: "action_GetTwitchStats",
                 parameters: {
                     actionID: "",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
 

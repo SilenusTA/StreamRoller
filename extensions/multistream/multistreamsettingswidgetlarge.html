@@ -1,0 +1,84 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<form id="extensionnametext_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <HR>
+    <h4 class="text-center">Multistream Settings</h4>
+    <p>Multistream using StreamRoller as the multiplexer to take OBS stream and output to different platforms
+        <BR> Notes:
+    <ul>
+        <li>ffmpeg is required to run, if you have a version installed (check the command prompt if not sure. enter ffmpeg -version' to see if you have one
+            already installed. If in stalled select 'use installed ffmpeg box below', else you can select 'use StreamRoller ffmpeg' which will install a version
+            of ffmpeg into the extensions bin folder for you)
+        <li>StreamRoller server needs starting before OBS. To start the server use the enable/disable checkbox in the small settings page (on the
+            Home/livePortal page)</li>
+        <li>Any updates to this page will only take effect when next starting a stream</li>
+        <li>For Twitch testing (without going live) set 'Additional Params
+            ' to '?bandwidthtest=true' (without quotes)</li>
+        <li>For YouTube testing (without going live) start the stream on YouTube using 'Unlisted' rather than 'Public'</li>
+        <li>For YouTube backup server (for some reason mine failed a lot with the standard server) set 'Additional URL
+            ' to '?backup=1' (without quotes)</li>
+
+    </ul>
+    <!--<h5>Enable/Disable</h5>
+        
+        <div class="form-group py-2">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" name="multistreamEnabled" type="checkbox" id="multistreamEnabled" multistreamEnabledchecked>
+                <label class="form-check-label" for="multistreamEnabled">Enable/Disable (enabling will start any streams selected below)</label>
+            </div>
+        </div>
+        -->
+    <HR>
+    <h3 class="text-center">Select FFMPEG install to use</h3>
+    You can use your own FFMPEG (check it runs from commandline with 'ffmpeg -version' if having issues)
+    <BR>
+    <div style="color:yellow">Note: if you select to run StreamRoller FFMPEG then this will be automatically downloaded and installed in the extensions /bin
+        folder if it doesn't exist (ie after installing a new version).</div>
+
+    multistreamFFMPEGPickerPlaceholder
+
+    <HR>
+    <h3 class="text-center">StreamConfigurations</h3>
+    <p>Configure the output for each stream</p>
+    multistreamStreamsPlaceholder
+
+    <HR>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox" id="extensionnametext_restore_defaults"
+                extensionnametext_restore_defaultschecked>
+            <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" type="close" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

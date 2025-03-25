@@ -166,6 +166,26 @@ const triggersandactions =
     actions:
         [
             {
+                name: "OBSStartStream",
+                displaytitle: "StartOBSStream",
+                description: "Start Streaming in OBS",
+                messagetype: "action_StartStream",
+                parameters: {
+                    triggerActionRef: "obs",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
+            {
+                name: "OBSStopStream",
+                displaytitle: "StopsOBSStream",
+                description: "Stop Streaming in OBS",
+                messagetype: "action_StopStream",
+                parameters: {
+                    triggerActionRef: "obs",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
+            {
                 name: "OBSToggleFilter",
                 displaytitle: "Toggle Filter",
                 description: "Enable/Disable a filter (true/false)",
@@ -445,6 +465,16 @@ function onDataCenterMessage (server_packet)
                         server_packet.from
                     )
                 )
+            }
+            else if (extension_packet.type === "action_StartStream")
+            {
+                if (serverConfig.enableobs == "on")
+                    startStream(extension_packet.data);
+            }
+            else if (extension_packet.type === "action_StopStream")
+            {
+                if (serverConfig.enableobs == "on")
+                    stopStream(extension_packet.data);
             }
             else if (extension_packet.type === "action_EnableSource")
             {
@@ -896,6 +926,41 @@ function processOBSSceneList (scenes)
 }
 
 // ============================================================================
+//                           FUNCTION: startStream
+// ============================================================================
+/**
+ * Starts OBS streaming
+ * @param {string} extension_data 
+ */
+function startStream (extension_data)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startStream", " starting Stream ", extension_data.triggerActionRef);
+    localConfig.obsConnection.call("StartStream", {})
+        .then(() =>
+        {
+            StreamStarted()
+        })
+        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startStream ", "startStream failed", err.message); });
+
+}
+// ============================================================================
+//                           FUNCTION: stopStream
+// ============================================================================
+/**
+ * Stops  OBS streaming
+ * @param {string} scene 
+ */
+function stopStream (extension_data)
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".stopStream", " stopping Stream ", extension_data.triggerActionRef);
+    localConfig.obsConnection.call("StopStream", {})
+        .then(() =>
+        {
+            StreamStarted()
+        })
+        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".stopStream ", "stopStream failed", err.message); });
+}
+// ============================================================================
 //                           FUNCTION: changeScene
 // ============================================================================
 /**
@@ -1106,7 +1171,6 @@ function onSwitchedScenes (scene)
 // ============================================================================
 /**
  * Called when the stream is stopped
- * @param {Object} data 
  */
 function StreamStopped ()
 {
@@ -1127,7 +1191,6 @@ function StreamStopped ()
 // ============================================================================
 /**
  * Called when the stream is started
- * @param {Object} data 
  */
 function StreamStarted ()
 {
