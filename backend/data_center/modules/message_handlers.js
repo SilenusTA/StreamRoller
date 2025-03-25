@@ -365,14 +365,28 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
 // ============================================================================
 function UpdateCredentials (server_packet)
 {
-    cm.saveCredentials(server_packet);
+    try
+    {
+        cm.saveCredentials(server_packet);
+    }
+    catch (err)
+    {
+        console.log("Error while updating credentials for", from, JSON.stringify(err, null, 2))
+    }
 }
 // ============================================================================
 //                           FUNCTION: DeleteCredentials
 // ============================================================================
 function DeleteCredentials (from)
 {
-    cm.deleteCredentials(from)
+    try
+    {
+        cm.deleteCredentials(from)
+    }
+    catch (err)
+    {
+        console.log("Error while deleting credentials for", from, JSON.stringify(err, null, 2))
+    }
 }
 // ============================================================================
 //                           FUNCTION: RetrieveCredentials
@@ -380,28 +394,36 @@ function DeleteCredentials (from)
 function RetrieveCredentials (from, extensions)
 {
 
-    let loadedCredentials = cm.loadCredentials(from);
-    let msg
-    logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
-        "Sending credential file", from);
-    if (loadedCredentials && loadedCredentials.ExtensionName && extensions[loadedCredentials.ExtensionName])
+    try
     {
-        // create our message packet
-        let msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, loadedCredentials, "", loadedCredentials.ExtensionName);
-        if (monitorSocketSentData)
-            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
-        extensions[loadedCredentials.ExtensionName].socket.emit("message", msg);
+        let loadedCredentials = cm.loadCredentials(from);
+        let msg
+        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+            "Sending credential file", from);
+        if (loadedCredentials && loadedCredentials.ExtensionName && extensions[loadedCredentials.ExtensionName])
+        {
+            // create our message packet
+            let msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, loadedCredentials, "", loadedCredentials.ExtensionName);
+            if (monitorSocketSentData)
+                socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+            extensions[loadedCredentials.ExtensionName].socket.emit("message", msg);
+        }
+        else
+        {
+            logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
+                from + " No data Credentials available or ExtensionName not valid in credential file");
+            // send an empty message back so the extension can check for missin credentials
+            msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from)
+            if (monitorSocketSentData)
+                socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
+            extensions[from].socket.emit("message", msg);
+        }
     }
-    else
+    catch (err)
     {
-        logger.info("[" + SYSTEM_LOGGING_TAG + "]message_handlers.RetrieveCredentials",
-            from + " No data Credentials available or ExtensionName not valid in credential file");
-        // send an empty message back so the extension can check for missin credentials
-        msg = sr_api.ServerPacket("CredentialsFile", EXTENSION_NAME, "", "", from)
-        if (monitorSocketSentData)
-            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg));
-        extensions[from].socket.emit("message", msg);
+        console.log("Error while retrieving credentials", JSON.stringify(err, null, 2))
     }
+
 }
 // ============================================================================
 //                           FUNCTION: broadcastMessage
