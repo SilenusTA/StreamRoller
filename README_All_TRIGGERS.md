@@ -35,7 +35,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Thu, 13 Mar 2025 01:00:53 GMT*## Extensions
+Table last updated: *Tue, 25 Mar 2025 05:02:28 GMT*## Extensions
 
 ## autopilot
 
@@ -5327,7 +5327,7 @@ Table last updated: *Thu, 13 Mar 2025 01:00:53 GMT*## Extensions
 | PredictionProgress | trigger_TwitchPredictionProgress | A Prediction Progressed |
 | RaidFrom | trigger_TwitchRaidFrom | Another streamer raided the channel |
 | RaidTo | trigger_TwitchRaidTo | A raid was started |
-| RedemptionAdd | trigger_TwitchRedemptionAdd | A user used channel points for a redemption |
+| RedemptionAdd | trigger_TwitchRedemptionAdd | A user used channel points for a redemption (id and rewardID appear to be the same number) |
 | RedemptionUpdate | trigger_TwitchRedemptionUpdate | A user used channel points for a redemption update?? |
 | RewardAdd | trigger_TwitchRewardAdd | Reward added by streamer to channel |
 | RewardRemove | trigger_TwitchRewardRemove | Reward removed by streamer to channel |
@@ -5367,7 +5367,7 @@ Table last updated: *Thu, 13 Mar 2025 01:00:53 GMT*## Extensions
 
 | name | trigger | description |
 | --- | --- | --- |
-| ChangeTitle | action_TwitchChangeTitle | Change channel title |
+| ChangeTitle | action_TwitchChangeTitle | Change stream title |
 | StartCommercial | action_TwitchStartCommercial | Start a Commercial for (30, 60, 90, 120, 150, 180) seconds |
 | GetEditors | action_TwitchGetEditors | Get a list of editors for the channel |
 | GetVIPs | action_TwitchGetVIPs | Get a list of VIPs for the channel |
