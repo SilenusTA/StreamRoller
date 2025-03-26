@@ -31,7 +31,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.3",
+        __version__: "0.4",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -85,6 +85,7 @@
         youtubeBlackList: "",
         YouTubeTTSVoiceName: "Please select a windows voice",
         YouTubeTTSVoiceIndex: -1,
+        TTSVoiceFilter: "", // filter out voices you are interested in
 
         // random facts twitter settings
         randomfactsenabled: "on",
@@ -1996,15 +1997,15 @@
             localConfig.TTSVoiceList.forEach((voice, index) =>
             {
                 if (index == serverConfig.twitchTTSVoiceIndex)
-                    twitchoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
+                    twitchoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "LoadVoiceTimer</option>"
                 else
-                    twitchoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
+                    twitchoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
 
                 if (index == serverConfig.YouTubeTTSVoiceIndex)
-                    ytoptioncode += "<option value='" + index + "' selected>" + voice.name + "LoadVoiceTimer</option>"
+                    ytoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "LoadVoiceTimer</option>"
                 else
-                    ytoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
-                testoptioncode += "<option value='" + index + "'>" + voice.name + "</option>"
+                    ytoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
+                testoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
             });
             //update the modal boxes for each platform and the test button
             modalstring = modalstring.replaceAll("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", twitchoptioncode);
@@ -2086,6 +2087,13 @@
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
+            if (key == "TTSVoiceFilter" && fieldsAsObject[key] != value)
+            {
+                serverConfig.TTSVoiceFilter = fieldsAsObject[key]
+                //data has changed
+                LoadVoices()
+            }
+
             if (key === "randomfactstimeout")
                 serverConfig[key] = fieldsAsObject[key] * 60000
             // need to explicity check for checkboxes we have that are turned off (no data returned)
@@ -2366,6 +2374,17 @@
         if (!localConfig.TTSVoiceList.length)
             localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
 
+        //filter out stuff the user is interested in
+        if (serverConfig.TTSVoiceFilter != "")
+        {
+            localConfig.TTSVoiceList = localConfig.TTSVoiceList.filter(function (el)
+            {
+                return el.name.indexOf(serverConfig.TTSVoiceFilter) > -1;
+            });
+        }
+        //sort voice list alphabetically
+        function compare (a, b) { if (a.name < b.name) { return -1; } if (a.name > b.name) { return 1; } return 0; }
+        localConfig.TTSVoiceList.sort(compare);
         //if we got voices then update out settings
         if (localConfig.TTSVoiceList.length)
         {
