@@ -59,11 +59,6 @@ const localConfig = {
     // stuff to be updated
     videoEncoders: ["an encoder", "h264_nvenc", "someotherencoder"],
     audioEncoders: ["an encoder", "aac", "someotherencoder"],
-
-    DEBUG_FFMPEG: false,
-    DEBUG_FFMPEG_STDERR: false,
-    DEBUG_FFMPEG_STDOUT: false,
-
 }
 
 // stream object that wil be used to create new stream objects
@@ -86,6 +81,10 @@ const defaultEmptyStream =
     audioChannels: "2", // number of audio channels output (defaults to source)
     audioBitrate: "128k",
     outputFormat: "flv",
+
+    DEBUG_FFMPEG: false,
+    DEBUG_FFMPEG_STDERR: false,
+    DEBUG_FFMPEG_STDOUT: false,
 }
 // setup some defaults for twitch/youtube to help users get started etc
 const defaultTwitchStream =
@@ -554,6 +553,21 @@ function parseSettingsWidgetLarge (extension_data)
             }
         }
         serverConfig.useStreamRollerFFMPEG = (extension_data.multistreamffmpegpicker == "1");
+        if (extension_data["multistream_DEBUG_FFMPEG"] == "on")
+            serverConfig.DEBUG_FFMPEG = true;
+        else
+            serverConfig.DEBUG_FFMPEG = false;
+
+        if (extension_data["multistream_DEBUG_FFMPEG_STDERR"] == "on")
+            serverConfig.DEBUG_FFMPEG_STDERR = true;
+        else
+            serverConfig.DEBUG_FFMPEG_STDERR = false;
+
+        if (extension_data["multistream_DEBUG_FFMPEG_STDOUT"] == "on")
+            serverConfig.DEBUG_FFMPEG_STDOUT = true;
+        else
+            serverConfig.DEBUG_FFMPEG_STDOUT = false;
+
         // if we want to use our installed version but don't have it then call the download function
         if (serverConfig.useStreamRollerFFMPEG && !localConfig.StreamRollerFfmpegInstalled)
             downloadFFMPEG()
@@ -756,6 +770,14 @@ function SendSettingsWidgetLarge (toExtension = "")
 
             modalString = modalString.replace("multistreamStreamsPlaceholder", streamsHtml)
 
+
+            if (serverConfig.DEBUG_FFMPEG)
+                modalString = modalString.replace("multistream_DEBUG_FFMPEGchecked", "checked")
+            if (serverConfig.DEBUG_FFMPEG_STDERR)
+                modalString = modalString.replace("multistream_DEBUG_FFMPEG_STDERRchecked", "checked")
+            if (serverConfig.DEBUG_FFMPEG_STDOUT)
+                modalString = modalString.replace("multistream_DEBUG_FFMPEG_STDOUTchecked", "checked")
+
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -920,7 +942,7 @@ function startStream (ref)
             localConfig.streamRunning = false;
             sendStreamStoppedTrigger();
             sendOBSStopAction(ref);
-            if (localConfig.DEBUG_FFMPEG)
+            if (serverConfig.DEBUG_FFMPEG)
             {
                 console.log("cmd end received")
                 console.log("out", JSON.stringify(out, null, 2))
@@ -973,7 +995,7 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
 
 
     let ffmpegProc = spawn(command, args);
-    if (localConfig.DEBUG_FFMPEG)
+    if (serverConfig.DEBUG_FFMPEG)
         console.log("ffmpegProc ", command, args.join(' '));
     if (ffmpegProc.stderr)
     {
@@ -1006,7 +1028,7 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
     ffmpegProc.stdout.on('data', function (data)
     {
         stdoutClosed = false;
-        if (localConfig.DEBUG_FFMPEG_STDOUT)
+        if (serverConfig.DEBUG_FFMPEG_STDOUT)
             console.log("ffmpeg:stdout:data()", data.toString())
         stdoutbuffer.push(data.toString())
     });
@@ -1014,7 +1036,7 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
     ffmpegProc.stdout.on('close', function ()
     {
         stdoutbuffer.push('close')
-        if (localConfig.DEBUG_FFMPEG_STDOUT)
+        if (serverConfig.DEBUG_FFMPEG_STDOUT)
             console.log("ffmpeg:stdout:close")
         stdoutClosed = true;
         handleExit(null, streamFinished);
@@ -1029,14 +1051,14 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
             streamStarted();
         stderrClosed = false
         stderrbuffer.push(data)
-        if (localConfig.DEBUG_FFMPEG_STDERR)
+        if (serverConfig.DEBUG_FFMPEG_STDERR)
             console.log("ffmpeg:stderr:data()", JSON.stringify(data, null, 2))
     });
 
     ffmpegProc.stderr.on('close', function ()
     {
         stderrbuffer.push('close')
-        if (localConfig.DEBUG_FFMPEG_STDERR)
+        if (serverConfig.DEBUG_FFMPEG_STDERR)
             console.log("ffmpeg:stderr:close()")
         stderrClosed = true;
         handleExit(null, streamFinished);
