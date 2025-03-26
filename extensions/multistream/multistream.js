@@ -42,23 +42,34 @@ let stdoutbuffer = []
 let stderrbuffer = []
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// volatile variables
 const localConfig = {
+    // StreamRoller stuff
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
+
+    //extensions basics
+    multistreamEnabled: "off",
+    streamRunning: false,
+
+    // installed version of ffmpeg available/installed/selected
     StreamRollerFfmpegInstalled: false,
     UserFfmpegInstalled: false,
     StreamRollerFfmpeg: false,//use/install ffmpeg in bin dir
+
+    // download options for ffmpeg
     ffmpegDownloadURL: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip",
     ffmpegFolder: __dirname + "\\bin\\",
     ffmpegDownloadZip: __dirname + "\\bin\\ffmpeg.zip",
     ffmpegExe: __dirname + "\\bin\\ffmpeg.exe",
     ffmpegHandle: null,
-    multistreamEnabled: "off",
-    streamRunning: false,
 
+    // encoders
+    ffmpegEncodersString: null,
+    videoEncoders: [],
+    audioEncoders: [],
     // stuff to be updated
-    videoEncoders: ["an encoder", "h264_nvenc", "someotherencoder"],
-    audioEncoders: ["an encoder", "aac", "someotherencoder"],
+
 }
 
 // stream object that wil be used to create new stream objects
@@ -127,7 +138,7 @@ const defaultYouTubeStream =
 }
 
 const default_serverConfig = {
-    __version__: "0.5",
+    __version__: "0.6",
     extensionname: "multistream",
     channel: "MULTISTREAM",
     streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream],
@@ -301,21 +312,27 @@ function onDataCenterMessage (server_packet)
         if (server_packet.data && server_packet.data.extensionname
             && server_packet.data.extensionname === serverConfig.extensionname)
         {
+            let ffmpegChanged = false;
             let configSubVersions = 0;
             let defaultSubVersions = default_serverConfig.__version__.split('.');
             if (server_packet.data == "")
             {
                 serverConfig = structuredClone(default_serverConfig);
                 SaveConfigToServer();
+                ffmpegChanged = true;
             }
             else
+            {
                 configSubVersions = server_packet.data.__version__.split('.')
+                ffmpegChanged = true;
+            }
 
             if (configSubVersions[0] != defaultSubVersions[0])
             {
                 serverConfig = structuredClone(default_serverConfig);
                 console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
                 SaveConfigToServer();
+                ffmpegChanged = true;
             }
             else if (configSubVersions[1] != defaultSubVersions[1])
             {
@@ -323,13 +340,20 @@ function onDataCenterMessage (server_packet)
                 serverConfig.__version__ = default_serverConfig.__version__;
                 console.log(serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__);
                 SaveConfigToServer();
+                ffmpegChanged = true;
             }
             else
             {
+                if (serverConfig.useStreamRollerFFMPEG != server_packet.useStreamRollerFFMPEG)
+                    ffmpegChanged = true;
                 serverConfig = structuredClone(server_packet.data);
             }
             SendSettingsWidgetSmall();
-            SendSettingsWidgetLarge();
+            if (ffmpegChanged)
+                checkFFMPEGAvailabilities();
+            // This will get sent from checkFFMPEGAvailabilities when it has finished getting it's settings update
+            if (!ffmpegChanged)
+                SendSettingsWidgetLarge();
         }
     }
     else if (server_packet.type === "CredentialsFile")
@@ -513,6 +537,7 @@ function parseSettingsWidgetSmall (extension_data)
 function parseSettingsWidgetLarge (extension_data)
 {
     let credsChanged = false;
+    let ffmpegChanged = false;
     // reset to defaults
     if (extension_data.multistream_restore_defaults == "on")
         serverConfig = structuredClone(default_serverConfig);
@@ -528,10 +553,14 @@ function parseSettingsWidgetLarge (extension_data)
                 serverCredentials[`multistreamStream${i}StreamKey`] = extension_data[`multistreamStream${i}StreamKey`];
                 credsChanged = true;
             }
+            if (extension_data[`useStreamRollerFFMPEG`] != serverConfig.useStreamRollerFFMPEG)
+                ffmpegChanged = true;
         })
 
         if (credsChanged)
             saveCredentialsToServer()
+        if (ffmpegChanged)
+            checkFFMPEGAvailabilities();
         // check the stream key values
         for (const [key, value] of Object.entries(extension_data))
         {
@@ -571,11 +600,14 @@ function parseSettingsWidgetLarge (extension_data)
         // if we want to use our installed version but don't have it then call the download function
         if (serverConfig.useStreamRollerFFMPEG && !localConfig.StreamRollerFfmpegInstalled)
             downloadFFMPEG()
+
         SaveConfigToServer();
     }
     //update anyone who is showing our code at the moment
     SendSettingsWidgetSmall("");
-    SendSettingsWidgetLarge("");
+    // if changed we will update our Availabilities and this will send this out anyway
+    if (!ffmpegChanged)
+        SendSettingsWidgetLarge("");
 
 }
 // ===========================================================================
@@ -742,7 +774,7 @@ function SendSettingsWidgetLarge (toExtension = "")
                 streamsHtml += createCheckBox("Variable Bitrate", `multistream_variableBitrate_${i}`, stream.variableBitrate == "on");
                 streamsHtml += "<BR>";
                 // videoEncoder
-                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, localConfig.videoEncoders, stream.videoEncoder);
+                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, localConfig.videoEncoders, stream.videoEncoder, "Available Video Encoders in current FFMPEG. If you need others try using a different version of FFMPEG that contain's them");
                 // videoPreset
                 streamsHtml += createTextBox("Video preset (for nvenc encoders)", `multistream_videoPreset_${i}`, stream.videoPreset);
                 streamsHtml += "<BR>";
@@ -759,7 +791,7 @@ function SendSettingsWidgetLarge (toExtension = "")
                 streamsHtml += createTextBox("Key Frame Interval (in seconds)", `multistream_keyframeInterval_${i}`, stream.keyframeInterval);
                 streamsHtml += "<BR>";
                 // AudioEncoder
-                streamsHtml += createDropdown("Audio Encoder", `multistream_audioEncoder_${i}`, localConfig.audioEncoders, stream.audioEncoder);
+                streamsHtml += createDropdown("Audio Encoder", `multistream_audioEncoder_${i}`, localConfig.audioEncoders, stream.audioEncoder, "Available Audio Encoders in FFMPEG. If you need others try using a different version of FFMPEG that contain's them");
                 // audioBitrate
                 streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate);
                 streamsHtml += "<BR>";
@@ -932,7 +964,7 @@ function startStream (ref)
             if (!localConfig.streamRunning)
             {
                 localConfig.streamRunning = true;
-                sendStreamStartedTrigger();
+                sendStreamStartedTrigger(ref);
                 sendOBSStartAction(ref);
             }
             // console.log("handle", JSON.stringify(handle, null, 2))
@@ -1300,11 +1332,11 @@ function sendTrigger (data)
 // ===========================================================================
 //                           FUNCTION: createDropdown
 // ===========================================================================
-function createDropdown (Title, id, data = [], currentSelectedId = 0)
+function createDropdown (Title, id, data = [], currentSelectedId = 0, label = null)
 {
     let dropdownHtml = "";
     dropdownHtml += '<div class="d-flex-align w-100">';
-    dropdownHtml += `<select class='selectpicker btn-secondary py-1' data-style='btn-danger' style="max-width: 85%;" title='${Title}' id="${id}" value='${currentSelectedId}' name="${id}" required="">`
+    dropdownHtml += `<select class='selectpicker btn-secondary py-2' data-style='btn-danger' style="max-width: 85%;" title='${Title}' id="${id}" value='${currentSelectedId}' name="${id}" required="">`
     dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--Select an option--</option>'
     data.forEach(option =>
     {
@@ -1314,6 +1346,8 @@ function createDropdown (Title, id, data = [], currentSelectedId = 0)
             dropdownHtml += '<option value="' + option + '">' + option + '</option>';
     });
     dropdownHtml += '</select>';
+    if (label)
+        dropdownHtml += `<label class="form-check-label" for="${id}">&nbsp;${label}</label>`
     // add clear history checkbox
     dropdownHtml += '</div>';
     return dropdownHtml;
@@ -1328,7 +1362,7 @@ function createTextBox (description, name, value, password)
     if (password)
         type = "password"
     return `<div id="${name}_div" class="form-group py-1" style="display: inline-flex;">
-        <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}"><label for="${name}" class="col-form-label">${description}</label>
+        <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}"><label for="${name}" class="col-form-label">&nbsp;${description}</label>
     </div>`
 }
 // ===========================================================================
@@ -1340,16 +1374,16 @@ function createCheckBox (description, name, checked)
     if (checked)
         checkedtext = "checked";
     return `
-    <div class="form-check form-check-inline">
+    <div class="form-check form-check-inline py-2">
         <input class="form-check-input" name="${name}" type="checkbox" id="${name}" ${checkedtext}>
-        <label class="form-check-label" for="${name}">${description}</label>
+        <label class="form-check-label" for="${name}">&nbsp;${description}</label>
     </div>`
 }
 
-// ============================================================================
+// ############################################################################
 //                            INSTALL FFMPEG FILES
 // If the user doesn't have ffmpeg installed we can install one from github
-// ============================================================================
+// ############################################################################
 
 // ============================================================================
 //                           FUNCTION: downloadFFMPEG
@@ -1358,7 +1392,8 @@ function createCheckBox (description, name, checked)
  * 
  */
 async function downloadFFMPEG ()
-{// check we have ffmpeg available or not.
+{
+    // check we have ffmpeg available or not.
     //console.log(`localConfig.ffmpegDownloadZip = ${localConfig.ffmpegDownloadZip}`)
     //console.log(`localConfig.ffmpegDownloadURL = ${localConfig.ffmpegDownloadURL}`)
     //console.log(`localConfig.ffmpegFolder = ${localConfig.ffmpegFolder}`)
@@ -1435,7 +1470,7 @@ async function downloadFFMPEG ()
             })
             // delete downloaded files
             // uncomment once tested it doesn't delete my hd :D :D
-            console.log("removing folder ffmpeg-master-latest-win64-gpl-shared")
+            //console.log("removing folder ffmpeg-master-latest-win64-gpl-shared")
             try { fs.rmSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", { recursive: true, force: true }); }
             catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: removing directory", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", err); }
 
@@ -1457,7 +1492,7 @@ async function downloadFFMPEG ()
         .catch(err =>
         {
             installSuccess = false;
-            console.log("err", err)
+            console.log("err downloading ffmpeg", err)
         })
     if (!installSuccess)
         localConfig.StreamRollerFfmpeg = true;
@@ -1481,9 +1516,160 @@ function unzipfile (file, to)
     return unzipHandle;
 
 }
+// ############################################################################
+//                            GET FFMPEG INFO
+// Stuff like video encoders available etc
+// ############################################################################
+// ============================================================================
+//                      FUNCTION: UpdateEncodersAvailable
+// ============================================================================
+/**
+ * Checks and updates availabilities of FFMPEG with current settings
+ */
+function checkFFMPEGAvailabilities ()
+{
+    let ffmpegExe = null
+    // did the user select to use our FFMPEG or their own
+    if (serverConfig.useStreamRollerFFMPEG)
+    {
+        if (localConfig.StreamRollerFfmpegInstalled)
+            ffmpegExe = localConfig.ffmpegExe;
+    }
+    else
+    {
+        if (localConfig.UserFfmpegInstalled)
+            ffmpegExe = "ffmpeg"
+    }
+    if (!ffmpegExe)
+    {
+        SendSettingsWidgetLarge();
+        return;
+    }
+
+    // get our video encoders
+    /* Flags
+            V..... = Video
+            A..... = Audio
+            S..... = Subtitle
+            .F.... = Frame-level multithreading
+            ..S... = Slice-level multithreading
+            ...X.. = Codec is experimental
+            ....B. = Supports draw_horiz_band
+            .....D = Supports direct rendering method 1
+    */
+    UpdateEncodersAvailable(ffmpegExe)
+}
+// ============================================================================
+//                      FUNCTION: UpdateEncodersAvailable
+// ============================================================================
+/**
+ * tests what ffmpeg encoders are available
+ * byproduct: calls out SendSettingsWidgetLarge()
+ */
+function UpdateEncodersAvailable (ffmpegExe)
+{
+    let finished = false;
+    let args = ["-encoders", "-hide_banner"];
+    let ffmpegHandle = spawn("ffmpeg", args);
+    localConfig.ffmpegEncodersString = "";
+
+    //console.log("running", ffmpegExe, args.join(' '));
+    if (ffmpegHandle.stderr)
+        ffmpegHandle.stderr.setEncoding('utf8');
+    if (ffmpegHandle.stdout)
+        ffmpegHandle.stdout.setEncoding('utf8');
+
+    ffmpegHandle.on('error', function (err)
+    {
+        console.log("UpdateEncodersAvailable():error()", err)
+    });
+
+    ffmpegHandle.on('exit', function (code, signal)
+    {
+        finished = true;
+        if (signal)
+            console.log("UpdateEncodersAvailable():exit()was killed with signal " + signal);
+        else if (code)
+            console.log("UpdateEncodersAvailable():exit())exited with code " + code);
+        //console.log("exit called no code or signal")
+    });
+
+    ffmpegHandle.stdout.on('data', function (data)
+    {
+        //console.log("stdout:adding data")
+        localConfig.ffmpegEncodersString += data.toString()
+    });
+
+    ffmpegHandle.stdout.on('close', function ()
+    {
+        //console.log("ffmpegHandle:stdout:close()")
+    });
+
+
+    // Capture stderr if specified
+    ffmpegHandle.stderr.on('data', function (data)
+    {
+        //console.log("stdout:adding:stderr:", data)
+    })
+
+    ffmpegHandle.stderr.on('close', function ()
+    {
+        //console.log("ffmpegHandle:stderr:close()")
+    });
+
+    localConfig.waitForExitHandle = setInterval(() =>
+    {
+        if (finished)
+        {
+            clearInterval(localConfig.waitForExitHandle)
+            parseEncodersString();
+            SendSettingsWidgetLarge();
+        }
+    }, 500);
+
+}
+// ============================================================================
+//                           FUNCTION: parseEncodersString
+// ============================================================================
+/**
+ * creates video and audio encoder lists from the ffmpeg output string
+ */
+function parseEncodersString ()
+{
+    localConfig.videoEncoders = [];
+    localConfig.audioEncoders = [];
+    const tempArray = localConfig.ffmpegEncodersString.split("\r\n")
+    let postHeader
+    for (let i = 0; i < tempArray.length; i++)
+    {
+        //skip to end of header
+        if (tempArray[i] == " ------")
+        {
+            postHeader = true;
+            continue;
+        }
+        if (!postHeader)
+            continue;
+        if (tempArray[i])
+        {
+            //console.log("tempArray[i]", tempArray[i])
+            if (tempArray[i].indexOf(" V") == 0)
+                localConfig.videoEncoders.push(tempArray[i].split(" ")[2])
+            else if (tempArray[i].indexOf(" A") == 0)
+                localConfig.audioEncoders.push(tempArray[i].split(" ")[2])
+
+        }
+    }
+    console.log("FFMPEG video encoders found", localConfig.videoEncoders.length);
+    console.log("FFMPEG audio encoders found", localConfig.audioEncoders.length);
+}
 // ============================================================================
 //                           FUNCTION: printProgress
 // ============================================================================
+/**
+ * overwrites a string on the cmd line, mostly useful for progress etc
+ * @param {string} progress 
+ */
 function printProgress (progress)
 {
     process.stdout.clearLine(0);
