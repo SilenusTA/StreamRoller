@@ -35,7 +35,7 @@ function updatePage ()
             '&force_verify=true' +
             '&client_id=' + tempStorage.clientId +
             '&redirect_uri=' + 'http://localhost:3000/twitch/auth' +
-            '&state=' + tempStorage.twitchOAuthState +
+            '&state=' + tempStorage.twitchOAuthState + "_" + tempStorage.userType +
             '&scope=' + tempStorage.scopes;
     }
 }

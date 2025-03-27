@@ -73,19 +73,24 @@ function onDataCenterMessage (server_packet)
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
 // ============================================================================
-function storeCredentials ()
+function storeCredentials (isStreamerAccount)
 {
-    if (localConfig.connected)
+    if (localConfig.connected && isStreamerAccount)
     {
+        //streamer auth
         UpdateCredential("twitchOAuthState", tempStorage.twitchOAuthState)
-        UpdateCredential("twitchOAuthToken", tempStorage.twitchOAuthToken)
+        updateTwitchChatCredentials(true);
         document.getElementById("messages").innerHTML = "Authorization complete, you can now close this window"
     }
-    else
+    if (localConfig.connected && !isStreamerAccount)
+        //bot auth
+        updateTwitchChatCredentials(false);
+
+    if (!localConfig.connected)
     {
         setTimeout(() =>
         {
-            storeCredentials()
+            storeCredentials(isStreamerAccount)
         }, 1000);
     }
 }
@@ -105,22 +110,52 @@ function UpdateCredential (name, value)
             },
         ));
 }
+function updateTwitchChatCredentials (isStreamer)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            'ExtensionMessage',
+            "twitch_auth",
+            sr_api.ExtensionPacket(
+                "UpdatedCredentialsForTwitchChat",
+                "twitch_auth",
+                {
+                    isStreamer: isStreamer,
+                    oauthToken: tempStorage.twitchOAuthToken
+                },
+                '',
+                'twitchchat'),
+            '',
+            'twitchchat'
+        )
+    );
+}
 // ============================================================================
 //                           FUNCTION: parseFragment
 // ============================================================================
 function parseFragment (hash)
 {
+    let isStreamer = false;// is this a streamer or bot auth
     // get the data back from twitch call
     const hashMatch = function (expr)
     {
         const match = hash.match(expr);
         return match ? match[1] : null;
     };
-    const state = hashMatch(/state=(\w+)/);
+    let state = hashMatch(/state=(\w+)/);
+
+    if (state.indexOf("_streamer") > -1)
+    {
+        isStreamer = true;
+        state = state.replace("_streamer", "")
+    }
+    if (state.indexOf("_bot") > -1)
+        state = state.replace("_bot", "")
+
     if (tempStorage.twitchOAuthState == state)
     {
         tempStorage.twitchOAuthToken = hashMatch(/access_token=(\w+)/);
-        storeCredentials()
+        storeCredentials(isStreamer)
     }
     else
     {

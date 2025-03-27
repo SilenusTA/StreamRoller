@@ -826,10 +826,15 @@ function onDataCenterMessage (server_packet)
         // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(server_packet.from);
+        else if (extension_packet.type === "UpdatedCredentialsForTwitchChat")
+        {
+            if (extension_packet.data.isStreamer)
+                SaveCredential("twitchchatuseroauth", "oauth:" + extension_packet.data.oauthToken)
+            else
+                SaveCredential("twitchchatbotoauth", "oauth:" + extension_packet.data.oauthToken)
+        }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
             SendSettingsWidgetLarge(server_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -1173,64 +1178,6 @@ function SendSettingsWidgetLarge (toExtension)
         }
     });
 }
-// ===========================================================================
-//                           FUNCTION: SendCredentialsModal
-// ===========================================================================
-/**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
- */
-function SendCredentialsModal (extensionname)
-{
-
-    fs.readFile(__dirname + "/twitchchatcredentialsmodal.html", function (err, filedata)
-    {
-        if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
-        else
-        {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
-                if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
-                // note oauth are stored in localConfig so we don't store them in plain text on the users machine
-                // so we need to add edge cases for the values of these (stored in cred2value and cred4value)
-                // add oauth to the user auth field
-                else if (typeof (value) == "string" && key == "cred1value" && localConfig.usernames.bot)
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.name);
-                else if (typeof (value) == "string" && key == "cred2value" && localConfig.usernames.bot)
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.oauth);
-                else if (typeof (value) == "string" && key == "cred3value" && localConfig.usernames.user)
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.name);
-                // add oauth to the user bot field
-                else if (typeof (value) == "string" && key == "cred4value" && localConfig.usernames.user)
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.oauth);
-                else if (typeof (value) == "string")
-                    modalstring = modalstring.replaceAll(key + "text", value);
-            }
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
-                        "",
-                        extensionname,
-                        serverConfig.channel
-                    ),
-                    "",
-                    extensionname)
-            )
-        }
-    });
-}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -1244,6 +1191,22 @@ function SaveConfigToServer ()
             "SaveConfig",
             localConfig.EXTENSION_NAME,
             serverConfig));
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+function SaveCredential (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            localConfig.EXTENSION_NAME,
+            {
+                ExtensionName: localConfig.EXTENSION_NAME,
+                CredentialName: name,
+                CredentialValue: value
+            },
+        ));
 }
 // ============================================================================
 //                           FUNCTION: SaveDataToServer

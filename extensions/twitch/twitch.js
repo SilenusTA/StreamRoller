@@ -33,7 +33,7 @@ const localConfig = {
     dataCenterApp: null,
     heartBeatTimeout: 5000,
     clientId: "s65xinp3a4orpi4qtn62pypekg5n6q",
-    scopes: 'user_read+channel:read:redemptions+channel:manage:broadcast+channel:edit:commercial+channel:read:vips+channel:manage:vips+channel:manage:moderators+moderation:read+channel:read:editors+user:read:follows+bits:read+channel:read:polls+channel:manage:polls+channel:read:goals+moderator:read:shield_mode+moderator:manage:shield_mode+channel:read:charity+channel:read:predictions+channel:manage:predictions+channel:read:hype_train+moderator:read:shoutouts+moderator:manage:shoutouts+moderator:read:followers+channel:read:subscriptions+channel:moderate+user:manage:blocked_users+user:read:blocked_users+clips:edit+moderator:manage:banned_users'
+    scopes: 'user_read+channel:read:redemptions+channel:manage:broadcast+channel:edit:commercial+channel:read:vips+channel:manage:vips+channel:manage:moderators+moderation:read+channel:read:editors+user:read:follows+bits:read+channel:read:polls+channel:manage:polls+channel:read:goals+moderator:read:shield_mode+moderator:manage:shield_mode+channel:read:charity+channel:read:predictions+channel:manage:predictions+channel:read:hype_train+moderator:read:shoutouts+moderator:manage:shoutouts+moderator:read:followers+channel:read:subscriptions+channel:moderate+user:manage:blocked_users+user:read:blocked_users+clips:edit+moderator:manage:banned_users+chat:read+chat:edit'
 };
 import express from "express";
 import { dirname } from "path";
@@ -69,7 +69,8 @@ function initialise (app, host, port, heartbeat)
                     heartbeat: heartbeat,
                     clientId: localConfig.clientId,
                     nonce: localConfig.nonce,
-                    scopes: localConfig.scopes
+                    scopes: localConfig.scopes,
+                    userType: req.query.user
                 }
             );
         });

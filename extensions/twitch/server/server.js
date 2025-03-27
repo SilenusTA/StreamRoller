@@ -2389,6 +2389,11 @@ async function connectTwitch ()
         // setup client
         let auth = localConfig.authProvider
         localConfig.apiClient = new ApiClient({ authProvider: auth });
+        /* let datauser = await localConfig.apiClient.getTokenInfo()
+                if (datauser && datauser.userName != "")
+                    console.log("connected to twich using", datauser.userName)
+        */
+
 
         // get some data about the streamer (id etc)
         localConfig.streamerData = await localConfig.apiClient.users.getUserByName(serverConfig.twitchstreamername)

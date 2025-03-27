@@ -25,11 +25,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet"
-        type="text/css"
-        href="/twitch/styles/twitchstyle.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="/twitch/styles/twitchstyle.css">
 </head>
 
 <body>
@@ -41,11 +38,11 @@
             port: '<%= port %>',
             clientId: '<%= clientId %>',
             twitchOAuthState: '<%= nonce %>',
-            scopes: '<%= scopes %>'
+            scopes: '<%= scopes %>',
+            userType: '<%= userType %>'
         };
     </script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js'
-        type='text/javascript'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js' type='text/javascript'></script>
     <script src="/streamroller-message-api.cjs"></script>
     <script src="/twitch/scripts/callback.js"></script>
     <script src="/twitch/scripts/twitchauth.js"></script>
