@@ -25,12 +25,13 @@
 import axios from 'axios';
 import commandExists from 'command-exists';
 import * as fs from "fs";
-import { spawn, spawnSync } from "node:child_process";
+import { exec, spawn, spawnSync } from "node:child_process";
 import { dirname } from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+
 
 // Ensure we wait for captured streams to end before calling endCB
 var exitError = null;
@@ -47,6 +48,7 @@ const localConfig = {
     // StreamRoller stuff
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     DataCenterSocket: null,
+    SendSettingsWidgetLargeTimerHandle: null,
 
     //extensions basics
     multistreamEnabled: "off",
@@ -68,6 +70,7 @@ const localConfig = {
     ffmpegEncodersString: null,
     videoEncoders: [],
     audioEncoders: [],
+    encodersUpdating: true // flag for when we are done updating encoders, if we need to get them.
     // stuff to be updated
 
 }
@@ -83,12 +86,14 @@ const defaultEmptyStream =
     AdditionalParams: "",//goes after StreamKey
     variableBitrate: "off",
     videoEncoder: "",// card dependant, need to check ffmpeg and update as needed
-    videoPreset: "",// preset for nvenc
+    videoEncoderOptions: "",
+    //videoPreset: "",// preset for nvenc
     targetBitrate: "8M",
     resolution: "1664x936",
     framerate: "30",
     keyframeInterval: "60",
     audioEncoder: "aac",
+    audioEncoderOptions: "",
     audioChannels: "2", // number of audio channels output (defaults to source)
     audioBitrate: "128k",
     outputFormat: "flv",
@@ -107,12 +112,14 @@ const defaultTwitchStream =
     AdditionalParams: "?bandwidthtest=true",
     variableBitrate: "off",
     videoEncoder: "h264_nvenc",
-    videoPreset: "p4",
+    videoEncoderOptions: "",
+    //videoPreset: "p4",
     targetBitrate: "8M",
     resolution: "1664x936",
     framerate: "30",
     keyframeInterval: "60",
     audioEncoder: "aac",
+    audioEncoderOptions: "",
     audioChannels: "",
     audioBitrate: "128k",
     outputFormat: "flv",
@@ -126,19 +133,21 @@ const defaultYouTubeStream =
     AdditionalParams: "",
     variableBitrate: "off",
     videoEncoder: "h264_nvenc",
-    videoPreset: "p4",
+    videoEncoderOptions: "",
+    //videoPreset: "p4",
     targetBitrate: "8M",
     resolution: "1920x1080",
     framerate: "30",
     keyframeInterval: "60",
     audioEncoder: "aac",
+    audioEncoderOptions: "",
     audioChannels: "",
     audioBitrate: "128k",
     outputFormat: "flv",
 }
 
 const default_serverConfig = {
-    __version__: "0.6",
+    __version__: "0.7",
     extensionname: "multistream",
     channel: "MULTISTREAM",
     streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream],
@@ -572,8 +581,8 @@ function parseSettingsWidgetLarge (extension_data)
             {
                 var variableName = key.replace("multistream_", "").replace("_" + streamId, "")
                 // need to use undefined here as if it is an empty string it will return false for most normal checks
-                if (typeof serverConfig.streams[streamId][variableName] !== 'undefined')
-                    serverConfig.streams[streamId][variableName] = value
+                //if (typeof serverConfig.streams[streamId][variableName] !== 'undefined')
+                serverConfig.streams[streamId][variableName] = value
             }
             else
             {
@@ -685,6 +694,42 @@ function SendSettingsWidgetSmall (toExtension = "")
  */
 function SendSettingsWidgetLarge (toExtension = "")
 {
+    let tempString = "";
+    // if encoders are updating don't send out a widget page yet. start a timer to check for when they have finished updating to send out the widget
+    if (localConfig.encodersUpdating)
+    {
+        // if we don't have a timer running yet (first request during this update) then send out a "waiting..." page
+        if (localConfig.SendSettingsWidgetLargeTimerHandle == null)
+        {
+            setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "ExtensionMessage", // this type of message is just forwarded on to the extension
+                        serverConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "SettingsWidgetLargeCode", // message type
+                            serverConfig.extensionname, //our name
+                            "Encoders list being built  ...",// data
+                            serverConfig.channel,
+                            toExtension,
+                        ),
+                        serverConfig.channel,
+                        toExtension
+                    ))
+            }, 3000)
+
+        }
+        // clear previous timers (has the benifit of squashing multiple requests to sending one result out)
+        clearTimeout(localConfig.SendSettingsWidgetLargeTimerHandle)
+        localConfig.SendSettingsWidgetLargeTimerHandle = setTimeout(() =>
+        {
+            SendSettingsWidgetLarge()
+        }, 2000);
+        return;
+    }
+    clearTimeout(localConfig.SendSettingsWidgetLargeTimerHandle)
+
     let streamsHtml = ""
     // read our modal file
     fs.readFile(__dirname + "/multistreamsettingswidgetlarge.html", function (err, filedata)
@@ -774,10 +819,18 @@ function SendSettingsWidgetLarge (toExtension = "")
                 streamsHtml += createCheckBox("Variable Bitrate", `multistream_variableBitrate_${i}`, stream.variableBitrate == "on");
                 streamsHtml += "<BR>";
                 // videoEncoder
-                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, localConfig.videoEncoders, stream.videoEncoder, "Available Video Encoders in current FFMPEG. If you need others try using a different version of FFMPEG that contain's them");
-                // videoPreset
-                streamsHtml += createTextBox("Video preset (for nvenc encoders)", `multistream_videoPreset_${i}`, stream.videoPreset);
-                streamsHtml += "<BR>";
+                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, localConfig.videoEncoders, stream.videoEncoder, "Note: Apply this setting to get updated options below for this encoder");
+
+                if (serverConfig.useStreamRollerFFMPEG)
+                    tempString = "Encoder options: (find more info by running '" + localConfig.ffmpegExe + " -h encoder=ENCODERNAME' on the commandline)<BR>"
+                else
+                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=ENCODERNAME' on the commandline)<BR>"
+                if (localConfig.videoEncoders[stream.videoEncoder])
+                    tempString += Object.keys(localConfig.videoEncoders[stream.videoEncoder]).join(", ")
+
+                streamsHtml += createTextBox("Video encoder options", `multistream_videoEncoderOptions_${i}`, stream.videoEncoderOptions ? stream.videoEncoderOptions : "", false, tempString);
+
+                //streamsHtml += "<BR>";
                 // targetBitrate
                 streamsHtml += createTextBox("Target Bitrate", `multistream_targetBitrate_${i}`, stream.targetBitrate);
                 streamsHtml += "<BR>";
@@ -790,8 +843,21 @@ function SendSettingsWidgetLarge (toExtension = "")
                 // keyframeInterval
                 streamsHtml += createTextBox("Key Frame Interval (in seconds)", `multistream_keyframeInterval_${i}`, stream.keyframeInterval);
                 streamsHtml += "<BR>";
+
+
+
                 // AudioEncoder
-                streamsHtml += createDropdown("Audio Encoder", `multistream_audioEncoder_${i}`, localConfig.audioEncoders, stream.audioEncoder, "Available Audio Encoders in FFMPEG. If you need others try using a different version of FFMPEG that contain's them");
+                streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoder_${i}`, localConfig.audioEncoders, stream.audioEncoder, "Note: Apply this setting to get updated options below for this encoder");
+
+                if (serverConfig.useStreamRollerFFMPEG)
+                    tempString = "Encoder options: (find more info by running '" + localConfig.ffmpegExe + " -h encoder=ENCODERNAME' on the commandline)<BR>"
+                else
+                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=ENCODERNAME' on the commandline)<BR>"
+                if (localConfig.audioEncoders[stream.audioEncoder])
+                    tempString += Object.keys(localConfig.audioEncoders[stream.audioEncoder]).join(", ")
+
+                streamsHtml += createTextBox("Audio encoder options", `multistream_audioEncoderOptions_${i}`, stream.audioEncoderOptions ? stream.audioEncoderOptions : "", false, tempString);
+                //streamsHtml += "<BR>";
                 // audioBitrate
                 streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate);
                 streamsHtml += "<BR>";
@@ -914,8 +980,19 @@ function startStream (ref)
             { ffmpegArgs.push("-rc"); ffmpegArgs.push("vbr"); }//variable bitrate
             if (stream.videoEncoder && stream.videoEncoder != "")
             { ffmpegArgs.push("-c:v"); ffmpegArgs.push(stream.videoEncoder); }
-            if (stream.videoPreset && stream.videoPreset != "")
-            { ffmpegArgs.push("-preset"); ffmpegArgs.push(stream.videoPreset); }
+            //if (stream.videoPreset && stream.videoPreset != "")
+            //{ ffmpegArgs.push("-preset"); ffmpegArgs.push(stream.videoPreset); }
+            // this could be multiple arguments so push each on individually
+            if (stream.videoEncoderOptions && stream.videoEncoderOptions != "")
+            {
+                let array = stream.videoEncoderOptions.split(" ")
+                array.forEach((value, i) =>
+                {
+                    //ffmpegArgs.push("-preset"); 
+                    ffmpegArgs.push(value);
+                })
+            }
+
             if (stream.targetBitrate && stream.targetBitrate != "")
             { ffmpegArgs.push("-b:v"); ffmpegArgs.push(stream.targetBitrate); }
             if (stream.resolution && stream.resolution != "")
@@ -1356,14 +1433,18 @@ function createDropdown (Title, id, data = [], currentSelectedId = 0, label = nu
 // ===========================================================================
 //                           FUNCTION: createTextBox
 // ===========================================================================
-function createTextBox (description, name, value, password)
+function createTextBox (label, name, value, password, description = null)
 {
     let type = "text"
     if (password)
         type = "password"
-    return `<div id="${name}_div" class="form-group py-1" style="display: inline-flex;">
-        <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}"><label for="${name}" class="col-form-label">&nbsp;${description}</label>
+
+    let textBoxHtml = `<div id="${name}_div" class="form-group py-1" style="display: inline-flex;">
+        <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}"><label for="${name}" class="col-form-label">&nbsp;${label}</label>
     </div>`
+    if (description)
+        textBoxHtml += `<div>&nbsp;${description}</div>`
+    return textBoxHtml;
 }
 // ===========================================================================
 //                           FUNCTION: createCheckBox
@@ -1529,6 +1610,7 @@ function unzipfile (file, to)
 function checkFFMPEGAvailabilities ()
 {
     let ffmpegExe = null
+    localConfig.encodersUpdating = true;
     // did the user select to use our FFMPEG or their own
     if (serverConfig.useStreamRollerFFMPEG)
     {
@@ -1547,16 +1629,6 @@ function checkFFMPEGAvailabilities ()
     }
 
     // get our video encoders
-    /* Flags
-            V..... = Video
-            A..... = Audio
-            S..... = Subtitle
-            .F.... = Frame-level multithreading
-            ..S... = Slice-level multithreading
-            ...X.. = Codec is experimental
-            ....B. = Supports draw_horiz_band
-            .....D = Supports direct rendering method 1
-    */
     UpdateEncodersAvailable(ffmpegExe)
 }
 // ============================================================================
@@ -1570,7 +1642,7 @@ function UpdateEncodersAvailable (ffmpegExe)
 {
     let finished = false;
     let args = ["-encoders", "-hide_banner"];
-    let ffmpegHandle = spawn("ffmpeg", args);
+    let ffmpegHandle = spawn(ffmpegExe, args);
     localConfig.ffmpegEncodersString = "";
 
     //console.log("running", ffmpegExe, args.join(' '));
@@ -1634,7 +1706,7 @@ function UpdateEncodersAvailable (ffmpegExe)
 /**
  * creates video and audio encoder lists from the ffmpeg output string
  */
-function parseEncodersString ()
+async function parseEncodersString ()
 {
     localConfig.videoEncoders = [];
     localConfig.audioEncoders = [];
@@ -1654,14 +1726,72 @@ function parseEncodersString ()
         {
             //console.log("tempArray[i]", tempArray[i])
             if (tempArray[i].indexOf(" V") == 0)
-                localConfig.videoEncoders.push(tempArray[i].split(" ")[2])
+            {
+                const videoName = tempArray[i].split(" ")[2];
+                localConfig.videoEncoders.push(videoName)
+                localConfig.videoEncoders[videoName] = await getEncoderOptions(videoName)
+            }
             else if (tempArray[i].indexOf(" A") == 0)
-                localConfig.audioEncoders.push(tempArray[i].split(" ")[2])
+            {
+                const audioName = tempArray[i].split(" ")[2];
+                localConfig.audioEncoders.push(audioName)
+                localConfig.audioEncoders[audioName] = await getEncoderOptions(audioName)
+            }
 
         }
     }
     console.log("FFMPEG video encoders found", localConfig.videoEncoders.length);
     console.log("FFMPEG audio encoders found", localConfig.audioEncoders.length);
+    localConfig.encodersUpdating = false
+}
+
+
+// ============================================================================
+//                           FUNCTION: getEncoderOptions
+// ============================================================================
+/**
+ * 
+ * @param {*} encoder 
+ * @returns array of options for the given encoder
+ */
+async function getEncoderOptions (encoder)
+{
+    return new Promise((resolve, reject) =>
+    {
+        exec(`ffmpeg -hide_banner -h encoder=${encoder}`, (error, stdout, stderr) =>
+        {
+            if (error) return reject(`Error: ${stderr || error.message}`);
+            let startParsing = false
+
+            const options = {};
+            let optionName = ""
+            const lines = stdout.split("\n");
+            for (const line of lines)
+            {
+                if (line.includes("AVOptions"))
+                {
+                    startParsing = true
+                    continue;
+                }
+                if (!startParsing)
+                    continue;
+                let regex = /^ {2}-(.+)/;
+                let match = regex.test(line)
+                if (match)
+                {
+
+                    optionName = line.trim().split(" ")[0]
+                    options[optionName] = ""
+                }
+                else
+                {
+                    //options[optionName].push(line.trim().split(" ")[0])
+                }
+            }
+            resolve(options);
+        });
+    });
+
 }
 // ============================================================================
 //                           FUNCTION: printProgress
