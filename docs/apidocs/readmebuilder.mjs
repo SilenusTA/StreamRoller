@@ -32,9 +32,25 @@ const allTAs = [
     //   {triggersString:MDrows[],arrayString:MDrows[]]}
     // ]
 ]
+// possible tags
+const readmeTAGs = [
+    "ReplaceTAGForTriggersUpdatedDocTime",// time doc was updated
+    "ReplaceTAGForTriggers",//list of triggers
+    "ReplaceTAGForActions",// list of actions
+
+    // common tags (will be replaced in replaceCommonTags()function)
+    "ReplaceTAGForAllTriggersCount",//count of all triggers
+    "ReplaceTAGForAllActionsCount",// count of all actions
+    "ReplaceTAGForTotalTACount",// count of all triggers+actions
+    "ReplaceTAGForTotalTAPossibilities"]// count of triggers*actions
 // keep a count of all triggers/actions
-let AllTriggersCount = 0
-let AllActionsCount = 0
+const counters = {
+    AllTriggersCount: 0,
+    AllActionsCount: 0,
+    TotalTACount: 0,
+    TotalTAPossibilities: 0
+
+}
 const filesUpdated = [];
 const header = "| name | trigger | description |"
 const hdivider = "| --- | --- | --- |"
@@ -118,7 +134,8 @@ function parseTrigger (trigger, filename)
             allTAs[trigger.extensionname].triggers = []
         for (const tr of trigger.triggers)
             allTAs[trigger.extensionname].triggers.push(createTableRow(tr))
-        AllTriggersCount += trigger.triggers.length
+        counters.AllTriggersCount += trigger.triggers.length
+        counters.TotalTACount += trigger.triggers.length
     }
     // build actions strings up
     if (trigger.actions)
@@ -127,8 +144,11 @@ function parseTrigger (trigger, filename)
             allTAs[trigger.extensionname].actions = []
         for (const ar of trigger.actions)
             allTAs[trigger.extensionname].actions.push(createTableRow(ar))
-        AllActionsCount += trigger.actions.length
+        counters.AllActionsCount += trigger.actions.length
+        counters.TotalTACount += trigger.actions.length
     }
+    //re-calculate possibilities
+    counters.TotalTAPossibilities = counters.AllActionsCount * counters.AllTriggersCount
 }
 // ============================================================================
 //                           createReadmeFiles
@@ -138,6 +158,7 @@ function createReadmeFiles ()
     //loop each extension
     for (var ext of Object.keys(allTAs)) 
     {
+
         let allExtTriggers = "";
         let allExtActions = "";
         // loop each set of triggers
@@ -152,22 +173,26 @@ function createReadmeFiles ()
             for (const ar of allTAs[ext].actions)
                 allExtActions += ar
         }
+
         let partFileName = extRoot + ext + "/README.part";
         // only update if we have a README.part file and it has tags to update
-        if (partFileName
-            && (partFileName.indexOf("ReplaceTAGForTriggersUpdatedDocTime" != -1)
-                || partFileName.indexOf("ReplaceTAGForTriggers" != -1)
-                || partFileName.indexOf("ReplaceTAGForActions" != -1)))
+        try
         {
-            try
+            let partFile = fs.readFileSync(partFileName, { encoding: 'utf8', flag: 'r' })
+            if (partFile && readmeTAGs.some(v => 
             {
-                let partFile = fs.readFileSync(partFileName, { encoding: 'utf8', flag: 'r' })
+                partFile.includes(v)
+
+            }))
+            {
                 if (partFile && partFile != "")
                 {
                     let datestamp = new Date().toUTCString();
                     partFile = partFile.replace("ReplaceTAGForTriggersUpdatedDocTime", "\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.\n\nTable last updated: *" + datestamp + "*");
                     partFile = partFile.replace("ReplaceTAGForTriggers", header + "\n" + hdivider + "\n" + allExtTriggers)
                     partFile = partFile.replace("ReplaceTAGForActions", header + "\n" + hdivider + "\n" + allExtActions)
+                    //replace any of the common tags (ie trigger counts etc)
+                    replaceCommonTags(partFile);
                     const filename = extRoot + ext + "/README.md";
                     fs.writeFileSync(filename, partFile, {
                         encoding: "utf8"
@@ -175,18 +200,19 @@ function createReadmeFiles ()
                     filesUpdated.push(filename)
                 }
             }
-            catch (err)
+        }
+        catch (err)
+        {
+            if (err.code === 'ENOENT')
             {
-                if (err.code === 'ENOENT')
-                {
-                    console.log("\x1b[1m\x1b[31mMissing exported README.part for:", partFileName, "\x1b[0m")
-                } else
-                {
-                    throw err;
-                }
+                console.log("\x1b[1m\x1b[31mMissing exported README.part for:", partFileName, "\x1b[0m")
+            } else
+            {
+                throw err;
             }
         }
     }
+
 }
 // ============================================================================
 //                           writefileslist
@@ -279,7 +305,8 @@ function manualParseTrigger (extTAvar)
             allTAs[extTAvar.extensionname].triggers = []
         for (const t of extTAvar.triggers)
             allTAs[extTAvar.extensionname].triggers.push(createTableRow(t))
-        AllTriggersCount += extTAvar.triggers.length
+        counters.AllTriggersCount += extTAvar.triggers.length
+        counters.TotalTACount += extTAvar.triggers.length
     }
     // build actions string up
     if (extTAvar.actions)
@@ -288,8 +315,11 @@ function manualParseTrigger (extTAvar)
             allTAs[extTAvar.extensionname].actions = []
         for (const t of extTAvar.actions)
             allTAs[extTAvar.extensionname].actions.push(createTableRow(t))
-        AllActionsCount += extTAvar.actions.length
+        counters.AllActionsCount += extTAvar.actions.length
+        counters.TotalTACount += extTAvar.actions.length
     }
+    //re-calculate possibilities
+    counters.TotalTAPossibilities = counters.AllActionsCount * counters.AllTriggersCount
 }
 // ============================================================================
 //                           createAllTriggerReadme
@@ -297,11 +327,11 @@ function manualParseTrigger (extTAvar)
 function createAllTriggerReadme ()
 {
     // A bit long winded way of doing this but it makes it so much easier to read :P
-    // embedded replacement strings (ie 'ReplaceTAGCounterForActions') will be updated after building the page
+    // embedded replacement strings (ie 'ReplaceTAGForAllActionsCount') will be updated after building the page
     let TOCHead = "# All Triggers currently in Streamroller\n\n"
     TOCHead += "## Overview\n\n"
-    TOCHead += "### Current count (ReplaceTAGTotalCount)\n\n"
-    TOCHead += "```Triggers: ReplaceTAGCounterForTriggers / Actions: ReplaceTAGCounterForActions```\n\n"
+    TOCHead += "### Current count (ReplaceTAGForTotalTACount)\n\n"
+    TOCHead += "```Triggers: ReplaceTAGForAllTriggersCount / Actions: ReplaceTAGForAllActionsCount```\n\n"
     TOCHead += "Contents\n\n"
     TOCHead += "- [All Triggers currently in Streamroller](#all-triggers-currently-in-streamroller)\n"
     TOCHead += "  - [Overview](#overview)\n"
@@ -342,12 +372,26 @@ function createAllTriggerReadme ()
     }
 
     let fileString = TOCHead + TOCTriggersList + Body
-    fileString = fileString.replace("ReplaceTAGTotalCount", AllTriggersCount + AllActionsCount)
-    fileString = fileString.replace("ReplaceTAGCounterForTriggers", AllTriggersCount)
-    fileString = fileString.replace("ReplaceTAGCounterForActions", AllActionsCount)
+    fileString = replaceCommonTags(fileString)
     const filename = __dirname + "/../../README_All_TRIGGERS.md"
     fs.writeFileSync(filename, fileString, { encoding: "utf8" })
     filesUpdated.push(filename)
+}
+// ============================================================================
+//                           replaceCommonTags
+// ============================================================================
+/**
+ * Replaces and of the common tags in the string provided
+ * @param {string} readme 
+ * @returns readme updated with tag values
+ */
+function replaceCommonTags (readme)
+{
+    readme = readme.replaceAll("ReplaceTAGForAllTriggersCount", numberWithCommas(counters.AllTriggersCount))
+    readme = readme.replaceAll("ReplaceTAGForAllActionsCount", numberWithCommas(counters.AllActionsCount))
+    readme = readme.replaceAll("ReplaceTAGForTotalTACount", numberWithCommas(counters.TotalTACount))
+    readme = readme.replaceAll("ReplaceTAGForTotalTAPossibilities", numberWithCommas(counters.TotalTAPossibilities))
+    return readme
 }
 // ============================================================================
 //                           createTableRow
@@ -365,15 +409,15 @@ function updateRootReadme ()
     let readmePartFileString = fs.readFileSync(__dirname + "/../../README.part", 'utf8')
 
     // update placeholders
-    let replacementString = "Current user configurable Trigger / Action available: ```" + numberWithCommas(AllTriggersCount + AllActionsCount) + " ```\n\n"
-    replacementString += "No. of possible combinations for a single trigger->action ```" + numberWithCommas(AllTriggersCount * AllActionsCount) + " ```\n\n"
+    /*let replacementString = "Current user configurable Trigger / Action available: ```" + numberWithCommas(counters.TotalTACount) + " ```\n\n"
+    replacementString += "No. of possible combinations for a single trigger->action ```" + numberWithCommas(counters.TotalTAPossibilities) + " ```\n\n"
     replacementString += "No. of possible chained commands ```infinite```"
-    readmePartFileString = readmePartFileString.replace("ReplaceTAGTotalCount", replacementString)
+    readmePartFileString = readmePartFileString.replace("ReplaceTAGForTotalTACount", replacementString)*/
+    readmePartFileString = replaceCommonTags(readmePartFileString);
     // write README.md file
     const filename = __dirname + "/../../README.md"
     fs.writeFileSync(__dirname + "/../../README.md", readmePartFileString, { encoding: "utf8" })
     filesUpdated.push(filename)
-
 }
 // ============================================================================
 //                           numberWithCommas
@@ -392,5 +436,5 @@ updateRootReadme()
 // write the filelist.text of files we have changed so they can be checked in.
 writefileslist()
 // log some interesting stats :P
-console.log("All Triggers count", AllTriggersCount)
-console.log("All ACtions count", AllActionsCount)
+console.log("All Triggers count", counters.AllTriggersCount)
+console.log("All ACtions count", counters.AllActionsCount)
