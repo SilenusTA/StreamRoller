@@ -55,6 +55,11 @@
         </div>
         -->
     <HR>
+    <h3 class="text-center">Current command (tou can cut paste this into a windows command prompt, replace the stream keys with your own and run this manually.
+        <BR>Useful for testing. if there are missing parameters below please report them back to me and I will update/add them to the page)
+    </h3>
+    <p><b>ffmpegCommandToRunAtCMDPrompt</b></p>
+    <HR>
     <h3 class="text-center">Select FFMPEG install to use</h3>
     You can use your own FFMPEG (check it runs from commandline with 'ffmpeg -version' if having issues)
     <BR>
@@ -70,6 +75,12 @@
 
     <HR>
     <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="extensionnametext_hideStreamKey" type="checkbox" id="extensionnametext_hideStreamKey"
+                extensionnametext_hideStreamKeychecked>
+            <label class="form-check-label" for="extensionnametext_hideStreamKey">Hide stream key in page (ffmpeg command etc)</label>
+        </div>
+        <BR>
         <div class="form-check form-check-inline">
             <input class="form-check-input" name="extensionnametext_DEBUG_FFMPEG" type="checkbox" id="extensionnametext_DEBUG_FFMPEG"
                 extensionnametext_DEBUG_FFMPEGchecked>

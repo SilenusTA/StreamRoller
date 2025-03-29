@@ -51,7 +51,7 @@ const localConfig = {
     SendSettingsWidgetLargeTimerHandle: null,
 
     //extensions basics
-    multistreamEnabled: "off",
+    multistreamStarStreaming: "off",
     streamRunning: false,
 
     // installed version of ffmpeg available/installed/selected
@@ -70,9 +70,11 @@ const localConfig = {
     ffmpegEncodersString: null,
     videoEncoders: [],
     audioEncoders: [],
-    encodersUpdating: true // flag for when we are done updating encoders, if we need to get them.
-    // stuff to be updated
-
+    encodersUpdating: false, // flag for when we are done updating encoders, if we need to get them.
+    //others
+    hideStreamKey: true, // show stream key on the screen or not
+    encoderBuildTimeoutHandle: null, // cancels the encoder builder (in case it gets stuck)
+    encoderBuildTimeout: 10000, // give ourselves 10 seconds to run the builder or quit if not finished
 }
 
 // stream object that wil be used to create new stream objects
@@ -81,7 +83,6 @@ const defaultEmptyStream =
     enabled: "off",
     name: "multistream",
     URL: "",
-    useStreamRollerFFMPEG: false,
     AdditionalURL: "",//goes between URL and StreamKey
     AdditionalParams: "",//goes after StreamKey
     variableBitrate: "off",
@@ -147,13 +148,15 @@ const defaultYouTubeStream =
 }
 
 const default_serverConfig = {
-    __version__: "0.7",
+    __version__: "0.8",
+    multistreamEnabled: "off",
     extensionname: "multistream",
     channel: "MULTISTREAM",
     streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream],
     localStreamPort: 1935,
     localStreamURL: "rtmp://localhost:localStreamPort/live/",
-    multistream_restore_defaults: "off"
+    multistream_restore_defaults: "off",
+    useStreamRollerFFMPEG: false,
 };
 
 let serverConfig = structuredClone(default_serverConfig)
@@ -243,15 +246,20 @@ function initialise (app, host, port, heartbeat)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
-
+    checkFFMPEGInstall();
+}
+// ============================================================================
+//                           FUNCTION: checkFFMPEGInstall
+// ============================================================================
+function checkFFMPEGInstall ()
+{
     // check if we have a cmd installed ffmpeg
     try
     {
-        commandExists("ffmpeg").then((command) =>
-        {
+        if (commandExists.sync("ffmpeg"))
             localConfig.UserFfmpegInstalled = true;
-        })
-            .catch(() => { localConfig.UserFfmpegInstalled = false; })
+        else
+            localConfig.UserFfmpegInstalled = false;
     }
     catch (err)
     {
@@ -261,21 +269,16 @@ function initialise (app, host, port, heartbeat)
     // check if we have a streamroller installed ffmpeg
     try
     {
-        commandExists(localConfig.ffmpegExe).then((command) =>
-        {
+        if (commandExists.sync(localConfig.ffmpegExe))
             localConfig.StreamRollerFfmpegInstalled = true;
-        })
-            .catch(() =>
-            {
-                localConfig.StreamRollerFfmpegInstalled = false;
-            })
+        else
+            localConfig.StreamRollerFfmpegInstalled = false;
     }
     catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "error while checking for ffmpeg:", err);
     }
 }
-
 // ============================================================================
 //                           FUNCTION: onDataCenterDisconnect
 // ============================================================================
@@ -324,14 +327,15 @@ function onDataCenterMessage (server_packet)
             let ffmpegChanged = false;
             let configSubVersions = 0;
             let defaultSubVersions = default_serverConfig.__version__.split('.');
-            if (server_packet.data == "")
+            // never hit due to server packet being valid at this point??????
+            if (server_packet.data.__version__)
             {
-                serverConfig = structuredClone(default_serverConfig);
-                SaveConfigToServer();
-                ffmpegChanged = true;
-            }
-            else
-            {
+                /*  serverConfig = structuredClone(default_serverConfig);
+                  SaveConfigToServer();
+                  //ffmpegChanged = true;
+              }
+              else
+              {*/
                 configSubVersions = server_packet.data.__version__.split('.')
                 ffmpegChanged = true;
             }
@@ -353,15 +357,18 @@ function onDataCenterMessage (server_packet)
             }
             else
             {
-                if (serverConfig.useStreamRollerFFMPEG != server_packet.useStreamRollerFFMPEG)
+                //if (serverConfig.useStreamRollerFFMPEG != server_packet.useStreamRollerFFMPEG)
+                //    ffmpegChanged = true;
+                // check if we have turned on the extension
+                if (server_packet.multistreamEnabled == "on" && server_packet.multistreamEnabled == "off")
                     ffmpegChanged = true;
                 serverConfig = structuredClone(server_packet.data);
             }
             SendSettingsWidgetSmall();
             if (ffmpegChanged)
                 checkFFMPEGAvailabilities();
-            // This will get sent from checkFFMPEGAvailabilities when it has finished getting it's settings update
-            if (!ffmpegChanged)
+            else
+                // This will get sent from checkFFMPEGAvailabilities when it has finished getting it's settings update
                 SendSettingsWidgetLarge();
         }
     }
@@ -417,12 +424,12 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_multistreamStartStream")
         {
-            console.log("action_multistreamStartStream called with", extension_packet.data)
+            console.log("TBD:action_multistreamStartStream called with", extension_packet.data)
 
         }
         else if (extension_packet.type === "action_multistreamStopStream")
         {
-            console.log("action_multistreamStopStream called with", extension_packet.data)
+            console.log("TBD:action_multistreamStopStream called with", extension_packet.data)
             stopStream(extension_packet.data.triggerActionRef,
                 extension_packet.data.streamName)
         }
@@ -483,30 +490,36 @@ function onDataCenterMessage (server_packet)
 function parseSettingsWidgetSmall (extension_data)
 {
 
+    let extensionTurnedOn = false
     let streamOnOffChanged = false
-    // first we need to set any checkbox settings off in this widget (these won't get 
+    // first we need to set any checkbox settings off in this widget (these won't get
     // returned we can't just assign them as "off" won't get sent back)
 
-    // multistreamEnabled is stored in localConfig as we should never startup StreamRoller with it enabled so it defaults to off on restart
-    if (!extension_data.multistreamEnabled)
-    {
-        if (localConfig.multistreamEnabled == "on")
-            streamOnOffChanged = true;
-        localConfig.multistreamEnabled = "off"
+    // multistreamStarStreaming is stored in localConfig as we should never startup StreamRoller with it enabled so it defaults to off on restart
 
+    if (!extension_data.multistreamStarStreaming)
+    {
+        if (localConfig.multistreamStarStreaming == "on")
+            streamOnOffChanged = true;
+        localConfig.multistreamStarStreaming = "off"
     }
     else
     {
-        // have have turned the extension on
-        if (localConfig.multistreamEnabled == "off")
+        // have have turned the streaming on
+        if (localConfig.multistreamStarStreaming == "off")
             streamOnOffChanged = true
-        localConfig.multistreamEnabled = "on"
+        localConfig.multistreamStarStreaming = "on"
     }
     // turn them off here/ they will be turned back on if checkboxes are set in the ui
     serverConfig.streams.forEach((stream, i) =>
     {
         stream.enabled = "off";
     })
+    if (extension_data.multistreamEnabled == "on" && serverConfig.multistreamEnabled == "off")
+        extensionTurnedOn = true;
+
+    // set any checkbox data to off at this point as it won't appear in extension_data if turned off
+    serverConfig.multistreamEnabled = "off";
 
     // check data received
     for (const [key, value] of Object.entries(extension_data))
@@ -530,11 +543,15 @@ function parseSettingsWidgetSmall (extension_data)
         //serverConfig[key.replace("multistream_", "")] = value;
     }
     SaveConfigToServer();
-    if (streamOnOffChanged)
-        if (localConfig.multistreamEnabled == "on")
+    if (extensionTurnedOn && localConfig.videoEncoders == [] && localConfig.audioEncoders == [])//extensionsion has just been turned on
+        checkFFMPEGAvailabilities();
+    if (streamOnOffChanged && serverConfig.multistreamEnabled)
+    {
+        if (localConfig.multistreamStarStreaming == "on")
             startStream("multistream")
         else
             stopStream()
+    }
     //update anyone who is showing our code at the moment
     SendSettingsWidgetSmall("");
     SendSettingsWidgetLarge("");
@@ -542,7 +559,6 @@ function parseSettingsWidgetSmall (extension_data)
 // ============================================================================
 //                           FUNCTION: parseSettingsWidgetLarge
 // ============================================================================
-
 function parseSettingsWidgetLarge (extension_data)
 {
     let credsChanged = false;
@@ -562,7 +578,7 @@ function parseSettingsWidgetLarge (extension_data)
                 serverCredentials[`multistreamStream${i}StreamKey`] = extension_data[`multistreamStream${i}StreamKey`];
                 credsChanged = true;
             }
-            if (extension_data[`useStreamRollerFFMPEG`] != serverConfig.useStreamRollerFFMPEG)
+            if ((extension_data.multistreamffmpegpicker == "1") != serverConfig.useStreamRollerFFMPEG)
                 ffmpegChanged = true;
         })
 
@@ -591,6 +607,10 @@ function parseSettingsWidgetLarge (extension_data)
             }
         }
         serverConfig.useStreamRollerFFMPEG = (extension_data.multistreamffmpegpicker == "1");
+        if (extension_data["multistream_hideStreamKey"] == "on")
+            localConfig.hideStreamKey = true;
+        else
+            localConfig.hideStreamKey = false;
         if (extension_data["multistream_DEBUG_FFMPEG"] == "on")
             serverConfig.DEBUG_FFMPEG = true;
         else
@@ -607,7 +627,7 @@ function parseSettingsWidgetLarge (extension_data)
             serverConfig.DEBUG_FFMPEG_STDOUT = false;
 
         // if we want to use our installed version but don't have it then call the download function
-        if (serverConfig.useStreamRollerFFMPEG && !localConfig.StreamRollerFfmpegInstalled)
+        if (serverConfig.useStreamRollerFFMPEG && !localConfig.StreamRollerFfmpegInstalled && serverConfig.multistreamEnabled == "on")
             downloadFFMPEG()
 
         SaveConfigToServer();
@@ -649,8 +669,8 @@ function SendSettingsWidgetSmall (toExtension = "")
             }
 
             // update credential boxes
-            if (localConfig.multistreamEnabled == "on")
-                modalString = modalString.replace("multistreamEnabledchecked", "checked");
+            if (localConfig.multistreamStarStreaming == "on")
+                modalString = modalString.replace("multistreamStarStreamingchecked", "checked");
             let streamsHtml = "<h4>Streams<h4>"
             streamsHtml = "<BR>Setup streams in the large settings page. Select here to enable/disable those streams"
             serverConfig.streams.forEach((stream, i) =>
@@ -729,7 +749,7 @@ function SendSettingsWidgetLarge (toExtension = "")
         return;
     }
     clearTimeout(localConfig.SendSettingsWidgetLargeTimerHandle)
-
+    localConfig.SendSettingsWidgetLargeTimerHandle = null;
     let streamsHtml = ""
     // read our modal file
     fs.readFile(__dirname + "/multistreamsettingswidgetlarge.html", function (err, filedata)
@@ -749,8 +769,18 @@ function SendSettingsWidgetLarge (toExtension = "")
                 else if (typeof (value) == "string")
                     modalString = modalString.replaceAll(key + "text", value);
             }
-            // create select picker for the FFMPEG install to use
 
+
+            // update the display hide streamkey
+            if (localConfig.hideStreamKey)
+                modalString = modalString.replace("multistream_hideStreamKeychecked", "checked")
+
+            //create command that will be run to display for the user
+            let cmd = ""
+            cmd = getFFMPEGCommand() + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" ");
+            modalString = modalString.replace("ffmpegCommandToRunAtCMDPrompt", cmd)
+
+            // create select picker for the FFMPEG install to use
             let ffmpegPickerHtml = ""
             // 0 = users FFMPEG
             // 1 = StreamRoller FFMPEG
@@ -915,7 +945,6 @@ function SaveConfigToServer ()
  */
 function saveCredentialsToServer ()
 {
-
     for (var c in serverCredentials)
     {
         let creds = {
@@ -937,33 +966,107 @@ function saveCredentialsToServer ()
 // ============================================================================
 //                           FUNCTION: startStream
 // ============================================================================
-/*
--preset (int) or
-    p1 fastest (lowest quality)
-    p2 faster (lower quality)
-    p3 fast (low quality)
-    p4 medium (default)
-    p5 slow (good quality)
-    p6 slower (better quality)
-    p7 slowest (best quality)
-*/
 /**
  * 
  * @param {*} ref 
- * @param {*} streamName 
  * @returns 
  */
 function startStream (ref)
 {
-    console.log(`startStream (${ref})`)
+    if (localConfig.ffmpegHandle && localConfig.ffmpegHandle != null)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".startStream", "A stream is already running");
+        return;
+    }
 
+    localConfig.ffmpegHandle = runFFMPEG(
+        //{ shell: true },
+        {},
+        function (handle)
+        {
+            // console.log("handle", JSON.stringify(handle, null, 2))
+        },
+        function (handle)
+        {
+            if (!localConfig.streamRunning)
+            {
+                localConfig.streamRunning = true;
+                sendStreamStartedTrigger(ref);
+                sendOBSStartAction(ref);
+            }
+            // console.log("handle", JSON.stringify(handle, null, 2))
+        },
+        function (data, out, err)
+        {
+            localConfig.streamRunning = false;
+            sendStreamStoppedTrigger();
+            sendOBSStopAction(ref);
+            if (serverConfig.DEBUG_FFMPEG)
+            {
+                console.log("cmd end received")
+                console.log("out", JSON.stringify(out, null, 2))
+                console.log("err", JSON.stringify(err, null, 2))
+                console.log("end", JSON.stringify(data, null, 2))
+            }
+            localConfig.ffmpegHandle = null
+            localConfig.multistreamStarStreaming = "off"
+        }
+    )
+}
+// ============================================================================
+//                           FUNCTION: getFFMPEGCommand
+// ============================================================================
+/**
+ * 
+ * @returns ffmpeg exe command
+ */
+function getFFMPEGCommand ()
+{
+    let command = ""
+    if (serverConfig.useStreamRollerFFMPEG)
+    {
+        if (localConfig.StreamRollerFfmpegInstalled)
+            command = localConfig.ffmpegExe;
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".runFFMPEG", "Failed to find StreamRoller FFMPEG");
+            return;
+        }
+    }
+    else
+    {
+        if (localConfig.UserFfmpegInstalled)
+            command = "ffmpeg"
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".runFFMPEG", "Failed to find System FFMPEG. Try running 'ffmpeg -version' on the command line to see if it is installed correctly");
+            return
+        }
+
+    }
+    return command;
+}
+// ============================================================================
+//                           FUNCTION: buildFFMPEGArgs
+// ============================================================================
+
+/**
+ * Builds the argument string for ffmpeg
+ *  @param {boolean} hideStreamKey //if true replaces keys with placeholders
+ * @returns ffmpeg args for the given stream
+ */
+function buildFFMPEGArgs (hideStreamKey = true)
+{
     let OBSUrl = serverConfig.localStreamURL.replace("localStreamPort", serverConfig.localStreamPort);
     let ffmpegArgs =
         [
             //"-v", "1",
             "-listen", "1",  // Makes FFmpeg listen for incoming RTMP stream
             "-i",
-            OBSUrl + "/" + serverCredentials.localStreamKey,
+            OBSUrl + serverCredentials.localStreamKey,
             /*
             Figure out where these go, they are position specific in the ffmpeg command
             "-reconnect", "1", // Enable reconnect
@@ -976,10 +1079,10 @@ function startStream (ref)
     {
         if (stream.enabled == "on")
         {
-            if (stream.variableBitrate == "on")
-            { ffmpegArgs.push("-rc"); ffmpegArgs.push("vbr"); }//variable bitrate
             if (stream.videoEncoder && stream.videoEncoder != "")
             { ffmpegArgs.push("-c:v"); ffmpegArgs.push(stream.videoEncoder); }
+            if (stream.variableBitrate == "on")
+            { ffmpegArgs.push("-rc"); ffmpegArgs.push("vbr"); }//variable bitrate
             //if (stream.videoPreset && stream.videoPreset != "")
             //{ ffmpegArgs.push("-preset"); ffmpegArgs.push(stream.videoPreset); }
             // this could be multiple arguments so push each on individually
@@ -1015,53 +1118,17 @@ function startStream (ref)
             if (stream.outputFormat && stream.outputFormat != "")
             { ffmpegArgs.push("-f"); ffmpegArgs.push(stream.outputFormat) }
             if (stream.URL && stream.URL != "")
-            { ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/" + serverCredentials[`multistreamStream${i}StreamKey`] + stream.AdditionalParams); }
+            {
+                if (hideStreamKey)
+                    ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/STREAM_KEY_GOES_HERE" + stream.AdditionalParams);
+                else
+                    ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/" + serverCredentials[`multistreamStream${i}StreamKey`] + stream.AdditionalParams);
+            }
             else
                 console.log(`Multistream: missing URL for stream ${i}: ${stream.name}`)
         }
     });
-    //console.log("ffmpegArgs args", ffmpegArgs)
-
-    if (localConfig.ffmpegHandle && localConfig.ffmpegHandle != null)
-    {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".startStream", "A stream is already running");
-        return;
-    }
-
-    localConfig.ffmpegHandle = runFFMPEG(
-        ffmpegArgs,
-        { shell: true },
-        function (handle)
-        {
-            // console.log("handle", JSON.stringify(handle, null, 2))
-        },
-        function (handle)
-        {
-            if (!localConfig.streamRunning)
-            {
-                localConfig.streamRunning = true;
-                sendStreamStartedTrigger(ref);
-                sendOBSStartAction(ref);
-            }
-            // console.log("handle", JSON.stringify(handle, null, 2))
-        },
-        function (data, out, err)
-        {
-            localConfig.streamRunning = false;
-            sendStreamStoppedTrigger();
-            sendOBSStopAction(ref);
-            if (serverConfig.DEBUG_FFMPEG)
-            {
-                console.log("cmd end received")
-                console.log("out", JSON.stringify(out, null, 2))
-                console.log("err", JSON.stringify(err, null, 2))
-                console.log("end", JSON.stringify(data, null, 2))
-            }
-            localConfig.ffmpegHandle = null
-            localConfig.multistreamEnabled = "off"
-        }
-    )
+    return ffmpegArgs;
 }
 // ============================================================================
 //                           FUNCTION: runFFMPEG
@@ -1075,35 +1142,12 @@ function startStream (ref)
  * @param {*} endCB 
  * @returns 
  */
-function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = null, streamFinished = null)
+function runFFMPEG (options = {}, processCB = null, streamStarted = null, streamFinished = null)
 {
-    let command = ""
-    if (serverConfig.useStreamRollerFFMPEG)
-    {
-        if (localConfig.StreamRollerFfmpegInstalled)
-            command = localConfig.ffmpegExe;
-        else
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".runFFMPEG", "Failed to find StreamRoller FFMPEG");
-            return;
-        }
-    }
-    else
-    {
-        if (localConfig.UserFfmpegInstalled)
-            command = "ffmpeg"
-        else
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".runFFMPEG", "Failed to find System FFMPEG. Try running 'ffmpeg -version' on the command line to see if it is installed correctly");
-            return
-        }
 
-    }
-
-
-    let ffmpegProc = spawn(command, args);
+    let command = getFFMPEGCommand();
+    let args = buildFFMPEGArgs(false)
+    let ffmpegProc = spawn(command, args, options);
     if (serverConfig.DEBUG_FFMPEG)
         console.log("ffmpegProc ", command, args.join(' '));
     if (ffmpegProc.stderr)
@@ -1132,13 +1176,11 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
         }
     });
 
+    let activeStreams = serverConfig.streams.filter((stream) => stream.enabled == "on");
     // Capture stdout if specified
-
     ffmpegProc.stdout.on('data', function (data)
     {
         stdoutClosed = false;
-        if (serverConfig.DEBUG_FFMPEG_STDOUT)
-            console.log("ffmpeg:stdout:data()", data.toString())
         stdoutbuffer.push(data.toString())
     });
 
@@ -1150,7 +1192,6 @@ function runFFMPEG (args = {}, options = {}, processCB = null, streamStarted = n
         stdoutClosed = true;
         handleExit(null, streamFinished);
     });
-
 
     // Capture stderr if specified
     ffmpegProc.stderr.on('data', function (data)
@@ -1249,7 +1290,6 @@ function handleExit (err, endCB)
  */
 function sendOBSStartAction (triggerActionRef = "multistream")
 {
-
     /* to send an action we just need the following fields
      action = 
     {
@@ -1297,7 +1337,6 @@ function sendOBSStopAction (triggerActionRef = "multistream")
         }
     }
     sendAction(action);
-
 }
 // ============================================================================
 //                           FUNCTION: sendStreamStartedTrigger
@@ -1316,7 +1355,6 @@ function sendStreamStartedTrigger (triggerActionRef = "multistream")
     }
     sendTrigger(trigger)
 }
-
 // ============================================================================
 //                           FUNCTION: sendStreamStoppedTrigger
 // ============================================================================
@@ -1488,13 +1526,12 @@ async function downloadFFMPEG ()
         {
             if (err == null)
             {
-                console.log("finished deleting old ffmpeg download")
+                //console.log("finished deleting old ffmpeg download")
                 //setTimeout(() => { downloadFFMPEG(); }, 1000);
             }
             else
             { installSuccess = false; console.log("Error deleting previous ffmpeg download", err) }
         });
-        return;
     }
     // download the zip and unpack it to the correct place
     axios({
@@ -1503,15 +1540,15 @@ async function downloadFFMPEG ()
         responseType: 'stream',
         onDownloadProgress: progressEvent =>// print progress to in the console
         { printProgress("ffmpeg downloading " + Math.round((progressEvent.loaded * 100) / progressEvent.total) + "%") }
-    }
-    ).then(response =>
+    }).then(response =>
     {
         //download complete write file
         const writer = fs.createWriteStream(localConfig.ffmpegDownloadZip);
         response.data.pipe(writer);
         writer.on('finish', async () => 
         {
-            console.log('✅ Download complete!');
+            if (serverConfig.DEBUG_FFMPEG)
+                console.log('Download complete!');
             // unzip file
             //console.log("unzipping file", localConfig.ffmpegDownloadZip, localConfig.ffmpegFolder)
             unzipfile(localConfig.ffmpegDownloadZip, localConfig.ffmpegFolder);
@@ -1541,7 +1578,8 @@ async function downloadFFMPEG ()
             // move new files in
             files.forEach((value, index) =>
             {
-                console.log("moving in new file", value)
+                if (serverConfig.DEBUG_FFMPEG)
+                    console.log("moving in new file", value)
                 fs.renameSync(localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared\\bin\\" + value,
                     localConfig.ffmpegFolder + value, function (err)
                 {
@@ -1556,18 +1594,16 @@ async function downloadFFMPEG ()
             catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: removing directory", localConfig.ffmpegFolder + "ffmpeg-master-latest-win64-gpl-shared", err); }
 
             // finally delete the zip file we downloaded
-            console.log("removing old zip")
             if (fs.existsSync(localConfig.ffmpegDownloadZip))
             {
                 try { fs.unlinkSync(localConfig.ffmpegDownloadZip); }
                 catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ":Error: clearing out downloaded ffmpeg.zip before replacing", err); }
             }
-
         });
         writer.on('error', err =>
         {
             installSuccess = false;
-            console.error('❌ Failed to download:', err)
+            console.error('Failed to download:', err)
         });
     })
         .catch(err =>
@@ -1576,11 +1612,15 @@ async function downloadFFMPEG ()
             console.log("err downloading ffmpeg", err)
         })
     if (!installSuccess)
+    {
         localConfig.StreamRollerFfmpeg = true;
+        console.log('✅ FFMPEG Install complete!');
+    }
     else
+    {
         localConfig.StreamRollerFfmpeg = false;
-
-
+        console.error('❌ FFMPEG Install Failed:')
+    }
 }
 // ============================================================================
 //                           FUNCTION: unzipfile
@@ -1602,26 +1642,17 @@ function unzipfile (file, to)
 // Stuff like video encoders available etc
 // ############################################################################
 // ============================================================================
-//                      FUNCTION: UpdateEncodersAvailable
+//                      FUNCTION: checkFFMPEGAvailabilities
 // ============================================================================
 /**
  * Checks and updates availabilities of FFMPEG with current settings
  */
 function checkFFMPEGAvailabilities ()
 {
-    let ffmpegExe = null
+    checkFFMPEGInstall()
+    let ffmpegExe = getFFMPEGCommand();
     localConfig.encodersUpdating = true;
-    // did the user select to use our FFMPEG or their own
-    if (serverConfig.useStreamRollerFFMPEG)
-    {
-        if (localConfig.StreamRollerFfmpegInstalled)
-            ffmpegExe = localConfig.ffmpegExe;
-    }
-    else
-    {
-        if (localConfig.UserFfmpegInstalled)
-            ffmpegExe = "ffmpeg"
-    }
+
     if (!ffmpegExe)
     {
         SendSettingsWidgetLarge();
@@ -1636,11 +1667,21 @@ function checkFFMPEGAvailabilities ()
 // ============================================================================
 /**
  * tests what ffmpeg encoders are available
- * byproduct: calls out SendSettingsWidgetLarge()
+ * by product: calls SendSettingsWidgetLarge()
  */
 function UpdateEncodersAvailable (ffmpegExe)
 {
     let finished = false;
+    let timeout = false
+    // just in case the command fails or we don't finish early enough lets kill it after 10 seconds
+    if (!localConfig.encoderBuildTimeoutHandle)
+    {
+        localConfig.encoderBuildTimeoutHandle = setTimeout(() =>
+        {
+            console.log("Encoder query taking too long, Exiting")
+            timeout = true;
+        }, localConfig.encoderBuildTimeout)
+    }
     let args = ["-encoders", "-hide_banner"];
     let ffmpegHandle = spawn(ffmpegExe, args);
     localConfig.ffmpegEncodersString = "";
@@ -1658,6 +1699,8 @@ function UpdateEncodersAvailable (ffmpegExe)
 
     ffmpegHandle.on('exit', function (code, signal)
     {
+        clearTimeout(localConfig.encoderBuildTimeoutHandle)
+        localConfig.encoderBuildTimeoutHandle = null;
         finished = true;
         if (signal)
             console.log("UpdateEncodersAvailable():exit()was killed with signal " + signal);
@@ -1674,10 +1717,9 @@ function UpdateEncodersAvailable (ffmpegExe)
 
     ffmpegHandle.stdout.on('close', function ()
     {
-        //console.log("ffmpegHandle:stdout:close()")
+        if (serverConfig.DEBUG_FFMPEG_STOUT)
+            console.log("UpdateEncodersAvailable():stdout:close()")
     });
-
-
     // Capture stderr if specified
     ffmpegHandle.stderr.on('data', function (data)
     {
@@ -1686,66 +1728,76 @@ function UpdateEncodersAvailable (ffmpegExe)
 
     ffmpegHandle.stderr.on('close', function ()
     {
-        //console.log("ffmpegHandle:stderr:close()")
+        if (serverConfig.DEBUG_FFMPEG_STDERR)
+            console.log("UpdateEncodersAvailable():stderr:close()")
     });
 
     localConfig.waitForExitHandle = setInterval(() =>
     {
-        if (finished)
+        if (finished || timeout)
         {
+            if (timeout)
+                if (serverConfig.DEBUG_FFMPEG)
+                    console.log("UpdateEncodersAvailable():Encoder search timed out")
+            finished = false;
             clearInterval(localConfig.waitForExitHandle)
-            parseEncodersString();
+            parseEncodersString(ffmpegExe);
             SendSettingsWidgetLarge();
         }
     }, 500);
-
 }
 // ============================================================================
 //                           FUNCTION: parseEncodersString
 // ============================================================================
 /**
  * creates video and audio encoder lists from the ffmpeg output string
+  * @param {string} ffmpegExe 
  */
-async function parseEncodersString ()
+async function parseEncodersString (ffmpegExe)
 {
-    localConfig.videoEncoders = [];
-    localConfig.audioEncoders = [];
-    const tempArray = localConfig.ffmpegEncodersString.split("\r\n")
-    let postHeader
-    for (let i = 0; i < tempArray.length; i++)
+    try
     {
-        //skip to end of header
-        if (tempArray[i] == " ------")
+        localConfig.videoEncoders = [];
+        localConfig.audioEncoders = [];
+        const tempArray = localConfig.ffmpegEncodersString.split("\r\n")
+        let postHeader = false;
+        for (let i = 0; i < tempArray.length; i++)
         {
-            postHeader = true;
-            continue;
-        }
-        if (!postHeader)
-            continue;
-        if (tempArray[i])
-        {
-            //console.log("tempArray[i]", tempArray[i])
-            if (tempArray[i].indexOf(" V") == 0)
+            //skip to end of header
+            if (tempArray[i] == " ------")
             {
-                const videoName = tempArray[i].split(" ")[2];
-                localConfig.videoEncoders.push(videoName)
-                localConfig.videoEncoders[videoName] = await getEncoderOptions(videoName)
+                postHeader = true;
+                continue;
             }
-            else if (tempArray[i].indexOf(" A") == 0)
+            if (!postHeader)
+                continue;
+            if (tempArray[i])
             {
-                const audioName = tempArray[i].split(" ")[2];
-                localConfig.audioEncoders.push(audioName)
-                localConfig.audioEncoders[audioName] = await getEncoderOptions(audioName)
-            }
+                //console.log("tempArray[i]", tempArray[i])
+                if (tempArray[i].indexOf(" V") == 0)
+                {
+                    const videoName = tempArray[i].split(" ")[2];
+                    localConfig.videoEncoders.push(videoName)
+                    localConfig.videoEncoders[videoName] = await getEncoderOptions(ffmpegExe, videoName)
+                }
+                else if (tempArray[i].indexOf(" A") == 0)
+                {
+                    const audioName = tempArray[i].split(" ")[2];
+                    localConfig.audioEncoders.push(audioName)
+                    localConfig.audioEncoders[audioName] = await getEncoderOptions(ffmpegExe, audioName)
+                }
 
+            }
         }
+        console.log("FFMPEG video encoders found", localConfig.videoEncoders.length);
+        console.log("FFMPEG audio encoders found", localConfig.audioEncoders.length);
+        localConfig.encodersUpdating = false
     }
-    console.log("FFMPEG video encoders found", localConfig.videoEncoders.length);
-    console.log("FFMPEG audio encoders found", localConfig.audioEncoders.length);
-    localConfig.encodersUpdating = false
+    catch (err)
+    {
+        console.log("parseEncodersString():err", err)
+    }
 }
-
-
 // ============================================================================
 //                           FUNCTION: getEncoderOptions
 // ============================================================================
@@ -1754,11 +1806,11 @@ async function parseEncodersString ()
  * @param {*} encoder 
  * @returns array of options for the given encoder
  */
-async function getEncoderOptions (encoder)
+async function getEncoderOptions (ffmpegExe, encoder)
 {
     return new Promise((resolve, reject) =>
     {
-        exec(`ffmpeg -hide_banner -h encoder=${encoder}`, (error, stdout, stderr) =>
+        exec(`${ffmpegExe} -hide_banner -h encoder=${encoder}`, (error, stdout, stderr) =>
         {
             if (error) return reject(`Error: ${stderr || error.message}`);
             let startParsing = false
@@ -1791,7 +1843,6 @@ async function getEncoderOptions (encoder)
             resolve(options);
         });
     });
-
 }
 // ============================================================================
 //                           FUNCTION: printProgress
@@ -1812,4 +1863,3 @@ function printProgress (progress)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise };
-
