@@ -1,3 +1,0 @@
-This file is only here so that github will allow check-in of the folder.
-The files will be installed if the user selects to install ffmpeg through streamroller
-If the user already has ffmpeg installed then it will use that version

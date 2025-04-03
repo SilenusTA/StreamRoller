@@ -9,9 +9,13 @@ tools together, ie select a trigger and tell it what actions you want it to perf
 
 [See **all Trigger/Actions** Available here](https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md)
 
-Current user configurable Trigger / Action available: ```5,275 ```
+# Take control of your stream (```5,824,260``` Possibilities)
 
-No. of possible combinations for a single trigger->action ```5,816,850 ```
+No other software out there gives you the same level of control over your stream in one App
+
+No. of possible combinations for a single trigger->action ```5,824,260```
+
+No. of user configurable Trigger / Action available: ```5,277```
 
 No. of possible chained commands ```infinite```
 
@@ -28,6 +32,7 @@ StreamRoller is currently in its alpha stage of development, and we welcome feed
 ## Table of Contents
 
 - [StreamRoller (current dev. stage: Alpha)](#streamroller-current-dev-stage-alpha)
+- [Take control of your stream](#take-control-of-your-stream)
   - [Key Features](#key-features)
   - [Table of Contents](#table-of-contents)
 - [Contacts/Links: (For questions, suggestions etc.)](#contactslinks-for-questions-suggestions-etc)
