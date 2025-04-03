@@ -525,19 +525,6 @@ function onDataCenterMessage (server_packet)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                 "InvalidMessage ", server_packet.data.error, server_packet);
         }
-        else if (server_packet.type === "ChannelJoined"
-            || server_packet.type === "ChannelCreated"
-            || server_packet.type === "ChannelLeft"
-            || server_packet.type === "LoggingLevel"
-        )
-        {
-            //logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage Not handling", server_packet.type);
-            // just a blank handler for items we are not using to avoid message from the catchall
-        }
-        // ------------------------------------------------ unknown message type received -----------------------------------------------
-        else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".onDataCenterMessage", "Unhandled message type", server_packet.data.error);
     } catch (error)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +

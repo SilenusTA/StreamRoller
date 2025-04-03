@@ -456,21 +456,6 @@ function onDataCenterMessage (server_packet)
 
         }
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "HeartBeat"
-        || server_packet.type === "UnknownExtension"
-        || server_packet.type === "ChannelJoined"
-        || server_packet.type === "LoggingLevel"
-    )
-    {
-        // just a blank handler for items we are not using to avoid message from the catchall
-    }
-    // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
-        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Unhandled message type:", server_packet);
-
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
