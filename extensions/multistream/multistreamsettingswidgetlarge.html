@@ -1,0 +1,486 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<style>
+    .hidden {
+        display: none !important;
+    }
+</style>
+<form id="multistream_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="multistream" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="MULTISTREAM" tabindex="-1" />
+    </div>
+    <HR>
+    <h4 class="text-center">Multistream Settings</h4>
+    <p>Multistream using StreamRoller as the multiplexer to take an OBS stream and output to different platforms
+        <BR> Notes:
+    <ul>
+        <li>OBS Settings: Service: <b><i>Custom...</i></b>, Server: <b><i>rtmp://localhost:1935/live</i></b>, Streamkey: <b><i>f215ee65asdd8864</i></b></li>
+        <li>ffmpeg is required to run, if you have a version installed (check the command prompt if not sure. enter <b><i>ffmpeg -version</i></b> to see if you
+            have one
+            already installed. If installed select 'use installed ffmpeg box below' rather than 'use StreamRoller ffmpeg' which will install a version of ffmpeg
+            into the extensions /bin folder for you)
+        <li>When starting a multistream StreamRoller will automatically start streaming in OBS (if obs websocket is connected). To start a multistream enable
+            the extension on the main liveportal page</li>
+        <li>Any updates to this page will only take effect when next starting a stream</li>
+        <li>For Twitch testing (without going live) set 'Additional Params' to '?bandwidthtest=true' (without quotes)</li>
+        <li>For YouTube testing (without going live) start the stream on YouTube using 'Unlisted' rather than 'Public'</li>
+        <li>For YouTube backup server (for some reason mine fails to connect the main server on YouTube) set 'Additional URL' to '?backup=1' (without quotes)
+        </li>
+    </ul>
+    <HR>
+    <h4 class="text-center">Configuration Mode</h4>
+    Select the mode below.
+    <ul>
+        <li><b>Simple mode:</b> will give the easiest and least resource intense way to get started. This option will take the output as is configured in OBS
+            and simply forward that onto the streaming platforms.</li>
+        <li><b>Configurable mode:</b> Offers the most common configuration you might want to chose (ie bitrate etc)</li>
+        <li><b>Advanced mode:</b> If you know ffmpeg parameters well you can use this one to define the exact commandline you want to use.</li>
+    </ul>
+    <HR>
+    <h3 class="text-center">Current (submitted) ffmpeg Command</h3>
+    <BR>This is Useful for testing by using the command line rather than starting the multistream from StreamRoller
+    <p><b>multistreamtextcurrentCommand</b></p>
+    <HR>
+    <h3 class="text-center">Select an FFMPEG install to use</h3>
+    You can use your own FFMPEG (check it runs from commandline with 'ffmpeg -version' if having issues) or a let StreamRoller download and install a version to
+    run
+    <BR>
+    <div style="color:yellow">Note: if you select to run StreamRoller FFMPEG this will automatically download and installed ffmpeg in the
+        extensions/multistream/bin folder if it doesn't exist (after installing a new StreamRoller version this will re-download ffmpeg).</div>
+    <div id="multistreamFFMPEGPickerPlaceholder"></div>
+    <HR>
+    <h3 class="text-center">StreamConfigurations</h3>
+    <p>Configure the output for each stream you want to send to (when stream is set to enabled)</p>
+    <div id="multistreamStreamsPlaceholder"></div>
+
+    <HR>
+    <div class="form-group">
+        These only take effect when form is submitted.
+        <BR>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_hideStreamKey" type="checkbox" id="multistream_hideStreamKey">
+            <label class="form-check-label" for="multistream_hideStreamKey">Hide stream key in page (ffmpeg command etc)</label>
+        </div>
+        <BR>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_DEBUG_FFMPEG" type="checkbox" id="multistream_DEBUG_FFMPEG">
+            <label class="form-check-label" for="multistream_DEBUG_FFMPEG">Debug FFMPEG</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_DEBUG_FFMPEG_STDERR" type="checkbox" id="multistream_DEBUG_FFMPEG_STDERR">
+            <label class="form-check-label" for="multistream_DEBUG_FFMPEG_STDERR">Debug FFMPEG STDERR</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_DEBUG_FFMPEG_STDOUT" type="checkbox" id="multistream_DEBUG_FFMPEG_STDOUT">
+            <label class="form-check-label" for="multistream_DEBUG_FFMPEG_STDOUT">Debug FFMPEG STDOUT</label>
+        </div>
+        <BR>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_restore_defaults" type="checkbox" id="multistream_restore_defaults"
+                multistream_restore_defaultschecked>
+            <label class="form-check-label" for="multistream_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <div class="modal-footer">
+        <button id="closeSettings" type="button" type="close" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>
+<script>
+    // these scripts will be put into the page via a dynamic load. 
+    // in order to separate the const variables out so they don't break the code with 're-declaration'
+    // issues we are going to scope them in a function. Any functions needed by the webpage
+    // will need declaring as window.functionname = () {functionbody}
+    (() =>
+    {
+        // can't make this const as it needs to be overwritten by updates including the declaration :(
+        const multiStreamingConfig = {
+            currentCommand: replace,
+            ffmpegExe: replace,
+            InstalledFFMPEGs: replace,
+            useStreamRollerFFMPEG: replace,
+            streams: replace,
+            encoders: {}, // read from file
+            serverCredentials: replace,
+            ffmpegDebug: replace,
+            hideStreamKey: replace,
+            complexityMode: replace
+        };
+
+        fetch('/multistream/data/encoders.json')
+            .then(response => response.json())
+            .then(data =>
+            {
+                console.log("data loaded")
+                // load the encoder dta
+                multiStreamingConfig.encoders = data;
+                // sets/unsets the checkboxes
+                updateCheckboxes()
+                // create the ffmpeg settings
+                updateFfmpegPickerHtml();
+                // create the streams sections
+                updateStreams();
+                // set the hidden options based on config type
+                multiStreamingConfig.streams.forEach((stream, i) =>
+                {
+                    changeConfigurableMode(i);
+                });
+            });
+
+        // ============================================================================
+        //                           FUNCTION: setCheckboxes
+        // ============================================================================
+        function updateCheckboxes ()
+        {
+            // set the debug checkboxes
+            if (multiStreamingConfig.ffmpegDebug.DEBUG_FFMPEG)
+                document.getElementById("multistream_DEBUG_FFMPEG").checked = true;
+            else
+                document.getElementById("multistream_DEBUG_FFMPEG").checked = false;
+            if (multiStreamingConfig.ffmpegDebug.DEBUG_FFMPEG_STDERR)
+                document.getElementById("multistream_DEBUG_FFMPEG_STDERR").checked = true;
+            else
+                document.getElementById("multistream_DEBUG_FFMPEG_STDERR").checked = false;
+            if (multiStreamingConfig.ffmpegDebug.DEBUG_FFMPEG_STDOUT)
+                document.getElementById("multistream_DEBUG_FFMPEG_STDOUT").checked = true;
+            else
+                document.getElementById("multistream_DEBUG_FFMPEG_STDOUT").checked = false;
+            // hide stream key?
+            if (multiStreamingConfig.hideStreamKey)
+                document.getElementById("multistream_hideStreamKey").checked = true;
+            else
+                document.getElementById("multistream_hideStreamKey").checked = false;
+        }
+        // ============================================================================
+        //                           FUNCTION: updateStreams
+        // ============================================================================
+        function updateStreams ()
+        {
+            let element = document.getElementById("multistreamStreamsPlaceholder")
+            let streamsHtml = "";
+            let tempString = "";
+            // streams
+            multiStreamingConfig.streams.forEach((stream, i) =>
+            {
+                streamsHtml += "<HR>";
+                streamsHtml += `<h4>${i}:${stream.name}</h4>`;
+                streamsHtml += "<BR>";
+                // stream enabled
+                streamsHtml += createCheckBox("Enabled/Disabled", `multistream_enabled_${i}`, stream.enabled == "on");
+
+                // StreamName
+                streamsHtml += createTextBox("Name", `multistream_name_${i}`, stream.name, false, "", "");
+
+                // Configuration Mode selector
+                streamsHtml += createDropdown("Configuration Mode", `multistream_configurationMode_${i}`, ["Simple", "Configurable", "Advanced"], stream.configurationMode);
+
+                // Advanced
+                streamsHtml += createTextBox("ffmpeg options", `multistream_Advanced_${i}`, "", false, "", `multistreamAdvancedDisplay_${i}`);
+                // URL
+                streamsHtml += createTextBox("URL", `multistream_URL_${i}`, stream.URL, false, "", `multistreamNotAdvancedDisplay_${i}`);
+
+                // AdditionalURL
+                streamsHtml += createTextBox("Additional URL", `multistream_AdditionalURL_${i}`, stream.AdditionalURL, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                // AdditionalParams
+                streamsHtml += createTextBox("Additional Params", `multistream_AdditionalParams_${i}`, stream.AdditionalParams, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                //StreamName multistreamStream${i}StreamKey
+                streamsHtml += createTextBox("Stream Key", `multistreamStream${i}StreamKey`, multiStreamingConfig.serverCredentials[`multistreamStream${i}StreamKey`], multiStreamingConfig.hideStreamKey, "", `multistreamNotAdvancedDisplay_${i}`);
+
+                // variable bitrate
+                streamsHtml += createCheckBox("Variable Bitrate", `multistream_variableBitrate_${i}`, stream.variableBitrate == "on", `multistreamConfigurableDisplay_${i}`);
+
+                // Video encoders
+                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, multiStreamingConfig.encoders.videoEncoders, stream.videoEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
+
+                // Video Encoder options
+                streamsHtml += createDropdown("Video Encoder Options", `multistream_videoEncoderOption_${i}`, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder], stream.videoEncoderOption, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder][stream.videoEncoderOption], `multistreamConfigurableDisplay_${i}`);
+                tempString = "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>"
+                if (multiStreamingConfig.useStreamRollerFFMPEG)
+                    tempString += "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                else
+                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                tempString += "</div>";
+                streamsHtml += createTextBox("Video encoder option Parameters", `multistream_videoEncoderOptionParameters_${i}`, stream.videoEncoderOptionParameters ? stream.videoEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
+
+                // targetBitrate
+                streamsHtml += createTextBox("Target Bitrate", `multistream_targetBitrate_${i}`, stream.targetBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                // resolution
+                streamsHtml += createTextBox("resolution", `multistream_resolution_${i}`, stream.resolution, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                // framerate
+                streamsHtml += createTextBox("Framerate", `multistream_framerate_${i}`, stream.framerate, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                // keyframeInterval
+                streamsHtml += createTextBox("Key Frame Interval (in seconds)", `multistream_keyframeInterval_${i}`, stream.keyframeInterval, false, "", `multistreamConfigurableDisplay_${i}`);
+
+                // AudioEncoder
+                streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoder_${i}`, multiStreamingConfig.encoders.audioEncoders, stream.audioEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
+
+                if (multiStreamingConfig.useStreamRollerFFMPEG)
+                    tempString = "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.audioEncoder + "' on the commandline)"
+                else
+                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.audioEncoder + "' on the commandline)"
+
+                // AudioEncoderOptions
+                streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoderOption_${i}`, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder], stream.audioEncoderOption, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder][stream.audioEncoderOption], `multistreamConfigurableDisplay_${i}`);
+
+                streamsHtml += createTextBox("Audio Encoder option parameters", `multistream_audioEncoderOptionParameters_${i}`, stream.audioEncoderOptionParameters ? stream.audioEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
+
+                // audioBitrate
+                streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
+            });
+            element.innerHTML = streamsHtml;
+        }
+        // ============================================================================
+        //                           FUNCTION: updateFfmpegPickerHtml
+        // ============================================================================
+        function updateFfmpegPickerHtml ()
+        {
+            let element = document.getElementById("multistreamFFMPEGPickerPlaceholder")
+            // create select picker for the FFMPEG install to use
+            let ffmpegPickerHtml = ""
+            // 0 = user's FFMPEG
+            // 1 = StreamRoller FFMPEG
+            ffmpegPickerHtml += "<BR>System FFMPEG:  " + multiStreamingConfig.InstalledFFMPEGs.userFfmpegInstalled;
+            if (multiStreamingConfig.InstalledFFMPEGs.userFfmpegInstalled)
+                ffmpegPickerHtml += '<span style="color:green">Available</span>'
+            else
+                ffmpegPickerHtml += '<span style="color:red">Not found</span>'
+            if (!multiStreamingConfig.useStreamRollerFFMPEG)
+                ffmpegPickerHtml += ' <span style="color:yellow">Currently Selected</span>'
+            ffmpegPickerHtml += "<BR>StreamRoller FFMPEG available:";
+            if (multiStreamingConfig.InstalledFFMPEGs.streamRollerFfmpegInstalled)
+                ffmpegPickerHtml += '<span style="color:green">Available</span>'
+            else
+                ffmpegPickerHtml += '<span style="color:red">Not found</span>'
+            if (multiStreamingConfig.useStreamRollerFFMPEG)
+                ffmpegPickerHtml += ' <span style="color:yellow">Currently Selected</span>'
+            ffmpegPickerHtml += "<BR>";
+
+            if (multiStreamingConfig.useStreamRollerFFMPEG)
+            {
+                ffmpegPickerHtml +=
+                    `<select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="Select FFMPEG source" id="multistreamffmpegpicker" value="1" name="multistreamffmpegpicker" required="" onchange="multistreamSelectionChanged(this)">`
+                ffmpegPickerHtml +=
+                    `<option value="0">Installed FFMPEG</option>
+                 <option value="1" selected>StreamRoller FFMPEG</option>
+                 </select >`
+            }
+            else
+            {
+                ffmpegPickerHtml +=
+                    `<select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="Select FFMPEG source" id="multistreamffmpegpicker" value="1" name="multistreamffmpegpicker" required="" onchange="multistreamSelectionChanged(this)">`
+                ffmpegPickerHtml +=
+                    `<option value="0" selected>Installed FFMPEG</option>
+                 <option value="1">StreamRoller FFMPEG</option>
+                 </select >`
+            }
+            element.innerHTML = ffmpegPickerHtml;
+        }
+        // ===========================================================================
+        //                           FUNCTION: createDropdown
+        // ===========================================================================
+        function createDropdown (Title, id, data = [], currentSelectedId = 0, label = null, configClasses = "")
+        {
+            let dropdownHtml = "";
+            dropdownHtml += `<div id=select_${id}_outer_div class="d-flex-align ${configClasses} w-100" style="border-bottom: 4px solid transparent;border-top: 4px solid transparent;">`;
+            dropdownHtml += `<select class='selectpicker btn-secondary py-2 ' data-style='btn-danger' style="max-width: 85%;" title='${Title}' id="${id}" value='${currentSelectedId}' name="${id}" required="" onchange="multistreamSelectionChanged(this)">`
+            dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--Select an option--</option>'
+
+            if (Array.isArray(data))
+            {
+                data.forEach(option =>
+                {
+                    if (option == currentSelectedId)
+                        dropdownHtml += '<option value="' + option + '" selected>' + option + '</option>';
+                    else
+                        dropdownHtml += '<option value="' + option + '">' + option + '</option>';
+                });
+            }
+            else
+            {
+                for (var key in data)
+                {
+                    if (key == currentSelectedId)
+                        dropdownHtml += '<option value="' + key + '" selected>' + key + '</option>';
+                    else
+                        dropdownHtml += '<option value="' + key + '">' + key + '</option>';
+                }
+            }
+
+            dropdownHtml += '</select>';
+            if (label)
+                dropdownHtml += `<label id="${id}_label" class="form-check-label" for="${id}">&nbsp;${label}</label>`
+            // add clear history checkbox
+            dropdownHtml += '</div>';
+            return dropdownHtml;
+        }
+        // ===========================================================================
+        //                           FUNCTION: createTextBox
+        // ===========================================================================
+        function createTextBox (label, name, value, password, description = null, configClasses = "")
+        {
+            let type = "text"
+            if (password)
+                type = "password"
+            let textBoxHtml = `<div id="${name}_outer_div" class="${configClasses}">`
+            textBoxHtml += `
+                <div id="${name}_div" class="form-group py-1" style="display: inline-flex;">
+                    <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}">
+                    <label for="${name}" class="col-form-label">&nbsp;${label}</label>
+                    
+                </div>`
+            if (description)
+                textBoxHtml += `<div>&nbsp;${description}</div>`
+            textBoxHtml += "</div>"
+            return textBoxHtml;
+        }
+        // ===========================================================================
+        //                           FUNCTION: createCheckBox
+        // ===========================================================================
+        function createCheckBox (description, name, checked, configClasses = "")
+        {
+            let checkedtext = "";
+            if (checked)
+                checkedtext = "checked";
+            return `
+                <div class="${configClasses} py-2">
+                    <input class="form-check-input" name="${name}" type="checkbox" id="${name}" ${checkedtext}>
+                    <label class="form-check-label" for="${name}">&nbsp;${description}</label>
+                </div>`
+        }
+        // ===========================================================================
+        //                           FUNCTION: multistreamSelectionChanged
+        // ===========================================================================
+        // needs to be attached to window due to this script running inside a function
+        window.multistreamSelectionChanged = function (ele)
+        {
+            console.log("selection changed called", ele.id, ele.value, ele.title)
+            // ffmpeg.exe dropdown
+            if (ele.id.indexOf("multistreamffmpegpicker") == 0)
+            {
+                // update places where ffmpeg.exe are used based on this valee
+                multiStreamingConfig.useStreamRollerFFMPEG = (ele.value == "1")
+                updateFfmpegPickerHtml()
+                updateStreams()
+            }
+            // Video Encoder dropdown
+            else if (ele.id.indexOf("multistream_videoEncoder_") == 0)
+            {
+                let index = ele.id.replace("multistream_videoEncoder_", "")
+                //let options_ele = document.getElementById("multistream_videoEncoderOption_" + ele.id)
+                //video encoder changed, lets update the options for this encoder
+                multiStreamingConfig.streams[index].videoEncoder = ele.value
+                multiStreamingConfig.streams[index].videoEncoderOption = "none"
+                multiStreamingConfig.streams[index].videoEncoderOptionParameters = "none"
+                updateStreams()
+            }
+            // Video Encoder Options dropdown
+            else if (ele.id.indexOf("multistream_videoEncoderOption_") == 0)
+            {
+                let index = ele.id.replace("multistream_videoEncoderOption_", "")
+                let encoder = multiStreamingConfig.streams[index].videoEncoder
+                //let options_ele = document.getElementById("multistream_videoEncoderOptions_" + ele.id)
+                //video encoder changed, lets update the options for this encoder
+                // multiStreamingConfig.streams[index].videoEncoder = ele.value
+                multiStreamingConfig.streams[index].videoEncoderOption = ele.value
+                //multiStreamingConfig.streams[index].videoEncoderOptionParameters = "none"
+                updateStreams()
+            }
+            // Audio Encoder dropdown
+            else if (ele.id.indexOf("multistream_audioEncoder_") == 0)
+            {
+                let index = ele.id.replace("multistream_audioEncoder_", "")
+                //let options_ele = document.getElementById("multistream_audioEncoderOption_" + ele.id)
+                //audio encoder changed, lets update the options for this encoder
+                multiStreamingConfig.streams[index].audioEncoder = ele.value
+                multiStreamingConfig.streams[index].audioEncoderOption = "none"
+                multiStreamingConfig.streams[index].audioEncoderOptionParameters = "none"
+                updateStreams()
+            }
+            // Audio Encoder Options dropdown
+            else if (ele.id.indexOf("multistream_audioEncoderOption_") == 0)
+            {
+                let index = ele.id.replace("multistream_audioEncoderOption_", "")
+                let encoder = multiStreamingConfig.streams[index].audioEncoder
+                //let options_ele = document.getElementById("multistream_audioEncoderOptions_" + ele.id)
+                //audio encoder changed, lets update the options for this encoder
+                // multiStreamingConfig.streams[index].audioEncoder = ele.value
+                multiStreamingConfig.streams[index].audioEncoderOption = ele.value
+                //multiStreamingConfig.streams[index].audioEncoderOptionParameters = "none"
+                updateStreams()
+            }
+            else if (ele.id.indexOf("multistream_configurationMode_") == 0)
+            {
+                console.log("complexity mode changed", ele.value)
+                changeConfigurableMode(ele.id.replace("multistream_configurationMode_", ""))
+            }
+        }
+        // ===========================================================================
+        //                           FUNCTION: changeConfigurableMode
+        // ===========================================================================
+        function changeConfigurableMode (index)
+        {
+            let mode = document.getElementById(`multistream_configurationMode_${index}`).value;
+
+            // Hide all
+            document.querySelectorAll(`.multistreamSimpleDisplay_${index}, .multistreamConfigurableDisplay_${index}, .multistreamAdvancedDisplay_${index}, .multistreamNotAdvancedDisplay_${index}`).forEach(ele => 
+            {
+                ele.classList.add("hidden")
+
+                // Show based on selection
+                if (mode === "Simple" && (ele.className.indexOf("multistreamSimpleDisplay") > -1))
+                {
+                    ele.classList.remove("hidden");
+                    //document.getElementById("simple-content").classList.remove("hidden");
+                    //document.getElementById("simple-content").classList.remove("hidden");
+                } else if (mode === "Configurable" && (ele.className.indexOf("multistreamConfigurableDisplay") > -1))
+                {
+                    ele.classList.remove("hidden")
+                    //document.getElementById("simple-content").classList.remove("hidden");
+                    //document.getElementById("easy-content").classList.remove("hidden");
+                } else if (mode === "Advanced" && (ele.className.indexOf("multistreamAdvancedDisplay") > -1))
+                {
+                    ele.classList.remove("hidden")
+                    //document.getElementById("simple-content").classList.remove("hidden");
+                    //document.getElementById("easy-content").classList.remove("hidden");
+                    //document.getElementById("expert-content").classList.remove("hidden");
+                }
+                else if (mode != "Advanced" && (ele.className.indexOf("multistreamNotAdvancedDisplay") > -1))
+                {
+                    ele.classList.remove("hidden")
+                    //document.getElementById("simple-content").classList.remove("hidden");
+                    //document.getElementById("easy-content").classList.remove("hidden");
+                    //document.getElementById("expert-content").classList.remove("hidden");
+                }
+            });
+        }
+    })();
+</script>

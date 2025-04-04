@@ -113,7 +113,8 @@
     {
         OBSSceneslist: {},
         obslive: false, // set on a heartbeat from obs messages
-        heartBeatTimeout: "6000",
+        deadmansHeartBeatTimeout: "6000", // sets extensions to off if heartbeat stops
+        deadmansHeartBeatHandle: null,
         twitchchatchannel: "",
         twitchplatformavailable: false,
         youtubeplatformavailable: false,
@@ -148,8 +149,14 @@
         bTTVEmotes: null,
         bTTVNames: [],
         TTSVoiceList: [],
-        bannedUsersList: []
+        bannedUsersList: [],
 
+        LargeSettingsDataCacheHandle: null,
+        LargeSettingsDataCacheTimeout: 2000,
+        addALLSettingsWidgetLargeRunning: false,
+
+        documentHiddenConnectHandler: null,
+        documentHiddenConnectTimeout: 1000,
     }
     const chatcolors =
     {
@@ -185,7 +192,9 @@
     livePortalVolatileData.channellist = {};
     localConfig.host = '<%= host %>';
     localConfig.port = '<%= port %>';
-    localConfig.heartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
+    // need our callback timeout to be longer than the system times as this is a
+    // deadmans heartbeat monitor
+    localConfig.deadmansHeartBeatTimeout = parseInt('<%= heartbeat %>') + 1000;
     // check for mousedown as we might need to stop the chat scroll when the user is trying to scroll the box
     document.body.onmousedown = function () { localConfig.mouseDown = true }
     document.body.onmouseup = function () { localConfig.mouseDown = false }
@@ -197,13 +206,13 @@
                 .then((result) =>
                 {
                     ConnectToDataCenter(localConfig.host, localConfig.port);
-                    heartBeatCallback();
+                    deadMansHeartBeatCallback();
                     LoadVoices()
                 })
                 .catch((error) =>
                 {
                     ConnectToDataCenter(localConfig.host, localConfig.port);
-                    heartBeatCallback();
+                    deadMansHeartBeatCallback();
                     console.log('LoadPages error:', error.message);
                 });
 
@@ -332,31 +341,56 @@
     // ===========================================================================
     function onDataCenterConnect (socket)
     {
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestConfig",
-                serverConfig.extensionname
-            ));
-
-        //request software version
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket(
-                "RequestSoftwareVersion",
-                serverConfig.extensionname,
-                serverConfig.channel
-            ));
-
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("RequestData", serverConfig.extensionname));
-
-        sr_api.sendMessage(DataCenterSocket,
-            sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
-        );
         // Request the stuff we need first here
         // We give the system some time to get things in and delay some of the longer stuff till the end (like the chat buffers) 
         // This is just to allow the extensions to get up and running
-        setTimeout(() =>
+        startupRequests();
+    }
+    // ============================================================================
+    //                           FUNCTION: startupRequests
+    // This function will suppress multiple startup startup requests when the page 
+    // is hidden
+    // ============================================================================
+    function startupRequests ()
+    {
+        // check if we already have a handle
+        if (localConfig.documentHiddenConnectHandler != null)
         {
+            clearTimeout(localConfig.documentHiddenConnectHandler)
+            localConfig.documentHiddenConnectHandler = null;
+        }
+        // if the page is hidden lets not request all the startup stuff as the socket connection
+        // will repeatedly timeout and reconnect when in the background.
+        if (document.hidden)
+        {
+            localConfig.documentHiddenConnectHandler = setTimeout(() =>
+            {
+                startupRequests()
+            }, localConfig.documentHiddenConnectTimeout)
+            return;
+        }
+        localConfig.documentHiddenConnectHandler = setTimeout(() =>
+        {
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket(
+                    "RequestConfig",
+                    serverConfig.extensionname
+                ));
+
+            //request software version
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket(
+                    "RequestSoftwareVersion",
+                    serverConfig.extensionname,
+                    serverConfig.channel
+                ));
+
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("RequestData", serverConfig.extensionname));
+
+            sr_api.sendMessage(DataCenterSocket,
+                sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+            );
             RequestExtList();
             RequestLoggingLevel();
             setTimeout(() =>
@@ -379,10 +413,6 @@
                 }, 500);
             }, 500);
         }, 1000);
-
-
-
-
     }
     // ============================================================================
     //                           FUNCTION: onDataCenterMessage
@@ -584,7 +614,7 @@
                 if (extension_packet.from != serverConfig.extensionname)
                 {
                     livePortalVolatileData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
-                    addALLSettingsWidgetLarge();
+                    addALLSettingsWidgetLargeScheduler();
                 }
             }
             // -------------------------------------------------------------------------------------------------
@@ -787,6 +817,32 @@
         {
             let extension_packet = server_packet.data;
             // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED CHANNEL MODAL CODE
+            // -------------------------------------------------------------------------------------------------
+            if (extension_packet.type === "SettingsWidgetSmallCode")
+            {
+                // we process our own submits so don't do anything with the updates we send out if they come 
+                // back to us
+                if (extension_packet.from != serverConfig.extensionname && livePortalVolatileData.extensions[extension_packet.from])
+                {
+                    livePortalVolatileData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
+                    addSettingsWidgetSmall(extension_packet.from);
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
+            //                   RECEIVED CHANNEL MODAL CODE
+            // -------------------------------------------------------------------------------------------------
+            else if (extension_packet.type === "SettingsWidgetLargeCode")
+            {
+                // we process our own submits so don't do anything with the updates we send out if they come 
+                // back to us
+                if (extension_packet.from != serverConfig.extensionname)
+                {
+                    livePortalVolatileData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
+                    addALLSettingsWidgetLargeScheduler();
+                }
+            }
+            // -------------------------------------------------------------------------------------------------
             //                           CheckForTrigger
             // -------------------------------------------------------------------------------------------------
             //if (extension_packet.type.startsWith("trigger_"))
@@ -794,19 +850,19 @@
             // -------------------------------------------------------------------------------------------------
             //                           HEARTBEAT
             // -------------------------------------------------------------------------------------------------
-            if (extension_packet.type === "HeartBeat")
+            else if (extension_packet.type === "HeartBeat")
             {
                 //check if we have this extension
                 if (typeof (livePortalVolatileData.extensions[extension_packet.from]) !== "undefined")
                 {
                     //clear the previous timeout handle
-                    clearTimeout(livePortalVolatileData.extensions[extension_packet.from].heartBeatHandle);
+                    clearTimeout(livePortalVolatileData.extensions[extension_packet.from].deadmansHeartBeatHandle);
                     // setup a new timeout for this extension
-                    livePortalVolatileData.extensions[extension_packet.from].heartBeatHandle = setTimeout(() => 
+                    livePortalVolatileData.extensions[extension_packet.from].deadmansHeartBeatHandle = setTimeout(() => 
                     {
-                        heartBeatCallback(extension_packet.from)
+                        deadMansHeartBeatCallback(extension_packet.from)
                     },
-                        localConfig.heartBeatTimeout);
+                        localConfig.deadmansHeartBeatTimeout);
 
                     // set the on screen status for this extension
                     setExtensionStatus(extension_packet.from, extension_packet.data)
@@ -1107,27 +1163,16 @@
                 }, 10000);
             }
         }
-        else if (server_packet.type === "ChannelJoined"
-            || server_packet.type === "ChannelCreated"
-            || server_packet.type === "ChannelLeft"
-            || server_packet.type === "UnknownExtension" // extension may not have loaded yet
-        )
-        {
-            // just a blank handler for items we are not using to avoid message from the catchall
-        }
-        // ------------------------------------------------ unknown message type received -----------------------------------------------
-        else
-            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
     }
     // ============================================================================
-    //                           FUNCTION: heartBeatCallback
+    //                           FUNCTION: deadMansHeartBeatCallback
     // ============================================================================
     // Description: started when we get a heartbeat and used to mark the extension as down if it expires
     // Parameters: extension name and the state (true fals to represent status)
     // ----------------------------- notes ----------------------------------------
     // none
     // ===========================================================================
-    function heartBeatCallback (extensionname)
+    function deadMansHeartBeatCallback (extensionname)
     {
         setExtensionStatus(extensionname, false);
     }
@@ -1204,7 +1249,7 @@
             if (livePortalVolatileData.extensions[extensions[i]].settingswidgetsmall)
                 addSettingsWidgetSmall(extensions[i])
         }
-        addALLSettingsWidgetLarge()
+        addALLSettingsWidgetLargeScheduler()
 
     }
     // ===========================================================================
@@ -1364,6 +1409,37 @@
         refreshDarkMode();
     }
     // ============================================================================
+    //                           FUNCTION: addALLSettingsWidgetLargeScheduler
+    // ============================================================================
+    // buffers widgest being set.
+    function addALLSettingsWidgetLargeScheduler ()
+    {
+        // already a scheduler running
+        if (localConfig.LargeSettingsDataCacheHandle != null)
+        {
+            // clear the existing timer as we have a new update
+            clearTimeout(localConfig.LargeSettingsDataCacheHandle)
+            localConfig.LargeSettingsDataCacheHandle == null
+        }
+
+        // set the timeout
+        localConfig.LargeSettingsDataCacheHandle = setTimeout(() =>
+        {
+            // last run is still going 
+            if (localConfig.addALLSettingsWidgetLargeRunning)
+            {
+                console.log("Trying to run but localConfig.addALLSettingsWidgetLargeRunning=", localConfig.addALLSettingsWidgetLargeRunning)
+            }
+            else
+            {
+                addALLSettingsWidgetLarge();
+                localConfig.LargeSettingsDataCacheHandle == null
+            }
+        }, localConfig.LargeSettingsDataCacheTimeout);
+
+
+    }
+    // ============================================================================
     //                           FUNCTION: addSettingsWidgetLarge
     // ============================================================================
     // Description: Add the modal code from the extension
@@ -1375,6 +1451,9 @@
     // ===========================================================================
     function addALLSettingsWidgetLarge ()
     {
+        if (localConfig.addALLSettingsWidgetLargeRunning)
+            return;
+        localConfig.addALLSettingsWidgetLargeRunning = true;
         let first = true;
         // clear the existing page data
         document.getElementById("SettingsPageTabs").innerHTML = "";
@@ -1439,25 +1518,43 @@
                     });
 
                     // Extract and execute script tags
+                    // For this we need to copy the script out of the file sent to us and then 
+                    // re-attach it to the page so that the script can be loaded (as scripts only get loaded when 
+                    // the page is loaded they don't work if added later unless re-attached)
+                    // If this is an update we also need to remove the previous script we added
                     let modalElement = document.getElementById(xname + "_settingswidgetlargecontent")
                     const scripts = modalElement.querySelectorAll('script');
                     scripts.forEach((script) =>
                     {
+                        // create a new id for this script
+                        let scriptname = xname + "_settingswidgetlargecontentscript"
+                        // check if we already have a script of this name (it is a page refresh)
+                        let previouslyAddedScript = document.getElementById(scriptname)
+                        if (previouslyAddedScript)
+                            // remove existing script
+                            previouslyAddedScript.remove();
+                        // remove the script from the incoming page
+                        script.remove();
                         const newScript = document.createElement('script');
-
-                        if (script.src)
+                        newScript.id = scriptname
+                        try
                         {
-                            // External script
-                            newScript.src = script.src;
-                            document.body.appendChild(newScript);
-                        } else
+                            if (script.src) // External script
+                            {
+                                newScript.src = script.src;
+                                document.body.appendChild(newScript);
+                            } else // Inline script
+                            {
+                                newScript.textContent = "//Added by liveportal " + script.textContent
+                                document.body.appendChild(newScript);
+                            }
+                        }
+                        catch (err)
                         {
-                            // Inline script
-                            newScript.textContent = script.textContent;
-                            document.body.appendChild(newScript);
-                            document.body.removeChild(newScript); // Clean up
+                            console.log("Error enabling script", err)
                         }
                     });
+                    localConfig.addALLSettingsWidgetLargeRunning = false;
                 }, 200);
             }
         });
@@ -1475,8 +1572,6 @@
             refreshDarkMode();
         }
             , 200);
-
-
     }
     // ============================================================================
     //                           FUNCTION: setExtensionStatus
@@ -2066,7 +2161,7 @@
         // Update the OBS channel list as we might have changed what we want to show
 
         // re-add the widge so it is updated on screen
-        addALLSettingsWidgetLarge()
+        addALLSettingsWidgetLargeScheduler()
 
     }
     // ============================================================================
@@ -2587,10 +2682,10 @@
             var action = "";
             var endaction = "";
             //chatdata.data.username
-            var banicon = `<img  onclick='banUserClicked("${chatdata.data.username}")' style='width: 20px; cursor: pointer;' alt='BanUser' title='BanUser' src='/liveportal/images/banhammer.png'>`;
+            var banicon = "<img onclick='banUserClicked(\"" + chatdata.data.username + "\")' style='width: 20px; cursor:pointer;' alt='BanUser' title='BanUser' src = '/liveportal/images/banhammer.png'>"
             let icons = "";
             if (localConfig.bannedUsersList.includes(chatdata.data.username))
-                banicon = `<img  onclick='unBanUserClicked("${chatdata.data.username}")' style='width: 20px; cursor: pointer;' alt='UnBanUser' title='UnBanUser' src='/liveportal/images/unbanhammer.png'>`
+                banicon = "< img  onclick = 'unBanUserClicked(\"" + chatdata.data.username + "\")' style = 'width:20px; cursor:pointer;' alt='UnBanUser' title='UnBanUser' src='/liveportal/images/unbanhammer.png'>"
 
 
             icons = banicon + "<img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>"
@@ -3000,7 +3095,7 @@
             if (stringToReplace != ":/")
                 stringReplacements.push({
                     stringToReplace: stringToReplace,
-                    //replacement: `<img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/1.0">`,
+                    //replacement: "< img src = "https://static-cdn.jtvnw.net/emoticons/v1/" + id + "/1.0" > ",
                     replacement: "<img src='https://static-cdn.jtvnw.net/emoticons/v2/" + id + "/default/" + theme + "/1.0'>"
                 });
         });
@@ -3849,9 +3944,10 @@
         });
     });
     // ============================================================================
-    //                           FUNCTION: heartBeat
+    //                           FUNCTION: deadMansHeartBeatCallback
+    // parse received heartbeats from extensions
     // ============================================================================
-    function heartBeatCallback ()
+    function deadMansHeartBeatCallback ()
     {
         if (DataCenterSocket.connected)
         {
@@ -3867,7 +3963,7 @@
             document.getElementById('shutdownbutton').style.color = "red"
             document.getElementById('shutdownbuttonsvg').style.fill = "red"
         }
-        localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+        localConfig.deadmansHeartBeatHandle = setTimeout(deadMansHeartBeatCallback, localConfig.deadmansHeartBeatTimeout)
     }
     // ============================================================================
     //                           FUNCTION: Power Button
@@ -3994,7 +4090,7 @@
     // ============================================================================
     function banUserClicked (username)
     {
-        let reason = prompt(`Ban ${username}?`, "Chat Spam")
+        let reason = prompt("Ban " + username + "?", "Chat Spam")
         if (reason != null)
         {
             if (!localConfig.bannedUsersList.includes(username))
@@ -4143,11 +4239,12 @@
         // returns a suitable date string for appending to a filename
         const date = new Date();
         const year = date.getFullYear();
-        const month = `${date.getMonth() + 1}`.padStart(2, '0');
-        const day = `${date.getDate()}`.padStart(2, '0');
-        const hours = `${date.getHours()}`.padStart(2, '0');
-        const minutes = `${date.getMinutes()}`.padStart(2, '0');
-        const seconds = `${date.getSeconds()}`.padStart(2, '0');
-        return `${year}_${month}_${day}-${hours}_${minutes}_${seconds}`
+        const month = (date.getMonth() + 1).padStart(2, '0');
+        const day = (date.getDate()).padStart(2, '0');
+        const hours = (date.getHours()).padStart(2, '0');
+        const minutes = (date.getMinutes()).padStart(2, '0');
+        const seconds = (date.getSeconds()).padStart(2, '0');
+        return year + "_" + month + "_" + day + "-" + hours + "_" + minutes + "_" + seconds
     }
+
 </script>
