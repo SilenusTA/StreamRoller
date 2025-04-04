@@ -27,3 +27,4 @@ extensions/chatbot/satisfactory/socketio/**
 backend/data_center/dos.js
 extensions/youtube/debug_logging.json
 bin/
+extensions/multistream/data/encoders.json
