@@ -49,7 +49,7 @@ jobs:
           EXCLUDE: "/dist/, /node_modules/"
       - name: push to repo
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.API_TOKEN_GITHUB }}
         run: |
           git add docs/apidocs/\*
           git config --global user.email "silenusta@gmail.com"
