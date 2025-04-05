@@ -142,7 +142,6 @@ function ffmpegBusyFlags ()
         ;
         */
 }
-
 // ============================================================================
 //                           FUNCTION: runFFMPEG
 // ============================================================================
@@ -160,12 +159,14 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
 {
     localConfig.exitFlags.processExited = false;
     let ffmpegProc = spawn(command, args, options);
+    localConfig.busyFlags.streaming = true;
     if (localConfig.debugOptions.DEBUG_FFMPEG)
         console.log("ffmpegProc ", command, args.join(' '));
 
     ffmpegProc.on('error', function (err)
     {
         localConfig.exitFlags.processExited = true;
+        localConfig.busyFlags.streaming = false;
         console.log("ffmpegProc:error()", err)
         streamFinished(err);
     });
@@ -174,7 +175,8 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
     {
         if (signal)
         {
-            console.log("ffmpeg:exit()was killed with signal " + signal.toString());
+            if (localConfig.debugOptions.DEBUG_FFMPEG)
+                console.log("ffmpeg:exit()was killed with signal " + signal.toString());
 
         } else if (code)
         {
@@ -185,6 +187,7 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
                 console.log("ffmpeg:exit()");
         }
         localConfig.exitFlags.processExited = true;
+        localConfig.busyFlags.streaming = false;
         streamFinished();
     });
 
@@ -192,12 +195,14 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
     ffmpegProc.stdout.on('data', function (data)
     {
         localConfig.exitFlags.stdoutClosed = false;
+        localConfig.busyFlags.streaming = true;
         localConfig.stdoutBuffer.push(data.toString())
     });
 
     ffmpegProc.stdout.on('close', function ()
     {
         localConfig.exitFlags.stdoutClosed = true
+        localConfig.busyFlags.streaming = false;
         if (localConfig.debugOptions.DEBUG_FFMPEG_STDOUT)
             console.log("ffmpeg:stdout:close")
         handleExit(null, streamFinished);
@@ -207,6 +212,7 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
     ffmpegProc.stderr.on('data', function (data)
     {
         localConfig.exitFlags.stderrClosed = false
+        localConfig.busyFlags.streaming = true;
         localConfig.stderrBuffer.push(data.toString())
         // on first data we notify stream is running so we can start OBS etc
         if (!localConfig.streamRunning)
@@ -221,6 +227,7 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
         if (localConfig.debugOptions.DEBUG_FFMPEG_STDERR)
             console.log("ffmpeg:stderr:close()")
         localConfig.exitFlags.stderrClosed = true;
+        localConfig.busyFlags.streaming = false;
         handleExit(null, streamFinished);
     });
 

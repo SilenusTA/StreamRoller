@@ -39,6 +39,8 @@ const localConfig = {
     dataCenterApp: null,
     host: null,
     port: null,
+    heartBeatTimeout: 5000,
+    heartBeatHandle: null,
     SendSettingsWidgetLargeTimerHandle: null,
     serverCredentials: {},
 
@@ -64,6 +66,7 @@ const defaultEmptyStream =
     configurationMode: "Simple",
     Advanced: "",
     URL: "",
+    twitchBandwidthTest: "off",
     AdditionalURL: "",//goes between URL and StreamKey
     AdditionalParams: "",//goes after StreamKey
     variableBitrate: "off",
@@ -89,6 +92,7 @@ const defaultTwitchStream =
     configurationMode: "Simple",
     Advanced: "",
     URL: "rtmp://live.twitch.tv/app",
+    twitchBandwidthTest: "off",
     AdditionalURL: "",
     AdditionalParams: "?bandwidthtest=true",
     variableBitrate: "off",
@@ -113,6 +117,7 @@ const defaultYouTubeStream =
     Advanced: "",
     configurationMode: "Simple",
     URL: "rtmp://b.rtmp.youtube.com/live2",
+    twitchBandwidthTest: "off",
     AdditionalURL: "",
     AdditionalParams: "",
     variableBitrate: "off",
@@ -230,6 +235,7 @@ function initialise (app, host, port, heartbeat)
     localConfig.dataCenterApp = app
     localConfig.host = host
     localConfig.port = port
+    localConfig.heartBeatTimeout = heartbeat;
 
     try
     {
@@ -309,6 +315,7 @@ function onDataCenterConnect (socket)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "LIVE_PORTAL")
     );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -547,6 +554,7 @@ function parseSettingsWidgetLarge (extension_data)
         {
             stream.enabled = "off";
             stream.variableBitrate = "off";
+            stream.twitchBandwidthTest = "off";
             if (extension_data[`multistreamStream${i}StreamKey`] != localConfig.serverCredentials[`multistreamStream${i}StreamKey`])
             {
                 localConfig.serverCredentials[`multistreamStream${i}StreamKey`] = extension_data[`multistreamStream${i}StreamKey`];
@@ -564,14 +572,12 @@ function parseSettingsWidgetLarge (extension_data)
         // check the config values
         for (const [key, value] of Object.entries(extension_data))
         {
-            console.log("setting ", key, "to", value)
             // attempt to get an id value
             // take the last 2 chars, remove the underscore if there is one.
             // this limits us to 100 streams (as will _99 will work with this method)
             var streamId = key.substring(key.length - 2).replace("_", "")
             if (serverConfig.streams[streamId])
             {
-                console.log(`serverConfig.streams[${streamId}]`, serverConfig.streams[streamId])
                 var variableName = key.replace("multistream_", "").replace("_" + streamId, "")
                 serverConfig.streams[streamId][variableName] = value
             }
@@ -712,11 +718,16 @@ function SendSettingsWidgetLarge ()
         {
             let modalString = filedata.toString();
 
+            modalString = modalString.replace("multistream_OBSStreamKey",
+                localConfig.serverCredentials.localStreamKey);
+            modalString = modalString.replace("multistream_localStreamURL",
+                serverConfig.localStreamURL);
+
             /* replacement text for variables */
             const ffmpegExe = __dirname.replaceAll("\\", "\\\\") + "\\bin\\ffmpeg.exe"
             modalString = modalString.replace("currentCommand: replace",
                 "currentCommand: '" + ffmpegExe.replaceAll("\\\\", "\\") + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" ") + "'")
-            modalString = modalString.replace("multistreamtextcurrentCommand", ffmpegExe.replaceAll("\\\\", "\\") + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" "))
+            modalString = modalString.replace("multistreamtextcurrentCommand", ffmpeg.getFFMPEGCommand().replaceAll("\\\\", "\\") + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" "))
             modalString = modalString.replace("ffmpegExe: replace",
                 "ffmpegExe: '" + ffmpegExe + "'")
             modalString = modalString.replace("InstalledFFMPEGs: replace",
@@ -868,10 +879,15 @@ function buildFFMPEGArgs (hideStreamKey = true)
                 ffmpegArgs.push("-f"); ffmpegArgs.push("flv");
                 if (stream.URL && stream.URL != "")
                 {
+                    let twitchBandwidthTest = "";
+                    if (stream.twitchBandwidthTest == "on")
+                        twitchBandwidthTest = "?bandwidthtest=true"
+
+
                     if (hideStreamKey)
-                        ffmpegArgs.push(stream.URL + "/STREAM_KEY_GOES_HERE");
+                        ffmpegArgs.push(stream.URL + "/STREAM_KEY_GOES_HERE" + twitchBandwidthTest);
                     else
-                        ffmpegArgs.push(stream.URL + "/" + localConfig.serverCredentials[`multistreamStream${i}StreamKey`]);
+                        ffmpegArgs.push(stream.URL + "/" + localConfig.serverCredentials[`multistreamStream${i}StreamKey`] + twitchBandwidthTest);
                 }
                 else
                     console.log(`Multistream: missing URL for stream ${i}: ${stream.name}`)
@@ -1184,7 +1200,6 @@ function checkFFMPEGAvailabilities ()
     // if we don't have a command we can't run so just send the widget
     if (!ffmpegExe)
     {
-        console.log("calling SendSettingsWidgetLarge from checkFFMPEGAvailabilities ()")
         SendSettingsWidgetLarge();
         return;
     }
@@ -1192,9 +1207,45 @@ function checkFFMPEGAvailabilities ()
     ffmpeg.UpdateEncodersAvailable()
         .then((encoders) =>
         {
-            console.log("encoders returned", encoders)
             SendSettingsWidgetLarge();
         })
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+/**
+ * Provides a heartbeat message to inform other extensions of our status
+ */
+function heartBeatCallback ()
+{
+    let connected = false;
+    let color = "red";
+
+    if (serverConfig.multistreamEnabled === "on")
+    {
+        connected = true;
+        if (ffmpeg.ffmpegBusyFlags().streaming)
+            color = "green"
+        else
+            color = "orange"
+    }
+    else
+        color = "red"
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                {
+                    connected: connected,
+                    color: color
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                                  EXPORTS
