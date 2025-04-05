@@ -22,6 +22,7 @@ jobs:
           node-version: "20.16.0"
       - name: checkout tag ${{inputs.tag}}
         run: |
+          git fetch --tags
           git checkout refs/tags/${{inputs.tag}}
           git status
       - name: Install npm dependencies
