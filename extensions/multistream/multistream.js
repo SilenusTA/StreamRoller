@@ -868,7 +868,6 @@ function startStream (ref = "multistream")
             ".startStream", "A stream is already running");
         return;
     }
-
     localConfig.ffmpegHandle = ffmpeg.runFFMPEG(
         ffmpeg.getFFMPEGCommand(),
         buildFFMPEGArgs(false),
@@ -888,8 +887,10 @@ function startStream (ref = "multistream")
             }
             // console.log("handle", JSON.stringify(handle, null, 2))
         },
-        function streamFinished (data, out, err)
+        function streamFinished (data = "", out = "", err = "")
         {
+            if (err && err != "")
+                console.log("StreamFinished: ", err)
             localConfig.streamRunning = false;
             sendStreamStoppedTrigger();
             sendOBSStopAction(ref);

@@ -153,10 +153,15 @@ function ffmpegBusyFlags ()
  * @param {callback} processCB 
  * @param {callback} streamStarted 
  * @param {callback} streamFinished 
- * @returns handle to process
+ * @returns handle to process or null
  */
 function runFFMPEG (command, args, options = {}, processCB = null, streamStarted = null, streamFinished = null)
 {
+    if (command == "")
+    {
+        streamFinished("", "", "Error no ffmpeg setup")
+        return null;
+    }
     localConfig.exitFlags.processExited = false;
     let ffmpegProc = spawn(command, args, options);
     localConfig.busyFlags.streaming = true;
@@ -168,7 +173,8 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
         localConfig.exitFlags.processExited = true;
         localConfig.busyFlags.streaming = false;
         console.log("ffmpegProc:error()", err)
-        streamFinished(err);
+        streamFinished("", "", err);
+        return ffmpegProc;
     });
 
     ffmpegProc.on('exit', function (code, signal)
@@ -188,7 +194,8 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
         }
         localConfig.exitFlags.processExited = true;
         localConfig.busyFlags.streaming = false;
-        streamFinished();
+        streamFinished("", "", "");
+        return ffmpegProc;
     });
 
     // Capture stdout buffer
@@ -205,7 +212,8 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
         localConfig.busyFlags.streaming = false;
         if (localConfig.debugOptions.DEBUG_FFMPEG_STDOUT)
             console.log("ffmpeg:stdout:close")
-        handleExit(null, streamFinished);
+        handleExit("", streamFinished);
+        return ffmpegProc;
     });
 
     // Capture stderr buffer
@@ -228,7 +236,8 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
             console.log("ffmpeg:stderr:close()")
         localConfig.exitFlags.stderrClosed = true;
         localConfig.busyFlags.streaming = false;
-        handleExit(null, streamFinished);
+        handleExit("", streamFinished);
+        return ffmpegProc;
     });
 
     // Call process callback
@@ -255,7 +264,7 @@ function handleExit (err, endCB)
 
     if (localConfig.exitFlags.processExited && (localConfig.exitFlags.stdoutClosed) && localConfig.exitFlags.stderrClosed)
     {
-        endCB(exitError, localConfig.exitFlags.stdoutBuffer, localConfig.exitFlags.stderrBuffer);
+        endCB(localConfig.exitFlags.stdoutBuffer, localConfig.exitFlags.stderrBuffer, exitError);
     }
 }
 // ============================================================================
