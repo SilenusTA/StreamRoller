@@ -51,8 +51,6 @@ const localConfig = {
     // encoders
     ffmpegEncodersString: null,
     Encoders: {},
-    encodersUpdating: false, // flag for when we are done updating encoders, if we need to get them.
-    //others
     hideStreamKey: true, // show stream key on the screen or not
     encoderBuildTimeoutHandle: null, // cancels the encoder builder (in case it gets stuck)
     encoderBuildTimeout: 10000, // give ourselves 10 seconds to run the builder or quit if not finished
@@ -253,6 +251,11 @@ function initialise (app, host, port, heartbeat)
         .then((ret) =>
         {
             localConfig.Encoders = ffmpeg.getEncoders();
+            SendSettingsWidgetLarge()
+        })
+        .catch((err) =>
+        {
+            // console.log("initialise:Couldn't update Encoders", err)
         })
 }
 // ============================================================================
@@ -546,7 +549,10 @@ function parseSettingsWidgetLarge (extension_data)
     let ffmpegChanged = false;
     // reset to defaults
     if (extension_data.multistream_restore_defaults == "on")
+    {
         serverConfig = structuredClone(default_serverConfig);
+        SendSettingsWidgetLarge();
+    }
     else
     {
         //first check credentials
@@ -567,8 +573,7 @@ function parseSettingsWidgetLarge (extension_data)
 
         if (credsChanged)
             saveCredentialsToServer()
-        if (ffmpegChanged)
-            checkFFMPEGAvailabilities();
+
         // check the config values
         for (const [key, value] of Object.entries(extension_data))
         {
@@ -610,17 +615,34 @@ function parseSettingsWidgetLarge (extension_data)
         else
             ffmpegDebug.DEBUG_FFMPEG_STDOUT = false;
         ffmpeg.setDebug(ffmpegDebug);
+
         // if we want to use our installed version but don't have it then call the download function
         if (serverConfig.useStreamRollerFFMPEG && !ffmpeg.getInstalledFFMPEGs().streamRollerFfmpegInstalled && serverConfig.multistreamEnabled == "on")
+        {
             ffmpeg.downloadFFMPEG()
+            let counter = 0
+            // wait for download to finish
+            let downloadHandle = setInterval(() =>
+            {
+                if (ffmpeg.getFFMPEGCommand() != "" || counter++ > 60)
+                {
+                    clearInterval(downloadHandle)
+                    checkFFMPEGAvailabilities()
+                }
+            }, 1000);
+        }
+        else if (ffmpegChanged)
+            checkFFMPEGAvailabilities();
+        else
+            SendSettingsWidgetLarge();
 
         SaveConfigToServer();
     }
+
     //update anyone who is showing our code at the moment
     SendSettingsWidgetSmall();
     // if changed we will update our Availabilities and this will send this out anyway
-    if (!ffmpegChanged)
-        SendSettingsWidgetLarge();
+
 }
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
@@ -706,7 +728,6 @@ function SendSettingsWidgetLarge ()
     // if we receive another request timer might still be running but not busy so cancel the timer and send it out now
     clearTimeout(localConfig.SendSettingsWidgetLargeTimerHandle)
     localConfig.SendSettingsWidgetLargeTimerHandle = null;
-
     // read our modal file
     fs.readFile(__dirname + "/multistreamsettingswidgetlarge.html", function (err, filedata)
     {
@@ -1195,8 +1216,6 @@ function checkFFMPEGAvailabilities ()
 {
     //ffmpeg.checkFFMPEGInstall()
     let ffmpegExe = ffmpeg.getFFMPEGCommand();
-    localConfig.encodersUpdating = true;
-
     // if we don't have a command we can't run so just send the widget
     if (!ffmpegExe)
     {
@@ -1207,6 +1226,11 @@ function checkFFMPEGAvailabilities ()
     ffmpeg.UpdateEncodersAvailable()
         .then((encoders) =>
         {
+            SendSettingsWidgetLarge();
+        })
+        .catch((err) =>
+        {
+            console.log("checkFFMPEGAvailabilities:Couldn't update Encoders", err)
             SendSettingsWidgetLarge();
         })
 }

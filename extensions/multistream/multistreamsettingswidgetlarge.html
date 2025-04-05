@@ -133,7 +133,13 @@
         };
 
         fetch('/multistream/data/encoders.json')
-            .then(response => response.json())
+            .then(response => 
+            {
+                if (response.ok)
+                    return response.json()
+                else
+                    return null
+            })
             .then(data =>
             {
                 // load the encoder dta
@@ -220,17 +226,24 @@
                 streamsHtml += createCheckBox("Variable Bitrate", `multistream_variableBitrate_${i}`, stream.variableBitrate == "on", `multistreamConfigurableDisplay_${i}`);
 
                 // Video encoders
-                streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, multiStreamingConfig.encoders.videoEncoders, stream.videoEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
+                if (multiStreamingConfig.encoders)
+                    streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, multiStreamingConfig.encoders.videoEncoders, stream.videoEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
 
                 // Video Encoder options
-                streamsHtml += createDropdown("Video Encoder Options", `multistream_videoEncoderOption_${i}`, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder], stream.videoEncoderOption, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder][stream.videoEncoderOption], `multistreamConfigurableDisplay_${i}`);
-                tempString = "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>"
-                if (multiStreamingConfig.useStreamRollerFFMPEG)
-                    tempString += "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                if (multiStreamingConfig.encoders && multiStreamingConfig.encoders.videoEncoders)
+                {
+                    streamsHtml += createDropdown("Video Encoder Options", `multistream_videoEncoderOption_${i}`, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder], stream.videoEncoderOption, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder][stream.videoEncoderOption], `multistreamConfigurableDisplay_${i}`);
+                    tempString = "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>"
+                    if (multiStreamingConfig.useStreamRollerFFMPEG)
+                        tempString += "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                    else
+                        tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                    tempString += "</div>";
+                    streamsHtml += createTextBox("Video encoder option Parameters", `multistream_videoEncoderOptionParameters_${i}`, stream.videoEncoderOptionParameters ? stream.videoEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
+
+                }
                 else
-                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.videoEncoder + "' on the commandline)"
-                tempString += "</div>";
-                streamsHtml += createTextBox("Video encoder option Parameters", `multistream_videoEncoderOptionParameters_${i}`, stream.videoEncoderOptionParameters ? stream.videoEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
+                    streamsHtml += "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>No Video Encoders loaded, is FFMPEG installed?";
 
                 // targetBitrate
                 streamsHtml += createTextBox("Target Bitrate", `multistream_targetBitrate_${i}`, stream.targetBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
@@ -245,18 +258,21 @@
                 streamsHtml += createTextBox("Key Frame Interval (in seconds)", `multistream_keyframeInterval_${i}`, stream.keyframeInterval, false, "", `multistreamConfigurableDisplay_${i}`);
 
                 // AudioEncoder
-                streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoder_${i}`, multiStreamingConfig.encoders.audioEncoders, stream.audioEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
+                if (multiStreamingConfig.encoders && multiStreamingConfig.encoders.audioEncoders)
+                {
+                    streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoder_${i}`, multiStreamingConfig.encoders.audioEncoders, stream.audioEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
 
-                if (multiStreamingConfig.useStreamRollerFFMPEG)
-                    tempString = "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.audioEncoder + "' on the commandline)"
+                    if (multiStreamingConfig.useStreamRollerFFMPEG)
+                        tempString = "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.audioEncoder + "' on the commandline)"
+                    else
+                        tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.audioEncoder + "' on the commandline)"
+
+                    // AudioEncoderOptions
+                    streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoderOption_${i}`, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder], stream.audioEncoderOption, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder][stream.audioEncoderOption], `multistreamConfigurableDisplay_${i}`);
+                    streamsHtml += createTextBox("Audio Encoder option parameters", `multistream_audioEncoderOptionParameters_${i}`, stream.audioEncoderOptionParameters ? stream.audioEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
+                }
                 else
-                    tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.audioEncoder + "' on the commandline)"
-
-                // AudioEncoderOptions
-                streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoderOption_${i}`, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder], stream.audioEncoderOption, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder][stream.audioEncoderOption], `multistreamConfigurableDisplay_${i}`);
-
-                streamsHtml += createTextBox("Audio Encoder option parameters", `multistream_audioEncoderOptionParameters_${i}`, stream.audioEncoderOptionParameters ? stream.audioEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
-
+                    streamsHtml += "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>Audio Encoders loaded, is FFMPEG installed?";
                 // audioBitrate
                 streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
 

@@ -93,7 +93,7 @@ const default_serverConfig = {
     questionbotenabled: "off",
     translatetoeng: "off",
     submessageenabled: "off",
-    generateimages: "on",
+    generateimages: "off",
     chatbotignorelist: "Nightbot, SonglistBot",
 
     // These times will limit the chatbot usage. Useful for busy chats to avoid burning up all your credits with openAI

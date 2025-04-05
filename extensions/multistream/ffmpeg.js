@@ -305,10 +305,15 @@ function UpdateEncodersAvailable ()
     let ffmpegExe = getFFMPEGCommand()
     // if we already have an instance running then return that promise
     // this will effectively cache calls to this function for multiple users
-    if (!localConfig.UpdateEncodersAvailablePromiseCache)
+    //if (!localConfig.UpdateEncodersAvailablePromiseCache)
     {
         localConfig.UpdateEncodersAvailablePromiseCache = new Promise((resolve, reject) =>
         {
+            if (!ffmpegExe)
+            {
+                localConfig.UpdateEncodersAvailablePromiseCache = null;
+                return reject("No ffmpeg command available. Please select StreamRoller FFMPEG in the multistream settings to install")
+            }
             let finished = false;
             let timeout = false;
             let uptoEncoders = false;
@@ -396,11 +401,15 @@ function UpdateEncodersAvailable ()
                     await parseEncodersString(ffmpegExe);
                     localConfig.busyFlags.getEncoders = false;
                     if (timeout)
-                        reject(null)
+                    {
+                        localConfig.UpdateEncodersAvailablePromiseCache = null;
+                        return reject(null)
+                    }
                     else
                     {
                         updateEncoderWebJSONFile();
-                        resolve(true);
+                        localConfig.UpdateEncodersAvailablePromiseCache = null;
+                        return resolve(true);
                     }
                 }
             }, localConfig.waitForUpdateEncodersAvailableTimeout);
@@ -484,14 +493,15 @@ async function parseEncodersString (ffmpegExe)
                             console.log("parseEncodersString():finished")
                         clearInterval(localConfig.waitForParseEncodersStringHandle)
                         updateEncoderWebJSONFile();
-                        resolve(true);
+                        return resolve(true);
                     }
                 }, localConfig.waitForParseEncodersStringTimeout);
             }
             catch (err)
             {
                 console.log("parseEncodersString():err", err)
-                reject(err)
+                return reject(err);
+
             }
         })
     }
@@ -515,7 +525,11 @@ async function getEncoderOptions (ffmpegExe, encoder)
     {
         exec(`${ffmpegExe} -hide_banner -h encoder=${encoder}`, (error, stdout, stderr) =>
         {
-            if (error) return reject(`Error: ${stderr || error.message}`);
+            if (error) 
+            {
+                localConfig.busyFlags.getEncoderOptions--;
+                return reject(`Error: ${stderr || error.message}`);
+            }
             let startParsing = false
 
             const options = { "none": "" };
@@ -541,7 +555,7 @@ async function getEncoderOptions (ffmpegExe, encoder)
                 }
             }
             localConfig.busyFlags.getEncoderOptions--;
-            resolve(options);
+            return resolve(options);
         });
     });
 }
@@ -624,22 +638,22 @@ function checkFFMPEGInstall ()
  */
 function getFFMPEGCommand ()
 {
-    let command = null
+    let command = ""
     if (localConfig.useStreamRollerFfmpeg)
     {
         if (localConfig.streamRollerFfmpegInstalled)
             command = localConfig.ffmpegExe;
         else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname +
-                ".runFFMPEG", "Failed to find StreamRoller FFMPEG");
+            if (localConfig.debugOptions.DEBUG_FFMPEG)
+                console.log("Multistream. Failed to find StreamRoller FFMPEG");
     }
     else
     {
         if (localConfig.userFfmpegInstalled)
             command = "ffmpeg.exe"
         else
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname +
-                ".runFFMPEG", "Failed to find System FFMPEG. Try running 'ffmpeg -version' on the command line to see if it is installed correctly");
+            if (localConfig.debugOptions.DEBUG_FFMPEG)
+                console.log("Multistream: No user installed FFMPEG available.");
     }
     return command;
 }
@@ -659,6 +673,7 @@ async function downloadFFMPEG ()
     // check we have ffmpeg available or not.
     // inverted failure flag
     let installSuccess = true;
+    let finished = false;
 
     // if we have a previous download lets delete it (should never be hit as should only run on install)
     if (fs.existsSync(localConfig.ffmpegDownloadZip))
@@ -670,7 +685,7 @@ async function downloadFFMPEG ()
                 //console.log("finished deleting old ffmpeg download")
             }
             else
-            { installSuccess = false; console.log("Error deleting previous ffmpeg download", err) }
+            { console.log("Error deleting previous ffmpeg download", err) }
         });
     }
     // download the zip and unpack it to the correct place
@@ -712,9 +727,9 @@ async function downloadFFMPEG ()
                 if (fs.existsSync(localConfig.ffmpegFolder + value))
                 {
                     if (localConfig.debugOptions.DEBUG_FFMPEG)
-                        console.log("deleteing", localConfig.ffmpegFolder + value)
+                        console.log("deleting", localConfig.ffmpegFolder + value)
                     try { fs.unlinkSync(localConfig.ffmpegFolder + value); }
-                    catch (err) { installSuccess = false; logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname + ":Error: clearing out old files before replacing", err); }
+                    catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname + ":Error: clearing out old files before replacing", err); }
                 }
             })
             // move new files in
@@ -737,31 +752,49 @@ async function downloadFFMPEG ()
             // finally delete the zip file we downloaded
             if (fs.existsSync(localConfig.ffmpegDownloadZip))
             {
-                try { fs.unlinkSync(localConfig.ffmpegDownloadZip); }
-                catch (err) { logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname + ":Error: clearing out downloaded ffmpeg.zip before replacing", err); }
+                try
+                {
+                    finished = true;
+                    fs.unlinkSync(localConfig.ffmpegDownloadZip);
+                }
+                catch (err)
+                {
+                    finished = true;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname + ":Error: clearing out downloaded ffmpeg.zip before replacing", err);
+                }
             }
         });
         writer.on('error', err =>
         {
+            finished = true;
             installSuccess = false;
             console.error('Failed to download:', err)
         });
     })
         .catch(err =>
         {
+            finished = true;
             installSuccess = false;
             console.log("error downloading ffmpeg", err)
         })
-    if (!installSuccess)
+
+    let finishedHandle = setInterval(() =>
     {
-        localConfig.StreamRollerFfmpeg = true;
-        console.log('✅ FFMPEG Install complete!');
-    }
-    else
-    {
-        localConfig.StreamRollerFfmpeg = false;
-        console.error('❌ FFMPEG Install Failed:')
-    }
+        if (finished)
+        {
+            clearInterval(finishedHandle)
+            if (installSuccess)
+            {
+                localConfig.streamRollerFfmpegInstalled = true;
+                console.log('✅ FFMPEG Install complete!');
+            }
+            else
+            {
+                localConfig.streamRollerFfmpegInstalled = false;
+                console.error('❌ FFMPEG Install Failed:')
+            }
+        }
+    }, 1000);
 }
 // ============================================================================
 //                           FUNCTION: unzipfile
