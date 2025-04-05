@@ -266,33 +266,55 @@ function addTriggerEntries ()
 {
     let TriggersExtensionChoser = document.getElementById("triggerExtensionChoser")
     let triggerextensionnames = ""
+    let previousExtensionName = localStorage.getItem("selectedtriggerextension")
+    let description = ""
+    if (fulltriggerslist.triggers[0])
+        description = fulltriggerslist.triggers[0]
+    if (extensionlist[previousExtensionName])
+        description = extensionlist[previousExtensionName].description
+
     let triggers = fulltriggerslist.triggers;
     if (Object.keys(triggers).length > 0)
     {
         for (var trigger in triggers)
         {
-            if (triggerextensionnames == "")
+
+            if (description == "")
+                description = trigger
+            // if we have a previous extension name set we need to set that one as selected
+            if (previousExtensionName != "")
             {
-                triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value=" + trigger + " selected>" + trigger + "&lt;/option>";
-                TriggersExtensionChoser.title = trigger
+                // check if this trigger is the previous one selected
+                if (trigger == previousExtensionName)
+                    triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "' selected>" + trigger + "&lt;/option>";
+                // if not previously selected then don't select it
+                else
+                    triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "'>" + trigger + "&lt;/option>";
             }
-            else
-                triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value=" + trigger + ">" + trigger + "&lt;/option>";
+            else 
+            {
+                // if we don't have a previously selected name then use the first one in the list as selected
+                // if first run though an no previous extension selected use the first in the list
+                if (triggerextensionnames == "")
+                    triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "' selected>" + trigger + "&lt;/option>";
+                else
+                    triggerextensionnames += "&lt;option name='" + trigger + "' class='btn btn-secondary' value='" + trigger + "'>" + trigger + "&lt;/option>";
+            }
 
         }
 
         TriggersExtensionChoser.innerHTML = triggerextensionnames;
 
         // check if we have stored a trigger extension name previously (adds memory to selected options for user)
-        let extensionname = localStorage.getItem("selectedtriggerextension")
-        if (extensionname)
+        if (previousExtensionName)
         {
-            triggersLoadTriggers(extensionname)// just load the first one to start with
-            TriggersExtensionChoser.value = extensionname
+            triggersLoadTriggers(previousExtensionName)// just load the first one to start with
+            TriggersExtensionChoser.value = previousExtensionName
         }
         else
             triggersLoadTriggers(fulltriggerslist.triggers[0])// just load the first one to start with
 
+        TriggersExtensionChoser.title = description
         TriggersExtensionChoser.dispatchEvent(new Event('change'))
     }
 }
@@ -319,10 +341,9 @@ function triggersLoadTriggers (name)
     let TriggerExtensionTriggers = document.getElementById("triggerExtensionTriggers")
     let selectedTrigger = fulltriggerslist.triggers[name]
     let triggerextensiontriggers = ""
-    // set the title of the calling dropdown
-
+    // set the description of the calling dropdown
     document.getElementById("triggerExtensionChoserLabel").innerHTML = extensionlist[name].description;
-    document.getElementById("triggerExtensionChoser").title = name
+    document.getElementById("triggerExtensionChoser").title = extensionlist[name].description
 
     for (var key in selectedTrigger)
     {
@@ -352,48 +373,73 @@ function triggersLoadParameters (id)
         let params = fulltriggerslist.triggers[extensionname][id].parameters
         let triggername = fulltriggerslist.triggers[extensionname][id].name;
         let triggerextensionparameters = ""
-        TriggerExtensionTriggerParameters.title = fulltriggerslist.triggers[extensionname][id].description
+        let titleDescription = "";
+        //TriggerExtensionTriggerParameters.title = fulltriggerslist.triggers[extensionname][id].description
         // set the title of the calling dropdown
         document.getElementById("triggerExtensionTriggers").title = fulltriggerslist.triggers[extensionname][id].description
         document.getElementById("triggerExtensionChoserChannel").value = extensionlist[extensionname].channel;
         document.getElementById("triggerExtensionChoserTriggerName").value = fulltriggerslist.triggers[extensionname][id].name;
+
+        let descriptions = []
+        // get a list of descriptions for this trigger
+        for (var descParamsKey in params)
+        {
+            if (descParamsKey.indexOf("_UIDescription") != -1)
+            {
+                descriptions[descParamsKey] = params[descParamsKey]
+            }
+        }
         for (var key in params)
         {
-            // Row
-            triggerextensionparameters += "&lt;div class='row'>"
-            // Variable name text
-            triggerextensionparameters += "&lt;div class='col-2'>"
-            triggerextensionparameters += "&lt;div class='d-flex form-row align-items-center'>"
-            triggerextensionparameters += "&lt;label class='form-label px-2 align-middle text-right' for=" + triggername + "_" + key + ">" + key + "&lt;/label>"
-            triggerextensionparameters += "&lt;/div>"
-            // variable data to match text box
-            triggerextensionparameters += "&lt;/div>"
-            triggerextensionparameters += "&lt;div class='col-7'>"
-            triggerextensionparameters += "&lt;input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
-            triggerextensionparameters += "&lt;/div>"
-            triggerextensionparameters += "&lt;div class='col-3'>"
-            // add the matcher dropdown to each variable name
-            triggerextensionparameters += "&lt;select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
-            triggerextensionparameters += "&lt;option data='Exact Match' class='form-control' value='1'>Exact Match&lt;/option>";
-            triggerextensionparameters += "&lt;option data='Anywhere' class='form-control' value='2'>Anywhere&lt;/option>";
-            triggerextensionparameters += "&lt;option data='Start of line' class='form-control' value='3'>Start of line&lt;/option>";
-            triggerextensionparameters += "&lt;option data='Doesn't Match' class='form-control' value='4'>Doesn't match&lt;/option>";
-            triggerextensionparameters += "&lt;option data='Specific word' class='form-control' value='5'>Match a specific whole word&lt;/option>";
-            triggerextensionparameters += "&lt;/select>"
-            triggerextensionparameters += "&lt;/div>"
-            triggerextensionparameters += "&lt;/div>"
+            // check if we have a description for this key
+            if (descriptions[key + "_UIDescription"] != undefined)
+            {
+                if (descriptions[key + "_UIDescription"] == "")
+                    titleDescription = key
+                else
+                    titleDescription = descriptions[key + "_UIDescription"]
+            }
+            else
+                titleDescription = key
+            if (key.indexOf("_UIDescription") == -1)
+            {
+                // Row
+                triggerextensionparameters += "&lt;div class='row' title='" + titleDescription + "'>"
+                // Variable name text
+                triggerextensionparameters += "&lt;div class='col-2'>"
+                triggerextensionparameters += "&lt;div class='d-flex form-row'>"
+                triggerextensionparameters += "&lt;label class='form-label px-2 text-right' for=" + triggername + "_" + key + ">" + key + "&lt;/label>"
+                triggerextensionparameters += "&lt;/div>"
+                // variable data to match text box
+                triggerextensionparameters += "&lt;/div>"
+                triggerextensionparameters += "&lt;div class='col-7'>"
+                triggerextensionparameters += "&lt;input type='text' class='form-control' name='" + triggername + "_" + key + "' id='" + triggername + "_" + key + "' placeholder='" + key + "' value=''>"
+                triggerextensionparameters += "&lt;/div>"
+                triggerextensionparameters += "&lt;div class='col-3'>"
+                // add the matcher dropdown to each variable name
+                triggerextensionparameters += "&lt;select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
+                triggerextensionparameters += "&lt;option data='Exact Match' class='form-control' value='1'>Exact Match&lt;/option>";
+                triggerextensionparameters += "&lt;option data='Anywhere' class='form-control' value='2'>Anywhere&lt;/option>";
+                triggerextensionparameters += "&lt;option data='Start of line' class='form-control' value='3'>Start of line&lt;/option>";
+                triggerextensionparameters += "&lt;option data='Doesn't Match' class='form-control' value='4'>Doesn't match&lt;/option>";
+                triggerextensionparameters += "&lt;option data='Specific word' class='form-control' value='5'>Match a specific whole word&lt;/option>";
+                triggerextensionparameters += "&lt;/select>"
+                triggerextensionparameters += "&lt;/div>"
+                triggerextensionparameters += "&lt;/div>"
+            }
         }
         // cooldown timer
-        triggerextensionparameters += "&lt;div class='row'>"
+        triggerextensionparameters += "&lt;HR>";
+        triggerextensionparameters += "&lt;div class='row' title='Ignore any future triggers for this number of seconds'>"
 
         triggerextensionparameters += "&lt;div class='col-2'>"
-        triggerextensionparameters += "&lt;div class='d-flex form-row align-items-center'>"
+        triggerextensionparameters += "&lt;div class='d-flex form-row >"
         triggerextensionparameters += "&lt;label class='form-label px-2 align-middle text-right' for=" + triggername + "_cooldown>cooldown&lt;/label>"
         triggerextensionparameters += "&lt;/div>"
         triggerextensionparameters += "&lt;/div>"
 
         triggerextensionparameters += "&lt;div class='col-3'>"
-        triggerextensionparameters += "&lt;div class='input-group'>"
+        triggerextensionparameters += "&lt;div class='input-group''>"
         triggerextensionparameters += "&lt;input type='text' class='form-control' name='" + triggername + "_cooldown' id='" + triggername + "__cooldown' placeholder='cooldown' value='0'>seconds"
         triggerextensionparameters += "&lt;/div>"
         triggerextensionparameters += "&lt;/div>"
@@ -410,8 +456,6 @@ function addActionEntries ()
 {
     let ActionExtensionChoser = document.getElementById("actionExtensionChoser")
     let actionextensionnames = ""
-    let temparray = []
-    let tempobject = {}
 
     let actions = fulltriggerslist.actions;
     if (Object.keys(actions).length > 0)
@@ -467,7 +511,7 @@ function actionLoadAction (name)
     let actionextensionaction = ""
 
     document.getElementById("actionExtensionChoserLabel").innerHTML = name
-    document.getElementById("actionExtensionChoser").title = name
+    document.getElementById("actionExtensionChoser").title = extensionlist[name].description
 
     for (var key in selectedAction)
     {
@@ -498,22 +542,45 @@ function actionLoadParameters (id)
     let params = fulltriggerslist.actions[extensionname][id].parameters
     let actionname = fulltriggerslist.actions[extensionname][id].name;
     let actionextensionparameters = ""
+    let titleDescription = "";
+    let descriptions = [];
     // set the title of the calling dropdown
     document.getElementById("actionExtensionAction").title = fulltriggerslist.actions[extensionname][id].description
     document.getElementById("actionExtensionChoserChannel").value = extensionlist[extensionname].channel;
     document.getElementById("actionExtensionChoserActionName").value = fulltriggerslist.actions[extensionname][id].name;
+
+    // get a list of descriptions for this trigger
+    for (var descParamsKey in params)
+    {
+        if (descParamsKey.indexOf("_UIDescription") != -1)
+            descriptions[descParamsKey] = params[descParamsKey]
+    }
+
     for (var key in params)
     {
-        actionextensionparameters += "&lt;div class='row'>"
-        actionextensionparameters += "&lt;div class='col-2'>"
-        actionextensionparameters += "&lt;div class='d-flex form-row align-items-center'>"
-        actionextensionparameters += "&lt;label class='form-label px-2 align-middle' for=" + actionname + "_" + key + ">" + key + "&lt;/label>"
-        actionextensionparameters += "&lt;/div>"
-        actionextensionparameters += "&lt;/div>"
-        actionextensionparameters += "&lt;div class='col-10'>"
-        actionextensionparameters += "&lt;input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value='' title='" + key + "'>"
-        actionextensionparameters += "&lt;/div>"
-        actionextensionparameters += "&lt;/div>"
+        // check if we have a description for this key
+        if (descriptions[key + "_UIDescription"] != undefined)
+        {
+            if (descriptions[key + "_UIDescription"] == "")
+                titleDescription = key
+            else
+                titleDescription = descriptions[key + "_UIDescription"]
+        }
+        else
+            titleDescription = key
+        if (key.indexOf("_UIDescription") == -1)
+        {
+            actionextensionparameters += "&lt;div class='row' title='" + titleDescription + "'>"
+            actionextensionparameters += "&lt;div class='col-2'>"
+            actionextensionparameters += "&lt;div class='d-flex form-row'>"
+            actionextensionparameters += "&lt;label class='form-label px-2' for=" + actionname + "_" + key + ">" + key + "&lt;/label>"
+            actionextensionparameters += "&lt;/div>"
+            actionextensionparameters += "&lt;/div>"
+            actionextensionparameters += "&lt;div class='col-10'>"
+            actionextensionparameters += "&lt;input type='text' class='form-control' name='" + actionname + "_" + key + "' id='" + actionname + "_" + key + "' placeholder='" + key + "' value=''>"
+            actionextensionparameters += "&lt;/div>"
+            actionextensionparameters += "&lt;/div>"
+        }
     }
     ActionExtensionActionParameters.innerHTML = actionextensionparameters;
 
@@ -549,12 +616,14 @@ function populateGroupNamesDropdown ()
 // ============================================================================
 function createTriggerAction (e)
 {
+    let pairingTitle = document.getElementById("pairingTitle").value
     let groupname = document.getElementById("triggerExtensionGroupName").value
     let extname = document.getElementById("triggerExtensionChoser").value
     let channel = document.getElementById("triggerExtensionChoserChannel").value
 
     localStorage.setItem("selectedgroup", groupname)
     let SingleEvent = {
+        pairingTitle: pairingTitle,
         group: groupname,
         trigger:
         {
@@ -771,7 +840,7 @@ function checkTriggerIsValid (trigger)
 }
 // ============================================================================
 //                       FUNCTION: populateTriggersTable
-//                  Shows the current tirgger pairings on screen 
+//                  Shows the current trigger pairings on screen 
 // ============================================================================
 function populateTriggersTable ()
 {
@@ -843,6 +912,9 @@ function populateTriggersTable ()
         let triggertitlerow = tbody.insertRow()
         let titlecell = triggertitlerow.insertCell()
         titlecell.classList = "text-center"
+        titlecell.innerHTML = "&lt;h3>Title&lt;/h3>"
+        titlecell = triggertitlerow.insertCell()
+        titlecell.classList = "text-center"
         titlecell.innerHTML = "&lt;h3>Triggers&lt;/h3>"
         titlecell = triggertitlerow.insertCell()
         titlecell.classList = "text-center"
@@ -855,16 +927,37 @@ function populateTriggersTable ()
             {
                 //triggers/actions row
                 let tr = tbody.insertRow()
+
+                let pairingTitle = tr.insertCell()
+                pairingTitle.style.width = "20%"
+                if (!usertriggerslist.pairings[i].pairingTitle || usertriggerslist.pairings[i].pairingTitle == "")
+                {
+                    //pairingTitle.innerHTML = "Not set"
+                    /*
+                    pairingTitle.innerHTML = usertriggerslist.pairings[i].trigger.extension
+                    pairingTitle.innerHTML += "."
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].trigger.messagetype.replace("trigger_", "").replace("_get", "")
+                    pairingTitle.innerHTML += " >> "
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].action.extension
+                    pairingTitle.innerHTML += "."
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].action.messagetype.replace("action_", "").replace("_get", "")
+                    */
+
+
+                }
+                else
+                    pairingTitle.innerHTML = usertriggerslist.pairings[i].pairingTitle
+
                 //split row into triggers and action cells
                 let triggerdatacell = tr.insertCell()
-                triggerdatacell.style.width = "50%"
+                triggerdatacell.style.width = "40%"
                 let triggersdatacelltable = document.createElement("table")
                 triggerdatacell.appendChild(triggersdatacelltable)
                 let triggerdatacellrow = triggersdatacelltable.insertRow()
 
 
                 let actiondatacell = tr.insertCell()
-                actiondatacell.style.width = "50%"
+                actiondatacell.style.width = "40%"
                 let actiondatacelltable = document.createElement("table")
                 actiondatacell.appendChild(actiondatacelltable)
                 let actiondatacellrow = actiondatacelltable.insertRow()
@@ -1231,7 +1324,17 @@ function EditPairingButton (event, g, i)
     editform.appendChild(createInputElement('triggerpairingidinputfield', 'triggerpairingid', 'hidden', i))
     // start table
     let table = document.createElement("table")
+
+
     let tr = table.insertRow()
+    let titleCell = tr.insertCell()
+    //let titleData = tr.insertCell()
+    titleCell.innerHTML = "Title&lt;BR>" + titleCell.innerHTML
+    if (!pairing.pairingTitle)
+        titleCell.appendChild(createInputElement("triggerExtensionPairingModalPairingTitle", "triggerExtensionPairingModalPairingTitle", "text", ""))
+    else
+        titleCell.appendChild(createInputElement("triggerExtensionPairingModalPairingTitle", "triggerExtensionPairingModalPairingTitle", "text", pairing.pairingTitle))
+
     let td = tr.insertCell()
     // group selection box    
     let selectgroup = createSelectGroup("triggerExtensionPairingModalGroupName", "selectpicker btn btn-secondary", "triggerExtensionPairingModalGroupName", "Select new group")
@@ -1243,6 +1346,7 @@ function EditPairingButton (event, g, i)
         if (usertriggerslist.groups[i].name == g)
             selectgroup.value = g
     }
+    td.innerHTML = "Select Group&lt;BR>" + td.innerHTML
     td.appendChild(selectgroup)
     // start trigger table
     tr = table.insertRow().insertCell().outerHTML = "&lt;Th colspan='3'>&lt;H3>Trigger&lt;/h3>&lt;/Th>"
@@ -1460,6 +1564,11 @@ function UpdatePairingButton (event)
         {
             usertriggerslist.pairings[pairingID].group = value;
         }
+        else if (key.indexOf("triggerExtensionPairingModalPairingTitle") == 0)
+        {
+            usertriggerslist.pairings[pairingID].pairingTitle = value;
+        }
+
         else if (key.indexOf("triggerpairingid") == 0)
         {
             //ignore the id as we have already used it
@@ -1675,13 +1784,13 @@ function getFileNameDateString ()
 </div>
 
 <nav>
-    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller Home</a></h2><h3><a href="/apidocs/index.html">API Docs</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SetupWebpageServer">SetupWebpageServer</a></li><li><a href="global.html#UpdateEncodersAvailable">UpdateEncodersAvailable</a></li><li><a href="global.html#buildFFMPEGArgs">buildFFMPEGArgs</a></li><li><a href="global.html#checkFFMPEGAvailabilities">checkFFMPEGAvailabilities</a></li><li><a href="global.html#checkFFMPEGInstall">checkFFMPEGInstall</a></li><li><a href="global.html#createCheckBox">createCheckBox</a></li><li><a href="global.html#downloadFFMPEG">downloadFFMPEG</a></li><li><a href="global.html#ffmpegBusyFlags">ffmpegBusyFlags</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#getDebug">getDebug</a></li><li><a href="global.html#getEncoderOptions">getEncoderOptions</a></li><li><a href="global.html#getEncoders">getEncoders</a></li><li><a href="global.html#getFFMPEGCommand">getFFMPEGCommand</a></li><li><a href="global.html#getInstalledFFMPEGs">getInstalledFFMPEGs</a></li><li><a href="global.html#handleExit">handleExit</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initialise">initialise</a></li><li><a href="global.html#killProcess">killProcess</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#parseEncodersString">parseEncodersString</a></li><li><a href="global.html#parseSettingsWidgetLarge">parseSettingsWidgetLarge</a></li><li><a href="global.html#parseSettingsWidgetSmall">parseSettingsWidgetSmall</a></li><li><a href="global.html#printProgress">printProgress</a></li><li><a href="global.html#runFFMPEG">runFFMPEG</a></li><li><a href="global.html#saveCredentialsToServer">saveCredentialsToServer</a></li><li><a href="global.html#sendAction">sendAction</a></li><li><a href="global.html#sendOBSStartAction">sendOBSStartAction</a></li><li><a href="global.html#sendOBSStopAction">sendOBSStopAction</a></li><li><a href="global.html#sendStreamStartedTrigger">sendStreamStartedTrigger</a></li><li><a href="global.html#sendStreamStoppedTrigger">sendStreamStoppedTrigger</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setDebug">setDebug</a></li><li><a href="global.html#startStream">startStream</a></li><li><a href="global.html#stopStream">stopStream</a></li><li><a href="global.html#unzipfile">unzipfile</a></li><li><a href="global.html#updateEncoderWebJSONFile">updateEncoderWebJSONFile</a></li><li><a href="global.html#useStreamRollerFfmpeg">useStreamRollerFfmpeg</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 05 2025 05:22:35 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -865,7 +865,7 @@ function onDataCenterMessage (server_packet)
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
-        if (server_packet.to === serverConfig.extensionname &amp;&amp; server_packet.data != "")
+        if (server_packet.data != "" &amp;&amp; server_packet.to === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
@@ -966,10 +966,15 @@ function onDataCenterMessage (server_packet)
         // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(server_packet.from);
+        else if (extension_packet.type === "UpdatedCredentialsForTwitchChat")
+        {
+            if (extension_packet.data.isStreamer)
+                SaveCredential("twitchchatuseroauth", "oauth:" + extension_packet.data.oauthToken)
+            else
+                SaveCredential("twitchchatbotoauth", "oauth:" + extension_packet.data.oauthToken)
+        }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
             SendSettingsWidgetLarge(server_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -1092,7 +1097,7 @@ function onDataCenterMessage (server_packet)
                 let name = ""
                 if (extension_packet.data.account == "bot" || extension_packet.data.account == "user")
                     name = localConfig.usernames[extension_packet.data.account].name
-                else if (extension_packet.data.account == "")
+                else if (localConfig.usernames.bot &amp;&amp; localConfig.usernames.bot.name &amp;&amp; extension_packet.data.account == "")
                     name = localConfig.usernames.bot.name
                 else
                     name = extension_packet.data.account
@@ -1313,64 +1318,6 @@ function SendSettingsWidgetLarge (toExtension)
         }
     });
 }
-// ===========================================================================
-//                           FUNCTION: SendCredentialsModal
-// ===========================================================================
-/**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
- */
-function SendCredentialsModal (extensionname)
-{
-
-    fs.readFile(__dirname + "/twitchchatcredentialsmodal.html", function (err, filedata)
-    {
-        if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
-        else
-        {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
-                if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
-                // note oauth are stored in localConfig so we don't store them in plain text on the users machine
-                // so we need to add edge cases for the values of these (stored in cred2value and cred4value)
-                // add oauth to the user auth field
-                else if (typeof (value) == "string" &amp;&amp; key == "cred1value")
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.name);
-                else if (typeof (value) == "string" &amp;&amp; key == "cred2value")
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.bot.oauth);
-                else if (typeof (value) == "string" &amp;&amp; key == "cred3value")
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.name);
-                // add oauth to the user bot field
-                else if (typeof (value) == "string" &amp;&amp; key == "cred4value")
-                    modalstring = modalstring.replaceAll(key + "text", localConfig.usernames.user.oauth);
-                else if (typeof (value) == "string")
-                    modalstring = modalstring.replaceAll(key + "text", value);
-            }
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
-                        "",
-                        extensionname,
-                        serverConfig.channel
-                    ),
-                    "",
-                    extensionname)
-            )
-        }
-    });
-}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -1384,6 +1331,22 @@ function SaveConfigToServer ()
             "SaveConfig",
             localConfig.EXTENSION_NAME,
             serverConfig));
+}
+// ============================================================================
+//                           FUNCTION: SaveConfigToServer
+// ============================================================================
+function SaveCredential (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            localConfig.EXTENSION_NAME,
+            {
+                ExtensionName: localConfig.EXTENSION_NAME,
+                CredentialName: name,
+                CredentialValue: value
+            },
+        ));
 }
 // ============================================================================
 //                           FUNCTION: SaveDataToServer
@@ -1950,7 +1913,8 @@ function chatLogin (account)
             });
             localConfig.twitchClient[account].connection.on("timeout", (channel, username, reason, duration, userstate) => 
             {
-                file_log("timeout", userstate, reason); userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
+                file_log("timeout", userstate, reason);
+                userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
                 process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
                 triggertosend = findtriggerByMessageType("trigger_ChatTimeout")
                 triggertosend.parameters.type = "trigger_ChatTimeout"
@@ -2495,13 +2459,13 @@ export { initialise, triggersandactions };
 </div>
 
 <nav>
-    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller Home</a></h2><h3><a href="/apidocs/index.html">API Docs</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SetupWebpageServer">SetupWebpageServer</a></li><li><a href="global.html#UpdateEncodersAvailable">UpdateEncodersAvailable</a></li><li><a href="global.html#buildFFMPEGArgs">buildFFMPEGArgs</a></li><li><a href="global.html#checkFFMPEGAvailabilities">checkFFMPEGAvailabilities</a></li><li><a href="global.html#checkFFMPEGInstall">checkFFMPEGInstall</a></li><li><a href="global.html#createCheckBox">createCheckBox</a></li><li><a href="global.html#downloadFFMPEG">downloadFFMPEG</a></li><li><a href="global.html#ffmpegBusyFlags">ffmpegBusyFlags</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#getDebug">getDebug</a></li><li><a href="global.html#getEncoderOptions">getEncoderOptions</a></li><li><a href="global.html#getEncoders">getEncoders</a></li><li><a href="global.html#getFFMPEGCommand">getFFMPEGCommand</a></li><li><a href="global.html#getInstalledFFMPEGs">getInstalledFFMPEGs</a></li><li><a href="global.html#handleExit">handleExit</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initialise">initialise</a></li><li><a href="global.html#killProcess">killProcess</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#parseEncodersString">parseEncodersString</a></li><li><a href="global.html#parseSettingsWidgetLarge">parseSettingsWidgetLarge</a></li><li><a href="global.html#parseSettingsWidgetSmall">parseSettingsWidgetSmall</a></li><li><a href="global.html#printProgress">printProgress</a></li><li><a href="global.html#runFFMPEG">runFFMPEG</a></li><li><a href="global.html#saveCredentialsToServer">saveCredentialsToServer</a></li><li><a href="global.html#sendAction">sendAction</a></li><li><a href="global.html#sendOBSStartAction">sendOBSStartAction</a></li><li><a href="global.html#sendOBSStopAction">sendOBSStopAction</a></li><li><a href="global.html#sendStreamStartedTrigger">sendStreamStartedTrigger</a></li><li><a href="global.html#sendStreamStoppedTrigger">sendStreamStoppedTrigger</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setDebug">setDebug</a></li><li><a href="global.html#startStream">startStream</a></li><li><a href="global.html#stopStream">stopStream</a></li><li><a href="global.html#unzipfile">unzipfile</a></li><li><a href="global.html#updateEncoderWebJSONFile">updateEncoderWebJSONFile</a></li><li><a href="global.html#useStreamRollerFfmpeg">useStreamRollerFfmpeg</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 05 2025 05:22:35 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -654,8 +654,11 @@ function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 // request this message on connection to the "TWITCH_CHAT" channel so we can personalize the bot to the logged on bot name
-                serverConfig.chatbotname = extension_packet.data.bot
-                changeBotName();
+                if (extension_packet.data &amp;&amp; extension_packet.data.bot)
+                {
+                    serverConfig.chatbotname = extension_packet.data.bot
+                    changeBotName();
+                }
             }
         }
         else if (extension_packet.type === "action_ProcessText")
@@ -1499,7 +1502,7 @@ function processChatMessage (data, maxRollbackCount = 20)
     {
         // check for the name at the start of line only (remove any @ symbols from his name as well.@for)
         let directChatbotTriggerTagTestMessage = data.message.replace("@", "").toLowerCase();
-        if (serverConfig.chatbotnametriggertagstartofline == "on")
+        if (serverConfig.chatbotname &amp;&amp; serverConfig.chatbotnametriggertagstartofline == "on")
         {
             directChatbotTriggerTag =
                 // check for trigger
@@ -1820,8 +1823,15 @@ function processChatMessage (data, maxRollbackCount = 20)
     }
     else
     {
-        localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
-        localConfig.chatMessageCount++;
+        if (chatdata &amp;&amp; chatdata.message &amp;&amp; chatdata.message != "")
+        {
+            localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
+            localConfig.chatMessageCount++;
+        }
+        else
+        {
+            console.log("chatbot.processChatMessage chatdata.message error, chatdata, data", chatdata, data)
+        }
     }
 
     if (!directChatbotTriggerTag &amp;&amp; ((localConfig.chatMessageCount &lt; serverConfig.chatbotMessageMaxLines) || (localConfig.chatMessageCount &lt; 1)))
@@ -2098,13 +2108,11 @@ function parseData (data, translation = false)
     {
         if (data.message)
             data.message = data.message.replace("@", "");
-        else if (!data.data['emote-only'])
-            console.log("sub message empty", data)
     }
     catch (error)
     {
         // debugging why we fail here. prob message is empty but it shouldn't be
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure again", error, error.message, JSON.stringify(data, null, 2));
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".parseData", "message failure", error, error.message, JSON.stringify(data, null, 2));
     }
     try
     {
@@ -2602,13 +2610,13 @@ export { initialise, triggersandactions };
 </div>
 
 <nav>
-    <h2><a href="/index.html">StreamRoller</a></h2><h3><a href="/apidocs/index.html">API Docsr</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="/index.html">StreamRoller Home</a></h2><h3><a href="/apidocs/index.html">API Docs</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SetupWebpageServer">SetupWebpageServer</a></li><li><a href="global.html#UpdateEncodersAvailable">UpdateEncodersAvailable</a></li><li><a href="global.html#buildFFMPEGArgs">buildFFMPEGArgs</a></li><li><a href="global.html#checkFFMPEGAvailabilities">checkFFMPEGAvailabilities</a></li><li><a href="global.html#checkFFMPEGInstall">checkFFMPEGInstall</a></li><li><a href="global.html#createCheckBox">createCheckBox</a></li><li><a href="global.html#downloadFFMPEG">downloadFFMPEG</a></li><li><a href="global.html#ffmpegBusyFlags">ffmpegBusyFlags</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#getDebug">getDebug</a></li><li><a href="global.html#getEncoderOptions">getEncoderOptions</a></li><li><a href="global.html#getEncoders">getEncoders</a></li><li><a href="global.html#getFFMPEGCommand">getFFMPEGCommand</a></li><li><a href="global.html#getInstalledFFMPEGs">getInstalledFFMPEGs</a></li><li><a href="global.html#handleExit">handleExit</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initialise">initialise</a></li><li><a href="global.html#killProcess">killProcess</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#parseEncodersString">parseEncodersString</a></li><li><a href="global.html#parseSettingsWidgetLarge">parseSettingsWidgetLarge</a></li><li><a href="global.html#parseSettingsWidgetSmall">parseSettingsWidgetSmall</a></li><li><a href="global.html#printProgress">printProgress</a></li><li><a href="global.html#runFFMPEG">runFFMPEG</a></li><li><a href="global.html#saveCredentialsToServer">saveCredentialsToServer</a></li><li><a href="global.html#sendAction">sendAction</a></li><li><a href="global.html#sendOBSStartAction">sendOBSStartAction</a></li><li><a href="global.html#sendOBSStopAction">sendOBSStopAction</a></li><li><a href="global.html#sendStreamStartedTrigger">sendStreamStartedTrigger</a></li><li><a href="global.html#sendStreamStoppedTrigger">sendStreamStoppedTrigger</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setDebug">setDebug</a></li><li><a href="global.html#startStream">startStream</a></li><li><a href="global.html#stopStream">stopStream</a></li><li><a href="global.html#unzipfile">unzipfile</a></li><li><a href="global.html#updateEncoderWebJSONFile">updateEncoderWebJSONFile</a></li><li><a href="global.html#useStreamRollerFfmpeg">useStreamRollerFfmpeg</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Mar 08 2025 20:36:10 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 05 2025 05:22:35 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
