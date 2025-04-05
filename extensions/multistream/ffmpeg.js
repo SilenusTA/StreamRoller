@@ -319,14 +319,14 @@ function UpdateEncodersAvailable ()
             let uptoEncoders = false;
             localConfig.busyFlags.getEncoders = true;
             // just in case the command fails or we don't finish early enough lets kill it after 10 seconds
-            if (!localConfig.encoderBuildTimeoutHandle)
+            //if (!localConfig.encoderBuildTimeoutHandle)
+            //{
+            localConfig.encoderBuildTimeoutHandle = setTimeout(() =>
             {
-                localConfig.encoderBuildTimeoutHandle = setTimeout(() =>
-                {
-                    console.log("Encoder query taking too long, Exiting")
-                    timeout = true;
-                }, localConfig.encoderBuildTimeout)
-            }
+                console.log("Encoder query taking too long, Exiting")
+                timeout = true;
+            }, localConfig.encoderBuildTimeout)
+            //}
             //let args = ["-hide_banner"];
             //need the banner to get the version line
             let args = ["-encoders"];
@@ -340,6 +340,7 @@ function UpdateEncodersAvailable ()
 
             ffmpegHandle.on('error', function (err)
             {
+                finished = true;
                 console.log("UpdateEncodersAvailable():error()", err)
             });
 

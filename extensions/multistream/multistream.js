@@ -45,7 +45,7 @@ const localConfig = {
     serverCredentials: {},
 
     //extensions basics
-    multistreamStarStreaming: "off",
+    multistreamStartStreaming: "off",
     streamRunning: false,
 
     // encoders
@@ -474,30 +474,35 @@ function onDataCenterMessage (server_packet)
  */
 function parseSettingsWidgetSmall (extension_data)
 {
-    let extensionTurnedOn = false
+    let extensionEnabledChanged = false
     let streamOnOffChanged = false
 
-    // multistreamStarStreaming is stored in localConfig as we should never startup StreamRoller with it enabled so it defaults to off on restart
-    if (!extension_data.multistreamStarStreaming)
+    // multistreamStartStreaming is stored in localConfig as we should never startup StreamRoller with it enabled so it defaults to off on restart
+    if (extension_data.multistreamStartStreaming == "on")
     {
-        if (localConfig.multistreamStarStreaming == "on")
-            streamOnOffChanged = true;
-        localConfig.multistreamStarStreaming = "off"
+        // have have turned the streaming on
+        if (localConfig.multistreamStartStreaming == "off")
+            streamOnOffChanged = true
+        localConfig.multistreamStartStreaming = "on"
     }
     else
     {
-        // have have turned the streaming on
-        if (localConfig.multistreamStarStreaming == "off")
-            streamOnOffChanged = true
-        localConfig.multistreamStarStreaming = "on"
+        if (localConfig.multistreamStartStreaming == "on")
+            streamOnOffChanged = true;
+        localConfig.multistreamStartStreaming = "off"
     }
+
     // turn them off here/ they will be turned back on if checkboxes are set in the ui
     serverConfig.streams.forEach((stream, i) =>
     {
         stream.enabled = "off";
     })
+    // have we just turned on the extension
     if (extension_data.multistreamEnabled == "on" && serverConfig.multistreamEnabled == "off")
-        extensionTurnedOn = true;
+        extensionEnabledChanged = true;
+    // turned off?
+    else if (!extension_data.multistreamEnabled && serverConfig.multistreamEnabled == "on")
+        extensionEnabledChanged = true;
 
     // set any checkbox data to off at this point as it won't appear in extension_data if turned off
     serverConfig.multistreamEnabled = "off";
@@ -522,16 +527,35 @@ function parseSettingsWidgetSmall (extension_data)
         }
     }
     SaveConfigToServer();
-    if (extensionTurnedOn && localConfig.Encoders.videoEncoders == {} && localConfig.Encoders.audioEncoders == {})
-        //extension has just been turned on
-        checkFFMPEGAvailabilities();
-    if (streamOnOffChanged && serverConfig.multistreamEnabled)
+
+    // extension turned on
+    if (extensionEnabledChanged)
     {
-        if (localConfig.multistreamStarStreaming == "on")
+        if (serverConfig.multistreamEnabled == "on")
+        {
+            if (localConfig.Encoders.videoEncoders == {} || localConfig.Encoders.audioEncoders == {})
+                //extension has just been turned on
+                checkFFMPEGAvailabilities();
+        }
+        else
+        {
+            localConfig.multistreamStartStreaming = "off"
+            stopStream()
+        }
+    }
+    // stream start toggled
+    if (streamOnOffChanged)
+    {
+        // don't start unless extension is turned on
+        if (localConfig.multistreamStartStreaming == "on" && serverConfig.multistreamEnabled == "on")
             startStream("multistream")
         else
+        {
+            localConfig.multistreamStartStreaming = "off"
             stopStream()
+        }
     }
+
     //update anyone who is showing our code at the moment
     SendSettingsWidgetSmall();
     SendSettingsWidgetLarge();
@@ -617,7 +641,7 @@ function parseSettingsWidgetLarge (extension_data)
         ffmpeg.setDebug(ffmpegDebug);
 
         // if we want to use our installed version but don't have it then call the download function
-        if (serverConfig.useStreamRollerFFMPEG && !ffmpeg.getInstalledFFMPEGs().streamRollerFfmpegInstalled && serverConfig.multistreamEnabled == "on")
+        if (serverConfig.useStreamRollerFFMPEG && !ffmpeg.getInstalledFFMPEGs().streamRollerFfmpegInstalled)
         {
             ffmpeg.downloadFFMPEG()
             let counter = 0
@@ -670,8 +694,8 @@ function SendSettingsWidgetSmall ()
             }
 
             // update credential boxes
-            if (localConfig.multistreamStarStreaming == "on")
-                modalString = modalString.replace("multistreamStarStreamingchecked", "checked");
+            if (localConfig.multistreamStartStreaming == "on")
+                modalString = modalString.replace("multistreamStartStreamingchecked", "checked");
             let streamsHtml = "<h4>Streams<h4>"
             streamsHtml = "<BR>Setup streams in the large settings page. Select here to enable/disable those streams"
             serverConfig.streams.forEach((stream, i) =>
@@ -832,6 +856,12 @@ function saveCredentialsToServer ()
  */
 function startStream (ref = "multistream")
 {
+    if (serverConfig.multistreamEnabled != "on")
+    {
+        console.log("Multistream Extension turn off when trying to start a stream")
+        localConfig.multistreamStartStreaming = "off"
+        return;
+    }
     if (localConfig.ffmpegHandle && localConfig.ffmpegHandle != null)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
@@ -864,7 +894,7 @@ function startStream (ref = "multistream")
             sendStreamStoppedTrigger();
             sendOBSStopAction(ref);
             localConfig.ffmpegHandle = null
-            localConfig.multistreamStarStreaming = "off"
+            localConfig.multistreamStartStreaming = "off"
         }
     )
 }
@@ -998,7 +1028,8 @@ function stopStream ()
     {
         sendStreamStoppedTrigger()
         killProcess()
-        localConfig.ffmpegHandle = null
+        //localConfig.ffmpegHandle = null
+        localConfig.multistreamStartStreaming = "off"
     }
 }
 // ============================================================================
