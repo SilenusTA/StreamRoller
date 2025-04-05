@@ -34,6 +34,19 @@ goto init
     del %SCRIPT%
     exit /b
 
+:createuninstallshortcut
+    set SCRIPT="%TEMP%\%RANDOM%-%RANDOM%-%RANDOM%-%RANDOM%.vbs"
+    echo Set oWS = WScript.CreateObject("WScript.Shell") >> %SCRIPT%
+    echo sLinkFile = "%USERPROFILE%\Desktop\Uninstall_StreamRoller.lnk" >> %SCRIPT%
+    echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%
+    echo oLink.TargetPath = "%destination_dir%\UninstallStreamRoller.cmd" >> %SCRIPT%
+    echo oLink.WorkingDirectory = "%destination_dir%" >> %SCRIPT%
+    echo oLink.Save >> %SCRIPT%
+
+    cscript /nologo %SCRIPT%
+    del %SCRIPT%
+    exit /b
+
 :init
     REM unset any varibles we may have set (ie if someone exited the previous run half way though)
     set tmp_dir=""
@@ -64,9 +77,9 @@ goto init
     echo Installing new version 
     xcopy %tmp_dir%\*.* %destination_dir% /e /c /i /q /h /r /y
     
-    echo Creating desktop shortcut
+    echo Creating desktop shortcuts
     call :createshortcut
-
+    call :createuninstallshortcut
     REM we need to pass in the temp dir so we can delete it once running (when we are not running a script in it :D)
     echo running the software
     run.cmd -d %tmp_dir% >> log.txt
