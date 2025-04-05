@@ -1,4 +1,144 @@
-/**
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, 
+                      width=device-width, initial-scale=1.0, 
+                      minimum-scale=1.0, maximum-scale=1.0, 
+                      user-scalable=no, target-densitydpi=device-dpi">
+    <title>Source: extensions/multistream/ffmpeg.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head data-theme="light">
+
+<body>
+    <div id="page-nav-bar">
+        <div><a id="top-icon" href="#"></a></div>
+        <div id="toggle-theme"
+        data-theme-toggle
+        aria-label="Change to light theme"
+    >Change to light theme (or icon here)</div>
+</div>
+<script>
+
+    // get theme on startup
+    const localStorageTheme = localStorage.getItem("theme");
+    const systemSettingDark = window.matchMedia("(prefers-color-scheme: dark)");
+    let currentThemeSetting = calculateSettingAsThemeString({ localStorageTheme, systemSettingDark });
+    
+    ///////////////////////////////////////////////////////////////////
+    /////////////////calculateSettingAsThemeString/////////////////////
+    ///////////////////////////////////////////////////////////////////
+    function calculateSettingAsThemeString({ localStorageTheme, systemSettingDark }) 
+    {
+        if (localStorageTheme !== null) {
+            return localStorageTheme;
+        }
+        if (systemSettingDark.matches) {
+            return "dark";
+        }
+        return "light";
+    }
+    const themeEle = document.querySelector("[data-theme-toggle]");
+    const topIcon = document.getElementById("top-icon");
+    themeEle.addEventListener("click", () => {toggleTheme()});
+    
+
+    /////////////////////////////////////////////////
+    /////////////////toggleTheme/////////////////////
+    /////////////////////////////////////////////////
+    function toggleTheme()
+    {
+        const newTheme = currentThemeSetting === "dark" ? "light" : "dark";
+        // update in local storage
+        localStorage.setItem("theme", newTheme);
+
+        // update the currentThemeSetting in memory
+        currentThemeSetting = newTheme;
+
+        setTheme();
+    }
+    //////////////////////////////////////////////
+    /////////////////setTheme/////////////////////
+    //////////////////////////////////////////////
+    function setTheme()
+    {
+        // update the button text
+        const newImage = currentThemeSetting === "dark" ? dayicon() : nighticon();
+        const newCta = currentThemeSetting === "dark" ? "Light Theme" : "Dark Theme";
+        //themeEle.innerText = newCta;  
+        themeEle.innerHTML = newImage;  
+        topIcon.innerHTML = topicon();
+        // use an aria-label if you are omitting text on the button
+        // and using sun/moon icons, for example
+        themeEle.setAttribute("aria-label", newCta);
+
+        // update theme attribute on HTML to switch theme in CSS
+        document.querySelector("html").setAttribute("data-theme", currentThemeSetting);
+    }
+
+    function dayicon(tag)
+    {
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        width="24" height="24" 
+        stroke-width="2"> 
+        <path d="M14.828 14.828a4 4 0 1 0 -5.656 -5.656a4 4 0 0 0 5.656 5.656z"></path> 
+        <path d="M6.343 17.657l-1.414 1.414"></path> 
+        <path d="M6.343 6.343l-1.414 -1.414"></path> 
+        <path d="M17.657 6.343l1.414 -1.414"></path> 
+        <path d="M17.657 17.657l1.414 1.414"></path> 
+        <path d="M4 12h-2"></path> 
+        <path d="M12 4v-2"></path> 
+        <path d="M20 12h2"></path> 
+        <path d="M12 20v2"></path> 
+        </svg>`
+    }
+    function nighticon(tag)
+    {
+        return`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 19a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M18.313 16.91l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.218 -1.567l.102 .07z"></path>
+        <path d="M7.007 16.993a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M4 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M21 11a1 1 0 0 1 .117 1.993l-.117 .007h-1a1 1 0 0 1 -.117 -1.993l.117 -.007h1z"></path>
+        <path d="M6.213 4.81l.094 .083l.7 .7a1 1 0 0 1 -1.32 1.497l-.094 -.083l-.7 -.7a1 1 0 0 1 1.217 -1.567l.102 .07z"></path>
+        <path d="M19.107 4.893a1 1 0 0 1 .083 1.32l-.083 .094l-.7 .7a1 1 0 0 1 -1.497 -1.32l.083 -.094l.7 -.7a1 1 0 0 1 1.414 0z"></path>
+        <path d="M12 2a1 1 0 0 1 .993 .883l.007 .117v1a1 1 0 0 1 -1.993 .117l-.007 -.117v-1a1 1 0 0 1 1 -1z"></path>
+        <path d="M12 7a5 5 0 1 1 -4.995 5.217l-.005 -.217l.005 -.217a5 5 0 0 1 4.995 -4.783z"></path>
+        </svg>`
+    }
+    function topicon()
+    {
+        //from https://tablericons.com/
+        return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" width="24" height="24" stroke-width="2"> <path d="M12 10l0 10"></path> <path d="M12 10l4 4"></path> <path d="M12 10l-4 4"></path> <path d="M4 4l16 0"></path> </svg> `
+    }
+    
+    // set the theme on page load
+    setTheme()
+</script>
+
+<div id="main">
+
+    <h1 class="page-title">Source: extensions/multistream/ffmpeg.js</h1>
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * Copyright (C) 2025 "SilenusTA https://www.twitch.tv/olddepressedgamer"
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -12,7 +152,7 @@
  * GNU Affero General Public License for more details.
  * 
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * along with this program.  If not, see &lt;https://www.gnu.org/licenses/>.
  */
 import commandExists from 'command-exists';
 import axios from 'axios';
@@ -253,7 +393,7 @@ function handleExit (err, endCB)
         exitError = err;
     }
 
-    if (localConfig.exitFlags.processExited && (localConfig.exitFlags.stdoutClosed) && localConfig.exitFlags.stderrClosed)
+    if (localConfig.exitFlags.processExited &amp;&amp; (localConfig.exitFlags.stdoutClosed) &amp;&amp; localConfig.exitFlags.stderrClosed)
     {
         endCB(exitError, localConfig.exitFlags.stdoutBuffer, localConfig.exitFlags.stderrBuffer);
     }
@@ -432,7 +572,7 @@ async function parseEncodersString (ffmpegExe)
                 const tempArray = localConfig.ffmpegEncodersString.split("\r\n")
                 let postHeader = false;
                 //scan lines
-                for (let i = 0; i < tempArray.length; i++)
+                for (let i = 0; i &lt; tempArray.length; i++)
                 {
                     //skip to end of header
                     if (tempArray[i] == " ------")
@@ -447,7 +587,7 @@ async function parseEncodersString (ffmpegExe)
                         if (tempArray[i].indexOf(" V") == 0)
                         {
                             const videoEncoderName = tempArray[i].split(" ")[2];
-                            if (videoEncoderName && videoEncoderName != "")
+                            if (videoEncoderName &amp;&amp; videoEncoderName != "")
                             {
                                 videoEncoderCounter++;
                                 localConfig.videoEncoders[videoEncoderName] = [];
@@ -462,7 +602,7 @@ async function parseEncodersString (ffmpegExe)
                         else if (tempArray[i].indexOf(" A") == 0)
                         {
                             const audioEncoderName = tempArray[i].split(" ")[2];
-                            if (audioEncoderName && audioEncoderName != "")
+                            if (audioEncoderName &amp;&amp; audioEncoderName != "")
                             {
                                 audioEncoderCounter++;
                                 localConfig.audioEncoders[audioEncoderName] = [];
@@ -478,7 +618,7 @@ async function parseEncodersString (ffmpegExe)
                 }
                 localConfig.waitForParseEncodersStringHandle = setInterval(async () =>
                 {
-                    if (videoEncoderCounter == 0 && audioEncoderCounter == 0)
+                    if (videoEncoderCounter == 0 &amp;&amp; audioEncoderCounter == 0)
                     {
                         if (localConfig.debugOptions.DEBUG_FFMPEG)
                             console.log("parseEncodersString():finished")
@@ -808,3 +948,22 @@ export
     downloadFFMPEG
 }
 
+</code></pre>
+        </article>
+    </section> 
+</div>
+
+<nav>
+    <h2><a href="/index.html">StreamRoller Home</a></h2><h3><a href="/apidocs/index.html">API Docs</a></h3><h3>Extensions</h3><ul><li><a href="Adminpage_extension.html#Adminpage">Adminpage</a></li><li><a href="Autopilot_extension.html#Autopilot">Autopilot</a></li><li><a href="DiscordChat_extension.html#DiscordChat">DiscordChat</a></li><li><a href="FakeDeck_extension.html#FakeDeck">FakeDeck</a></li><li><a href="LivePortal_extension.html#LivePortal">LivePortal</a></li><li><a href="MSFS2020_extension.html#MSFS2020">MSFS2020</a></li><li><a href="OBS_extension.html#OBS">OBS</a></li><li><a href="PhilipsHue_extension.html#PhilipsHue">PhilipsHue</a></li><li><a href="Quizbot_extension.html#Quizbot">Quizbot</a></li><li><a href="RandomFact_extension.html#RandomFact">RandomFact</a></li><li><a href="StreamRoller_extension.html#StreamRoller">StreamRoller</a></li><li><a href="StreamerSongList_extension.html#StreamerSongList">StreamerSongList</a></li><li><a href="StreamlabsAPI_extension.html#StreamlabsAPI">StreamlabsAPI</a></li><li><a href="Sysinfo_extension.html#Sysinfo">Sysinfo</a></li><li><a href="Timers_extension.html#Timers">Timers</a></li><li><a href="Twitch_extension.html#Twitch">Twitch</a></li><li><a href="TwitchChat_extension.html#TwitchChat">TwitchChat</a></li><li><a href="Twitter_extension.html#Twitter">Twitter</a></li><li><a href="Users_extension.html#Users">Users</a></li><li><a href="YouTube_extension.html#YouTube">YouTube</a></li><li><a href="chatbot_extension.html#chatbot">chatbot</a></li></ul><h3>Global</h3><ul><li><a href="global.html#SaveConfigToServer">SaveConfigToServer</a></li><li><a href="global.html#SendSettingsWidgetLarge">SendSettingsWidgetLarge</a></li><li><a href="global.html#SendSettingsWidgetSmall">SendSettingsWidgetSmall</a></li><li><a href="global.html#SetupWebpageServer">SetupWebpageServer</a></li><li><a href="global.html#UpdateEncodersAvailable">UpdateEncodersAvailable</a></li><li><a href="global.html#buildFFMPEGArgs">buildFFMPEGArgs</a></li><li><a href="global.html#checkFFMPEGAvailabilities">checkFFMPEGAvailabilities</a></li><li><a href="global.html#checkFFMPEGInstall">checkFFMPEGInstall</a></li><li><a href="global.html#createCheckBox">createCheckBox</a></li><li><a href="global.html#downloadFFMPEG">downloadFFMPEG</a></li><li><a href="global.html#ffmpegBusyFlags">ffmpegBusyFlags</a></li><li><a href="global.html#findTriggerByMessageType">findTriggerByMessageType</a></li><li><a href="global.html#getDebug">getDebug</a></li><li><a href="global.html#getEncoderOptions">getEncoderOptions</a></li><li><a href="global.html#getEncoders">getEncoders</a></li><li><a href="global.html#getFFMPEGCommand">getFFMPEGCommand</a></li><li><a href="global.html#getInstalledFFMPEGs">getInstalledFFMPEGs</a></li><li><a href="global.html#handleExit">handleExit</a></li><li><a href="global.html#heartBeatCallback">heartBeatCallback</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#initialise">initialise</a></li><li><a href="global.html#killProcess">killProcess</a></li><li><a href="global.html#onDataCenterConnect">onDataCenterConnect</a></li><li><a href="global.html#onDataCenterDisconnect">onDataCenterDisconnect</a></li><li><a href="global.html#onDataCenterMessage">onDataCenterMessage</a></li><li><a href="global.html#parseEncodersString">parseEncodersString</a></li><li><a href="global.html#parseSettingsWidgetLarge">parseSettingsWidgetLarge</a></li><li><a href="global.html#parseSettingsWidgetSmall">parseSettingsWidgetSmall</a></li><li><a href="global.html#printProgress">printProgress</a></li><li><a href="global.html#runFFMPEG">runFFMPEG</a></li><li><a href="global.html#saveCredentialsToServer">saveCredentialsToServer</a></li><li><a href="global.html#sendAction">sendAction</a></li><li><a href="global.html#sendOBSStartAction">sendOBSStartAction</a></li><li><a href="global.html#sendOBSStopAction">sendOBSStopAction</a></li><li><a href="global.html#sendStreamStartedTrigger">sendStreamStartedTrigger</a></li><li><a href="global.html#sendStreamStoppedTrigger">sendStreamStoppedTrigger</a></li><li><a href="global.html#sendTrigger">sendTrigger</a></li><li><a href="global.html#setDebug">setDebug</a></li><li><a href="global.html#startStream">startStream</a></li><li><a href="global.html#stopStream">stopStream</a></li><li><a href="global.html#unzipfile">unzipfile</a></li><li><a href="global.html#updateEncoderWebJSONFile">updateEncoderWebJSONFile</a></li><li><a href="global.html#useStreamRollerFfmpeg">useStreamRollerFfmpeg</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Apr 05 2025 03:42:18 GMT+0100 (British Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
