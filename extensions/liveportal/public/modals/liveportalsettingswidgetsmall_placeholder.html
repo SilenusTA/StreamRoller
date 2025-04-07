@@ -14,10 +14,11 @@
         <div class="modal-body">
             <!-- Invisible channel name data -->
             <div class="form-group invisible">
-                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
-                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
-                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
-                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+                <input type="hidden" name="extensionname_SettingsSmallFormItem" class="form-control" value="extensionname_SettingsSmallFormItemtext"
+                    tabindex="-1" />
+                <input type="hidden" name="modalcodetype_SettingsSmallFormItem" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype_SettingsSmallFormItem" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                <input type="hidden" name="channel_SettingsSmallFormItem" class="form-control" value="channel_SettingsSmallFormItemtext" tabindex="-1" />
             </div>
             <h4 class="modal-title">Display/Hide Extensions</h4>
             <div class="form-group">
@@ -25,35 +26,41 @@
                 <div class="col-form-label">Deselect the items you don't want to show on this page</div>
                 <BR>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="streamersonglistdisplay" type="checkbox" id="streamersonglistdisplay" streamersonglistdisplaychecked>
-                    <label class="form-check-label" for="streamersonglistdisplay">StreamerSonglist</label>
+                    <input class="form-check-input" name="streamersonglistdisplay_SettingsSmallFormItem" type="checkbox"
+                        id="streamersonglistdisplay_SettingsSmallFormItem" streamersonglistdisplay_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="streamersonglistdisplay_SettingsSmallFormItem">StreamerSonglist</label>
                 </div>
                 <BR>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="discordmodchatdisplay" type="checkbox" id="discordmodchatdisplay" discordmodchatdisplaychecked>
-                    <label class="form-check-label" for="discordmodchatdisplay">Discord mod chat</label>
+                    <input class="form-check-input" name="discordmodchatdisplay_SettingsSmallFormItem" type="checkbox"
+                        id="discordmodchatdisplay_SettingsSmallFormItem" discordmodchatdisplay_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="discordmodchatdisplay_SettingsSmallFormItem">Discord mod chat</label>
                 </div>
                 <BR>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="obsdisplay" type="checkbox" id="obsdisplay" obsdisplaychecked>
-                    <label class="form-check-label" for="obsdisplay">OBS</label>
+                    <input class="form-check-input" name="obsdisplay_SettingsSmallFormItem" type="checkbox" id="obsdisplay_SettingsSmallFormItem"
+                        obsdisplay_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="obsdisplay_SettingsSmallFormItem">OBS</label>
                 </div>
                 <BR>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="philipshuedisplay" type="checkbox" id="philipshuedisplay" philipshuedisplaychecked>
-                    <label class="form-check-label" for="philipshuedisplay">Philips Hue</label>
+                    <input class="form-check-input" name="philipshuedisplay_SettingsSmallFormItem" type="checkbox" id="philipshuedisplay_SettingsSmallFormItem"
+                        philipshuedisplay_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="philipshuedisplay_SettingsSmallFormItem">Philips Hue</label>
                 </div>
                 <BR>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="macrobuttonsdisplay" type="checkbox" id="macrobuttonsdisplay" macrobuttonsdisplaychecked>
-                    <label class="form-check-label" for="macrobuttonsdisplay">Macro Buttons</label>
+                    <input class="form-check-input" name="macrobuttonsdisplay_SettingsSmallFormItem" type="checkbox"
+                        id="macrobuttonsdisplay_SettingsSmallFormItem" macrobuttonsdisplay_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="macrobuttonsdisplay_SettingsSmallFormItem">Macro Buttons</label>
                 </div>
             </div>
             <div class="form-group">
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" name="slalertsdisplay" type="checkbox" id="slalertsdisplay" slalertsdisplaychecked>
-                <label class="form-check-label" for="slalertsdisplay">StreamLabs Alerts</label>
+                <input class="form-check-input" name="slalertsdisplay_SettingsSmallFormItem" type="checkbox" id="slalertsdisplay_SettingsSmallFormItem"
+                    slalertsdisplay_SettingsSmallFormItemchecked>
+                <label class="form-check-label" for="slalertsdisplay_SettingsSmallFormItem">StreamLabs Alerts</label>
             </div>
             <HR>
             <h4 class="modal-title">OBS Scene buttons</h4>
@@ -62,16 +69,19 @@
                     intermission and end buttons (set identifier tags in the obs extension settings
                     first)</div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="showprimaryscenes" type="checkbox" id="showprimaryscenes" showprimarysceneschecked>
-                    <label class="form-check-label" for="showprimaryscenes">Primary Scenes</label>
+                    <input class="form-check-input" name="showprimaryscenes_SettingsSmallFormItem" type="checkbox" id="showprimaryscenes_SettingsSmallFormItem"
+                        showprimaryscenes_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="showprimaryscenes_SettingsSmallFormItem">Primary Scenes</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="showsecondaryscenes" type="checkbox" id="showsecondaryscenes" showsecondarysceneschecked>
-                    <label class="form-check-label" for="showsecondaryscenes">Secondary Scenes</label>
+                    <input class="form-check-input" name="showsecondaryscenes_SettingsSmallFormItem" type="checkbox"
+                        id="showsecondaryscenes_SettingsSmallFormItem" showsecondaryscenes_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="showsecondaryscenes_SettingsSmallFormItem">Secondary Scenes</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="showallscenes" type="checkbox" id="showallscenes" showallsceneschecked>
-                    <label class="form-check-label" for="showallscenes">Show All Scenes</label>
+                    <input class="form-check-input" name="showallscenes_SettingsSmallFormItem" type="checkbox" id="showallscenes_SettingsSmallFormItem"
+                        showallscenes_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="showallscenes_SettingsSmallFormItem">Show All Scenes</label>
                 </div>
             </div>
 
@@ -90,35 +100,38 @@
                 <BR>
                 Filter voices out of the list, ie only show entries with English in name or leave blank for all
 
-                <input type="text" style="width: 40%;" name="TTSVoiceFilter" id="TTSVoiceFilter" value="TTSVoiceFiltertext"><label for="TTSVoiceFilter"
-                    class="">Filter</label>
+                <input type="text" style="width: 40%;" name="TTSVoiceFilter_SettingsSmallFormItem" id="TTSVoiceFilter_SettingsSmallFormItem"
+                    value="TTSVoiceFilter_SettingsSmallFormItemtext"><label for="TTSVoiceFilter_SettingsSmallFormItem" class="">Filter</label>
                 <BR>
 
                 <!-- enable twitch check box-->
                 <div class="input-group">
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="winttstwitchenabled" type="checkbox" id="winttstwitchenabled" winttstwitchenabledchecked>
-                        <label class="form-check-label" for="winttstwitchenabled">Enable TTS</label>
+                        <input class="form-check-input" name="winttstwitchenabled_SettingsSmallFormItem" type="checkbox"
+                            id="winttstwitchenabled_SettingsSmallFormItem" winttstwitchenabled_SettingsSmallFormItemchecked>
+                        <label class="form-check-label" for="winttstwitchenabled_SettingsSmallFormItem">Enable TTS</label>
                     </div>
                 </div>
                 <!-- twitch volume -->
 
-                <label for="twitchTTSVolume" class="">Volume </label>
-                <input type="text" style="width: 40px;" name="twitchTTSVolume" id="twitchTTSVolume" value="twitchTTSVolumetext">
+                <label for="twitchTTSVolume_SettingsSmallFormItem" class="">Volume </label>
+                <input type="text" style="width: 40px;" name="twitchTTSVolume_SettingsSmallFormItem" id="twitchTTSVolume_SettingsSmallFormItem"
+                    value="twitchTTSVolume_SettingsSmallFormItemtext">
                 <BR>
 
                 <!-- twitch user blacklist-->
-                <label for="twitchBlackList" class="col-form-label">Comma separated names of users to ignore</label>
-                <input type="text" name="twitchBlackList" class="form-control" id="twitchBlackList" value="twitchBlackListtext">
+                <label for="twitchBlackList_SettingsSmallFormItem" class="col-form-label">Comma separated names of users to ignore</label>
+                <input type="text" name="twitchBlackList_SettingsSmallFormItem" class="form-control" id="twitchBlackList_SettingsSmallFormItem"
+                    value="twitchBlackList_SettingsSmallFormItemtext">
 
                 <!-- voice select -->
                 <div class="input-group3">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
-                        id="twitchTTSVoiceSelectionDropdown" value="0" name="twitchTTSVoiceSelectionDropdown" required=""
-                        onchange='twitchVoiceDropdownChanged( this )'>
+                        id="twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem"
+                        required="" onchange='twitchVoiceDropdownChanged( this )'>
                         TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
                     </select>
-                    <label class="form-check-label" for="twitchTTSVoiceSelectionDropdown">Voice</label>
+                    <label class="form-check-label" for="twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem">Voice</label>
                 </div>
             </div>
             <HR>
@@ -131,25 +144,28 @@
                 <!-- enable YouTube check box-->
                 <div class="input-group">
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" name="winttsyoutubeenabled" type="checkbox" id="winttsyoutubeenabled" winttsyoutubeenabledchecked>
-                        <label class="form-check-label" for="winttsyoutubeenabled">Enable TTS</label>
+                        <input class="form-check-input" name="winttsyoutubeenabled_SettingsSmallFormItem" type="checkbox"
+                            id="winttsyoutubeenabled_SettingsSmallFormItem" winttsyoutubeenabled_SettingsSmallFormItemchecked>
+                        <label class="form-check-label" for="winttsyoutubeenabled_SettingsSmallFormItem">Enable TTS</label>
                     </div>
                 </div>
 
-                <label for="youtubeTTSVolume" class="">Volume </label>
-                <input type="text" style="width: 40px;" name="youtubeTTSVolume" id="youtubeTTSVolume" value="youtubeTTSVolumetext">
+                <label for="youtubeTTSVolume_SettingsSmallFormItem" class="">Volume </label>
+                <input type="text" style="width: 40px;" name="youtubeTTSVolume_SettingsSmallFormItem" id="youtubeTTSVolume_SettingsSmallFormItem"
+                    value="youtubeTTSVolume_SettingsSmallFormItemtext">
                 <BR>
                 <!-- youtube user blacklist-->
-                <label for="youtubeBlackList" class="col-form-label">Comma separated names of users to ignore</label>
-                <input type="text" name="youtubeBlackList" class="form-control" id="youtubeBlackList" value="youtubeBlackListtext">
+                <label for="youtubeBlackList_SettingsSmallFormItem" class="col-form-label">Comma separated names of users to ignore</label>
+                <input type="text" name="youtubeBlackList_SettingsSmallFormItem" class="form-control" id="youtubeBlackList_SettingsSmallFormItem"
+                    value="youtubeBlackList_SettingsSmallFormItemtext">
                 <!-- voice select -->
                 <div class="input-group3">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
-                        id="youtubeTTSVoiceSelectionDropdown" value="0" name="youtubeTTSVoiceSelectionDropdown" required=""
-                        onchange='youtubeVoiceDropdownChanged( this )'>
+                        id="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem"
+                        required="" onchange='youtubeVoiceDropdownChanged( this )'>
                         YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
                     </select>
-                    <label class="form-check-label" for="youtubeTTSVoiceSelectionDropdown">Voice</label>
+                    <label class="form-check-label" for="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem">Voice</label>
                 </div>
             </div>
             <!-- Text To Speech Section-->
@@ -159,16 +175,17 @@
                 <!-- voice select -->
                 <div class="input-group3">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
-                        id="TestVoiceTTSVoiceSelectionDropdown" value="0" name="TestVoiceTTSVoiceSelectionDropdown" required="">
+                        id="TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem"
+                        required="">
                         TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
                     </select>
-                    <label class="form-check-label" for="TestVoiceTTSVoiceSelectionDropdown">Test Voice</label>
+                    <label class="form-check-label" for="TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem">Test Voice</label>
                 </div>
                 <!-- tests voice  -->
                 <div class="input-group">
-                    <input id="TTSTestVoice" type="text" class="form-control card bg-light text-dark border-secondary" placeholder="Say something smart to chat"
-                        aria-label="Recipient's username" aria-describedby="button-addon2">
-                    <button class="btn btn-secondary" type="button" id="TTSTestVoiceButton" onclick="liveportalTestVoice()">
+                    <input id="TTSTestVoice_SettingsSmallFormItem" type="text" class="form-control card bg-light text-dark border-secondary"
+                        placeholder="Say something smart to chat" aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <button class="btn btn-secondary" type="button" id="TTSTestVoiceButton_SettingsSmallFormItem" onclick="liveportalTestVoice()">
                         Speak:
                     </button>
                 </div>
@@ -178,13 +195,15 @@
             <h4 class="modal-title">Random Facts</h4>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" name="randomfactsenabled" type="checkbox" id="randomfactsenabled" randomfactsenabledchecked>
-                    <label class="form-check-label" for="randomfactsenabled">Enable random facts</label>
+                    <input class="form-check-input" name="randomfactsenabled_SettingsSmallFormItem" type="checkbox"
+                        id="randomfactsenabled_SettingsSmallFormItem" randomfactsenabled_SettingsSmallFormItemchecked>
+                    <label class="form-check-label" for="randomfactsenabled_SettingsSmallFormItem">Enable random facts</label>
                 </div>
                 <div class="form-group">
-                    <label for="randomfactstimeout" class="col-form-label">How often to post random facts to twitch
+                    <label for="randomfactstimeout_SettingsSmallFormItem" class="col-form-label">How often to post random facts to twitch
                         chat(minutes)</label>
-                    <input type="text" name="randomfactstimeout" class="form-control" id="randomfactstimeout" value="randomfactstimeouttext">
+                    <input type="text" name="randomfactstimeout_SettingsSmallFormItem" class="form-control" id="randomfactstimeout_SettingsSmallFormItem"
+                        value="randomfactstimeout_SettingsSmallFormItemtext">
                 </div>
             </div>
             <div class="modal-footer">
