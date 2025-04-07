@@ -841,6 +841,18 @@ function RequestChList ()
  */
 function SendUserPairings (to)
 {
+    // temp hack to fix quizbot renaming issue of trigger_QuizbotIncorrectAnwser
+    // remove this hack when we have released the code a few times. Current version at time of hack is
+    // v0.3.2
+    serverData.userPairings.pairings.forEach(element =>
+    {
+        if (element.trigger.messagetype == "trigger_QuizbotIncorrectAnwser")
+        {
+            element.trigger.messagetype = "trigger_QuizbotIncorrectAnswer";
+            SaveDataToServer();
+        }
+    });
+    // end hack
     if (to != "")
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ExtensionMessage",

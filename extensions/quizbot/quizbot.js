@@ -41,7 +41,8 @@ const localConfig = {
     currentQuestionAnswer: 0,
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
-    quizbotTimerHandle: undefined
+    quizbotTimerHandle: undefined,
+    quizRunning: false
 };
 
 const default_serverConfig = {
@@ -90,7 +91,7 @@ const triggersandactions =
             {
                 name: "quizbotIncorrectAnswer",
                 displaytitle: "IncorrectAnswer",
-                description: "Someone provided an incorrec answer",
+                description: "Someone provided an incorrect answer",
                 messagetype: "trigger_QuizbotIncorrectAnswer",
                 parameters: { user: "", question: "", answer: "" }
             },
@@ -304,7 +305,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_QuizbotCheckAnswer")
         {
-            if (extension_packet.to === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname && serverConfig.quizbot_enabled == "on")
                 checkAnswer(extension_packet.data);
         }
 
@@ -505,6 +506,7 @@ function checkAnswer (userAnswer)
     if (currentAnswer.toLowerCase() == answer.toLowerCase())
     {
         clearTimeout(localConfig.quizbotTimerHandle)
+        localConfig.quizRunning = false;
         startQuiz();
     }
 }
@@ -517,7 +519,7 @@ function checkAnswer (userAnswer)
 function startQuiz ()
 {
     // check if quiz is running
-    if (typeof (localConfig.quizbotTimerHandle) != "undefined" && !localConfig.quizbotTimerHandle._destroyed)
+    if (localConfig.quizRunning)
         stopQuiz()
     localConfig.currentQuestionAnswer = Math.floor(Math.random() * localConfig.quizQuestions.length);
 
@@ -546,7 +548,7 @@ function startQuiz ()
 function stopQuiz ()
 {
     // if we are currently turned on trigger a message so we can post the answer to the last question when turning it off
-    if (serverConfig.quizbot_enabled == "on" && typeof (localConfig.quizbotTimerHandle) != "undefined" && !localConfig.quizbotTimerHandle._destroyed)
+    if (localConfig.quizRunning)
     {
         let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
         let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim();
@@ -567,14 +569,15 @@ function stopQuiz ()
         );
     }
     clearTimeout(localConfig.quizbotTimerHandle)
+    localConfig.quizRunning = false;
 }
 // ============================================================================
-//                           FUNCTION: quizTimeout
+//                           FUNCTION: sendQuizTimeout
 // ============================================================================
 /**
  * sends trigger_QuizbotQuizTimeout when current question timer expires
  */
-function quizTimeout ()
+function sendQuizTimeout ()
 {
     let currentQuestion = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
     let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim();
@@ -603,14 +606,17 @@ function quizTimeout ()
 function quizTimerCallback ()
 {
     clearTimeout(localConfig.quizbotTimerHandle)
+    localConfig.quizRunning = false;
     if (serverConfig.quizbot_enabled == "on")
     {
         localConfig.quizbotTimerHandle = setTimeout(() =>
         {
-            quizTimeout();
+            localConfig.quizRunning = false;
+            sendQuizTimeout();
             startQuiz();
             quizTimerCallback();
         }, serverConfig.quizbot_duration)
+        localConfig.quizRunning = true;
     }
 }
 // ============================================================================
