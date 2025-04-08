@@ -75,7 +75,6 @@ const localConfig = {
         outputCongestion: 0,
         outputSkippedFrames: 0,
         outputTotalFrames: 0
-
     }
 };
 //sever config (stuff we want to save over runs)
@@ -155,6 +154,20 @@ const triggersandactions =
                 parameters: {}
             },
             {
+                name: "OBSRecordingStarted",
+                displaytitle: "Recording Started",
+                description: "Recording Started",
+                messagetype: "trigger_RecordingStarted",
+                parameters: {}
+            },
+            {
+                name: "OBSRecordingStopped",
+                displaytitle: "Recording Stopped",
+                description: "Recording Stopped",
+                messagetype: "trigger_RecordingStopped",
+                parameters: {}
+            },
+            {
                 name: "OBSSceneChanged",
                 displaytitle: "Scene Changed",
                 description: "Scene was changed",
@@ -180,6 +193,26 @@ const triggersandactions =
                 displaytitle: "StopsOBSStream",
                 description: "Stop Streaming in OBS",
                 messagetype: "action_StopStream",
+                parameters: {
+                    triggerActionRef: "obs",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
+            {
+                name: "OBSStartRecording",
+                displaytitle: "StartOBSRecording",
+                description: "Start Recording in OBS",
+                messagetype: "action_StartRecording",
+                parameters: {
+                    triggerActionRef: "obs",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
+            {
+                name: "OBSStopRecording",
+                displaytitle: "StopsOBSRecording",
+                description: "Stop Recording in OBS",
+                messagetype: "action_StopRecording",
                 parameters: {
                     triggerActionRef: "obs",
                     triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
@@ -475,6 +508,18 @@ function onDataCenterMessage (server_packet)
             {
                 if (serverConfig.enableobs == "on")
                     stopStream(extension_packet.data);
+            }
+            else if (extension_packet.type === "action_StartRecording")
+            {
+                console.log("action_StartRecording")
+                if (serverConfig.enableobs == "on")
+                    startRecording(extension_packet.data);
+            }
+            else if (extension_packet.type === "action_StopRecording")
+            {
+                console.log("action_StopRecording")
+                if (serverConfig.enableobs == "on")
+                    stopRecording(extension_packet.data);
             }
             else if (extension_packet.type === "action_EnableSource")
             {
@@ -943,9 +988,41 @@ function stopStream (extension_data)
     localConfig.obsConnection.call("StopStream", {})
         .then(() =>
         {
-            StreamStarted()
+            StreamStopped()
         })
         .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".stopStream ", "stopStream failed", err.message); });
+}
+// ============================================================================
+//                           FUNCTION: startRecording
+// ============================================================================
+/**
+ * Starts OBS Recording
+ * @param {string} extension_data 
+ */
+function startRecording (extension_data)
+{
+    localConfig.obsConnection.call("StartRecord", {})
+        .then(() =>
+        {
+            RecordingStarted()
+        })
+        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startRecording ", "startRecording failed", err.message); });
+}
+// ============================================================================
+//                           FUNCTION: stopRecording
+// ============================================================================
+/**
+ * Stops  OBS Recording
+ * @param {string} scene 
+ */
+function stopRecording (extension_data)
+{
+    localConfig.obsConnection.call("StopRecord", {})
+        .then(() =>
+        {
+            RecordingStopped()
+        })
+        .catch(err => { logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".stopRecording ", "stopRecording failed", err.message); });
 }
 // ============================================================================
 //                           FUNCTION: changeScene
@@ -1154,6 +1231,26 @@ function onSwitchedScenes (scene)
 
 }
 // ============================================================================
+//                           FUNCTION: StreamStarted
+// ============================================================================
+/**
+ * Called when the stream is started
+ */
+function StreamStarted ()
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStarted");
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "trigger_StreamStarted",
+                serverConfig.extensionname,
+                findtriggerByMessageType("trigger_StreamStarted"),
+                serverConfig.channel),
+            serverConfig.channel
+        ));
+}
+// ============================================================================
 //                           FUNCTION: StreamStopped
 // ============================================================================
 /**
@@ -1174,21 +1271,41 @@ function StreamStopped ()
         ));
 }
 // ============================================================================
-//                           FUNCTION: StreamStarted
+//                           FUNCTION: RecordingStarted
 // ============================================================================
 /**
- * Called when the stream is started
+ * Called when the Recording is started
  */
-function StreamStarted ()
+function RecordingStarted ()
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".StreamStarted");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".RecordingStarted");
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "trigger_StreamStarted",
+                "trigger_RecordingStarted",
                 serverConfig.extensionname,
-                findtriggerByMessageType("trigger_StreamStarted"),
+                findtriggerByMessageType("trigger_RecordingStarted"),
+                serverConfig.channel),
+            serverConfig.channel
+        ));
+}
+// ============================================================================
+//                           FUNCTION: RecordingStopped
+// ============================================================================
+/**
+ * Called when the Recording is stopped
+ */
+function RecordingStopped ()
+{
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".RecordingStopped");
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "trigger_RecordingStopped",
+                serverConfig.extensionname,
+                findtriggerByMessageType("trigger_RecordingStopped"),
                 serverConfig.channel),
             serverConfig.channel
         ));

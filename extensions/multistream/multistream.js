@@ -54,6 +54,17 @@ const localConfig = {
     hideStreamKey: true, // show stream key on the screen or not
     encoderBuildTimeoutHandle: null, // cancels the encoder builder (in case it gets stuck)
     encoderBuildTimeout: 10000, // give ourselves 10 seconds to run the builder or quit if not finished
+
+    // Error handlers
+    // need to add these into the settings to avoid buffer overun exit/issues
+    //ie for 50M buffer set this to 50 * 1024 * 1024 / 188
+    bufferOverrunFlags: "?overrun_nonfatal=1&fifo_size=50000000&buffer_size=65535",
+    // This prevents warnings of header updates (not an issue in streaming)
+    HeaderUpdateWarningsFlags1: "-flvflags",
+    HeaderUpdateWarningsFlags2: "no_duration_filesize",
+    // no buffer for low latency (may cause choppy streams)
+    lowLatency1: "-fflags",
+    lowLatency2: "+nobuffer"
 }
 
 // default empty stream object that wil be used to create new stream objects when we add user expansion of the number of streams available
@@ -64,6 +75,7 @@ const defaultEmptyStream =
     configurationMode: "Simple",
     Advanced: "",
     URL: "",
+    lowLatencyMode: "off",
     twitchBandwidthTest: "off",
     AdditionalURL: "",//goes between URL and StreamKey
     AdditionalParams: "",//goes after StreamKey
@@ -80,6 +92,7 @@ const defaultEmptyStream =
     audioEncoderOptionParameters: "",
     audioChannels: "2", // number of audio channels output (defaults to source)
     audioBitrate: "128k",
+    audioTracks: [],// which audio tracks to include, empty = all
     outputFormat: "flv",
 }
 // setup some defaults for twitch/youtube to help users get started etc
@@ -106,6 +119,7 @@ const defaultTwitchStream =
     audioEncoderOptionParameters: "",
     audioChannels: "",
     audioBitrate: "128k",
+    audioTracks: [],// which audio tracks to include, empty = all
     outputFormat: "flv",
 }
 const defaultYouTubeStream =
@@ -131,6 +145,7 @@ const defaultYouTubeStream =
     audioEncoderOptionParameters: "",
     audioChannels: "",
     audioBitrate: "128k",
+    audioTracks: [],// which audio tracks to include, empty = all
     outputFormat: "flv",
 }
 
@@ -141,7 +156,7 @@ const default_serverConfig = {
     channel: "MULTISTREAM",
     streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream, defaultTwitchStream],
     localStreamPort: 1935,
-    localStreamURL: "rtmp://localhost:localStreamPort/live/",
+    localStreamURL: "rtmp://localhost:localStreamPort",
     multistream_restore_defaults: "off",
     useStreamRollerFFMPEG: false,
 };
@@ -150,7 +165,6 @@ let serverConfig = structuredClone(default_serverConfig)
 localConfig.serverCredentials =
 {
     version: "0.1",
-    localStreamKey: "f215ee65asdd8864" // for OBS
 }
 
 const triggersandactions =
@@ -366,6 +380,7 @@ function onDataCenterMessage (server_packet)
                 if (server_packet.multistreamEnabled == "on" && server_packet.multistreamEnabled == "off")
                     ffmpegChanged = true;
                 serverConfig = structuredClone(server_packet.data);
+                SaveConfigToServer();
             }
             ffmpeg.useStreamRollerFfmpeg(serverConfig.useStreamRollerFFMPEG)
             SendSettingsWidgetSmall();
@@ -579,12 +594,14 @@ function parseSettingsWidgetLarge (extension_data)
     }
     else
     {
-        //first check credentials
+        // clean up streams and add streamKey/ffmpeg.exe to use
         serverConfig.streams.forEach((stream, i) =>
         {
             stream.enabled = "off";
             stream.variableBitrate = "off";
             stream.twitchBandwidthTest = "off";
+            stream.audioTracks = [];// clear out audioTracks as they are added below
+            // check credentials
             if (extension_data[`multistreamStream${i}StreamKey`] != localConfig.serverCredentials[`multistreamStream${i}StreamKey`])
             {
                 localConfig.serverCredentials[`multistreamStream${i}StreamKey`] = extension_data[`multistreamStream${i}StreamKey`];
@@ -604,20 +621,40 @@ function parseSettingsWidgetLarge (extension_data)
             // attempt to get an id value
             // take the last 2 chars, remove the underscore if there is one.
             // this limits us to 100 streams (as will _99 will work with this method)
-            var streamId = key.substring(key.length - 2).replace("_", "")
-            if (serverConfig.streams[streamId])
+            var streamId = "";
+            if (key.indexOf("audioTrack") > 0)
             {
-                var variableName = key.replace("multistream_", "").replace("_" + streamId, "")
-                serverConfig.streams[streamId][variableName] = value
+                // get the track id
+                let trackId = key.substring(key.length - 2).replace("_", "")
+                // remove the track id from the string
+                var temp = key.substring(0, key.length - (trackId.length + 1))
+                streamId = temp.substring(temp.length - 2).replace("_", "")
+                serverConfig.streams[streamId].audioTracks.push(trackId)
             }
             else
             {
-                if (serverConfig[key])
-                    serverConfig[key] = value;
+                streamId = key.substring(key.length - 2).replace("_", "")
+                if (serverConfig.streams[streamId])
+                {
+                    var variableName = key.replace("multistream_", "").replace("_" + streamId, "")
+                    serverConfig.streams[streamId][variableName] = value
+                }
+                else
+                {
+                    if (serverConfig[key])
+                        serverConfig[key] = value;
+                }
             }
         }
         serverConfig.useStreamRollerFFMPEG = (extension_data.multistreamffmpegpicker == "1");
         ffmpeg.useStreamRollerFfmpeg((extension_data.multistreamffmpegpicker == "1"))
+
+        // change "on" to true in out settings
+        if (extension_data["multistream_lowLatencyMode"] == "on")
+            serverConfig.lowLatencyMode = true;
+        else
+            serverConfig.lowLatencyMode = false;
+
         if (extension_data["multistream_hideStreamKey"] == "on")
             localConfig.hideStreamKey = true;
         else
@@ -701,7 +738,7 @@ function SendSettingsWidgetSmall ()
             serverConfig.streams.forEach((stream, i) =>
             {
                 streamsHtml += "<HR>";
-                streamsHtml += `<h4>${i}:${stream.name}</h4>`;
+                streamsHtml += `<h4>${i + 1}: ${stream.name}</h4>`;
                 // stream enabled
                 streamsHtml += createCheckBox("Enabled/Disabled", `multistream_enabled_${i}`, stream.enabled == "on");
                 streamsHtml += "<BR>";
@@ -762,16 +799,13 @@ function SendSettingsWidgetLarge ()
         else
         {
             let modalString = filedata.toString();
-
-            modalString = modalString.replace("multistream_OBSStreamKey",
-                localConfig.serverCredentials.localStreamKey);
             modalString = modalString.replace("multistream_localStreamURL",
                 serverConfig.localStreamURL);
 
             /* replacement text for variables */
-            const ffmpegExe = __dirname.replaceAll("\\", "\\\\") + "\\bin\\ffmpeg.exe"
+            const ffmpegExe = (__dirname + "\\bin\\ffmpeg.exe").replaceAll("\\", "\\\\")
             modalString = modalString.replace("currentCommand: replace",
-                "currentCommand: '" + ffmpegExe.replaceAll("\\\\", "\\") + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" ") + "'")
+                "currentCommand: '" + ffmpegExe + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" ") + "'")
             modalString = modalString.replace("multistreamtextcurrentCommand", ffmpeg.getFFMPEGCommand().replaceAll("\\\\", "\\") + " " + buildFFMPEGArgs(localConfig.hideStreamKey).join(" "))
             modalString = modalString.replace("ffmpegExe: replace",
                 "ffmpegExe: '" + ffmpegExe + "'")
@@ -787,8 +821,8 @@ function SendSettingsWidgetLarge ()
                 "ffmpegDebug: " + JSON.stringify(ffmpeg.getDebug()))
             modalString = modalString.replace("hideStreamKey: replace",
                 "hideStreamKey: " + localConfig.hideStreamKey);
-            modalString = modalString.replace("complexityMode: replace",
-                "complexityMode: " + "'Simple'")
+            modalString = modalString.replace("lowLatencyMode: replace",
+                "lowLatencyMode: " + serverConfig.lowLatencyMode)
 
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -883,7 +917,8 @@ function startStream (ref = "multistream")
             {
                 localConfig.streamRunning = true;
                 sendStreamStartedTrigger(ref);
-                sendOBSStartAction(ref);
+                //sendOBSStartStreamingAction(ref)
+                sendOBSStartRecordingAction(ref);
             }
             // console.log("handle", JSON.stringify(handle, null, 2))
         },
@@ -893,7 +928,8 @@ function startStream (ref = "multistream")
                 console.log("StreamFinished: ", err)
             localConfig.streamRunning = false;
             sendStreamStoppedTrigger();
-            sendOBSStopAction(ref);
+            //sendOBSStopStreamingAction(ref);
+            sendOBSStopRecordingAction(ref);
             localConfig.ffmpegHandle = null
             localConfig.multistreamStartStreaming = "off"
         }
@@ -913,108 +949,189 @@ function buildFFMPEGArgs (hideStreamKey = true)
     let OBSUrl = serverConfig.localStreamURL.replace("localStreamPort", serverConfig.localStreamPort);
     let ffmpegArgs =
         [
-            //"-v", "1",
-            "-listen", "1",  // Makes FFmpeg listen for incoming RTMP stream
+            //"-listen", "1",  // Makes FFmpeg listen for incoming RTMP stream
             "-i",
-            OBSUrl + localConfig.serverCredentials.localStreamKey,
+            OBSUrl //+ localConfig.serverCredentials.localStreamKey,
         ]
-    // examples
-    //-c copy -f flv rtmp://twitch 
-    //-c:v libx264 -preset medium -maxrate 3500k -bufsize 6000k -r 30 -pix_fmt yuv420p -g 60 -c:a aac -b:a 160k -ac 2 -ar 44100 -f flv rtmp//:facebook
+    if (serverConfig.lowLatencyMode)
+    {
+        ffmpegArgs.push(localConfig.lowLatency1);
+        ffmpegArgs.push(localConfig.lowLatency2);
+    }
     serverConfig.streams.forEach((stream, i) =>
     {
-        if (stream.enabled == "on")
+        ffmpegArgs = buildStreamParams(ffmpegArgs, stream, i, hideStreamKey)
+    });
+    return ffmpegArgs;
+}
+// ============================================================================
+//                           FUNCTION: stopStream
+// ============================================================================
+function buildStreamParams (ffmpegArgs, stream, streamIndex, hideStreamKey = true)
+{
+    if (stream.enabled == "on")
+    {
+        // Simple mode
+        if (stream.configurationMode == "Simple")
+            ffmpegArgs = buildSimpleStreamArgs(ffmpegArgs, stream, streamIndex, hideStreamKey)
+        else if (stream.configurationMode == "Configurable")
+            ffmpegArgs = buildConfigurableStreamArgs(ffmpegArgs, stream, streamIndex, hideStreamKey)
+        else if (stream.configurationMode == "Advanced") 
         {
-            if (stream.configurationMode == "Simple")
+            let params = stream.Advanced.split(" ");
+            params.forEach((item, index) =>
             {
-                ffmpegArgs.push("-c"); ffmpegArgs.push("copy");
-                ffmpegArgs.push("-f"); ffmpegArgs.push("flv");
-                if (stream.URL && stream.URL != "")
-                {
-                    let twitchBandwidthTest = "";
-                    if (stream.twitchBandwidthTest == "on")
-                        twitchBandwidthTest = "?bandwidthtest=true"
+                ffmpegArgs.push(item);
+            });
+        }
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".buildFFMPEGArgs", "No stream.configurationMode", streamIndex, stream.configurationMode);
+    }
+    return ffmpegArgs;
+}
+// ============================================================================
+//                           FUNCTION: buildSimpleStreamArgs
+// ============================================================================
+function buildSimpleStreamArgs (ffmpegArgs, stream, streamIndex, hideStreamKey)
+{
 
+    //always take the complete video
+    ffmpegArgs.push("-map"); ffmpegArgs.push("0:v");
 
-                    if (hideStreamKey)
-                        ffmpegArgs.push(stream.URL + "/STREAM_KEY_GOES_HERE" + twitchBandwidthTest);
-                    else
-                        ffmpegArgs.push(stream.URL + "/" + localConfig.serverCredentials[`multistreamStream${i}StreamKey`] + twitchBandwidthTest);
-                }
-                else
-                    console.log(`Multistream: missing URL for stream ${i}: ${stream.name}`)
-            }
-            else
+    if (stream.audioTracks && stream.audioTracks.length > 0)
+    {
+        ffmpegArgs = buildAudioArgs(ffmpegArgs, stream);
+        ffmpegArgs.push("-c:v"); ffmpegArgs.push("copy");
+    }
+    else
+    {
+        ffmpegArgs.push("-map"); ffmpegArgs.push("0:a");
+        ffmpegArgs.push("-c:v"); ffmpegArgs.push("copy");
+        ffmpegArgs.push("-c:a"); ffmpegArgs.push("copy");
+    }
+
+    ffmpegArgs.push(localConfig.HeaderUpdateWarningsFlags1);
+    ffmpegArgs.push(localConfig.HeaderUpdateWarningsFlags2);
+    ffmpegArgs.push("-f"); ffmpegArgs.push("flv");
+    if (stream.URL && stream.URL != "")
+    {
+        let twitchBandwidthTest = "";
+        if (stream.twitchBandwidthTest == "on")
+            twitchBandwidthTest = "?bandwidthtest=true"
+
+        if (hideStreamKey)
+            ffmpegArgs.push(stream.URL + localConfig.bufferOverrunFlags + "/STREAM_KEY_GOES_HERE" + twitchBandwidthTest);
+        else
+            ffmpegArgs.push(stream.URL + localConfig.bufferOverrunFlags + "/" + localConfig.serverCredentials[`multistreamStream${streamIndex}StreamKey`] + twitchBandwidthTest);
+    }
+    else
+        console.log(`Multistream: missing URL for stream[${streamIndex}] ${stream.name}`)
+    return ffmpegArgs;
+}
+// ============================================================================
+//                           FUNCTION: buildConfigurableStreamArgs
+// ============================================================================
+function buildConfigurableStreamArgs (ffmpegArgs, stream, streamIndex, hideStreamKey)
+{
+    //always take the complete video
+    ffmpegArgs.push("-map"); ffmpegArgs.push("0:v");
+    if (stream.audioTracks && stream.audioTracks.length > 0)
+    {
+        stream.audioTracks.forEach((item, index) =>
+        {
+            ffmpegArgs.push("-map"); ffmpegArgs.push("0:a:" + item);
+        });
+    }
+    else
+    {
+        ffmpegArgs.push("-map"); ffmpegArgs.push("0:a");
+    }
+    if (stream.videoEncoder && stream.videoEncoder != "")
+    {
+        ffmpegArgs.push("-c:v");
+        ffmpegArgs.push(stream.videoEncoder);
+        if (stream.videoEncoderOption && stream.videoEncoderOption != "" && stream.videoEncoderOption != "none")
+        {
+            ffmpegArgs.push(stream.videoEncoderOption);
+            if (stream.videoEncoderOptionParameters && stream.videoEncoderOptionParameters != "" && stream.videoEncoderOptionParameters != "EMPTY")
             {
-                if (stream.videoEncoder && stream.videoEncoder != "")
+                let array = stream.videoEncoderOptionParameters.split(" ")
+                array.forEach((value, i) =>
                 {
-                    ffmpegArgs.push("-c:v");
-                    ffmpegArgs.push(stream.videoEncoder);
-                    if (stream.videoEncoderOption && stream.videoEncoderOption != "" && stream.videoEncoderOption != "none")
-                    {
-                        ffmpegArgs.push(stream.videoEncoderOption);
-                        if (stream.videoEncoderOptionParameters && stream.videoEncoderOptionParameters != "" && stream.videoEncoderOptionParameters != "EMPTY")
-                        {
-
-                            let array = stream.videoEncoderOptionParameters.split(" ")
-                            array.forEach((value, i) =>
-                            {
-                                //ffmpegArgs.push("-preset"); 
-                                ffmpegArgs.push(value);
-                            })
-                        }
-                    }
-                }
-                //set the basic options
-                if (stream.variableBitrate == "on")
-                { ffmpegArgs.push("-rc"); ffmpegArgs.push("vbr"); }//variable bitrate
-                else
-                { ffmpegArgs.push("-rc"); ffmpegArgs.push("cbr"); }//constant bitrate
-                if (stream.targetBitrate && stream.targetBitrate != "")
-                { ffmpegArgs.push("-b:v"); ffmpegArgs.push(stream.targetBitrate); }
-                if (stream.resolution && stream.resolution != "")
-                { ffmpegArgs.push("-s"); ffmpegArgs.push(stream.resolution); }
-                if (stream.framerate && stream.framerate != "")
-                { ffmpegArgs.push("-r"); ffmpegArgs.push(stream.framerate); }//use a standard frame rate
-                if (stream.keyframeInterval && stream.keyframeInterval != "")
-                { ffmpegArgs.push("-g"); ffmpegArgs.push(stream.keyframeInterval); }
-                if (stream.audioEncoder && stream.audioEncoder != "")
-                {
-                    ffmpegArgs.push("-c:a");
-                    ffmpegArgs.push(stream.audioEncoder);
-                    if (stream.audioEncoderOption && stream.audioEncoderOption != "" && stream.audioEncoderOption != "none")
-                    {
-                        ffmpegArgs.push(stream.audioEncoderOption);
-                        if (stream.audioEncoderOptionParameters && stream.audioEncoderOptionParameters != "" && stream.audioEncoderOptionParameters != "EMPTY")
-                        {
-                            let array = stream.audioEncoderOptionParameters.split(" ")
-                            array.forEach((value, i) =>
-                            {
-                                ffmpegArgs.push(value);
-                            })
-                        }
-                    }
-                }
-                if (stream.audioChannels && stream.audioChannels != "")
-                { ffmpegArgs.push("-ac"); ffmpegArgs.push(stream.audioChannels); } // stereo sound
-                //ffmpegArgs.push("-crf"); ffmpegArgs.push("18"); // set a constant rate factor to 'visually lossless'
-                if (stream.audioBitrate && stream.audioBitrate != "")
-                { ffmpegArgs.push("-b:a"); ffmpegArgs.push(stream.audioBitrate); }
-                if (stream.outputFormat && stream.outputFormat != "")
-                { ffmpegArgs.push("-f"); ffmpegArgs.push(stream.outputFormat) }
-
-                if (stream.URL && stream.URL != "")
-                {
-                    if (hideStreamKey)
-                        ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/STREAM_KEY_GOES_HERE" + stream.AdditionalParams);
-                    else
-                        ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/" + localConfig.serverCredentials[`multistreamStream${i}StreamKey`] + stream.AdditionalParams);
-                }
-                else
-                    console.log(`Multistream: missing URL for stream ${i}: ${stream.name}`)
+                    //ffmpegArgs.push("-preset"); 
+                    ffmpegArgs.push(value);
+                })
             }
         }
+    }
+    //set the basic options
+    if (stream.variableBitrate == "on")
+    { ffmpegArgs.push("-rc"); ffmpegArgs.push("vbr"); }//variable bitrate
+    else
+    { ffmpegArgs.push("-rc"); ffmpegArgs.push("cbr"); }//constant bitrate
+    if (stream.targetBitrate && stream.targetBitrate != "")
+    { ffmpegArgs.push("-b:v"); ffmpegArgs.push(stream.targetBitrate); }
+    if (stream.resolution && stream.resolution != "")
+    { ffmpegArgs.push("-s"); ffmpegArgs.push(stream.resolution); }
+    if (stream.framerate && stream.framerate != "")
+    { ffmpegArgs.push("-r"); ffmpegArgs.push(stream.framerate); }//use a standard frame rate
+    if (stream.keyframeInterval && stream.keyframeInterval != "")
+    { ffmpegArgs.push("-g"); ffmpegArgs.push(stream.keyframeInterval); }
+    if (stream.audioEncoder && stream.audioEncoder != "")
+    {
+        ffmpegArgs.push("-c:a");
+        ffmpegArgs.push(stream.audioEncoder);
+        if (stream.audioEncoderOption && stream.audioEncoderOption != "" && stream.audioEncoderOption != "none")
+        {
+            ffmpegArgs.push(stream.audioEncoderOption);
+            if (stream.audioEncoderOptionParameters && stream.audioEncoderOptionParameters != "" && stream.audioEncoderOptionParameters != "EMPTY")
+            {
+                let array = stream.audioEncoderOptionParameters.split(" ")
+                array.forEach((value, i) =>
+                {
+                    ffmpegArgs.push(value);
+                })
+            }
+        }
+    }
+    if (stream.audioChannels && stream.audioChannels != "")
+    { ffmpegArgs.push("-ac"); ffmpegArgs.push(stream.audioChannels); } // stereo sound
+    //ffmpegArgs.push("-crf"); ffmpegArgs.push("18"); // set a constant rate factor to 'visually lossless'
+    if (stream.audioBitrate && stream.audioBitrate != "")
+    { ffmpegArgs.push("-b:a"); ffmpegArgs.push(stream.audioBitrate); }
+    if (stream.outputFormat && stream.outputFormat != "")
+    { ffmpegArgs.push("-f"); ffmpegArgs.push(stream.outputFormat) }
+
+    if (stream.URL && stream.URL != "")
+    {
+        if (hideStreamKey)
+            ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/STREAM_KEY_GOES_HERE" + stream.AdditionalParams);
+        else
+            ffmpegArgs.push(stream.URL + stream.AdditionalURL + "/" + localConfig.serverCredentials[`multistreamStream${streamIndex}StreamKey`] + stream.AdditionalParams);
+    }
+    else
+        console.log(`Multistream: missing URL for stream ${streamIndex}: ${stream.name}`)
+    return ffmpegArgs;
+}
+// ============================================================================
+//                           FUNCTION: buildAudioArgs
+// ============================================================================
+function buildAudioArgs (ffmpegArgs, stream)
+{
+    //-filter_complex "[0:a:0][0:a:1][0:a:2]amix=inputs=3:duration=longest[aout]" -map 0:v -map "[aout]"
+    let trackCount = stream.audioTracks.length
+    let mappings = ''
+    ffmpegArgs.push("-filter_complex");
+
+    stream.audioTracks.forEach((item, index) =>
+    {
+        mappings += `[0:a:${item}]`
     });
+    mappings += "amix=inputs=" + trackCount + ":duration=longest[aout]"
+    ffmpegArgs.push(mappings);
+    ffmpegArgs.push("-map");
+    ffmpegArgs.push("[aout]");
     return ffmpegArgs;
 }
 // ============================================================================
@@ -1062,24 +1179,14 @@ process.on("SIGINT", () =>
 });
 
 // ============================================================================
-//                           FUNCTION: sendOBSStartAction
+//                           FUNCTION: sendOBSStartStreamingAction
 // ============================================================================
 /**
  * tells OBS to start streaming
  * @param {string} triggerActionRef pass through reference from action or "multistream"
  */
-function sendOBSStartAction (triggerActionRef = "multistream")
+function sendOBSStartStreamingAction (triggerActionRef = "multistream")
 {
-    /* to send an action we just need the following fields
-     action = 
-    {
-     messagetype: "action_StartStream",
-     data: 
-        {
-            //param data from the extensions action definition
-        }
-    }
-    */
     let action = {
         messagetype: "action_StartStream",
         to: "obs",
@@ -1090,19 +1197,54 @@ function sendOBSStartAction (triggerActionRef = "multistream")
     sendAction(action);
 }
 // ============================================================================
-//                           FUNCTION: sendOBSStopAction
+//                           FUNCTION: sendOBSStopStreamingAction
 // ============================================================================
 /**
  * 
  * @param {string} triggerActionRef pass through reference from action or "multistream"
  */
-function sendOBSStopAction (triggerActionRef = "multistream")
+function sendOBSStopStreamingAction (triggerActionRef = "multistream")
 {
     let action = {
         messagetype: "action_StopStream",
         to: "obs",
         data: {
-            //param data from the extensions action definition
+            triggerActionRef: triggerActionRef,
+        }
+    }
+    sendAction(action);
+}
+// ============================================================================
+//                           FUNCTION: sendOBSStartRecordingAction
+// ============================================================================
+/**
+ * tells OBS to start Recording
+ * @param {string} triggerActionRef pass through reference from action or "multistream"
+ */
+function sendOBSStartRecordingAction (triggerActionRef = "multistream")
+{
+    let action = {
+        messagetype: "action_StartRecording",
+        to: "obs",
+        data: {
+            triggerActionRef: triggerActionRef,
+        }
+    }
+    sendAction(action);
+}
+// ============================================================================
+//                           FUNCTION: sendOBSStopRecordingAction
+// ============================================================================
+/**
+ * 
+ * @param {string} triggerActionRef pass through reference from action or "multistream"
+ */
+function sendOBSStopRecordingAction (triggerActionRef = "multistream")
+{
+    let action = {
+        messagetype: "action_StopRecording",
+        to: "obs",
+        data: {
             triggerActionRef: triggerActionRef,
         }
     }

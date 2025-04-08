@@ -226,7 +226,14 @@ function runFFMPEG (command, args, options = {}, processCB = null, streamStarted
         if (!localConfig.streamRunning)
             streamStarted();
         if (localConfig.debugOptions.DEBUG_FFMPEG_STDERR)
+        {
             console.log("ffmpeg:stderr:data()", JSON.stringify(data.toString(), null, 2))
+        }
+        else
+        {
+            if (data.indexOf("frame") == 0)
+                printProgress(data.toString())
+        }
     });
 
     ffmpegProc.stderr.on('close', function ()

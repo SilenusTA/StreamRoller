@@ -25,7 +25,9 @@
         display: none !important;
     }
 </style>
-<form id="multistream_settingsform">
+<form id="multistream_settingsform" autocomplete="off">
+    <!-- chromium will complain about this form due to two password fields for streamkeys 
+     'password' fields in the same form -->
     <div class="form-group invisible">
         <input type="hidden" name="extensionname" class="form-control" value="multistream" tabindex="-1" />
         <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
@@ -37,7 +39,7 @@
     <p>Multistream using StreamRoller as the multiplexer to take an OBS stream and output to different platforms
         <BR> Notes:
     <ul>
-        <li>OBS Settings: Service: <b><i>Custom...</i></b>, Server: <b><i>multistream_localStreamURL</i></b>, Streamkey: <b><i>multistream_OBSStreamKey</i></b>
+        <li>OBS Settings: Service: <b><i>Custom...</i></b>, Server: <b><i>multistream_localStreamURL</i></b>
         </li>
         <li>ffmpeg is required to run, if you have a version installed (check the command prompt if not sure. enter <b><i>ffmpeg -version</i></b> to see if you
             have one
@@ -72,6 +74,13 @@
     <div style="color:yellow">Note: if you select to run StreamRoller FFMPEG this will automatically download and installed ffmpeg in the
         extensions/multistream/bin folder if it doesn't exist (after installing a new StreamRoller version this will re-download ffmpeg).</div>
     <div id="multistreamFFMPEGPickerPlaceholder"></div>
+    <div id="multistreamlowLatencyModecheckbox">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="multistream_lowLatencyMode" type="checkbox" id="multistream_lowLatencyMode">
+            <label class="form-check-label" for="multistream_lowLatencyMode">Low Latency Mode (may cause choppiness in streams)</label>
+        </div>
+
+    </div>
     <HR>
     <h3 class="text-center">StreamConfigurations</h3>
     <p>Configure the output for each stream you want to send to (when stream is set to enabled)</p>
@@ -107,7 +116,7 @@
     </div>
     <HR>
     <div class="modal-footer">
-        <button id="closeSettings" type="button" type="close" class="btn btn-secondary">Close</button>
+        <button id="closeSettingsmultistream" type="button" type="close" class="btn btn-secondary">Close</button>
         <button type="submit" class="btn btn-primary">Update</button>
     </div>
 </form>
@@ -129,7 +138,7 @@
             serverCredentials: replace,
             ffmpegDebug: replace,
             hideStreamKey: replace,
-            complexityMode: replace
+            lowLatencyMode: replace
         };
 
         fetch('/multistream/data/encoders.json')
@@ -175,6 +184,12 @@
                 document.getElementById("multistream_DEBUG_FFMPEG_STDOUT").checked = true;
             else
                 document.getElementById("multistream_DEBUG_FFMPEG_STDOUT").checked = false;
+
+            // hide stream key?
+            if (multiStreamingConfig.LatencyMode)
+                document.getElementById("multistreamlowLatencyModecheckbox").checked = true;
+            else
+                document.getElementById("multistreamlowLatencyModecheckbox").checked = false;
             // hide stream key?
             if (multiStreamingConfig.hideStreamKey)
                 document.getElementById("multistream_hideStreamKey").checked = true;
@@ -202,8 +217,9 @@
                 streamsHtml += createTextBox("Name", `multistream_name_${i}`, stream.name, false, "", "");
 
                 // Configuration Mode selector
-                streamsHtml += createDropdown("Configuration Mode", `multistream_configurationMode_${i}`, ["Simple", "Configurable", "Advanced"], stream.configurationMode);
+                streamsHtml += createDropdown("Configuration Mode", `multistream_configurationMode_${i}`, ["Simple", "Configurable", "Advanced"], stream.configurationMode, "Configuration Mode");
 
+                streamsHtml += "<h5>Stream Settings</h5>"
                 // Advanced
                 streamsHtml += createTextBox("ffmpeg options", `multistream_Advanced_${i}`, "", false, "", `multistreamAdvancedDisplay_${i}`);
 
@@ -226,6 +242,7 @@
                 streamsHtml += createCheckBox("Variable Bitrate", `multistream_variableBitrate_${i}`, stream.variableBitrate == "on", `multistreamConfigurableDisplay_${i}`);
 
                 // Video encoders
+                streamsHtml += `<h5 class="multistreamConfigurableDisplay_${i}">Video Settings</h5>`
                 if (multiStreamingConfig.encoders)
                     streamsHtml += createDropdown("Video Encoder", `multistream_videoEncoder_${i}`, multiStreamingConfig.encoders.videoEncoders, stream.videoEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
 
@@ -235,9 +252,9 @@
                     streamsHtml += createDropdown("Video Encoder Options", `multistream_videoEncoderOption_${i}`, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder], stream.videoEncoderOption, multiStreamingConfig.encoders.videoEncoders[stream.videoEncoder][stream.videoEncoderOption], `multistreamConfigurableDisplay_${i}`);
                     tempString = "<div id='encoderOptionsDiv' class='multistreamConfigurableDisplay'>"
                     if (multiStreamingConfig.useStreamRollerFFMPEG)
-                        tempString += "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                        tempString += "Video Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.videoEncoder + "' on the commandline)"
                     else
-                        tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.videoEncoder + "' on the commandline)"
+                        tempString = "Video Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.videoEncoder + "' on the commandline)"
                     tempString += "</div>";
                     streamsHtml += createTextBox("Video encoder option Parameters", `multistream_videoEncoderOptionParameters_${i}`, stream.videoEncoderOptionParameters ? stream.videoEncoderOptionParameters : "", false, tempString, `multistreamConfigurableDisplay_${i}`);
 
@@ -258,14 +275,15 @@
                 streamsHtml += createTextBox("Key Frame Interval (in seconds)", `multistream_keyframeInterval_${i}`, stream.keyframeInterval, false, "", `multistreamConfigurableDisplay_${i}`);
 
                 // AudioEncoder
+                streamsHtml += `<h5 class="multistreamConfigurableDisplay_${i}">Audio Settings</h5>`
                 if (multiStreamingConfig.encoders && multiStreamingConfig.encoders.audioEncoders)
                 {
                     streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoder_${i}`, multiStreamingConfig.encoders.audioEncoders, stream.audioEncoder, "More info can be found using the command line", `multistreamConfigurableDisplay_${i}`);
 
                     if (multiStreamingConfig.useStreamRollerFFMPEG)
-                        tempString = "Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.audioEncoder + "' on the commandline)"
+                        tempString = "Audio Encoder options: (find more info by running '" + multiStreamingConfig.ffmpegExe + " -h encoder=" + stream.audioEncoder + "' on the commandline)"
                     else
-                        tempString = "Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.audioEncoder + "' on the commandline)"
+                        tempString = "Audio Encoder options: (find more info by running 'ffmpeg -h encoder=" + stream.audioEncoder + "' on the commandline)"
 
                     // AudioEncoderOptions
                     streamsHtml += createDropdown("Audio Encoder options", `multistream_audioEncoderOption_${i}`, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder], stream.audioEncoderOption, multiStreamingConfig.encoders.audioEncoders[stream.audioEncoder][stream.audioEncoderOption], `multistreamConfigurableDisplay_${i}`);
@@ -276,6 +294,17 @@
                 // audioBitrate
                 streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
 
+                streamsHtml += '<div class=" py-2">'
+                streamsHtml += 'Audio Channels (Select none if you want all channels to save remuxing them all adding a performance hit)<BR>';
+                for (let trackId = 0; trackId < 6; trackId++)
+                {
+                    streamsHtml += `<label class="form-check-label" for=""multistream_audioTrack_${i}_${trackId}">&nbsp;${trackId + 1}&nbsp;</label>`
+                    if (stream.audioTracks && stream.audioTracks.includes(trackId.toString()))
+                        streamsHtml += `<input class="form-check-input" name="multistream_audioTrack_${i}_${trackId}" type="checkbox" id="multistream_audioTrack_${i}_${trackId}" onclick="checkboxClicked(this);" checked>`;
+                    else
+                        streamsHtml += `<input class="form-check-input" name="multistream_audioTrack_${i}_${trackId}" type="checkbox" id="multistream_audioTrack_${i}_${trackId}" onclick="checkboxClicked(this);">`;
+                }
+                streamsHtml += '</div>'
             });
             element.innerHTML = streamsHtml;
             // update hidden stats for all items.
@@ -372,12 +401,17 @@
         function createTextBox (label, name, value, password, description = null, configClasses = "")
         {
             let type = "text"
+            let autocomplete = ""
             if (password)
+            {
                 type = "password"
+                // attempt to prevent chrome from complaining about multiple form items
+                autocomplete = "autocomplete='current-password'"
+            }
             let textBoxHtml = `<div id="${name}_outer_div" class="${configClasses}">`
             textBoxHtml += `
                 <div id="${name}_div" class="form-group py-1" style="display: inline-flex;">
-                    <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}">
+                    <input type="${type}" name="${name}" class="form-control" style="width:auto" id="${name}" value="${value}" ${autocomplete}>
                     <label for="${name}" class="col-form-label">&nbsp;${label}</label>
                     
                 </div>`
