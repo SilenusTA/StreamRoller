@@ -187,8 +187,6 @@
     //global volatile data store for the app
     const livePortalVolatileData = {};
     livePortalVolatileData.extensions = {};
-    // add our own card
-
     livePortalVolatileData.channellist = {};
     localConfig.host = '<%= host %>';
     localConfig.port = '<%= port %>';
@@ -1370,18 +1368,8 @@
             extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_settingswidgetsmallmodal";
             extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
             extLiTag.getElementsByClassName("modal")[0].id = xname + "_settingswidgetsmallmodal";
-            fetch("https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/" + xname + "/README.md", { method: 'HEAD' }) // Use HEAD to get only headers, which is faster
-                .then(response =>
-                {
-                    if (response.ok)
-                    {
-                        extLiTag.innerHTML = extLiTag.innerHTML + "<a href='https://github.com/SilenusTA/StreamRoller/tree/master/extensions/" + xname + "/README.md' Title='" + xname + " docs' target='readme'><img src='/liveportal/images/info.png' width='15px' height='15px'></a>"
-                    }
-                })
-                .catch(error =>
-                {
-                    console.log(`Error: ${error.message}. The URL might be invalid.`);
-                });
+
+            extLiTag.innerHTML = extLiTag.innerHTML + "<a href='https://github.com/SilenusTA/StreamRoller/blob/master/extensions/" + xname + "/README.md' Title='" + xname + " docs' target='readme'><img src='/liveportal/images/info.png' width='15px' height='15px'></a>"
 
             // set the data from the extension
             document.getElementById(xname + "_settingswidgetsmallmodal").innerHTML = data;
@@ -1604,7 +1592,7 @@
         3) if they have a readonly flag set to true set orange // for chat mostly
         4) if connected or status is true set green
         5) otherwise set red
-
+ 
         */
         //checking for old heartbeat message types. should be all fixed
         if ((typeof (status)) != "object")
