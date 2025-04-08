@@ -17,16 +17,17 @@
 
 // these are default triggers so the user has something to look at during startup.
 const default_serverData = {
-    __version__: "0.2.3",
-    userPairings: {
+    "__version__": "0.2.3",
+    "userPairings": {
         "pairings": [
             {
+                "pairingTitle": "",
                 "group": "Quiz_1",
                 "trigger": {
-                    "name": "Start Quiz",
+                    "name": "Quiz",
                     "extension": "macros",
                     "channel": "AUTOPILOT_BE",
-                    "messagetype": "trigger_startquiz",
+                    "messagetype": "trigger_Quiz",
                     "data": [],
                     "cooldown": "0"
                 },
@@ -35,8 +36,7 @@ const default_serverData = {
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",
                     "messagetype": "action_QuizbotStartQuiz",
-                    "data": [],
-                    "paused": false
+                    "data": []
                 }
             },
             {
@@ -162,11 +162,12 @@ const default_serverData = {
                             "account": "bot"
                         },
                         {
-                            "message": "No one seemed to have an answer for %%question%%. The correct answer was %%answer%%"
+                            "message": "Quiz timeout: The correct answer was %%answer%%"
                         }
                     ],
                     "paused": false
-                }
+                },
+                "pairingTitle": ""
             },
             {
                 "group": "Quiz_1",
@@ -197,11 +198,12 @@ const default_serverData = {
                             "account": "bot"
                         },
                         {
-                            "message": "The answer to %%question%%. was %%answer%%"
+                            "message": "Quiz Stopped: The answer was %%answer%%"
                         }
                     ],
                     "paused": false
-                }
+                },
+                "pairingTitle": ""
             },
             {
                 "group": "Quiz_1",
@@ -236,11 +238,12 @@ const default_serverData = {
                             "account": "bot"
                         },
                         {
-                            "message": "@%%user%% \"%%answer%%\" is an incorrect answer for %%question%%"
+                            "message": "@%%user%% \"%%answer%%\" was incorrect"
                         }
                     ],
                     "paused": false
-                }
+                },
+                "pairingTitle": ""
             },
             {
                 "group": "Quiz_1",
@@ -295,18 +298,18 @@ const default_serverData = {
             "description": "Macros (dummy triggers)",
             "version": "0.2",
             "channel": "AUTOPILOT_BE",
-            "triggers":
-                [
-                    {
-                        "name": "Start Quiz",
-                        "description": "Start the Quiz",
-                        "displaytitle": "Triggers the Quiz to startup",
-                        "messagetype": "trigger_startquiz",
-                        "color": "",
-                        "backgroundcolor": "",
-                        "image": "medium-m.brands.png"
-                    }
-                ],
+            "triggers": [
+                {
+                    "name": "Quiz",
+                    "description": "Starts/Restarts Quiz",
+                    "displaytitle": "Quiz",
+                    "extensionname": "autopilot",
+                    "messagetype": "trigger_Quiz",
+                    "color": "",
+                    "backgroundcolor": "",
+                    "image": "medium-m.brands.png"
+                }
+            ],
             "actions": []
         }
     }
