@@ -656,6 +656,10 @@ function chatAPIError (error)
 function metaUpdate (metadata)
 {
     file_log("// metaUpdate() metadata.views.is_live = " + metadata.views.is_live);
+    if (!metadata.views.is_live)
+    {
+        localConfig.liveVideoId = null;
+    }
     if (localConfig.youtubeAPI && localConfig.youtubeAPI.session)
         localConfig.signedIn = localConfig.youtubeAPI.session.logged_in;
 }
