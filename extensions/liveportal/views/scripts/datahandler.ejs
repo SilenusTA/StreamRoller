@@ -152,7 +152,7 @@
         bannedUsersList: [],
 
         LargeSettingsDataCacheHandle: null,
-        LargeSettingsDataCacheTimeout: 2000,
+        LargeSettingsDataCacheTimeout: 500,
         addALLSettingsWidgetLargeRunning: false,
 
         documentHiddenConnectHandler: null,
@@ -677,12 +677,12 @@
                         for (const [key, value] of Object.entries(serverConfig))
                         {
                             //lets check our settings and send out updates as required
-                            if (value === "on" && !extension_packet.data[key])
+                            if (value === "on" && !extension_packet.data[key + "_SettingsSmallFormItem"])
                                 serverConfig[key] = "off";
-                            else if (key === "randomfactstimeout")
-                                serverConfig[key] = extension_packet.data[key] * 60000
-                            else if (key in extension_packet.data)
-                                serverConfig[key] = extension_packet.data[key];
+                            else if (key === "randomfactstimeout" + "_SettingsSmallFormItem")
+                                serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"] * 60000
+                            else if (key + "_SettingsSmallFormItem" in extension_packet.data)
+                                serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"];
                         }
                     }
 
@@ -1269,9 +1269,9 @@
         {
             // true values represent a checkbox so replace the "[key]checked" values with checked
             if (value === "on")
-                modalstring = modalstring.replaceAll(key + "checked", "checked");
+                modalstring = modalstring.replaceAll(key + "_SettingsSmallFormItemchecked", "checked");
             else if (typeof (value) == "string" || typeof (value) == "number")
-                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + value + '"');
+                modalstring = modalstring.replaceAll('"' + key + '_SettingsSmallFormItemtext"', '"' + value + '"');
         }
         // send the modal data to the server
         // send the modal data to the server
@@ -1411,10 +1411,11 @@
     // ============================================================================
     //                           FUNCTION: addALLSettingsWidgetLargeScheduler
     // ============================================================================
-    // buffers widgest being set.
+    // buffers widget being set.
     function addALLSettingsWidgetLargeScheduler ()
     {
-        // already a scheduler running
+        // CACHE REQUESTS
+        // already a scheduler waiting so clear it and restart (cahching requests)
         if (localConfig.LargeSettingsDataCacheHandle != null)
         {
             // clear the existing timer as we have a new update
@@ -1428,7 +1429,13 @@
             // last run is still going 
             if (localConfig.addALLSettingsWidgetLargeRunning)
             {
-                console.log("Trying to run but localConfig.addALLSettingsWidgetLargeRunning=", localConfig.addALLSettingsWidgetLargeRunning)
+                // reschedule this run when the current running timer has finished
+                localConfig.LargeSettingsDataCacheHandle = null;
+                setTimeout(() =>
+                {
+                    addALLSettingsWidgetLargeScheduler();
+                }, 100);
+
             }
             else
             {
@@ -1436,8 +1443,6 @@
                 localConfig.LargeSettingsDataCacheHandle == null
             }
         }, localConfig.LargeSettingsDataCacheTimeout);
-
-
     }
     // ============================================================================
     //                           FUNCTION: addSettingsWidgetLarge
@@ -1473,6 +1478,7 @@
                 else
                     document.getElementById("SettingsPageTabs").innerHTML += "<li class='nav-item' id='" + xname + "_settingswidgetlargetab'>\n<a class='nav-link bg-light text-dark' id='" + xname + "_settingswidgetlargelink' data-toggle='tab' href='#" + xname + "_settingswidgetlargecontent'>" + xname + "</a>\n</li>"
 
+                // ################# ADD Content ##############
                 if (first)
                 {
                     first = false;
@@ -1510,7 +1516,7 @@
                         $("#live-tab").tab('show');
                         return false;
                     });
-                    $('#' + xname + "_settingsform").find('#closeSettings').on('click', function (event)
+                    $('#' + xname + "_settingsform").find('#closeSettings' + xname).on('click', function (event)
                     {
                         event.preventDefault();
                         $("#live-tab").tab('show');
@@ -1570,8 +1576,9 @@
             // need to update the mode in case we have received a light mode 
             // modal and we are in dark mode, done here in case we arn't loaded yet
             refreshDarkMode();
-        }
-            , 200);
+
+        }, 200);
+
     }
     // ============================================================================
     //                           FUNCTION: setExtensionStatus
@@ -2040,6 +2047,7 @@
         let fieldsAsArray = $('#' + page_id).serializeArray();
         // convert our array of objects into a more usable objet
         var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+
         if (fieldsAsObject.extensionname)
             sr_api.sendMessage(DataCenterSocket,
                 sr_api.ServerPacket(
@@ -2075,7 +2083,7 @@
         if (!localConfig.TTSVoiceList.length)
             LoadVoices();
 
-        //update twitch section
+        //update TTS section
         if (localConfig.TTSVoiceList.length)
         {
             let twitchoptioncode = "";
@@ -2120,12 +2128,12 @@
         {
             // checkboxes
             if (value === "on")
-                modalstring = modalstring.replaceAll(' ' + key + 'checked', 'checked');
+                modalstring = modalstring.replaceAll(' ' + key + '_SettingsSmallFormItemchecked', 'checked');
             else if (key === "randomfactstimeout")
-                modalstring = modalstring.replaceAll('"' + key + 'text"', '"' + (value / 60000) + '"');
+                modalstring = modalstring.replaceAll('"' + key + '_SettingsSmallFormItemtext"', '"' + (value / 60000) + '"');
             // replace text strings
             else if (typeof (value) == "string" || typeof (value) == "number")
-                modalstring = modalstring.replaceAll('"' + key + 'text', '"' + value);
+                modalstring = modalstring.replaceAll('"' + key + '_SettingsSmallFormItemtext', '"' + value);
         }
         livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetsmall = modalstring;
         // Update the OBS channel list as we might have changed what we want to show
@@ -2178,7 +2186,7 @@
         // get the modal data as an array
         let fieldsAsArray = $('#' + name + "_settingswidgetsmallmodal").serializeArray();
         // convert our array of objects into a more usable object
-        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name] = item.value, obj), {});
+        var fieldsAsObject = fieldsAsArray.reduce((obj, item) => (obj[item.name.replace("_SettingsSmallFormItem", "")] = item.value, obj), {});
         // loop though our keys and set them to match what is in the modal
         for (const [key, value] of Object.entries(serverConfig))
         {
@@ -2500,7 +2508,7 @@
     {
         if (serverConfig.twitchTTSVoiceIndex != e.value)
         {
-            document.getElementById("twitchTTSVoiceSelectionDropdown").value = e.value
+            document.getElementById("twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem").value = e.value
             serverConfig.twitchTTSVoiceName = localConfig.TTSVoiceList[e.value].name
             serverConfig.twitchTTSVoiceIndex = e.value;
             SaveConfigToServer()
@@ -2513,7 +2521,7 @@
     {
         if (serverConfig.YouTubeTTSVoiceIndex != e.value)
         {
-            document.getElementById("youtubeTTSVoiceSelectionDropdown").value = e.value
+            document.getElementById("youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem").value = e.value
             serverConfig.YouTubeTTSVoiceName = localConfig.TTSVoiceList[e.value].name
             serverConfig.YouTubeTTSVoiceIndex = e.value;
             SaveConfigToServer()
@@ -2528,8 +2536,8 @@
         // if we have voice disabled we still want to be able to speak
         event.preventDefault();
         //document.getElementById("TestVoiceTTSVoiceSelectionDropdown").value = e.value
-        let text = document.getElementById("TTSTestVoice").value;
-        let voiceIndex = document.getElementById("TestVoiceTTSVoiceSelectionDropdown").value;
+        let text = document.getElementById("TTSTestVoice_SettingsSmallFormItem").value;
+        let voiceIndex = document.getElementById("TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem").value;
         TTSSpeak(voiceIndex, text)
     }
     // ============================================================================
@@ -4246,5 +4254,4 @@
         const seconds = (date.getSeconds()).padStart(2, '0');
         return year + "_" + month + "_" + day + "-" + hours + "_" + minutes + "_" + seconds
     }
-
 </script>
