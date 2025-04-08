@@ -1370,6 +1370,19 @@
             extLiTag.getElementsByClassName("ext-modal-link")[0].href = "#" + xname + "_settingswidgetsmallmodal";
             extLiTag.getElementsByClassName("ext-modal-link")[0].innerHTML = xname;
             extLiTag.getElementsByClassName("modal")[0].id = xname + "_settingswidgetsmallmodal";
+            fetch("https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/" + xname + "/README.md", { method: 'HEAD' }) // Use HEAD to get only headers, which is faster
+                .then(response =>
+                {
+                    if (response.ok)
+                    {
+                        extLiTag.innerHTML = extLiTag.innerHTML + "<a href='https://github.com/SilenusTA/StreamRoller/tree/master/extensions/" + xname + "/README.md' Title='" + xname + " docs' target='readme'><img src='/liveportal/images/info.png' width='15px' height='15px'></a>"
+                    }
+                })
+                .catch(error =>
+                {
+                    console.log(`Error: ${error.message}. The URL might be invalid.`);
+                });
+
             // set the data from the extension
             document.getElementById(xname + "_settingswidgetsmallmodal").innerHTML = data;
 
