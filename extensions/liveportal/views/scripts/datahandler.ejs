@@ -478,7 +478,13 @@
         }
         else if (server_packet.type === "DataFile")
         {
-            if (server_packet.to === serverConfig.extensionname)
+            if (server_packet.data == "")
+            {
+                // server data is empty, possibly the first run of the code so just default it
+                serverConfig = structuredClone(default_serverConfig);
+                SaveConfigToServer();
+            }
+            else if (server_packet.to === serverConfig.extensionname)
             {
                 if (server_packet.data.__version__ != default_serverData.__version__)
                 {
