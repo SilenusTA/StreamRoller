@@ -51,7 +51,7 @@ const default_serverConfig = {
     channel: "QUIZBOT_CHANNEL",
     // setting variables
     quizbot_enabled: "off",
-    quizbot_restart: "on",
+    quizbot_restart: "off",
     quizbot_showanswerinconsole: "off",
     quizbot_restore_defaults: "off",
     quizbot_filename: "questions.txt",
