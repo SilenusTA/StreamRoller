@@ -291,8 +291,24 @@ function output (col, func, tag, message)
 {
     try
     {
+        let outputmessage = []
+        if (message.length > 0)
+        {
+            for (let i = 0; i < message.length; i++)
+            {
+                if (message[i] instanceof Error)
+                {
+                    outputmessage.push(message[i].name.toString())
+                    outputmessage.push(message[i].outputmessage.toString());
+                    outputmessage.push(message[i].stack.toString());
+                }
+                else
+                    outputmessage.push(message[i])
+            }
+            message = outputmessage;
+        }
         if (typeof (message) == "object")
-            message = JSON.stringify(message);
+            message = JSON.stringify(message, null, 2);
         if (message.length > cap_message_length)
             message = message.substring(0, cap_message_length) + "...";
         if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended-line")
