@@ -59,7 +59,7 @@ const default_serverConfig = {
     __version__: 0.1,
     extensionname: "users",
     channel: "USERS_CHANNEL",
-    enableusersextension: "on",
+    enableusersextension: "off",
     cleardatausersextension: "off",
     maxuserstokeep: "50",
     maxusersmessagestokeep: "100",
