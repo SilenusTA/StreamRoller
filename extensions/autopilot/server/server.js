@@ -210,7 +210,13 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname)
         {
-            if (server_packet.data.__version__ != default_serverData.__version__)
+            if (server_packet.data == "")
+            {
+                // server data is empty, possibly the first run of the code so just default it
+                serverConfig = structuredClone(default_serverConfig);
+                SaveConfigToServer();
+            }
+            else if (server_packet.data.__version__ != default_serverData.__version__)
             {
                 serverData = structuredClone(default_serverData);
                 console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
