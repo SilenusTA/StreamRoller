@@ -127,7 +127,7 @@ const serverData =
 {
     chatMessageBuffer: [{
         channel: serverConfig.streamername + " (Readonly)",
-        dateStamp: "sys",
+        dateStamp: Date.now(),
         message: "Empty chat buffer",
         data: { 'display-name': serverConfig.streamername, emotes: '' }
     }
@@ -722,305 +722,316 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    try
     {
-        // check it is our config
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.type === "ConfigFile")
         {
-            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            // check it is our config
+            if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
             {
-                serverConfig = structuredClone(default_serverConfig);
-                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
-            }
-            else
-                serverConfig = structuredClone(server_packet.data);
+                if (server_packet.data.__version__ != default_serverConfig.__version__)
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                }
+                else
+                    serverConfig = structuredClone(server_packet.data);
 
-            SaveConfigToServer();
-            // restart the sceduler in case we changed the values
-            SaveChatMessagesToServerScheduler();
+                SaveConfigToServer();
+                // restart the sceduler in case we changed the values
+                SaveChatMessagesToServerScheduler();
+            }
         }
-    }
-    else if (server_packet.type === "CredentialsFile")
-    {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
-        if (server_packet.to === serverConfig.extensionname)
+        else if (server_packet.type === "CredentialsFile")
         {
-            // check we have been sent something
+            // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
+            // if it is empty we will use our current default and send it to the server 
+            if (server_packet.to === serverConfig.extensionname)
+            {
+                // check we have been sent something
+                if (server_packet.data != "")
+                {
+                    if (server_packet.data.twitchchatuser && server_packet.data.twitchchatuseroauth)
+                    {
+                        serverConfig.username = server_packet.data.twitchchatuser
+                        localConfig.usernames.user = [];
+                        localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                        localConfig.usernames.user["oauth"] = server_packet.data.twitchchatuseroauth;
+                    }
+                    if (server_packet.data.twitchchatbot && server_packet.data.twitchchatbotoauth)
+                    {
+                        serverConfig.botname = server_packet.data.twitchchatbot
+                        localConfig.usernames.bot = [];
+                        localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
+                        localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
+                    }
+                    // start connection
+                    if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
+                    {
+                        for (const [key, value] of Object.entries(localConfig.usernames))
+                        {
+                            if (localConfig.twitchClient[key].state.connected)
+                                reconnectChat(key);
+                            else
+                                connectToTwitch(key);
+                        }
+                    }
+                    else
+                    {
+                        /* Readonly connection */
+                        localConfig.usernames.user = [];
+                        localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                        connectToTwitch("user");
+                        process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
+                    }
+                }
+                else // credentials empty so connected with previous credentials if we have them
+                {
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                        serverConfig.extensionname + " CredentialsFile", "Credential file is empty, connecting readonly");
+                    // connect with existing credentials if we have them
+                    if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
+                    {
+                        for (const [key, value] of Object.entries(localConfig.usernames))
+                        {
+                            if (localConfig.twitchClient[key].state.connected)
+                                reconnectChat(key);
+                            else
+                                connectToTwitch(key);
+                        }
+                    }
+                    else // connect readonly if no credentials available
+                    {
+                        localConfig.usernames.user = [];
+                        localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                        connectToTwitch("user");
+                        process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
+                    }
+                }
+            }
+        }
+        else if (server_packet.type === "DataFile")
+        {
             if (server_packet.data != "")
             {
-                if (server_packet.data.twitchchatuser && server_packet.data.twitchchatuseroauth)
+                // check it is our data
+                if (server_packet.to === serverConfig.extensionname && server_packet.data.chatMessageBuffer.length > 0)
                 {
-                    serverConfig.username = server_packet.data.twitchchatuser
-                    localConfig.usernames.user = [];
-                    localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                    localConfig.usernames.user["oauth"] = server_packet.data.twitchchatuseroauth;
+                    serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
+                    SaveDataToServer();
                 }
-                if (server_packet.data.twitchchatbot && server_packet.data.twitchchatbotoauth)
-                {
-                    serverConfig.botname = server_packet.data.twitchchatbot
-                    localConfig.usernames.bot = [];
-                    localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
-                    localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
-                }
-                // start connection
-                if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
-                {
-                    for (const [key, value] of Object.entries(localConfig.usernames))
-                    {
-                        if (localConfig.twitchClient[key].state.connected)
-                            reconnectChat(key);
-                        else
-                            connectToTwitch(key);
-                    }
-                }
+            }
+        }
+        else if (server_packet.type === "ExtensionMessage")
+        {
+            let extension_packet = server_packet.data;
+            // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
+            if (extension_packet.type === "RequestSettingsWidgetSmallCode")
+                SendSettingsWidgetSmall(server_packet.from);
+            else if (extension_packet.type === "UpdatedCredentialsForTwitchChat")
+            {
+                if (extension_packet.data.isStreamer)
+                    SaveCredential("twitchchatuseroauth", "oauth:" + extension_packet.data.oauthToken)
                 else
-                {
-                    /* Readonly connection */
-                    localConfig.usernames.user = [];
-                    localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                    connectToTwitch("user");
-                    process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
-                }
+                    SaveCredential("twitchchatbotoauth", "oauth:" + extension_packet.data.oauthToken)
             }
-            else // credentials empty so connected with previous credentials if we have them
+            else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+                SendSettingsWidgetLarge(server_packet.from);
+            else if (extension_packet.type === "SettingsWidgetSmallData")
             {
-                logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                    serverConfig.extensionname + " CredentialsFile", "Credential file is empty, connecting readonly");
-                // connect with existing credentials if we have them
-                if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
+                if (extension_packet.to === serverConfig.extensionname)
                 {
-                    for (const [key, value] of Object.entries(localConfig.usernames))
+                    if (extension_packet.data.twitchchatresetdefaults == "on")
                     {
-                        if (localConfig.twitchClient[key].state.connected)
-                            reconnectChat(key);
-                        else
-                            connectToTwitch(key);
+                        serverConfig = structuredClone(default_serverConfig);
+                        console.log("\x1b[31m" + serverConfig.extensionname + " Config defaults loaded.", "Source: User request \x1b[0m");
                     }
-                }
-                else // connect readonly if no credentials available
-                {
-                    localConfig.usernames.user = [];
-                    localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                    connectToTwitch("user");
-                    process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": serverConfig.streamername, "emotes": "", "message-type": "twitchchat_extension" }, "No twitch users setup yet")
-                }
-            }
-        }
-    }
-    else if (server_packet.type === "DataFile")
-    {
-        if (server_packet.data != "")
-        {
-            // check it is our data
-            if (server_packet.to === serverConfig.extensionname && server_packet.data.chatMessageBuffer.length > 0)
-            {
-                serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
-                SaveDataToServer();
-            }
-        }
-    }
-    else if (server_packet.type === "ExtensionMessage")
-    {
-        let extension_packet = server_packet.data;
-        // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
-        if (extension_packet.type === "RequestSettingsWidgetSmallCode")
-            SendSettingsWidgetSmall(server_packet.from);
-        else if (extension_packet.type === "UpdatedCredentialsForTwitchChat")
-        {
-            if (extension_packet.data.isStreamer)
-                SaveCredential("twitchchatuseroauth", "oauth:" + extension_packet.data.oauthToken)
-            else
-                SaveCredential("twitchchatbotoauth", "oauth:" + extension_packet.data.oauthToken)
-        }
-        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
-            SendSettingsWidgetLarge(server_packet.from);
-        else if (extension_packet.type === "SettingsWidgetSmallData")
-        {
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                if (extension_packet.data.twitchchatresetdefaults == "on")
-                {
-                    serverConfig = structuredClone(default_serverConfig);
-                    console.log("\x1b[31m" + serverConfig.extensionname + " Config defaults loaded.", "Source: User request \x1b[0m");
-                }
-                else
-                {
-                    // need to indicate we have changed user in header even if we are turned off.
-                    if (serverConfig.enabletwitchchat == "off")
-                    {
-                        if (serverConfig.streamername != extension_packet.data.streamername)
-                        {
-                            // we have turned off twitch chat and are changing channel. need to update the users screen.
-                            serverConfig.enabletwitchchat = "on";
-                            let name = serverConfig.streamername
-                            serverConfig.streamername = extension_packet.data.streamername
-                            process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "channel: " + extension_packet.data.streamername);
-                            serverConfig.enabletwitchchat = "off";
-                            serverConfig.streamername = name;
-                        }
-                    }
-
-                    // need to update these manually as the web page does not send unchecked box values
-                    serverConfig.enabletwitchchat = "off";
-
-                    for (const [key, value] of Object.entries(serverConfig))
-                        if (key in extension_packet.data)
-                        {
-                            serverConfig[key] = extension_packet.data[key];
-                        }
-                    for (const [key, value] of Object.entries(localConfig.usernames))
-                    {
-                        if (localConfig.twitchClient[key].state.connected)
-                            reconnectChat(key);
-                        else
-                            connectToTwitch(key);
-                    }
-                    SaveConfigToServer();
-                    // restart the scheduler in case we changed it
-                    SaveChatMessagesToServerScheduler();
-                    // broadcast our modal out so anyone showing it can update it
-                    SendSettingsWidgetSmall("");
-                    SendSettingsWidgetLarge("");
-                }
-            }
-        }
-        else if (extension_packet.type === "SettingsWidgetLargeData")
-        {
-
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                if (extension_packet.data.twitchchat_restore_defaults == "on")
-                {
-                    console.log("restoring defaults", extension_packet.data.twitchchat_restore_defaults)
-                    process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "restoring defaults");
-                    serverConfig = structuredClone(default_serverConfig);
-                    // restart the scheduler in case we changed it
-                    SaveChatMessagesToServerScheduler();
-                    // broadcast our modal out so anyone showing it can update it
-                    SendSettingsWidgetSmall("");
-                    SendSettingsWidgetLarge("");
-                }
-                else
-                {
-                    if (serverConfig.streamername != extension_packet.data.streamername)
+                    else
                     {
                         // need to indicate we have changed user in header even if we are turned off.
                         if (serverConfig.enabletwitchchat == "off")
                         {
-                            // we have turned off twitch chat and are changing channel. need to update the users screen.
-                            serverConfig.enabletwitchchat = "on";
-                            let name = serverConfig.streamername
-                            serverConfig.streamername = extension_packet.data.streamername
-                            process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, " channel: " + extension_packet.data.streamername);
-                            serverConfig.enabletwitchchat = "off";
-                            serverConfig.streamername = name;
+                            if (serverConfig.streamername != extension_packet.data.streamername)
+                            {
+                                // we have turned off twitch chat and are changing channel. need to update the users screen.
+                                serverConfig.enabletwitchchat = "on";
+                                let name = serverConfig.streamername
+                                serverConfig.streamername = extension_packet.data.streamername
+                                process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "channel: " + extension_packet.data.streamername);
+                                serverConfig.enabletwitchchat = "off";
+                                serverConfig.streamername = name;
+                            }
                         }
-                    }
-                    // need to update these manually as the web page does not send unchecked box values
-                    serverConfig.enabletwitchchat = "off";
-                    serverConfig.checkforbots = "off";
-                    serverConfig.updateUserLists = "off";
-                    serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH = "off"
-                    serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
-                    serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
 
-                    for (const [key, value] of Object.entries(serverConfig))
-                    {
-                        if (key in extension_packet.data)
-                            serverConfig[key] = extension_packet.data[key];
+                        // need to update these manually as the web page does not send unchecked box values
+                        serverConfig.enabletwitchchat = "off";
 
+                        for (const [key, value] of Object.entries(serverConfig))
+                            if (key in extension_packet.data)
+                            {
+                                serverConfig[key] = extension_packet.data[key];
+                            }
+                        for (const [key, value] of Object.entries(localConfig.usernames))
+                        {
+                            if (localConfig.twitchClient[key].state.connected)
+                                reconnectChat(key);
+                            else
+                                connectToTwitch(key);
+                        }
+                        SaveConfigToServer();
+                        // restart the scheduler in case we changed it
+                        SaveChatMessagesToServerScheduler();
+                        // broadcast our modal out so anyone showing it can update it
+                        SendSettingsWidgetSmall("");
+                        SendSettingsWidgetLarge("");
                     }
-                    for (const [key, value] of Object.entries(localConfig.usernames))
-                    {
-                        if (localConfig.twitchClient[key].state.connected)
-                            reconnectChat(key);
-                        else
-                            connectToTwitch(key);
-                    }
-                    SaveConfigToServer();
-                    // restart the scheduler in case we changed it
-                    SaveChatMessagesToServerScheduler();
-                    // broadcast our modal out so anyone showing it can update it
-                    SendSettingsWidgetSmall("");
-                    SendSettingsWidgetLarge("");
                 }
-
             }
-        }
-        else if (extension_packet.type === "action_SendChatMessage")
-        {
-            if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH.indexOf("on") < 0)
-                action_SendChatMessage(serverConfig.streamername, extension_packet.data)
-            else
+            else if (extension_packet.type === "SettingsWidgetLargeData")
             {
-                let name = ""
-                if (extension_packet.data.account == "bot" || extension_packet.data.account == "user")
-                    name = localConfig.usernames[extension_packet.data.account].name
-                else if (localConfig.usernames.bot && localConfig.usernames.bot.name && extension_packet.data.account == "")
-                    name = localConfig.usernames.bot.name
-                else
-                    name = extension_packet.data.account
-                //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage Not posting to twitch due to debug flag 'on' in settings", extension_packet.data.message);
-                process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "(localpost debug turned on in settings) " + name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
+
+                if (extension_packet.to === serverConfig.extensionname)
+                {
+                    if (extension_packet.data.twitchchat_restore_defaults == "on")
+                    {
+                        console.log("restoring defaults", extension_packet.data.twitchchat_restore_defaults)
+                        process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "restoring defaults");
+                        serverConfig = structuredClone(default_serverConfig);
+                        // restart the scheduler in case we changed it
+                        SaveChatMessagesToServerScheduler();
+                        // broadcast our modal out so anyone showing it can update it
+                        SendSettingsWidgetSmall("");
+                        SendSettingsWidgetLarge("");
+                    }
+                    else
+                    {
+                        if (serverConfig.streamername != extension_packet.data.streamername)
+                        {
+                            // need to indicate we have changed user in header even if we are turned off.
+                            if (serverConfig.enabletwitchchat == "off")
+                            {
+                                // we have turned off twitch chat and are changing channel. need to update the users screen.
+                                serverConfig.enabletwitchchat = "on";
+                                let name = serverConfig.streamername
+                                serverConfig.streamername = extension_packet.data.streamername
+                                process_chat_data("#" + extension_packet.data.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, " channel: " + extension_packet.data.streamername);
+                                serverConfig.enabletwitchchat = "off";
+                                serverConfig.streamername = name;
+                            }
+                        }
+                        // need to update these manually as the web page does not send unchecked box values
+                        serverConfig.enabletwitchchat = "off";
+                        serverConfig.checkforbots = "off";
+                        serverConfig.updateUserLists = "off";
+                        serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH = "off"
+                        serverConfig.DEBUG_EXTRA_CHAT_MESSAGE = "off";
+                        serverConfig.DEBUG_LOG_DATA_TO_FILE = "off";
+
+                        for (const [key, value] of Object.entries(serverConfig))
+                        {
+                            if (key in extension_packet.data)
+                                serverConfig[key] = extension_packet.data[key];
+
+                        }
+                        for (const [key, value] of Object.entries(localConfig.usernames))
+                        {
+                            if (localConfig.twitchClient[key].state.connected)
+                                reconnectChat(key);
+                            else
+                                connectToTwitch(key);
+                        }
+                        SaveConfigToServer();
+                        // restart the scheduler in case we changed it
+                        SaveChatMessagesToServerScheduler();
+                        // broadcast our modal out so anyone showing it can update it
+                        SendSettingsWidgetSmall("");
+                        SendSettingsWidgetLarge("");
+                    }
+
+                }
             }
-        }
-        else if (extension_packet.type === "RequestAccountNames")
-        {
-            sendAccountNames(server_packet.from)
-        }
-        else if (extension_packet.type === "RequestChatBuffer")
-        {
-            sendChatBuffer(server_packet.from)
-        }
-        else if (extension_packet.type === "SendTriggerAndActions")
-        {
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "TriggerAndActions",
+            else if (extension_packet.type === "action_SendChatMessage")
+            {
+                if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH.indexOf("on") < 0)
+                    action_SendChatMessage(serverConfig.streamername, extension_packet.data)
+                else
+                {
+                    let name = ""
+                    if (extension_packet.data.account
+                        && localConfig.usernames[extension_packet.data.account]
+                        && localConfig.usernames[extension_packet.data.account].name
+                    )
+                        name = localConfig.usernames[extension_packet.data.account].name
+                    else if (localConfig.usernames.bot && localConfig.usernames.bot.name && extension_packet.data.account == "")
+                        name = localConfig.usernames.bot.name
+                    else
+                        name = extension_packet.data.account
+                    //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "action_SendChatMessage Not posting to twitch due to debug flag 'on' in settings", extension_packet.data.message);
+                    process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "(localpost debug turned on in settings) " + name, "emotes": "", "message-type": "chat" }, extension_packet.data.message)
+                }
+            }
+            else if (extension_packet.type === "RequestAccountNames")
+            {
+                sendAccountNames(server_packet.from)
+            }
+            else if (extension_packet.type === "RequestChatBuffer")
+            {
+                sendChatBuffer(server_packet.from)
+            }
+            else if (extension_packet.type === "SendTriggerAndActions")
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket("ExtensionMessage",
                         serverConfig.extensionname,
-                        triggersandactions,
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            serverConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
                         "",
                         server_packet.from
-                    ),
-                    "",
-                    server_packet.from
+                    )
                 )
-            )
+            }
+            else
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+
         }
-        else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
-
-    }
-    // ------------------------------------------------ error message received -----------------------------------------------
-    else if (server_packet.data === "UnknownChannel")
-    {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
-
-        clearTimeout(localConfig.joinChannelScheduleHandle);
-        localConfig.joinChannelScheduleHandle = setTimeout(() =>
+        // ------------------------------------------------ error message received -----------------------------------------------
+        else if (server_packet.data === "UnknownChannel")
         {
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket(
-                    "JoinChannel",
-                    localConfig.EXTENSION_NAME,
-                    server_packet.channel));
-        }, 5000);
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+
+            clearTimeout(localConfig.joinChannelScheduleHandle);
+            localConfig.joinChannelScheduleHandle = setTimeout(() =>
+            {
+                sr_api.sendMessage(localConfig.DataCenterSocket,
+                    sr_api.ServerPacket(
+                        "JoinChannel",
+                        localConfig.EXTENSION_NAME,
+                        server_packet.channel));
+            }, 5000);
+        }
+        else if (server_packet.type === "ChannelJoined"
+            || server_packet.type === "ChannelCreated"
+            || server_packet.type === "ChannelLeft"
+            || server_packet.type === "LoggingLevel"
+            || server_packet.type === "ChannelData")
+        {
+            // just a blank handler for items we are not using to avoid message from the catchall
+        }
+        // ------------------------------------------------ unknown message type received -----------------------------------------------
+        else
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                ".onDataCenterMessage", "Unhandled message type", server_packet.type);
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "LoggingLevel"
-        || server_packet.type === "ChannelData")
+    catch (err)
     {
-        // just a blank handler for items we are not using to avoid message from the catchall
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            ".onDataCenterMessage", "Unhandler Error", err);
     }
-    // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 // ===========================================================================
 //                           FUNCTION: sendChatBuffer
