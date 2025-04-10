@@ -79,6 +79,7 @@ function storeCredentials (isStreamerAccount)
     {
         //streamer auth
         UpdateCredential("twitchOAuthState", tempStorage.twitchOAuthState)
+        UpdateCredential("twitchOAuthToken", tempStorage.twitchOAuthToken)
         updateTwitchChatCredentials(true);
         document.getElementById("messages").innerHTML = "Authorization complete, you can now close this window"
     }

@@ -2362,9 +2362,11 @@ async function connectTwitch ()
 {
     try
     {
-        if (localConfig.authProvider == "")
+        if (!localCredentials.twitchOAuthToken || localCredentials.twitchOAuthToken == undefined || localCredentials.twitchOAuthToken == "")
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Missing authorization, go to http://localhost:3000/twitch/auth to authorise for twitch");
+            serverConfig.twitchenabled = "off"
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch",
+                "Missing authorization, go to http://localhost:3000/adminpage/ to authorise for twitch, turning off extension");
             return;
         }
         if (serverConfig.twitchstreamername == "")

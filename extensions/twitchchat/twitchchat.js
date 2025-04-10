@@ -831,9 +831,23 @@ function onDataCenterMessage (server_packet)
             else if (extension_packet.type === "UpdatedCredentialsForTwitchChat")
             {
                 if (extension_packet.data.isStreamer)
+                {
                     SaveCredential("twitchchatuseroauth", "oauth:" + extension_packet.data.oauthToken)
+                    SaveCredential("twitchchatuser", "user");
+                    serverConfig.username = "user"
+                    localConfig.usernames.user = [];
+                    localConfig.usernames.user["name"] = "user";
+                    localConfig.usernames.user["oauth"] = extension_packet.data.oauthToken;
+                }
                 else
+                {
                     SaveCredential("twitchchatbotoauth", "oauth:" + extension_packet.data.oauthToken)
+                    SaveCredential("twitchchatbot", "bot")
+                    serverConfig.botname = "bot"
+                    localConfig.usernames.bot = [];
+                    localConfig.usernames.bot["name"] = "bot";
+                    localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
+                }
             }
             else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
                 SendSettingsWidgetLarge(server_packet.from);
