@@ -2275,7 +2275,12 @@ function heartBeatCallback ()
     let botreadonly = localConfig.twitchClient["bot"].state.readonly
     let colour = 'red'
     let connected = (userconnected || botconnected) && (!userreadonly || !botreadonly)
-
+    let stats = {
+        userconnected: userconnected,
+        botconnected: botconnected,
+        userreadonly: userreadonly,
+        botreadonly: botreadonly
+    }
     //is everything conencted and running
     if (serverConfig.enabletwitchchat === "on" && userconnected && botconnected && !userreadonly && !botreadonly)
     {
@@ -2299,7 +2304,8 @@ function heartBeatCallback ()
                 serverConfig.extensionname,
                 {
                     color: colour,
-                    connected: connected
+                    connected: connected,
+                    stats: stats
                 },
                 serverConfig.channel),
             serverConfig.channel

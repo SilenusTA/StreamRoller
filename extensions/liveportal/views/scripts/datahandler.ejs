@@ -874,13 +874,8 @@
                     if (extension_packet.from == "twitchchat")
                     {
                         // check if we are able to use the platform
-                        let connected = extension_packet.data.connected
-                        // check if we need to do an update or not
-                        if (localConfig.twitchplatformavailable != connected)
-                        {
-                            localConfig.twitchplatformavailable = connected
-                            updateChatPlatforms();
-                        }
+                        localConfig.twitchplatformavailable = extension_packet.data.stats.userconnected || extension_packet.data.stats.botconnected
+                        updateChatPlatforms();
                     }
                     else if (extension_packet.from == "youtube" || extension_packet.from == "youtubeapi")
                     {

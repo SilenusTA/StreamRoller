@@ -2871,6 +2871,9 @@ async function banUser (username, reason)
                         .then((response) =>
                         {
                             //console.log("twitch.banUser User returned", response)
+                        }).catch((err) =>
+                        {
+                            console.log("BanUser.banUser error", err)
                         })
                 }
                 else
