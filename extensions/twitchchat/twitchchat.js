@@ -1976,7 +1976,7 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("followersonly", (channel, enabled, length) => 
             {
                 file_log("followersonly", enabled, length);
-                process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "followersonly" }, "followersonly: " + length + " Follower Only mode : " + enabled);
+                process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "followersonly" }, "followersonly: " + length + "min Follower Only mode : " + enabled);
                 triggertosend = findtriggerByMessageType("trigger_ChatFollowersOnly")
                 triggertosend.parameters.type = "trigger_ChatFollowersOnly"
                 triggertosend.parameters.textMessage = "Follower only mode " + enabled + " for " + length
@@ -2275,6 +2275,12 @@ function heartBeatCallback ()
     let botreadonly = localConfig.twitchClient["bot"].state.readonly
     let colour = 'red'
     let connected = (userconnected || botconnected) && (!userreadonly || !botreadonly)
+    let stats = {
+        userconnected: userconnected,
+        botconnected: botconnected,
+        userreadonly: userreadonly,
+        botreadonly: botreadonly
+    }
 
     //is everything conencted and running
     if (serverConfig.enabletwitchchat === "on" && userconnected && botconnected && !userreadonly && !botreadonly)
@@ -2299,7 +2305,8 @@ function heartBeatCallback ()
                 serverConfig.extensionname,
                 {
                     color: colour,
-                    connected: connected
+                    connected: connected,
+                    stats
                 },
                 serverConfig.channel),
             serverConfig.channel
