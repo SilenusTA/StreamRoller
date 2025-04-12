@@ -77,7 +77,7 @@ Recording --> Audio encoder --> aac
 Recording --> Audio track --> select all
 ```
 
-<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/multistreaming/images/OBS_Settings.png" title="OBS settings" alt="OBS settings">
+<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/multistream/images/OBS_Settings.png" title="OBS settings" alt="OBS settings">
 
 ## Step 3: Select global Options
 
