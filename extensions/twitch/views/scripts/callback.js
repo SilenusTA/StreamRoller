@@ -80,20 +80,23 @@ function storeCredentials (isStreamerAccount)
         //streamer auth
         UpdateCredential("twitchOAuthState", tempStorage.twitchOAuthState)
         UpdateCredential("twitchOAuthToken", tempStorage.twitchOAuthToken)
-        updateTwitchChatCredentials(true);
-        document.getElementById("messages").innerHTML = "Authorization complete, you can now close this window"
     }
     if (localConfig.connected && !isStreamerAccount)
-        //bot auth
-        updateTwitchChatCredentials(false);
-
+    {    //bot auth
+        UpdateCredential("twitchBotOAuthState", tempStorage.twitchOAuthState)
+        UpdateCredential("twitchBotOAuthToken", tempStorage.twitchOAuthToken)
+    }
     if (!localConfig.connected)
     {
         setTimeout(() =>
         {
             storeCredentials(isStreamerAccount)
+            document.getElementById("messages").innerHTML = "Authorization complete, you can now close this window"
+            return;
         }, 1000);
     }
+    else
+        document.getElementById("messages").innerHTML = "Authorization complete, you can now close this window"
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterMessage
@@ -111,26 +114,7 @@ function UpdateCredential (name, value)
             },
         ));
 }
-function updateTwitchChatCredentials (isStreamer)
-{
-    sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket(
-            'ExtensionMessage',
-            "twitch_auth",
-            sr_api.ExtensionPacket(
-                "UpdatedCredentialsForTwitchChat",
-                "twitch_auth",
-                {
-                    isStreamer: isStreamer,
-                    oauthToken: tempStorage.twitchOAuthToken
-                },
-                '',
-                'twitchchat'),
-            '',
-            'twitchchat'
-        )
-    );
-}
+
 // ============================================================================
 //                           FUNCTION: parseFragment
 // ============================================================================
