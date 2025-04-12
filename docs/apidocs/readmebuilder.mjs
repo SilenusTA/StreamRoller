@@ -179,11 +179,11 @@ function createReadmeFiles ()
         try
         {
             let partFile = fs.readFileSync(partFileName, { encoding: 'utf8', flag: 'r' })
-            if (partFile && readmeTAGs.some(v => 
+            let hasTags = readmeTAGs.some(v => 
             {
-                partFile.includes(v)
-
-            }))
+                return partFile.indexOf(v) != -1
+            })
+            if (partFile && hasTags)
             {
                 if (partFile && partFile != "")
                 {
