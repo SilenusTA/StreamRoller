@@ -22,9 +22,8 @@ extensions/quizbot/odgquestions.txt
 extensions/autopilot/public/images/deckicons/**
 extensions/chatbot/savedimages/**
 extensions/chatbot/currentstreamimages/**
-extensions/chatbot/satisfactory/sml/**
-extensions/chatbot/satisfactory/socketio/**
 backend/data_center/dos.js
 extensions/youtube/debug_logging.json
 bin/
 extensions/multistream/data/encoders.json
+gitcommands.md
