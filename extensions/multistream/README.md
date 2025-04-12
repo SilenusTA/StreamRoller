@@ -77,7 +77,7 @@ Recording --> Audio encoder --> aac
 Recording --> Audio track --> select all
 ```
 
-<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/multistreaming/images/OBS_Settings.png" title="OBS settings" alt="OBS settings">
+<img src="https://raw.githubusercontent.com/SilenusTA/StreamRoller/refs/heads/master/extensions/multistream/images/OBS_Settings.png" title="OBS settings" alt="OBS settings">
 
 ## Step 3: Select global Options
 
@@ -129,7 +129,7 @@ This gives you the ability to see errors (even more if adding the +info, +verbos
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:16:20 GMT*
+Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 
 ### Triggers
 
