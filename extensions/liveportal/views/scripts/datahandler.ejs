@@ -874,8 +874,13 @@
                     if (extension_packet.from == "twitchchat")
                     {
                         // check if we are able to use the platform
-                        localConfig.twitchplatformavailable = extension_packet.data.stats.userconnected || extension_packet.data.stats.botconnected
-                        updateChatPlatforms();
+                        let connected = extension_packet.data.stats.botconnected || extension_packet.data.stats.userconnected
+                        // check if we need to do an update or not
+                        if (localConfig.twitchplatformavailable != connected)
+                        {
+                            localConfig.twitchplatformavailable = connected
+                            updateChatPlatforms();
+                        }
                     }
                     else if (extension_packet.from == "youtube" || extension_packet.from == "youtubeapi")
                     {
@@ -2400,18 +2405,31 @@
         let newchatternames = ""
         let twitchnamedropdowns = ""
         let optioncode = ""
+        let selectedname = false;
+        let newChatAsUsername = ""
         localConfig.usernamelist = extension_packet.data;
         // if we have a username set in our config and that is in the current list of names lets use that one
         let ele = document.getElementById("ChatMessageDropdown");
         ele.innerHTML = ""
         for (const [profile_id, value] of Object.entries(extension_packet.data))
         {
-            if (serverConfig.chatAsUsername && serverConfig.chatAsUsername == value)
+            if (serverConfig.chatAsUsername && serverConfig.chatAsUsername == value
+                ||serverConfig.chatAsUsername && serverConfig.chatAsUsername == profile_id
+            )
+            {
+                selectedname = true;
                 optioncode += "<option value='" + profile_id + "' selected>" + value + "</option>"
+            }
             //hide the current profile on the modal box
             else
+            {
+                newChatAsUsername = value;
                 optioncode += "<option value='" + profile_id + "'>" + value + "</option>"
+            }
         }
+        // if our current selection isn't in the list then set it to the first one received if any
+        if (!selectedname && newChatAsUsername != "")
+            serverConfig.chatAsUsername=        newChatAsUsername
         ele.innerHTML = optioncode
     }
     // ============================================================================

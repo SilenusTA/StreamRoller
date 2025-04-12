@@ -76,8 +76,12 @@ const default_serverConfig = {
 let serverConfig = structuredClone(default_serverConfig);
 const localCredentials =
 {
+    twitchName: "",
     twitchOAuthState: "",
-    twitchOAuthToken: ""
+    twitchOAuthToken: "",
+    twitchBotName: "",
+    twitchBotOAuthState: "",
+    twitchBotOAuthToken: ""
 }
 // To further expand this list check out HELIX APIS at
 // https://twurple.js.org/reference/api/classes/ApiClient.html
@@ -1585,20 +1589,75 @@ function onDataCenterMessage (server_packet)
         // -----------------------------------------------------------------------------------
         else if (server_packet.type === "CredentialsFile")
         {
-            if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != ""
-                && server_packet.data.twitchOAuthState != "" && server_packet.data.twitchOAuthToken != "")
+            if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
             {
-                localCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
-                localCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
-                localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
-                if (serverConfig.twitchenabled == "on")
+                // streamer account
+                if (server_packet.data.twitchOAuthState && server_packet.data.twitchOAuthState != ""
+                    && server_packet.data.twitchOAuthToken && server_packet.data.twitchOAuthToken != "")
                 {
-                    setTimeout(() =>
+                    if (server_packet.data.twitchOAuthState)
+                        localCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
+                    if (server_packet.data.twitchOAuthToken)
+                        localCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
+                    localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
+
+                    if (serverConfig.twitchenabled == "off")
                     {
-                        disconnectTwitch();
-                        connectTwitch();
-                    }, 1000);
+                        // update the username and data even if extension is turned off.
+                        // if we have credentials get the username and send them to twitchchat
+                        if (localCredentials.twitchOAuthState != "" && localCredentials.twitchOAuthToken != "")
+                        {
+                            let tempauth = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
+                            let tempApiClient = new ApiClient({ authProvider: tempauth });
+                            tempApiClient.getTokenInfo()
+                                .then((dataUser) =>
+                                {
+                                    localCredentials.twitchName = dataUser.userName;
+                                    sendTwitchChatCredentials(dataUser.userName, localCredentials.twitchOAuthToken, false);
+                                })
+                                .catch((err) =>
+                                {
+                                    logger.err(serverConfig.extensionname + ".onDataCenterMessage received CredentialsFile, getting user token", "Unhandled exception:", err);
+                                })
+                        }
+                    }
                 }
+
+                // bot account
+                if (server_packet.data.twitchBotOAuthState && server_packet.data.twitchBotOAuthState != ""
+                    && server_packet.data.twitchBotOAuthToken && server_packet.data.twitchBotOAuthToken != "")
+                {
+                    // update our creds
+                    if (server_packet.data.twitchBotOAuthState)
+                        localCredentials.twitchBotOAuthState = server_packet.data.twitchBotOAuthState;
+                    if (server_packet.data.twitchBotOAuthToken)
+                        localCredentials.twitchBotOAuthToken = server_packet.data.twitchBotOAuthToken;
+
+                    // if we have credentials get the username and send them to twitchchat
+                    if (localCredentials.twitchBotOAuthState != "" && localCredentials.twitchBotOAuthToken != "")
+                    {
+                        let tempauth = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchBotOAuthToken);
+                        let tempApiClient = new ApiClient({ authProvider: tempauth });
+                        tempApiClient.getTokenInfo()
+                            .then((dataUser) =>
+                            {
+                                localCredentials.twitchBotName = dataUser.userName;
+                                sendTwitchChatCredentials(dataUser.userName, localCredentials.twitchBotOAuthToken, true);
+                            })
+                            .catch((err) =>
+                            {
+                                logger.err(serverConfig.extensionname + ".onDataCenterMessage received CredentialsFile, getting bot token", "Unhandled exception:", err);
+                            })
+                    }
+                }
+            }
+            if (serverConfig.twitchenabled == "on")
+            {
+                setTimeout(() =>
+                {
+                    disconnectTwitch();
+                    connectTwitch();
+                }, 1000);
             }
         }
         // -----------------------------------------------------------------------------------
@@ -2223,6 +2282,44 @@ function SendCredentialsModal (extensionname)
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================
+//function sendTwitchChatCredentialsScheduler (name, oauth, bot = false)
+/**
+ * updates the twitch chat extension with creadentials
+ * @param {string} name 
+ * @param {string} oauth 
+ * @param {string} bot 
+ */
+function sendTwitchChatCredentials (name, oauth, bot = false)
+{
+    let data = {}
+    if (bot)
+    {
+        data.twitchchatbot = name
+        data.twitchchatbotoauth = oauth
+    }
+    else
+    {
+        data.twitchchatuser = name
+        data.twitchchatuseroauth = oauth
+    }
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            'ExtensionMessage',
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "CredentialsFile",
+                serverConfig.extensionname,
+                data,
+                '',
+                'twitchchat'),
+            '',
+            'twitchchat'
+        )
+    );
+}
+// ===========================================================================
+//                           FUNCTION: handleSettingsWidgetSmallData
+// ===========================================================================
 /**
  * Handles data from a user submit on our small settings widget
  * @param {object} modalCode 
@@ -2369,20 +2466,25 @@ async function connectTwitch ()
                 "Missing authorization, go to http://localhost:3000/adminpage/ to authorise for twitch, turning off extension");
             return;
         }
-        if (serverConfig.twitchstreamername == "")
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Missing stream name, please set a stream name to work with in the settings");
-            return;
-        }
+
         // setup client
         let auth = localConfig.authProvider
         localConfig.apiClient = new ApiClient({ authProvider: auth });
-        /* let datauser = await localConfig.apiClient.getTokenInfo()
-                if (datauser && datauser.userName != "")
-                    console.log("connected to twich using", datauser.userName)
-        */
 
+        let datauser = await localConfig.apiClient.getTokenInfo()
+        localCredentials.twitchName = datauser.userName;
 
+        if (serverConfig.twitchstreamername == "")
+        {
+
+            if (localCredentials.twitchName && localCredentials.twitchName != "")
+                serverConfig.twitchstreamername = localCredentials.twitchName;
+            else
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Missing stream name, please set a stream name to work with in the settings");
+        }
+
+        //send the streamer details to twitchchat
+        sendTwitchChatCredentials(localCredentials.twitchName, localCredentials.twitchOAuthToken, false);
         // get some data about the streamer (id etc)
         localConfig.streamerData = await localConfig.apiClient.users.getUserByName(serverConfig.twitchstreamername)
 
@@ -2871,9 +2973,6 @@ async function banUser (username, reason)
                         .then((response) =>
                         {
                             //console.log("twitch.banUser User returned", response)
-                        }).catch((err) =>
-                        {
-                            console.log("BanUser.banUser error", err)
                         })
                 }
                 else
@@ -3529,7 +3628,6 @@ async function getUser (username)
                 else
                 {
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".server.getUser", "username not found", username);
-                    console.log(user);
                     trigger.parameters.username = username;
                     trigger.parameters.userNameInvalid = true;
                 }
