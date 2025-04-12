@@ -1,0 +1,75 @@
+# trigger on the cix.x.x tag.
+name: CI process chain
+run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "ci*.*.*"
+env:
+  VERSION_TAG: ${{ github.ref_name }}
+  #VERSION_TAG: ci1.1.1
+jobs:
+  createReleaseTag:
+    runs-on: windows-latest
+    outputs:
+      tag_name: ${{ steps.increment_version.outputs.NEW_VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - name: npm install
+        run: npm install
+      - name: Increment Patch Version
+        id: increment_version
+        run: |
+          $version = "${{ env.VERSION_TAG }}"
+          $newVersion = "$version".replace("ci","v")
+          Write-Output "Generated Tag: $newVersion"
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        shell: pwsh
+      - name: test output
+        run: |
+          echo "VERSION_TAG is ${{env.VERSION_TAG}}"
+          echo "NEW_VERSION is ${{ steps.increment_version.outputs.NEW_VERSION }}"
+        shell: pwsh
+      - name: note time to check it was built later
+        run: more .\extensions\users\README.md
+      - name: running node readmebuilder.mjs
+        run: |
+          cd docs/apidocs
+          node readmebuilder.mjs
+
+      - name: check timestamp for update
+        run: |
+          dir
+          more extensions\users\README.md
+# possible incorrect path here as docs arn'te getting checked int
+      - name: adding files to git
+        run: |
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "SilenusTA"
+          more .\docs\apidocs\filelist.txt
+          more docs\apidocs\filelist.txt
+          more \docs\apidocs\filelist.txt
+          foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
+          git commit -m "autodoc readme update"
+          git push
+#      - name: Pushing tag to repo
+#        run: |
+#          echo "Pushing TAG ${{ steps.increment_version.outputs.NEW_VERSION }}"
+#          git tag ${{ steps.increment_version.outputs.NEW_VERSION }}
+#          git push origin --tags
+#        shell: pwsh
+#  BuildRelease:
+#    needs: createReleaseTag
+#    uses: ./.github/workflows/create_release.yml
+#    with:
+#      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+#  UpdateDocs:
+#    needs: [BuildRelease,createReleaseTag]
+#    uses: ./.github/workflows/build_docs.yml
+#    with:
+#      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+#    secrets: inherit
