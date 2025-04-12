@@ -29,7 +29,7 @@ An example set of triggers for twitch chat can be seen in the image below.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 25 Mar 2025 05:02:28 GMT*
+Table last updated: *Sat, 12 Apr 2025 14:16:20 GMT*
 
 ### Triggers
 
@@ -38,7 +38,7 @@ Table last updated: *Tue, 25 Mar 2025 05:02:28 GMT*
 | quizbotQuizStarted | trigger_QuizbotQuizStarted | Quiz was started, restarted or a new question was asked |
 | quizbotQuizStopped | trigger_QuizbotQuizStopped | Quiz was stopped |
 | quizbotQuizTimeout | trigger_QuizbotQuizTimeout | Quiz Question timedout |
-| quizbotIncorrectAnswer | trigger_QuizbotIncorrectAnswer | Someone provided an incorrec answer |
+| quizbotIncorrectAnswer | trigger_QuizbotIncorrectAnswer | Someone provided an incorrect answer |
 | quizbotCorrectAnswer | trigger_QuizbotCorrectAnswer | Someone answered the quiz question correctly |
 
 ### Actions
