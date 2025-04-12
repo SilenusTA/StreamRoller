@@ -1,6 +1,6 @@
 # trigger on the cix.x.x tag.
-name: Test readme uploading
-run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
+name: Test readme auto update and upload
+run-name: ${{ github.actor }} Test readme auto update and upload
 on:
   workflow_dispatch:
   push:
