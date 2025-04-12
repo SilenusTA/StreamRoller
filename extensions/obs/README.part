@@ -8,39 +8,53 @@ to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
 # OBS
+
 Contents
+
 - [OBS](#obs)
 - [Setup](#setup)
   - [Outgoing channel : "OBS\_CHANNEL"](#outgoing-channel--obs_channel)
   - [Authorization fields](#authorization-fields)
-      - [Field 1](#field-1)
-      - [Field 2](#field-2)
-      - [Field 3](#field-3)
+    - [Field 1](#field-1)
+    - [Field 2](#field-2)
+    - [Field 3](#field-3)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
+
+ReplaceTAGForTriggersUpdatedDocTime
+
 # Setup
 
 ## Outgoing channel : "OBS_CHANNEL"
+
 ## Authorization fields
+
 #### Field 1
+
 - Name: "obshost"
 - Value: hostname (ie localhost)
+
 #### Field 2
+
 - Name: "obsport"
 - Port to use
 
 #### Field 3
+
 - Name: "obspass"
 - Value: password
 
-Provides connection to OBS for information and control. 
+Provides connection to OBS for information and control.
+
 ## Triggers/Actions
+
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
 ReplaceTAGForTriggers
+
 ### Actions
 
 ReplaceTAGForActions
