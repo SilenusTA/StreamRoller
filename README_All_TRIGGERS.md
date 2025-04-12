@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,281)
+### Current count (5,283)
 
-```Triggers: 3,707 / Actions: 1,574```
+```Triggers: 3,709 / Actions: 1,574```
 
 Contents
 
@@ -17,6 +17,7 @@ Contents
     - [chatbot](#chatbot)
     - [discordchat](#discordchat)
     - [msfs2020](#msfs2020)
+    - [multistream](#multistream)
     - [obs](#obs)
     - [philipshue](#philipshue)
     - [quizbot](#quizbot)
@@ -35,7 +36,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sat, 12 Apr 2025 13:36:24 GMT*## Extensions
+Table last updated: *Sat, 12 Apr 2025 13:54:22 GMT*## Extensions
 
 ## autopilot
 
@@ -5166,6 +5167,18 @@ Table last updated: *Sat, 12 Apr 2025 13:36:24 GMT*## Extensions
 | YOKE Y POSITION_get | action_YOKE Y POSITION_get | Request the value, will be returned in a 'name_(Single) 'triggerPercent control deflection fore/aft (for animation).: Units position |
 | YOKE Y POSITION WITH AP_get | action_YOKE Y POSITION WITH AP_get | Request the value, will be returned in a 'name_(Single) 'triggerPercent control deflection fore/aft (for animation). Also includes AP's inputs.: Units position |
 | ZERO LIFT ALPHA_get | action_ZERO LIFT ALPHA_get | Request the value, will be returned in a 'name_(Single) 'triggerThe angle of attack at which the wing has zero lift.: Units radians |
+## multistream
+
+### Triggers
+
+| name | trigger | description |
+| --- | --- | --- |
+| multistreamStreamStarted | trigger_multistreamStreamStarted | A Stream has been started to the destination |
+| multistreamStreamStopped | trigger_multistreamStreamStopped | A Stream has been stopped |
+### Actions
+
+| name | trigger | description |
+| --- | --- | --- |
 ## obs
 
 ### Triggers
