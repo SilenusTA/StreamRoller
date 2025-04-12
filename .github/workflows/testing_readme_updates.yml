@@ -1,5 +1,5 @@
 # trigger on the cix.x.x tag.
-name: CI process chain
+name: Test readme uploading
 run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
 on:
   workflow_dispatch:
