@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,277)
+### Current count (5,281)
 
-```Triggers: 3,705 / Actions: 1,572```
+```Triggers: 3,707 / Actions: 1,574```
 
 Contents
 
@@ -35,7 +35,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sat, 05 Apr 2025 19:37:25 GMT*## Extensions
+Table last updated: *Sat, 12 Apr 2025 12:52:17 GMT*## Extensions
 
 ## autopilot
 
@@ -5174,6 +5174,8 @@ Table last updated: *Sat, 05 Apr 2025 19:37:25 GMT*## Extensions
 | --- | --- | --- |
 | OBSStreamingStarted | trigger_StreamStarted | Stream Started |
 | OBSStreamingStopped | trigger_StreamStopped | Stream Stopped |
+| OBSRecordingStarted | trigger_RecordingStarted | Recording Started |
+| OBSRecordingStopped | trigger_RecordingStopped | Recording Stopped |
 | OBSSceneChanged | trigger_SceneChanged | Scene was changed |
 ### Actions
 
@@ -5181,6 +5183,8 @@ Table last updated: *Sat, 05 Apr 2025 19:37:25 GMT*## Extensions
 | --- | --- | --- |
 | OBSStartStream | action_StartStream | Start Streaming in OBS |
 | OBSStopStream | action_StopStream | Stop Streaming in OBS |
+| OBSStartRecording | action_StartRecording | Start Recording in OBS |
+| OBSStopRecording | action_StopRecording | Stop Recording in OBS |
 | OBSToggleFilter | action_ToggleFilter | Enable/Disable a filter (true/false) |
 | OBSChangeScene | action_ChangeScene | Switch to the OBS scene provided by sceneName |
 | OBSEnableSource | action_EnableSource | Turn a source on or off, ie to enable animations, cameraas etc |
@@ -5206,7 +5210,7 @@ Table last updated: *Sat, 05 Apr 2025 19:37:25 GMT*## Extensions
 | quizbotQuizStarted | trigger_QuizbotQuizStarted | Quiz was started, restarted or a new question was asked |
 | quizbotQuizStopped | trigger_QuizbotQuizStopped | Quiz was stopped |
 | quizbotQuizTimeout | trigger_QuizbotQuizTimeout | Quiz Question timedout |
-| quizbotIncorrectAnswer | trigger_QuizbotIncorrectAnswer | Someone provided an incorrec answer |
+| quizbotIncorrectAnswer | trigger_QuizbotIncorrectAnswer | Someone provided an incorrect answer |
 | quizbotCorrectAnswer | trigger_QuizbotCorrectAnswer | Someone answered the quiz question correctly |
 ### Actions
 
