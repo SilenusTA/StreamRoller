@@ -196,13 +196,13 @@ function deleteConfig (configname, path = configFilesPath)
 {
     if (fs.existsSync(path + configname + ".json"))
     {
-        fs.unlink(path + configname + ".json",
+        fs.unlinkSync(path + configname + ".json",
             (err =>
             {
                 if (err) console.log(err);
                 else
                 {
-                    console.log("\nDeleted file: example_file.txt");
+                    // console.log("\nDeleted file:", path + configname + ".json");
                 }
             }));
     }
