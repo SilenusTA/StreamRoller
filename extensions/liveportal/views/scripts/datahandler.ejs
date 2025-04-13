@@ -2107,12 +2107,12 @@
             localConfig.TTSVoiceList.forEach((voice, index) =>
             {
                 if (index == serverConfig.twitchTTSVoiceIndex)
-                    twitchoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "LoadVoiceTimer</option>"
+                    twitchoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
                 else
                     twitchoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
 
                 if (index == serverConfig.YouTubeTTSVoiceIndex)
-                    ytoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "LoadVoiceTimer</option>"
+                    ytoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
                 else
                     ytoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
                 testoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
