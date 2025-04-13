@@ -78,6 +78,7 @@
         winttstwitchenabled: "off",
         twitchTTSVolume: "1",
         twitchBlackList: "",
+        TTSVoiceFilter: "English", // filter out voices you are interested in
         twitchTTSVoiceName: "Please select a windows voice",
         twitchTTSVoiceIndex: -1,
         winttsyoutubeenabled: "off",
@@ -85,7 +86,7 @@
         youtubeBlackList: "",
         YouTubeTTSVoiceName: "Please select a windows voice",
         YouTubeTTSVoiceIndex: -1,
-        TTSVoiceFilter: "", // filter out voices you are interested in
+
 
         // random facts twitter settings
         randomfactsenabled: "on",
@@ -637,12 +638,12 @@
                     for (const [key, value] of Object.entries(serverConfig))
                     {
                         //lets check our settings and send out updates as required
-                        if (value === "on" && !extension_packet.data[key])
+                        if (value === "on" && !extension_packet.data[key + "_SettingsSmallFormItem"])
                             serverConfig[key] = "off";
-                        else if (key === "randomfactstimeout")
-                            serverConfig[key] = extension_packet.data[key] * 60000
+                        else if (key === "randomfactstimeout_SettingsSmallFormItem")
+                            serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"] * 60000
                         else if (key in extension_packet.data)
-                            serverConfig[key] = extension_packet.data[key];
+                            serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"];
                     }
 
                     changeServerLogging(serverConfig.logginglevel)
@@ -681,12 +682,12 @@
                         for (const [key, value] of Object.entries(serverConfig))
                         {
                             //lets check our settings and send out updates as required
-                            if (value === "on" && !extension_packet.data[key + "_SettingsSmallFormItem"])
+                            if (value === "on" && !extension_packet.data[key])
                                 serverConfig[key] = "off";
-                            else if (key === "randomfactstimeout" + "_SettingsSmallFormItem")
-                                serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"] * 60000
+                            else if (key === "randomfactstimeout")
+                                serverConfig[key] = extension_packet.data[key] * 60000
                             else if (key + "_SettingsSmallFormItem" in extension_packet.data)
-                                serverConfig[key] = extension_packet.data[key + "_SettingsSmallFormItem"];
+                                serverConfig[key] = extension_packet.data[key];
                         }
                     }
 
@@ -935,8 +936,7 @@
                             username = extension_packet.data.data.username
                         else if (extension_packet.data["display-name"])
                             username = extension_packet.data["display-name"]
-                        if (
-                            serverConfig.twitchBlackList && serverConfig.twitchBlackList.toLowerCase().indexOf(username) == -1)
+                        if (serverConfig.twitchBlackList && serverConfig.twitchBlackList.toLowerCase().indexOf(username) == -1)
                             TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message, serverConfig.twitchTTSVolume)
                     }
                     parseTwitchChatMessage(extension_packet.data);
@@ -2118,16 +2118,17 @@
                 testoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
             });
             //update the modal boxes for each platform and the test button
-            modalstring = modalstring.replaceAll("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", twitchoptioncode);
-            modalstring = modalstring.replaceAll("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", ytoptioncode);
-            modalstring = modalstring.replaceAll("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", testoptioncode);
+            + "_SettingsSmallFormItem"
+            modalstring = modalstring.replace("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", twitchoptioncode);
+            modalstring = modalstring.replace("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", ytoptioncode);
+            modalstring = modalstring.replace("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", testoptioncode);
         }
         else
         {
             let noVoicesOption = '<option value="Microsoft George - English (United Kingdom)" selected>Loading ...</option>'
-            modalstring = modalstring.replaceAll("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
-            modalstring = modalstring.replaceAll("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
-            modalstring = modalstring.replaceAll("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+            modalstring = modalstring.replace("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+            modalstring = modalstring.replace("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
+            modalstring = modalstring.replace("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", noVoicesOption);
         }
 
         // other data update
@@ -2414,7 +2415,7 @@
         for (const [profile_id, value] of Object.entries(extension_packet.data))
         {
             if (serverConfig.chatAsUsername && serverConfig.chatAsUsername == value
-                ||serverConfig.chatAsUsername && serverConfig.chatAsUsername == profile_id
+                || serverConfig.chatAsUsername && serverConfig.chatAsUsername == profile_id
             )
             {
                 selectedname = true;
@@ -2429,7 +2430,7 @@
         }
         // if our current selection isn't in the list then set it to the first one received if any
         if (!selectedname && newChatAsUsername != "")
-            serverConfig.chatAsUsername=        newChatAsUsername
+            serverConfig.chatAsUsername = newChatAsUsername
         ele.innerHTML = optioncode
     }
     // ============================================================================
