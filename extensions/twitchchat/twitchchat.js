@@ -1434,7 +1434,7 @@ function process_chat_data (channel, tags, chatmessage)
 function action_SendChatMessage (channel, data, attempts = 0)
 {
     let sent = false
-    let account = null;
+    let account = "";
     if (serverConfig.enabletwitchchat == "off")
     {
         logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with twitchchat turned off", data.account, data.message)
@@ -1442,15 +1442,19 @@ function action_SendChatMessage (channel, data, attempts = 0)
     }
     try
     {
-        if (data.account === "" || data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
+        if (data.account === "bot" || (localConfig.usernames.bot && localConfig.usernames.bot.name == data.account))
             account = "bot"
         else if (data.account === "user" || (localConfig.usernames.user && localConfig.usernames.user.name == data.account))
             account = "user"
-
+        else
+            account = "bot"
         // first run we might still be waiting for chat to connect
-        if (!localConfig.twitchClient[account].connection.channels || (localConfig.twitchClient[account].connection.channels && localConfig.twitchClient[account].connection.channels.length == 0))
+        if (!localConfig.twitchClient[account]
+            || !localConfig.twitchClient[account].connection
+            || !localConfig.twitchClient[account].connection.channels
+            || localConfig.twitchClient[account].connection.channels.length == 0)
         {
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with zero channels connected, scheduling wait timer number", attempts, data.account, data.message)
+            logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with zero channels connected yet, scheduling wait timer number", attempts, data.account, data.message)
             if (++attempts < 5)
             {
                 setTimeout(() =>
@@ -1459,13 +1463,17 @@ function action_SendChatMessage (channel, data, attempts = 0)
                 }, 2000)
                 return;
             }
+            else
+            {
+                logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Couldn't send twitch chat message, no connection or channels available", data.account, data.message)
+                return;
+            }
         }
         if (account && localConfig.twitchClient[account].connection && localConfig.twitchClient[account].state.connected)
         {
             localConfig.twitchClient[account].connection.say(channel, data.message)
                 .then(() =>
                 {
-
                     sent = true;
                 })
                 .catch((e) => 
