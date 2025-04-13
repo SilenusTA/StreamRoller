@@ -1448,7 +1448,7 @@ function action_SendChatMessage (channel, data, attempts = 0)
             account = "user"
 
         // first run we might still be waiting for chat to connect
-        if (!localConfig.twitchClient[account].connection.channels || localConfig.twitchClient[account].connection.channels.length == 0)
+        if (!localConfig.twitchClient[account].connection.channels || (localConfig.twitchClient[account].connection.channels && localConfig.twitchClient[account].connection.channels.length == 0))
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME, "Trying to send twitch message with zero channels connected, scheduling wait timer number", attempts, data.account, data.message)
             if (++attempts < 5)
