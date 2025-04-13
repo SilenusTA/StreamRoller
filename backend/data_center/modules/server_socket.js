@@ -303,7 +303,7 @@ function onMessage (socket, server_packet)
     else if (server_packet.type === "RequestCredentials")
         mh.RetrieveCredentials(server_packet.from, extensions);
     else if (server_packet.type === "DeleteCredentials")
-        mh.DeleteCredentials(server_packet.from);
+        mh.DeleteCredentials(socket, server_packet.from);
     else if (server_packet.type === "RequestExtensionsList")
     {
         if (!extensionlist_requesters.includes(server_packet.from))

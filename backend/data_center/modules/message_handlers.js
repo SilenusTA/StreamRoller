@@ -371,17 +371,21 @@ function UpdateCredentials (server_packet)
     }
     catch (err)
     {
-        console.log("Error while updating credentials for", from, JSON.stringify(err, null, 2))
+        console.log("Error while updating credentials for", server_packet.from, JSON.stringify(err, null, 2))
     }
 }
 // ============================================================================
 //                           FUNCTION: DeleteCredentials
 // ============================================================================
-function DeleteCredentials (from)
+function DeleteCredentials (client_socket, from)
 {
     try
     {
         cm.deleteCredentials(from)
+        let msg = sr_api.ServerPacket("CredentialsFileDeleted", EXTENSION_NAME, {}, "", from);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        client_socket.emit("message", msg);
     }
     catch (err)
     {
