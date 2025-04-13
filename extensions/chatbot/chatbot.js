@@ -61,6 +61,7 @@ const localConfig = {
     heartBeatHandle: null,
     OpenAPIHandle: null,
     openAPIImageHandle: null,
+    openAIKey: "",
     // number of messages added to history so far
     chatMessageCount: 0,
     chatHistory: [],
@@ -306,13 +307,6 @@ const default_serverConfig = {
  },
 */
     // =============================
-    // credentials dialog variables
-    // =============================
-    credentialscount: "1",
-    cred1name: "openAIkey",
-    cred1value: "",
-
-    // =============================
     // debug dialog variables
     // =============================
     DEBUG_MODE: "off",
@@ -505,10 +499,7 @@ function onDataCenterMessage (server_packet)
             SendSettingsWidgetSmall(extension_packet.from);
         else if (extension_packet.type === 'RequestSettingsWidgetLargeCode')
             SendSettingsWidgetLarge(extension_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-        {
-            SendCredentialsModal(extension_packet.from);
-        }
+
         else if (extension_packet.type === "UserAccountNames")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -686,8 +677,17 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
-        if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
+        // prefiously we had a miss spelling of the key. lowercase K in the name. This code fixes that by updating the 
+        // credentials file with the correct naming.
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "" && server_packet.data.openAIkey)
+        {
+            DeleteCredentialsonServer()
+            SaveCredentialsToServer("openAIKey", server_packet.data.openAIkey);
             localConfig.openAIKey = server_packet.data.openAIkey;
+        }
+
+        if (server_packet.to === serverConfig.extensionname && server_packet.data != "" && server_packet.data.openAIKey)
+            localConfig.openAIKey = server_packet.data.openAIKey;
         else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -785,11 +785,10 @@ function handleSettingsWidgetLargeData (modalcode)
 {
     if (modalcode.chatbot_restore_defaults == "on")
     {
-        console.log("Chatbot defaults restored")
-        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config/Credentials file has been Restored. Your settings may have changed" + "\x1b[0m");
         serverConfig = structuredClone(default_serverConfig);
-        console.log(serverConfig.chatbotprofiles.length)
         SaveConfigToServer();
+        DeleteCredentialsonServer();
         return;
     }
     serverConfig.chatbotenabled = "off";
@@ -809,6 +808,14 @@ function handleSettingsWidgetLargeData (modalcode)
     {
         if (key.indexOf("temperature") > -1)
             serverConfig[key] = String(value / 50);
+        else if (key.indexOf("chatbot_openAIKey") > -1)
+        {
+            if (value != localConfig.openAIKey && value != "empty" && value != "")
+            {
+                localConfig.openAIKey = value;
+                SaveCredentialsToServer("openAIKey", value)
+            }
+        }
         else
             serverConfig[key] = value;
     }
@@ -1047,56 +1054,7 @@ function stringParser (str)
     //if (typeof (str) == "string")
     //    return str.replace(/'/g, '&apos;').replace(/'/g, '&apos;')
 }
-// ===========================================================================
-//                           FUNCTION: SendCredentialsModal
-// ===========================================================================
-/**
- * Sends our extensions model html code for the credentials dialog to be displayed
- * to allow the user to enter credentials for login/oauth
- * @param {string} extensionname 
- */
-function SendCredentialsModal (extensionname)
-{
-    fs.readFile(__dirname + "/chatbotcredentialsmodal.html", function (err, filedata)
-    {
-        if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
-        else
-        {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
-                if (value === "on")
-                {
-                    modalstring = modalstring.replace(key + "checked", "checked");
-                }   //value is a string then we need to replace the text
-                else if (typeof (value) == "string")
-                {
-                    modalstring = modalstring.replace(key + "text", value);
-                }
-            }
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
-                        "",
-                        extensionname,
-                        serverConfig.channel
-                    ),
-                    "",
-                    extensionname)
-            )
-        }
-    });
-}
+
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -1110,6 +1068,43 @@ function SaveConfigToServer ()
         "SaveConfig",
         localConfig.EXTENSION_NAME,
         serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: SaveCredentialsToServer
+// ============================================================================
+/**
+ * Sends Credentials to the server
+ */
+function SaveCredentialsToServer (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+                CredentialName: name,
+                CredentialValue: value,
+            },
+
+        ));
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsonServer
+// ============================================================================
+/**
+ * Sends Credentials to the server
+ */
+function DeleteCredentialsonServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
 }
 // ============================================================================
 //                           FUNCTION: heartBeat

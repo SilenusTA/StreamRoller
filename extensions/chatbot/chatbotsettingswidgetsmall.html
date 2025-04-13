@@ -3,50 +3,27 @@
     <div class="modal-content bg-light text-dark">
         <div class="modal-header">
             <h5 class="modal-title">Chatbot Settings</h5>
-            <button type="button"
-                class="btn-close bg-light"
-                title="Close"
-                data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close bg-light" title="Close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
             <div class="form-group invisible">
-                <input type="hidden"
-                    name="extensionname"
-                    class="form-control"
-                    value="extensionnametext"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="modalcodetype"
-                    class="form-control"
-                    value="SettingsWidgetSmallCode"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="modaldatatype"
-                    class="form-control"
-                    value="SettingsWidgetSmallData"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="channel"
-                    class="form-control"
-                    value="channeltext"
-                    tabindex="-1" />
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
 
             <p>Chatbot is a ChatGPT powered chatbot that can be asked questions or just hang out in chat talking with
                 users.
             </p>
+            <p>Note: to set the login credentials go to the bottom of the main settings page for chatbot (tab at top of main page)</p>
 
             <!-- fields for user interaction -->
             <!-- enable/disable chatbot -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="chatbotenabled"
-                        type="checkbox"
-                        id="chatbotenabled"
-                        chatbotenabledchecked>
-                    <label class="form-check-label"
-                        for="chatbotenabled">Enable Chatbot Autoresponse (joins in the
+                    <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled" chatbotenabledchecked>
+                    <label class="form-check-label" for="chatbotenabled">Enable Chatbot Autoresponse (joins in the
                         conversation
                         in
                         chat)</label>
@@ -54,78 +31,46 @@
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="chatbottriggerenabled"
-                        type="checkbox"
-                        id="chatbottriggerenabled"
-                        chatbottriggerenabledchecked>
-                    <label class="form-check-label"
-                        for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will
+                    <input class="form-check-input" name="chatbottriggerenabled" type="checkbox" id="chatbottriggerenabled" chatbottriggerenabledchecked>
+                    <label class="form-check-label" for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will
                         answer
                         to questings that uses its name, or whatever is set in the trigger field below)</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="questionbotenabled"
-                        type="checkbox"
-                        id="questionbotenabled"
-                        questionbotenabledchecked>
-                    <label class="form-check-label"
-                        for="questionbotenabled">Enable Questionbot trigger (chat can ask
+                    <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled" questionbotenabledchecked>
+                    <label class="form-check-label" for="questionbotenabled">Enable Questionbot trigger (chat can ask
                         questions
                         directly)</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="translatetoeng"
-                        type="checkbox"
-                        id="translatetoeng"
-                        translatetoengchecked>
-                    <label class="form-check-label"
-                        for="translatetoeng">English Translation trigger</label>
+                    <input class="form-check-input" name="translatetoeng" type="checkbox" id="translatetoeng" translatetoengchecked>
+                    <label class="form-check-label" for="translatetoeng">English Translation trigger</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="submessageenabled"
-                        type="checkbox"
-                        id="submessageenabled"
-                        submessageenabledchecked>
-                    <label class="form-check-label"
-                        for="submessageenabled">Enable sub/dono responses through
+                    <input class="form-check-input" name="submessageenabled" type="checkbox" id="submessageenabled" submessageenabledchecked>
+                    <label class="form-check-label" for="submessageenabled">Enable sub/dono responses through
                         chatbot</label>
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="generateimages"
-                        type="checkbox"
-                        id="generateimages"
-                        generateimageschecked>
-                    <label class="form-check-label"
-                        for="generateimages">Enable Image generation for responses
+                    <input class="form-check-input" name="generateimages" type="checkbox" id="generateimages" generateimageschecked>
+                    <label class="form-check-label" for="generateimages">Enable Image generation for responses
                         chatbot</label>
                 </div>
             </div>
             <!-- Profile selector -->
             <hr>
-            <div class="form-group row-2"
-                class="form-control">
+            <div class="form-group row-2" class="form-control">
                 <h4>Profile in use:<span style='color: yellow'> chatbotprofileselectedname</span></h4>
-                <select class="selectpicker btn-secondary"
-                    data-style="btn-danger"
-                    data-width="150px"
-                    title="box one"
-                    id="chatbotprofilepicker"
-                    value="chatbotprofilepickervalue"
-                    name="chatbotprofilepicker"
-                    required>
+                <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one" id="chatbotprofilepicker"
+                    value="chatbotprofilepickervalue" name="chatbotprofilepicker" required>
                     chatbotprofileoptionssplaceholder
                 </select>
             </div>
@@ -157,15 +102,9 @@
             </style>
 
             <p id="chatbotresponsiveness">
-                <label><input type="radio"
-                        name="chatbotresponsiveness"
-                        value="1"><span>Low</span></label>
-                <label><input type="radio"
-                        name="chatbotresponsiveness"
-                        value="2"><span>Med</span></label>
-                <label><input type="radio"
-                        name="chatbotresponsiveness"
-                        value="3"><span>High</span></label>
+                <label><input type="radio" name="chatbotresponsiveness" value="1"><span>Low</span></label>
+                <label><input type="radio" name="chatbotresponsiveness" value="2"><span>Med</span></label>
+                <label><input type="radio" name="chatbotresponsiveness" value="3"><span>High</span></label>
             </p>
 
             <!-- message count level -->
@@ -175,24 +114,15 @@
                 timeout above)and send them to get a response</p>
             <div class="form-group py-2">
                 <div class="col-m-1">
-                    <label for="chatbotMessageMaxLines"
-                        class="">Num of messages : </label>
-                    <input type="text"
-                        style="width: 40px;"
-                        name="chatbotMessageMaxLines"
-                        id="chatbotMessageMaxLines"
-                        value="chatbotMessageMaxLinestext">
+                    <label for="chatbotMessageMaxLines" class="">Num of messages : </label>
+                    <input type="text" style="width: 40px;" name="chatbotMessageMaxLines" id="chatbotMessageMaxLines" value="chatbotMessageMaxLinestext">
                 </div>
             </div>
         </div>
         <!-- Standard footer with submit and cancel buttons -->
         <div class="modal-footer">
-            <button type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal">Cancel</button>
-            <button type="submit"
-                data-bs-dismiss="modal"
-                class="btn btn-primary">Update</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
         </div>
     </div>
 </div>

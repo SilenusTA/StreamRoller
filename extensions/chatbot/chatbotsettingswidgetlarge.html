@@ -1,25 +1,9 @@
 <form id="extensionnametext_settingsform">
     <div class="form-group invisible">
-        <input type="hidden"
-            name="extensionname"
-            class="form-control"
-            value="extensionnametext"
-            tabindex="-1" />
-        <input type="hidden"
-            name="modalcodetype"
-            class="form-control"
-            value="SettingsWidgetLargeCode"
-            tabindex="-1" />
-        <input type="hidden"
-            name="modaldatatype"
-            class="form-control"
-            value="SettingsWidgetLargeData"
-            tabindex="-1" />
-        <input type="hidden"
-            name="channel"
-            class="form-control"
-            value="channeltext"
-            tabindex="-1" />
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
     </div>
 
     <h4 class="text-center">Chatbot Settings</h4>
@@ -31,72 +15,42 @@
     <h5 class="text-center">Enablers</h5>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="chatbotenabled"
-                type="checkbox"
-                id="chatbotenabled"
-                chatbotenabledchecked>
-            <label class="form-check-label"
-                for="chatbotenabled">Enable Chatbot Autoresponse (joins in the conversation
+            <input class="form-check-input" name="chatbotenabled" type="checkbox" id="chatbotenabled" chatbotenabledchecked>
+            <label class="form-check-label" for="chatbotenabled">Enable Chatbot Autoresponse (joins in the conversation
                 in
                 chat)</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="chatbottriggerenabled"
-                type="checkbox"
-                id="chatbottriggerenabled"
-                chatbottriggerenabledchecked>
-            <label class="form-check-label"
-                for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will answer
+            <input class="form-check-input" name="chatbottriggerenabled" type="checkbox" id="chatbottriggerenabled" chatbottriggerenabledchecked>
+            <label class="form-check-label" for="chatbottriggerenabled">Enable Chatbot trigger (ie so chat will answer
                 to questions that uses its name, or whatever is set in the trigger field below)</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="questionbotenabled"
-                type="checkbox"
-                id="questionbotenabled"
-                questionbotenabledchecked>
-            <label class="form-check-label"
-                for="questionbotenabled">Enable Question bot trigger (chat can ask questions
+            <input class="form-check-input" name="questionbotenabled" type="checkbox" id="questionbotenabled" questionbotenabledchecked>
+            <label class="form-check-label" for="questionbotenabled">Enable Question bot trigger (chat can ask questions
                 directly)</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="translatetoeng"
-                type="checkbox"
-                id="translatetoeng"
-                translatetoengchecked>
-            <label class="form-check-label"
-                for="translatetoeng">English Translation trigger</label>
+            <input class="form-check-input" name="translatetoeng" type="checkbox" id="translatetoeng" translatetoengchecked>
+            <label class="form-check-label" for="translatetoeng">English Translation trigger</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="submessageenabled"
-                type="checkbox"
-                id="submessageenabled"
-                submessageenabledchecked>
-            <label class="form-check-label"
-                for="submessageenabled">Enable sub/dono responses through chatbot</label>
+            <input class="form-check-input" name="submessageenabled" type="checkbox" id="submessageenabled" submessageenabledchecked>
+            <label class="form-check-label" for="submessageenabled">Enable sub/dono responses through chatbot</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="generateimages"
-                type="checkbox"
-                id="generateimages"
-                generateimageschecked>
-            <label class="form-check-label"
-                for="generateimages">Enable Image generation for responses
+            <input class="form-check-input" name="generateimages" type="checkbox" id="generateimages" generateimageschecked>
+            <label class="form-check-label" for="generateimages">Enable Image generation for responses
                 chatbot</label>
         </div>
     </div>
@@ -107,52 +61,33 @@
         <div class="col-xs-1">
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="chatbotpreviousresponseinhistoryenabled"
-                        type="checkbox"
-                        id="chatbotpreviousresponseinhistoryenabled"
+                    <input class="form-check-input" name="chatbotpreviousresponseinhistoryenabled" type="checkbox" id="chatbotpreviousresponseinhistoryenabled"
                         chatbotpreviousresponseinhistoryenabledchecked>
-                    <label class="form-check-label"
-                        for="chatbotenabled">Add last chatbot response to next history request</label>
+                    <label class="form-check-label" for="chatbotenabled">Add last chatbot response to next history request</label>
                 </div>
             </div>
             <BR>
             <label for="chatbotautoresponseengine">Engine to use (ie gpt-3.5-turbo, gpt-4 etc , not all are currently
                 supported so check for console errors if it doesn't work)</label>
-            <BR> <input type="text"
-                name="chatbotautoresponseengine"
-                id="chatbotautoresponseengine"
-                value="chatbotautoresponseenginetext">
+            <BR> <input type="text" name="chatbotautoresponseengine" id="chatbotautoresponseengine" value="chatbotautoresponseenginetext">
 
             <div class="form-group row-2 text-center">
                 <div>Randomness.
                     Higher = more random/less precise
                     Lower = less random/more precise
                 </div>
-                <label for="chatbotautoresponsetemperature"
-                    class="form-label"
+                <label for="chatbotautoresponsetemperature" class="form-label"
                     id="chatbotautoresponsetemperaturerangeval">chatbotautoresponsetemperaturetext</label>
-                <input type="range"
-                    class="form-range"
-                    name="chatbotautoresponsetemperature"
-                    id="chatbotautoresponsetemperature"
-                    min="0"
-                    max="100"
-                    step="1"
-                    onInput="$('#chatbotautoresponsetemperaturerangeval').html($(this).val())"
-                    value="chatbotautoresponsetemperaturetext">
+                <input type="range" class="form-range" name="chatbotautoresponsetemperature" id="chatbotautoresponsetemperature" min="0" max="100" step="1"
+                    onInput="$('#chatbotautoresponsetemperaturerangeval').html($(this).val())" value="chatbotautoresponsetemperaturetext">
             </div>
             <h5 class="text-center">Token Limit</h5>
             Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
             tokens is around the max twitch chat length. Over this you will get multiple messages in chat.
             <div class="form-group">
                 <div class="col-xs-1">
-                    <label for="chatbotautoresponsemaxtokenstouse"
-                        class="col-form-label">Max Tokens to use:</label>
-                    <input type="text"
-                        style="width: 40px"
-                        name="chatbotautoresponsemaxtokenstouse"
-                        id="chatbotautoresponsemaxtokenstouse"
+                    <label for="chatbotautoresponsemaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotautoresponsemaxtokenstouse" id="chatbotautoresponsemaxtokenstouse"
                         value="chatbotautoresponsemaxtokenstousetext">
                 </div>
             </div>
@@ -168,55 +103,33 @@
                 name can be referenced below in the questions and answer section by using %%CHATBOTTRIGGERNAME%%. Note
                 the bot will always respond to the twitch name as well as the shortened name here if used</label>
             <BR>
-            <input type="text"
-                name="chatbotnametriggertag"
-                id="chatbotnametriggertag"
-                value="chatbotnametriggertagtext">
+            <input type="text" name="chatbotnametriggertag" id="chatbotnametriggertag" value="chatbotnametriggertagtext">
 
-            <label class="form-check-label"
-                for="chatbotnametriggertagstartofline">Start of line only</label>
-            <input class="form-check-input"
-                name="chatbotnametriggertagstartofline"
-                type="checkbox"
-                id="chatbotnametriggertagstartofline"
+            <label class="form-check-label" for="chatbotnametriggertagstartofline">Start of line only</label>
+            <input class="form-check-input" name="chatbotnametriggertagstartofline" type="checkbox" id="chatbotnametriggertagstartofline"
                 chatbotnametriggertagstartoflinechecked>
 
             <BR>
             <label for="chatbotnametriggerengine">Engine to use (ie gpt-3.5-turbo)</label>
-            <BR> <input type="text"
-                name="chatbotnametriggerengine"
-                id="chatbotnametriggerengine"
-                value="chatbotnametriggerenginetext">
+            <BR> <input type="text" name="chatbotnametriggerengine" id="chatbotnametriggerengine" value="chatbotnametriggerenginetext">
 
             <div class="form-group row-2 text-center">
                 <div>Randomness.
                     Higher = more random/less precise
                     Lower = less random/more precise
                 </div>
-                <label for="chatbotnametriggertemperature"
-                    class="form-label"
+                <label for="chatbotnametriggertemperature" class="form-label"
                     id="chatbotnametriggertemperaturerangeval">chatbotnametriggertemperaturetext</label>
-                <input type="range"
-                    class="form-range"
-                    name="chatbotnametriggertemperature"
-                    id="chatbotnametriggertemperature"
-                    min="0"
-                    max="100"
-                    step="1"
-                    onInput="$('#chatbotnametriggertemperaturerangeval').html($(this).val())"
-                    value="chatbotnametriggertemperaturetext">
+                <input type="range" class="form-range" name="chatbotnametriggertemperature" id="chatbotnametriggertemperature" min="0" max="100" step="1"
+                    onInput="$('#chatbotnametriggertemperaturerangeval').html($(this).val())" value="chatbotnametriggertemperaturetext">
             </div>
             <h5 class="text-center">Token Limit</h5>
             Limit the number of tokens used for the responce from OpenAI. Less tokens mean a shorter response. ~125
             tokens is around the max twitch chat length. Over this you will get multiple messages in chat.
             <div class="form-group">
                 <div class="col-xs-1">
-                    <label for="chatbotnametriggermaxtokenstouse"
-                        class="col-form-label">Max Tokens to use:</label>
-                    <input type="text"
-                        style="width: 40px"
-                        name="chatbotnametriggermaxtokenstouse"
-                        id="chatbotnametriggermaxtokenstouse"
+                    <label for="chatbotnametriggermaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotnametriggermaxtokenstouse" id="chatbotnametriggermaxtokenstouse"
                         value="chatbotnametriggermaxtokenstousetext">
                 </div>
             </div>
@@ -230,25 +143,14 @@
             <label for="chatbotquerytag">Message to directly ask a question in chat. The bot will look for this word in
                 any chatmessage sent and will trigger a response when it see's the words/phrase.</label>
             <BR>
-            <input type="text"
-                name="chatbotquerytag"
-                id="chatbotquerytag"
-                value="chatbotquerytagtext">
+            <input type="text" name="chatbotquerytag" id="chatbotquerytag" value="chatbotquerytagtext">
 
-            <label class="form-check-label"
-                for="chatbotquerytagstartofline">Start of line only</label>
-            <input class="form-check-input"
-                name="chatbotquerytagstartofline"
-                type="checkbox"
-                id="chatbotquerytagstartofline"
-                chatbotquerytagstartoflinechecked>
+            <label class="form-check-label" for="chatbotquerytagstartofline">Start of line only</label>
+            <input class="form-check-input" name="chatbotquerytagstartofline" type="checkbox" id="chatbotquerytagstartofline" chatbotquerytagstartoflinechecked>
 
             <BR>
             <label for="chatbotqueryengine">Engine to use (ie gpt-3.5-turbo)</label>
-            <BR> <input type="text"
-                name="chatbotqueryengine"
-                id="chatbotqueryengine"
-                value="chatbotqueryenginetext">
+            <BR> <input type="text" name="chatbotqueryengine" id="chatbotqueryengine" value="chatbotqueryenginetext">
 
 
             <div class="form-group row-2 text-center">
@@ -256,29 +158,16 @@
                     Higher = more random/less precise
                     Lower = less random/more precise
                 </div>
-                <label for="chatbotquerytemperature"
-                    class="form-label"
-                    id="chatbotquerytemperaturerangeval">chatbotquerytemperaturetext</label>
-                <input type="range"
-                    class="form-range"
-                    name="chatbotquerytemperature"
-                    id="chatbotquerytemperature"
-                    min="0"
-                    max="100"
-                    step="1"
-                    onInput="$('#chatbotquerytemperaturerangeval').html($(this).val())"
-                    value="chatbotquerytemperaturetext">
+                <label for="chatbotquerytemperature" class="form-label" id="chatbotquerytemperaturerangeval">chatbotquerytemperaturetext</label>
+                <input type="range" class="form-range" name="chatbotquerytemperature" id="chatbotquerytemperature" min="0" max="100" step="1"
+                    onInput="$('#chatbotquerytemperaturerangeval').html($(this).val())" value="chatbotquerytemperaturetext">
             </div>
 
             <h5 class="text-center">Token Limit</h5>
             <div class="form-group">
                 <div class="col-xs-1">
-                    <label for="chatbotquerymaxtokenstouse"
-                        class="col-form-label">Max Tokens to use:</label>
-                    <input type="text"
-                        style="width: 40px"
-                        name="chatbotquerymaxtokenstouse"
-                        id="chatbotquerymaxtokenstouse"
+                    <label for="chatbotquerymaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="chatbotquerymaxtokenstouse" id="chatbotquerymaxtokenstouse"
                         value="chatbotquerymaxtokenstousetext">
                 </div>
             </div>
@@ -290,46 +179,27 @@
         <div class="col-xs-1">
             <label for="translatetoengtag">Have the the bot translate a chat message to english (start the message with
                 the following)</label>
-            <BR> <input type="text"
-                name="translatetoengtag"
-                id="translatetoengtag"
-                value="translatetoengtagtext">
+            <BR> <input type="text" name="translatetoengtag" id="translatetoengtag" value="translatetoengtagtext">
 
             <BR>
             <label for="translatetoengengine">Engine to use (ie gpt-3.5-turbo)</label>
-            <BR> <input type="text"
-                name="translatetoengengine"
-                id="translatetoengengine"
-                value="translatetoengenginetext">
+            <BR> <input type="text" name="translatetoengengine" id="translatetoengengine" value="translatetoengenginetext">
 
             <div class="form-group row-2 text-center">
                 <div>Randomness.
                     Higher = more random/less precise
                     Lower = less random/more precise
                 </div>
-                <label for="translatetoengtagtemperature"
-                    class="form-label"
-                    id="translatetoengtagtemperaturerangeval">translatetoengtagtemperaturetext</label>
-                <input type="range"
-                    class="form-range"
-                    name="translatetoengtagtemperature"
-                    id="translatetoengtagtemperature"
-                    min="0"
-                    max="100"
-                    step="1"
-                    onInput="$('#translatetoengtagtemperaturerangeval').html($(this).val())"
-                    value="translatetoengtagtemperaturetext">
+                <label for="translatetoengtagtemperature" class="form-label" id="translatetoengtagtemperaturerangeval">translatetoengtagtemperaturetext</label>
+                <input type="range" class="form-range" name="translatetoengtagtemperature" id="translatetoengtagtemperature" min="0" max="100" step="1"
+                    onInput="$('#translatetoengtagtemperaturerangeval').html($(this).val())" value="translatetoengtagtemperaturetext">
             </div>
 
             <h5 class="text-center">Token Limit</h5>
             <div class="form-group">
                 <div class="col-xs-1">
-                    <label for="translatetoengtagmaxtokenstouse"
-                        class="col-form-label">Max Tokens to use:</label>
-                    <input type="text"
-                        style="width: 40px"
-                        name="translatetoengtagmaxtokenstouse"
-                        id="translatetoengtagmaxtokenstouse"
+                    <label for="translatetoengtagmaxtokenstouse" class="col-form-label">Max Tokens to use:</label>
+                    <input type="text" style="width: 40px" name="translatetoengtagmaxtokenstouse" id="translatetoengtagmaxtokenstouse"
                         value="translatetoengtagmaxtokenstousetext">
                 </div>
             </div>
@@ -342,24 +212,12 @@
         random amount of time.</p>
     <div class="form-group py-2">
         <div class="col-xs-1">
-            <label for="chatbotTimerMin"
-                class="col-lg-1">Min (minutes): </label>
-            <input type="text"
-                class="col-lg-4"
-                style="width: 40px;"
-                name="chatbotTimerMin"
-                id="chatbotTimerMin"
-                value="chatbotTimerMintext">
+            <label for="chatbotTimerMin" class="col-lg-1">Min (minutes): </label>
+            <input type="text" class="col-lg-4" style="width: 40px;" name="chatbotTimerMin" id="chatbotTimerMin" value="chatbotTimerMintext">
         </div>
         <div class="col-xs-1">
-            <label for="chatbotTimerMax"
-                class="col-lg-1"> Max (minutes): </label>
-            <input type="text"
-                class="col-lg-4"
-                style="width: 40px;"
-                name="chatbotTimerMax"
-                id="chatbotTimerMax"
-                value="chatbotTimerMaxtext">
+            <label for="chatbotTimerMax" class="col-lg-1"> Max (minutes): </label>
+            <input type="text" class="col-lg-4" style="width: 40px;" name="chatbotTimerMax" id="chatbotTimerMax" value="chatbotTimerMaxtext">
         </div>
     </div>
     <HR>
@@ -368,13 +226,8 @@
         timeout above)and send them to get a response</p>
     <div class="form-group py-2">
         <div class="col-m-1">
-            <label for="chatbotMessageMaxLines"
-                class="">Num of messages : </label>
-            <input type="text"
-                style="width: 40px;"
-                name="chatbotMessageMaxLines"
-                id="chatbotMessageMaxLines"
-                value="chatbotMessageMaxLinestext">
+            <label for="chatbotMessageMaxLines" class="">Num of messages : </label>
+            <input type="text" style="width: 40px;" name="chatbotMessageMaxLines" id="chatbotMessageMaxLines" value="chatbotMessageMaxLinestext">
         </div>
     </div>
     <HR>
@@ -384,13 +237,8 @@
         don't make for such a good responce.</a>
     <div class="form-group py-2">
         <div class="col-m-1">
-            <label for="chatbotminmessagelength"
-                class="">Minimum char length of a message</label>
-            <input type="text"
-                style="width: 40px;"
-                name="chatbotminmessagelength"
-                id="chatbotminmessagelength"
-                value="chatbotminmessagelengthtext">
+            <label for="chatbotminmessagelength" class="">Minimum char length of a message</label>
+            <input type="text" style="width: 40px;" name="chatbotminmessagelength" id="chatbotminmessagelength" value="chatbotminmessagelengthtext">
         </div>
     </div>
     <HR>
@@ -401,13 +249,8 @@
         time before posting back). </a>
     <div class="form-group py-2">
         <div class="col-m-1">
-            <label for="chatbottypingdelay"
-                class="">Delay per word in seconds</label>
-            <input type="text"
-                style="width: 40px;"
-                name="chatbottypingdelay"
-                id="chatbottypingdelay"
-                value="chatbottypingdelaytext">
+            <label for="chatbottypingdelay" class="">Delay per word in seconds</label>
+            <input type="text" style="width: 40px;" name="chatbottypingdelay" id="chatbottypingdelay" value="chatbottypingdelaytext">
         </div>
     </div>
     <HR>
@@ -415,30 +258,19 @@
     <a>The list of users that will ignored by the AI bot (ie spammers, chatbots etc). Separate names with a ',' </a>
     <div class="form-group py-2">
         <div class="col-m-3">
-            <label for="chatbotignorelist"
-                class="">List of names that the bot will ignore</label>
-            <input type="text"
-                style="width: 80%;"
-                name="chatbotignorelist"
-                id="chatbotignorelist"
-                value="chatbotignorelisttext">
+            <label for="chatbotignorelist" class="">List of names that the bot will ignore</label>
+            <input type="text" style="width: 80%;" name="chatbotignorelist" id="chatbotignorelist" value="chatbotignorelisttext">
         </div>
     </div>
     <h5 class="text-center">AI images</h5>
     <div class="form-group py-2">
         <div class="col-xs-1">
             <label for="savedir">Save directory for images</label>
-            <BR> <input type="text"
-                name="savedir"
-                id="savedir"
-                value="savedirtext">
+            <BR> <input type="text" name="savedir" id="savedir" value="savedirtext">
 
             <BR>
             <label for="livedir">Directory to save to while live (moved to save directory on next stream)</label>
-            <BR> <input type="text"
-                name="livedir"
-                id="livedir"
-                value="livedirtext">
+            <BR> <input type="text" name="livedir" id="livedir" value="livedirtext">
         </div>
     </div>
     <hr>
@@ -448,17 +280,10 @@
     <!-- ####################################################### -->
     <!--              behaviour and personalities                -->
     <!-- ####################################################### -->
-    <div class="form-group row-2"
-        class="form-control">
+    <div class="form-group row-2" class="form-control">
         <h4>Profile in use:<span style='color: yellow'> chatbotprofileselectedname</span></h4>
-        <select class="selectpicker btn-secondary"
-            data-style="btn-danger"
-            data-width="150px"
-            title="box one"
-            id="chatbotprofilepicker"
-            value="chatbotprofilepickervalue"
-            name="chatbotprofilepicker"
-            onchange="
+        <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one" id="chatbotprofilepicker"
+            value="chatbotprofilepickervalue" name="chatbotprofilepicker" onchange="
                         let wc_i = this.selectedIndex; 
                         Array.apply(null,this.options).forEach(x => 
                         {
@@ -468,8 +293,7 @@
                         let selectedElement = document.getElementById('chatbotprofile' + this.options[wc_i].value+'profile')                    
                         selectedElement.style.visibility ='visible'
                         selectedElement.style.display ='block'
-                "
-            required>
+                " required>
             chatbotprofileoptionssplaceholder
         </select>
     </div>
@@ -478,8 +302,7 @@
     <!-- ####################################################### -->
     <!--          end behaviour and personalities                -->
     <!-- ####################################################### -->
-    <div class="form-group row-2"
-        class="form-control">
+    <div class="form-group row-2" class="form-control">
         <!--
          Load Save chatbot settings files
     -->
@@ -502,31 +325,21 @@
                 <div class="col-6 px-3">
                     <div class="form-group">
                         <!--<h5>Download the chatbot Server Data File</h5>-->
-                        <label class="form-label"
-                            for="uploadChatbotFileButton">Download the chatbot Server Data File</label>
+                        <label class="form-label" for="uploadChatbotFileButton">Download the chatbot Server Data File</label>
                         <!--<form id="uploadChatbotFileButton"
                             class="form-inline">-->
-                        <button type="button"
-                            class="btn btn-secondary"
-                            onclick="return downloadServerDataClicked()">Download</button>
+                        <button type="button" class="btn btn-secondary" onclick="return downloadServerDataClicked()">Download</button>
                         <!-- </form> -->
                     </div>
                 </div>
                 <div class="col-6 px-3">
                     <div class="form-group">
                         <!-- <h5>Upload a Server Data File</h5>-->
-                        <label class="form-label"
-                            for="ChatBotDatFileUploadElement">Upload an chatbot Server Data File</label>
+                        <label class="form-label" for="ChatBotDatFileUploadElement">Upload an chatbot Server Data File</label>
                         <!-- <form class="form-inline"> -->
-                        <input type="file"
-                            name=""
-                            class="form-control"
-                            id="ChatBotDatFileUploadElement">
+                        <input type="file" name="" class="form-control" id="ChatBotDatFileUploadElement">
                         <BR>
-                        <button type="button"
-                            id="Upload"
-                            class="btn btn-secondary"
-                            onclick="uploadServerDataClicked()">Upload ChatBot data file</button>
+                        <button type="button" id="Upload" class="btn btn-secondary" onclick="uploadServerDataClicked()">Upload ChatBot data file</button>
                         <div id="ChatBotDatFileUploadMessage"></div>
                         <!--/form> -->
                     </div>
@@ -534,40 +347,33 @@
             </div>
         </div>
     </div>
-
-
+    <HR>
+    <H2>Open AI access key</H2>
+    <div class="form-group">
+        <label for="chatbot_openAIKey" class="col-form-label">Enter your openAI token here (can be obtained by going to
+            <a href="https://platform.openai.com/account/api-keys">https://platform.openai.com/account/api-keys</a>)</label>
+        <input type="password" name="chatbot_openAIKey" class="form-control" id="chatbot_openAIKey" value="empty">
+    </div>
 
     <HR>
     <h5 class="text-center">Debug</h5>
     Outputs some extra text in the console for help to tune things better.
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="DEBUG_MODE"
-                type="checkbox"
-                id="DEBUG_MODE"
-                DEBUG_MODEchecked>
-            <label class="form-check-label"
-                for="DEBUG_MODE">Enable debug messages</label>
+            <input class="form-check-input" name="DEBUG_MODE" type="checkbox" id="DEBUG_MODE" DEBUG_MODEchecked>
+            <label class="form-check-label" for="DEBUG_MODE">Enable debug messages</label>
         </div>
     </div>
     <div class="form-group">
         <div class="form-check form-check-inline">
-            <input class="form-check-input"
-                name="extensionnametext_restore_defaults"
-                type="checkbox"
-                id="extensionnametext_restore_defaults"
+            <input class="form-check-input" name="extensionnametext_restore_defaults" type="checkbox" id="extensionnametext_restore_defaults"
                 extensionnametext_restore_defaultschecked>
-            <label class="form-check-label"
-                for="extensionnametext_restore_defaults">Restore Defaults</label>
+            <label class="form-check-label" for="extensionnametext_restore_defaults">Restore Defaults</label>
         </div>
     </div>
     <div class="modal-footer">
-        <button id="closeSettingschatbot"
-            type="close"
-            class="btn btn-secondary">Close</button>
-        <button type="submit"
-            class="btn btn-primary">Update</button>
+        <button id="closeSettingschatbot" type="close" class="btn btn-secondary">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
     </div>
 
 </form>
