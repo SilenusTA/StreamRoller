@@ -1677,8 +1677,8 @@ function onDataCenterMessage (server_packet)
             // -----------------------------------------------------------------------------------
             //                   REQUEST FOR CREDENTIALS DIALOG
             // -----------------------------------------------------------------------------------
-            else if (extension_packet.type === "RequestCredentialsModalsCode")
-                SendCredentialsModal(extension_packet.from);
+            //else if (extension_packet.type === "RequestCredentialsModalsCode")
+            //SendCredentialsModal(extension_packet.from);
             // -----------------------------------------------------------------------------------
             //                   SETTINGS DIALOG DATA
             // -----------------------------------------------------------------------------------
@@ -2244,6 +2244,7 @@ function SendSettingsWidgetSmall (toChannel = "")
  * Send our CredentialsModal to whoever requested it
  * @param {string} extensionname 
  */
+/*
 function SendCredentialsModal (extensionname)
 {
     fs.readFile(__dirname + "/twitchcredentialsmodal.html", function (err, filedata)
@@ -2278,7 +2279,7 @@ function SendCredentialsModal (extensionname)
             )
         }
     });
-}
+}*/
 // ===========================================================================
 //                           FUNCTION: handleSettingsWidgetSmallData
 // ===========================================================================

@@ -3,33 +3,14 @@
     <div class="modal-content bg-light text-dark">
         <div class="modal-header">
             <h5 class="modal-title">Twitch Settings</h5>
-            <button type="button"
-                class="btn-close bg-light"
-                title="Close"
-                data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close bg-light" title="Close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
             <div class="form-group invisible">
-                <input type="hidden"
-                    name="extensionname"
-                    class="form-control"
-                    value="extensionnametext"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="modalcodetype"
-                    class="form-control"
-                    value="SettingsWidgetSmallCode"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="modaldatatype"
-                    class="form-control"
-                    value="SettingsWidgetSmallData"
-                    tabindex="-1" />
-                <input type="hidden"
-                    name="channel"
-                    class="form-control"
-                    value="channeltext"
-                    tabindex="-1" />
+                <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+                <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetSmallCode" tabindex="-1" />
+                <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetSmallData" tabindex="-1" />
+                <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
             </div>
 
             <p>The Twitch extensions handles details from your twitch stream/account</p>
@@ -38,84 +19,71 @@
             <!-- fields for user interaction -->
             <div class="form-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="twitchenabled"
-                        type="checkbox"
-                        id="twitchenabled"
-                        twitchenabledchecked>
-                    <label class="form-check-label"
-                        for="twitchenabled">Enable/Disable Twitch</label>
+                    <input class="form-check-input" name="twitchenabled" type="checkbox" id="twitchenabled" twitchenabledchecked>
+                    <label class="form-check-label" for="twitchenabled">Enable/Disable Twitch</label>
                 </div>
             </div>
             <BR>
             <h4>Streamer Name</h4>
             Note this field should only be your own account due to access rights needed for this extension
             <!-- Stream To Join-->
-            <div id="twitchstredamername"
-                class="form-group">
-                <label for="twitchstreamername"
-                    class="col-form-label">Streamer name (channel to join)</label>
-                <input type="text"
-                    name="twitchstreamername"
-                    class="form-control"
-                    id="twitchstreamername"
-                    value="twitchstreamernametext">
+            <div id="twitchstredamername" class="form-group">
+                <label for="twitchstreamername" class="col-form-label">Streamer name (channel to join)</label>
+                <input type="text" name="twitchstreamername" class="form-control" id="twitchstreamername" value="twitchstreamernametext">
             </div>
             <!-- Twitch Stream Title-->
             <HR>
             <h4>Title</h4>
             Set the stream title.
-            <div id="twitchtitleformgroup"
-                class="form-group">
-                <label for="twitchtitleformgroup"
-                    class="col-form-label">Twitch Stream Title</label>
+            <div id="twitchtitleformgroup" class="form-group">
+                <label for="twitchtitleformgroup" class="col-form-label">Twitch Stream Title</label>
                 twitchStreamTitleSelector
             </div>
             <!-- Twitch Stream Game/Category-->
             <HR>
             <h4>Game/Category</h4>
             Select your game/category to stream in
-            <div id="twitchcategoryformgroup"
-                class="form-group">
-                <label for="twitchcategoryformgroup"
-                    class="col-form-label">Twitch (Top Viewed) Games Categories To Stream In</label>
+            <div id="twitchcategoryformgroup" class="form-group">
+                <label for="twitchcategoryformgroup" class="col-form-label">Twitch (Top Viewed) Games Categories To Stream In</label>
                 twitchGameCategorySelector
             </div>
             <BR>
-            <div id="twitchsearchforgamegroup"
-                class="form-group">
-                <label for="twitchsearchforgamegroup"
-                    class="col-form-label">Search games not in the top viewed list above (adds to history list if
+            <div id="twitchsearchforgamegroup" class="form-group">
+                <label for="twitchsearchforgamegroup" class="col-form-label">Search games not in the top viewed list above (adds to history list if
                     found)</label>
                 twitchTwitchSearchForGame
             </div>
             <div style="color:chocolate">
                 twitchGameCategorySearchErrors
             </div>
-            <!-- reset to defaults-->
-            <BR>
-            <div class="form-group">
+            <!-- twitch login -->
+            <HR>
+            <div>
+                <H2>Twitch Authorization</H2>
+                <H5>Twitch Bot Authorization</H5>
+                First open your twitch page and check you are logged in with your bot account, then click
+                <a href="/twitch/auth?user=bot" target="twitchauth" onclick="$('#twitch_modal_credentialscard').modal('hide')">Authorize Bot</a>
+
                 <HR>
+                <H5>Twitch Streamer Authorization</H5>
+                First open your twitch page and check you are logged in with your streamer account, then click
+                <a href="/twitch/auth?user=streamer" target="twitchauth" onclick="$('#twitch_modal_credentialscard').modal('hide')">Authorize Streamer</a>
+            </div>
+            <!-- reset to defaults-->
+            <HR>
+            <div class="form-group">
+
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input"
-                        name="twitchresetdefaults"
-                        type="checkbox"
-                        id="twitchresetdefaults"
-                        twitchresetdefaultschecked>
-                    <label class="form-check-label"
-                        for="twitchresetdefaults">Reset to defaults</label>
+                    <input class="form-check-input" name="twitchresetdefaults" type="checkbox" id="twitchresetdefaults" twitchresetdefaultschecked>
+                    <label class="form-check-label" for="twitchresetdefaults">Reset to defaults</label>
                 </div>
             </div>
             <BR>
         </div>
         <!-- Standard footer with submit and cancel buttons -->
         <div class="modal-footer">
-            <button type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal">Cancel</button>
-            <button type="submit"
-                data-bs-dismiss="modal"
-                class="btn btn-primary">Update</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" data-bs-dismiss="modal" class="btn btn-primary">Update</button>
         </div>
     </div>
 </div>
