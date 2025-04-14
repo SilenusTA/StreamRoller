@@ -48,7 +48,8 @@ const localConfig = {
     status: {
         connected: false
     },
-    DataCenterSocket: null
+    DataCenterSocket: null,
+    discordToken: ""
 };
 //this object will be overwritten from the sever data if it exists
 const default_serverConfig = {
@@ -60,10 +61,6 @@ const default_serverConfig = {
     discordMessageBufferMaxSize: "300",
     discordMessageBackupTimer: "60",
     discordchat_restore_defaults: "off",
-    //credentials variable names to use (in credentials modal)
-    credentialscount: "1",
-    cred1name: "DISCORD_TOKEN",
-    cred1value: ""
 };
 // need to make sure we have a proper clone of this object and not a reference
 // otherwise changes to server also change defaults
@@ -205,7 +202,21 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "CredentialsFile")
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
-            connectToDiscord(server_packet.data);
+        {
+            // temp code to change discord token name to newer variable. 
+            // remove code in future. Added in 0.3.4
+            if (server_packet.data.DISCORD_TOKEN)
+            {
+                localConfig.discordToken = server_packet.data.DISCORD_TOKEN;
+                DeleteCredentialsOnServer();
+                SaveCredentialToServer("discordToken", localConfig.discordToken);
+            }
+
+            if (server_packet.data.discordToken && server_packet.data.discordToken != "")
+                localConfig.discordToken = server_packet.data.discordToken
+            if (serverConfig.discordenabled == "on")
+                connectToDiscord();
+        }
         else
         {
             logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
@@ -225,7 +236,8 @@ function onDataCenterMessage (server_packet)
             SaveDataToServer();
         }
         SaveChatMessagesToServerScheduler();
-    } else if (server_packet.type === "UnknownChannel")
+    }
+    else if (server_packet.type === "UnknownChannel")
     {
         logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
@@ -249,8 +261,6 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall(extension_packet.from);
             else if (extension_packet.type === 'RequestSettingsWidgetLargeCode')
                 SendSettingsWidgetLarge(extension_packet.from);
-            else if (extension_packet.type === "RequestCredentialsModalsCode")
-                SendCredentialsModal(extension_packet.from);
             // received data from our settings widget small. A user has requested some settings be changedd
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
@@ -274,15 +284,30 @@ function onDataCenterMessage (server_packet)
                     serverConfig = structuredClone(default_serverConfig);
                 else
                 {
+                    let reLogin = false
                     // set our config values to the ones in message
                     serverConfig.discordenabled = "off";
                     // NOTE: this will ignore new items in the page that we don't currently have in our config
                     // and only performs a shallow copy
                     for (const [key] of Object.entries(serverConfig))
                     {
+                        if (serverConfig.discordenabled != extension_packet.data.discordenabled)
+                            reLogin = true
                         if (key in extension_packet.data)
                             serverConfig[key] = extension_packet.data[key];
                     }
+
+                    if (extension_packet.data["discordToken_largeSettingsPage"])
+                    {
+                        if (localConfig.discordToken != extension_packet.data["discordToken_largeSettingsPage"])
+                        {
+                            reLogin = true
+                            localConfig.discordToken = extension_packet.data["discordToken_largeSettingsPage"]
+                            SaveCredentialToServer("discordToken", localConfig.discordToken)
+                        }
+                    }
+                    if (reLogin)
+                        connectToDiscord();
                 }
                 // save our data to the server for next time we run
                 SaveConfigToServer();
@@ -358,15 +383,6 @@ function onDataCenterMessage (server_packet)
                 logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
                     "Unable to process ExtensionMessage : ", server_packet);
         }
-        else if (extension_packet.type === "SettingsWidgetSmallCode"
-            || extension_packet.type === "SettingsWidgetLargeCode"
-            || extension_packet.type === "TriggerAndActions")
-        {
-            // ignore these messages
-        }
-        else
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                "received Unhandled ExtensionMessage : ", server_packet);
     }
     else if (server_packet.type === "ChannelData")
     {
@@ -493,6 +509,8 @@ function SendSettingsWidgetLarge (extensionname)
                 else if (typeof (value) == "string")
                     modalstring = modalstring.replaceAll(key + "text", value);
             }
+
+            modalstring = modalstring.replaceAll("discordToken_largeSettingsPagetext", localConfig.discordToken);
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket("ExtensionMessage",
@@ -511,56 +529,6 @@ function SendSettingsWidgetLarge (extensionname)
         }
     });
 
-}
-
-// ===========================================================================
-//                           FUNCTION: SendCredentialsModal
-// ===========================================================================
-/**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
- */
-function SendCredentialsModal (extensionname)
-{
-    fs.readFile(__dirname + "/discordcredentialsmodal.html", function (err, filedata)
-    {
-        if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
-        else
-        {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
-                if (value === "on")
-                {
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
-                }   //value is a string then we need to replace the text
-                else if (typeof (value) == "string")
-                {
-                    modalstring = modalstring.replaceAll(key + "text", value);
-                }
-            }
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
-                        "",
-                        extensionname,
-                        serverConfig.channel
-                    ),
-                    "",
-                    extensionname)
-            )
-        }
-    });
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
@@ -596,6 +564,46 @@ function SaveDataToServer ()
             serverData));
 }
 // ============================================================================
+//                           FUNCTION: SaveCredentialToServer
+// ============================================================================
+
+/**
+ * Sends Credential to the server to be saved
+ * @param {string} name 
+ * @param {string} value 
+ */
+function SaveCredentialToServer (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+                CredentialName: name,
+                CredentialValue: value,
+            },
+
+        ));
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsOnServer
+// ============================================================================
+/**
+ * Sends Credentials to the server
+ */
+function DeleteCredentialsOnServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
+}
+// ============================================================================
 //                     FUNCTION: SaveChatMessagesToServerScheduler
 // ============================================================================
 /**
@@ -623,41 +631,53 @@ import { Client, Intents } from "discord.js";
 //                          FUNCTION: connectToDiscord
 // ============================================================================
 /**
- * Connets to discord
- * @param {object} credentials 
+ * Connects to discord/ will disconnect if extension is turned off
  */
-function connectToDiscord (credentials)
+async function connectToDiscord ()
 {
     try
     {
-        localConfig.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-        localConfig.discordClient.on("ready", function (e)
+        if (localConfig.discordClient)
         {
-            localConfig.status.connected = true;
-            //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
-            //let messagedata = { name: message.author.username, message: message.content }
-            process_chat_data({ author: { username: "System" }, content: "Connected to Discord" });
-            //process_chat_data(localConfig.discordClient.user.tag, chatmessagetags, "Chat Connected to " + serverConfig.streamername)
-
-        });
-        // Authenticate the discord client to start it up
-        if (!credentials.DISCORD_TOKEN)
-        {
-            localConfig.status.connected = false;
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "DISORD_TOKEN not set");
+            localConfig.discordClient.removeAllListeners();
+            await localConfig.discordClient.destroy();
+            localConfig.discordClient = null;
         }
-        else
+
+        if (serverConfig.discordenabled == "on")
         {
-            localConfig.discordClient.login(credentials.DISCORD_TOKEN)
-                .then(() => { localConfig.status.connected = true; })
-                .catch((err) => logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord login failed", err.message))
+            localConfig.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+            localConfig.discordClient.on("ready", function (e)
+            {
+                localConfig.status.connected = true;
+                //logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, `Logged in as ${localConfig.discordClient.user.tag}!`);
+                //let messagedata = { name: message.author.username, message: message.content }
+                process_chat_data({ author: { username: "System" }, content: "Connected to Discord" });
+                //process_chat_data(localConfig.discordClient.user.tag, chatmessagetags, "Chat Connected to " + serverConfig.streamername)
 
-
+            });
+            // Authenticate the discord client to start it up
+            if (!localConfig.discordToken)
+            {
+                localConfig.status.connected = false;
+                if (serverConfig.discordenabled == "on")
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord credentials not set, please add credentials to the Main Settings Page");
+            }
+            else
+            {
+                localConfig.discordClient.login(localConfig.discordToken)
+                    .then(() => { localConfig.status.connected = true; })
+                    .catch((err) => 
+                    {
+                        localConfig.status.connected = false;
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, "Discord login failed", err.message)
+                    })
+            }
+            localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
+            localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
+            localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
+            localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
         }
-        localConfig.discordClient.on("reconnection", (message) => discordReconnectHandler(message));
-        localConfig.discordClient.on("disconnect", (message) => discordDisconnectHandler(message));
-        localConfig.discordClient.on("error", (message) => discordErrorHandler(message));
-        localConfig.discordClient.on("messageCreate", (message) => discordMessageHandler(message));
     }
     catch (err)
     {
@@ -800,16 +820,23 @@ function process_chat_data (message)
 function heartBeatCallback ()
 {
     let connected = localConfig.status.connected
-
+    let color = "red";
     if (serverConfig.discordenabled === "off")
-        connected = false;
+        color = "red";
+    else if (!connected)
+        color = "orange"
+    else
+        color = "green"
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                { connected: connected },
+                {
+                    connected: connected,
+                    color: color
+                },
                 serverConfig.channel),
             serverConfig.channel
         ),
