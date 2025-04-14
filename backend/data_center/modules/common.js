@@ -293,7 +293,7 @@ function deleteCredentials (extensionname)
 function saveCredentials (data)
 {
     if (
-        (data.ExtensionName != "" && data.CredentialName != "" && data.CredentialValue != "")
+        (data.ExtensionName != "" && data.CredentialName != "")
         && (data.ExtensionName != null && data.CredentialName != null && data.CredentialValue != null)
     )
     {
