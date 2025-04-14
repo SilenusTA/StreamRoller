@@ -681,7 +681,7 @@ function onDataCenterMessage (server_packet)
         // credentials file with the correct naming.
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "" && server_packet.data.openAIkey)
         {
-            DeleteCredentialsonServer()
+            DeleteCredentialsOnServer()
             SaveCredentialsToServer("openAIKey", server_packet.data.openAIkey);
             localConfig.openAIKey = server_packet.data.openAIkey;
         }
@@ -788,7 +788,7 @@ function handleSettingsWidgetLargeData (modalcode)
         console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config/Credentials file has been Restored. Your settings may have changed" + "\x1b[0m");
         serverConfig = structuredClone(default_serverConfig);
         SaveConfigToServer();
-        DeleteCredentialsonServer();
+        DeleteCredentialsOnServer();
         return;
     }
     serverConfig.chatbotenabled = "off";
@@ -1090,12 +1090,12 @@ function SaveCredentialsToServer (name, value)
         ));
 }
 // ============================================================================
-//                           FUNCTION: DeleteCredentialsonServer
+//                           FUNCTION: DeleteCredentialsOnServer
 // ============================================================================
 /**
  * Sends Credentials to the server
  */
-function DeleteCredentialsonServer ()
+function DeleteCredentialsOnServer ()
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
