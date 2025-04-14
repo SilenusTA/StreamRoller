@@ -29,14 +29,8 @@
     </div>
     <h4 class="text-center">OBS Settings</h4>
     <p>Lots of room for future features here :D
-    <h5>Enable/Disable</h5>
-    <div class="form-group py-2">
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" name="enableobs" type="checkbox" id="enableobs" enableobschecked>
-            <label class="form-check-label" for="enableobs">Enable/Disable</label>
-        </div>
-    </div>
-    <HR>
+
+        <HR>
     <h5>Scene identifiers</h5>
     <p>These settings are used to be able to automatically group the scenes into Main, Secondary and 'others'
         to allow quick switching between groups</p>
@@ -47,6 +41,21 @@
     <label for="secondarysceneselector" class="col-sm-3 col-form-label">Secondary Scene Identifier</label>
     <div class="col-sm-2">
         <input type="text" name="secondarysceneselector" class="col-sm-3 col-form-label" id="secondarysceneselector" value="secondarysceneselectortext">
+    </div>
+    <HR>
+    <h5>Websocket Connection Details</h5>
+    Get/Set the OBS credentials from OBS menu "Tools" > "websocket server settings"
+    <div class="form-group">
+        <label for="OBSHostName" class="col-form-label">OBS Hostname (normally "localhost")</label>
+        <input type="text" name="OBSHostName" class="form-control" id="OBSHostName" value="OBSHostNametext">
+    </div>
+    <div class="form-group">
+        <label for="OBSPortNumber" class="col-form-label">OBS Port</label>
+        <input type="text" name="OBSPortNumber" class="form-control" id="OBSPortNumber" value="OBSPortNumbertext">
+    </div>
+    <div class="form-group">
+        <label for="OBSPassword" class="col-form-label">OBS Pass (required for StreamRoller)</label>
+        <input type="password" name="OBSPassword" class="form-control" id="OBSPassword" value="OBSPasswordtext">
     </div>
     <HR>
     <div class="form-group">

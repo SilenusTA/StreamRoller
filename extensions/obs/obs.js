@@ -65,7 +65,7 @@ const localConfig = {
     heartBeatHandle: null,
     status: {
         connected: false, // are we connected to obs
-        currentscene: ""
+        color: ""
     },
     streamStats: {
         renderSkippedFrames: 0,
@@ -86,16 +86,14 @@ const default_serverConfig = {
     mainsceneselector: "##",
     secondarysceneselector: "**",
     obs_restore_defaults: "off",
-    //credentials variable names to use (in credentials modal)
-    credentialscount: "3",
-    cred1name: "obshost",
-    cred1value: "localhost",
-    cred2name: "obsport",
-    cred2value: "4444",
-    cred3name: "obspass",
-    cred3value: "",
 };
-let localCredentials = {};
+let localCredentials =
+{
+    credentialsLoaded: false,
+    OBSHostName: "localhost",
+    OBSPortNumber: "4444",
+    OBSPassword: ""
+};
 let serverConfig = structuredClone(default_serverConfig);
 /* other options to look to add, not the complete list available (from types.d.ts )
 
@@ -335,7 +333,7 @@ function onDataCenterConnect ()
 
     // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
-    // start our heatbeat timer
+    // start our heatBeat timer
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -368,9 +366,26 @@ function onDataCenterMessage (server_packet)
         {
             if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
             {
-                localCredentials.cred1value = server_packet.data.obshost;
-                localCredentials.cred2value = server_packet.data.obsport;
-                localCredentials.cred3value = server_packet.data.obspass;
+                // temp code to update discord token variable name.
+                // remove code in future. Added in 0.3.4
+                if (server_packet.data.obshost)
+                {
+                    localCredentials.OBSHostName = server_packet.data.obshost;
+                    localCredentials.OBSPortNumber = server_packet.data.obsport;
+                    localCredentials.OBSPassword = server_packet.data.obspass;
+                    DeleteCredentialsOnServer();
+                    SaveCredentialToServer("OBSHostName", localCredentials.OBSHostName)
+                    SaveCredentialToServer("OBSPortNumber", localCredentials.OBSPortNumber)
+                    SaveCredentialToServer("OBSPassword", localCredentials.OBSPassword)
+                    disconnectObs();
+                }
+                else
+                {
+                    localCredentials.OBSHostName = server_packet.data.OBSHostName;
+                    localCredentials.OBSPortNumber = server_packet.data.OBSPortNumber;
+                    localCredentials.OBSPassword = server_packet.data.OBSPassword;
+                    disconnectObs();
+                }
                 if (localConfig.obsConnecting == false && serverConfig.enableobs == "on")
                     connectToObs();
             }
@@ -382,8 +397,6 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall(extension_packet.from);
             else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
                 SendSettingsWidgetLarge(extension_packet.from);
-            else if (extension_packet.type === "RequestCredentialsModalsCode")
-                SendCredentialsModal(extension_packet.from);
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
                 if (extension_packet.to === serverConfig.extensionname)
@@ -422,47 +435,7 @@ function onDataCenterMessage (server_packet)
             {
                 if (extension_packet.to === serverConfig.extensionname)
                 {
-                    // reset to defaults
-                    if (extension_packet.data.obs_restore_defaults == "on")
-                    {
-                        serverConfig = structuredClone(default_serverConfig);
-                        // Request our credentials from the server as we are storing them in our serverconfig
-                        sr_api.sendMessage(localConfig.DataCenterSocket,
-                            sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
-                    }
-                    else
-                    {
-                        //copy the data across
-                        serverConfig.enableobs = "off";
-                        for (const [key, value] of Object.entries(extension_packet.data))
-                            serverConfig[key] = value;
-                        SaveConfigToServer();
-
-                        if (localConfig.OBSAvailableScenes != null)
-                            processOBSSceneList(localConfig.OBSAvailableScenes);
-                        sendScenes();
-
-                        // if we have enabled/disabled obs connection
-                        if (serverConfig.enableobs != extension_packet.data.enableobs)
-                        {
-                            //we are currently enabled so lets disconnect
-                            if (serverConfig.enableobs == "on")
-                            {
-                                serverConfig.enableobs = "off";
-                                clearTimeout(localConfig.obsTimeoutHandle)
-                                disconnectObs()
-                            }
-                            //currently disabled so connect to obs
-                            else
-                            {
-                                serverConfig.enableobs = "on";
-                                connectToObs();
-                            }
-                        }
-                    }
-                    //update anyone who is showing our code at the moment
-                    SendSettingsWidgetSmall("");
-                    SendSettingsWidgetLarge("");
+                    parseSettingsWidgetLargeData(extension_packet.data)
                 }
             }
             else if (extension_packet.type === "RequestScenes")
@@ -599,14 +572,14 @@ function SendSettingsWidgetSmall (toextension)
         //throw err;
         else
         {
-            let modalstring = filedata.toString();
+            let modalString = filedata.toString();
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
+                    modalString = modalString.replaceAll(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replaceAll(key + "text", value);
+                    modalString = modalString.replaceAll(key + "text", value);
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -616,7 +589,7 @@ function SendSettingsWidgetSmall (toextension)
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode", // message type
                         serverConfig.extensionname, //our name
-                        modalstring,// data
+                        modalString,// data
                         serverConfig.channel,
                         toextension
 
@@ -635,9 +608,9 @@ function SendSettingsWidgetSmall (toextension)
  * this is done as part of the webpage request for modal message we get from 
  * extension. It is a way of getting some user feedback via submitted forms
  * from a page that supports the modal system
- * @param {String} tochannel 
+ * @param {String} to channel to send to or "" to broadcast
  */
-function SendSettingsWidgetLarge (tochannel)
+function SendSettingsWidgetLarge (to = "")
 {
     // read our modal file
     fs.readFile(__dirname + "/obssettingswidgetlarge.html", function (err, filedata)
@@ -648,15 +621,20 @@ function SendSettingsWidgetLarge (tochannel)
         //throw err;
         else
         {
-            let modalstring = filedata.toString();
+            let modalString = filedata.toString();
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
+                    modalString = modalString.replaceAll(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replaceAll(key + "text", value);
+                    modalString = modalString.replaceAll(key + "text", value);
             }
+
+            modalString = modalString.replace("enableOBSSettingsLargechecked", localCredentials.OBSHostName);
+            modalString = modalString.replace("OBSHostNametext", localCredentials.OBSHostName);
+            modalString = modalString.replace("OBSPortNumbertext", localCredentials.OBSPortNumber);
+            modalString = modalString.replace("OBSPasswordtext", localCredentials.OBSPassword);
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -665,62 +643,86 @@ function SendSettingsWidgetLarge (tochannel)
                     sr_api.ExtensionPacket(
                         "SettingsWidgetLargeCode", // message type
                         serverConfig.extensionname, //our name
-                        modalstring,// data
+                        modalString,// data
                         "",
-                        tochannel,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    tochannel // in this case we only need the "to" channel as we will send only to the requester
+                    to // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
     });
 }
 // ===========================================================================
-//                           FUNCTION: SendCredentialsModal
-// ===========================================================================
+//                           FUNCTION: parseSettingsWidgetLargeData#
 /**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
+ * parse the received data from a modal submit from the user
+ * @param {object} extData // modal data
  */
-function SendCredentialsModal (extensionname)
+// ===========================================================================
+function parseSettingsWidgetLargeData (extData)
 {
-    fs.readFile(__dirname + "/obscredentialsmodal.html", function (err, filedata)
+    // reset to defaults
+    if (extData.obs_restore_defaults == "on")
     {
-        if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
-        else
+        serverConfig = structuredClone(default_serverConfig);
+        //default credentials
+        SaveCredentialToServer("OBSHostName", "localhost");
+        SaveCredentialToServer("OBSPortNumber", "4444");
+        SaveCredentialToServer("OBSPassword", "");
+    }
+    else
+    {
+        //copy the data across
+        serverConfig.enableobs = "off";
+        for (const [key, value] of Object.entries(extData))
+            serverConfig[key] = value;
+        SaveConfigToServer();
+        // update credentials if they have changed
+        if (extData.OBSHostName != localConfig.OBSHostName)
         {
-            let modalstring = filedata.toString();
-
-            // first lets update our modal to the current settings
-            for (const [key, value] of Object.entries(serverConfig))
-            {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
-                if (value === "on")
-                    modalstring = modalstring.replaceAll(key + "checked", "checked");
-                else if (typeof (value) == "string" || typeof (value) == "number")
-                    modalstring = modalstring.replaceAll(key + "text", value);
-            }
-            // send the modal data to the server
-            sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
-                    serverConfig.extensionname,
-                    sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
-                        "",
-                        extensionname,
-                        serverConfig.channel
-                    ),
-                    "",
-                    extensionname)
-            )
+            localConfig.OBSHostName = extData.OBSHostName;
+            if (localConfig.OBSHostName)
+                SaveCredentialToServer("OBSHostName", localConfig.OBSHostName);
         }
-    });
+        if (extData.OBSPortNumber != localConfig.OBSPortNumber)
+        {
+            localConfig.OBSPortNumber = extData.OBSPortNumber;
+            if (localConfig.OBSPortNumber)
+                SaveCredentialToServer("OBSPortNumber", localConfig.OBSPortNumber);
+        }
+        if (extData.OBSPassword != localConfig.OBSPassword)
+        {
+            localConfig.OBSPassword = extData.OBSPassword;
+            if (localConfig.OBSPassword)
+                SaveCredentialToServer("OBSPassword", localConfig.OBSPassword);
+        }
+        if (localConfig.OBSAvailableScenes != null)
+            processOBSSceneList(localConfig.OBSAvailableScenes);
+        sendScenes();
+
+        // if we have enabled/disabled obs connection
+        if (serverConfig.enableobs != extData.enableobs)
+        {
+            //we are currently enabled so lets disconnect
+            if (serverConfig.enableobs == "on")
+            {
+                serverConfig.enableobs = "off";
+                clearTimeout(localConfig.obsTimeoutHandle)
+                disconnectObs()
+            }
+            //currently disabled so connect to obs
+            else
+            {
+                serverConfig.enableobs = "on";
+                connectToObs();
+            }
+        }
+    }
+    //update anyone who is showing our code at the moment
+    SendSettingsWidgetSmall("");
+    SendSettingsWidgetLarge("");
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
@@ -735,6 +737,44 @@ function SaveConfigToServer ()
         "SaveConfig",
         serverConfig.extensionname,
         serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: SaveCredentialToServer
+// ============================================================================
+/**
+ * Sends Credential to the server to be saved
+ * @param {string} name 
+ * @param {string} value 
+ */
+function SaveCredentialToServer (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+                CredentialName: name,
+                CredentialValue: value,
+            },
+        ));
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsOnServer
+// ============================================================================
+/**
+ * Delete our credential file from the server
+ */
+function DeleteCredentialsOnServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
 }
 // ############################################################################
 // ============================================================================
@@ -752,11 +792,13 @@ localConfig.obsConnection = new OBSWebSocket();
 function connectToObs ()
 {
     // check we have connection details.
-    if (localCredentials.cred1value != "" && localCredentials.cred2value != "" && localCredentials.cred3value != "" && localCredentials.cred1value != null && localCredentials.cred2value != null && localCredentials.cred3value != null &&
-        serverConfig.enableobs == "on" && localConfig.status.connected == false)
+    if (localConfig.status.connected)
+        disconnectObs();
+    if (
+        localCredentials.OBSHostName != "" && localCredentials.OBSPortNumber != "" && localCredentials.OBSPassword != "" && localCredentials.OBSHostName != null && localCredentials.OBSPortNumber != null && localCredentials.OBSPassword != null && serverConfig.enableobs == "on" && localConfig.status.connected == false)
     {
         localConfig.obsConnecting = true
-        localConfig.obsConnection.connect("ws://" + localCredentials.cred1value + ":" + localCredentials.cred2value, localCredentials.cred3value)
+        localConfig.obsConnection.connect("ws://" + localCredentials.OBSHostName + ":" + localCredentials.OBSPortNumber, localCredentials.OBSPassword)
             .then(data =>
             {
                 // we are now connected so stop any further scheduling
@@ -786,10 +828,12 @@ function connectToObs ()
             .catch((err) =>
             {
                 localConfig.status.connected = false;
+                localConfig.OBSAvailableScenes = null;
+                localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
                 //Need to setup a reschedule if we have a connection failure
                 if (serverConfig.enableobs == "on")
                 {
-                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", err.message);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", "Are websocket login details correct?");
                     localConfig.obsConnecting = true
                     clearTimeout(localConfig.obsTimeoutHandle)
                     localConfig.obsTimeoutHandle = setTimeout(() =>
@@ -803,14 +847,17 @@ function connectToObs ()
     else
     {
         localConfig.status.connected = false;
+        localConfig.OBSAvailableScenes = null;
+        localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
         if (serverConfig.enableobs == "off")
         {
             logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", " Trying to connect while turned off by user");
         }
-        else if (localCredentials.cred1value == "" || localCredentials.cred2value == "" || localCredentials.cred3value == ""
-            || localCredentials.cred1value == null || localCredentials.cred2value == null || localCredentials.cred3value == null)
+        else if (localCredentials.OBSHostName == "" || localCredentials.OBSPortNumber == "" || localCredentials.OBSPassword == "" || localCredentials.OBSHostName == null || localCredentials.OBSPortNumber == null || localCredentials.OBSPassword == null)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, missing credentials");
+            if (localCredentials.OBSPassword == null || localCredentials.OBSPassword == "")
+                console.log("No password set")
         }
         else
         {
@@ -839,6 +886,8 @@ function connectToObs ()
 function disconnectObs ()
 {
     localConfig.status.connected = false;
+    localConfig.OBSAvailableScenes = null;
+    localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
     localConfig.obsConnection.disconnect();
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".disconnectObs ", "disconnected from OBS");
 }
@@ -1065,7 +1114,11 @@ function enableSource (sourcedata)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".enableSource", err.message);
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".enableSource", err);
             if (err.message === "Not connected")
+            {
                 localConfig.status.connected = false;
+                localConfig.OBSAvailableScenes = null;
+                localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
+            }
             return;
         });
 }
@@ -1141,6 +1194,8 @@ function debugtest (callback, data)
 localConfig.obsConnection.on("error", err => 
 {
     localConfig.status.connected = false;
+    localConfig.OBSAvailableScenes = null;
+    localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".OBS error message received", err.message);
 });
 
@@ -1213,7 +1268,7 @@ function onSwitchedScenes (scene)
     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onSwitchedScenes", "OBS scene changed ", scene);
     localConfig.sceneList.current = scene.sceneName;
     // send back the triger with the scnen name added
-    let data = findtriggerByMessageType("trigger_SceneChanged")
+    let data = findTriggerByMessageType("trigger_SceneChanged")
     data.parameters.sceneName = scene.sceneName;
 
     // send the information out on our channel
@@ -1245,7 +1300,7 @@ function StreamStarted ()
             sr_api.ExtensionPacket(
                 "trigger_StreamStarted",
                 serverConfig.extensionname,
-                findtriggerByMessageType("trigger_StreamStarted"),
+                findTriggerByMessageType("trigger_StreamStarted"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1265,7 +1320,7 @@ function StreamStopped ()
             sr_api.ExtensionPacket(
                 "trigger_StreamStopped",
                 serverConfig.extensionname,
-                findtriggerByMessageType("trigger_StreamStopped"),
+                findTriggerByMessageType("trigger_StreamStopped"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1285,7 +1340,7 @@ function RecordingStarted ()
             sr_api.ExtensionPacket(
                 "trigger_RecordingStarted",
                 serverConfig.extensionname,
-                findtriggerByMessageType("trigger_RecordingStarted"),
+                findTriggerByMessageType("trigger_RecordingStarted"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1305,7 +1360,7 @@ function RecordingStopped ()
             sr_api.ExtensionPacket(
                 "trigger_RecordingStopped",
                 serverConfig.extensionname,
-                findtriggerByMessageType("trigger_RecordingStopped"),
+                findTriggerByMessageType("trigger_RecordingStopped"),
                 serverConfig.channel),
             serverConfig.channel
         ));
@@ -1392,22 +1447,26 @@ function onSourceMuteStateChanged (data)
 /**
  * Get all the filters for scenes 
  */
-async function getFilters ()
+async function getFilters (counter = 0)
 {
     if (typeof localConfig.obsConnection.socket != "undefined" && localConfig.obsConnection.socket._socket == null)
     {
-        // if resetarting this might get called too soon
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "Sockect not ready, rescheduling");
+        if (counter > 5)
+        {
+            // if restarting this might get called too soon
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "No obs connection available");
+            return;
+        }
         setTimeout(() =>
         {
-            getFilters();
+            getFilters(counter++);
             sendScenes();
         }, 50);
         return
     }
-
     localConfig.OBSAvailableScenes.forEach((sceneName) =>
     {
+
         localConfig.obsConnection.call("GetSourceFilterList", { sourceName: sceneName.sceneName })
             .then(data =>
             {
@@ -1447,7 +1506,11 @@ async function getFilters ()
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err.message);
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".getFilters", "getFilters:", err);
                 if (err.message === "Not connected")
+                {
                     localConfig.status.connected = false;
+                    localConfig.OBSAvailableScenes = null;
+                    localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
+                }
                 return;
             });
     })
@@ -1556,7 +1619,11 @@ function setSceneItemTransform (requestData)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".setSceneItemTransform.GetSceneItemId", err.message);
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".setSceneItemTransform.GetSceneItemId", err);
             if (err.message === "Not connected")
+            {
                 localConfig.status.connected = false;
+                localConfig.OBSAvailableScenes = null;
+                localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
+            }
             return;
         });
 }
@@ -1630,17 +1697,20 @@ function heartBeatCallback ()
         // if we are not currently trying to connect  and we are enabled we need to start the scheduler again
         if (localConfig.status.connected == false && serverConfig.enableobs == "on")
         {
+            localConfig.status.color = "orange";
             if (localConfig.obsConnecting == false)
             {
-                connectToObs(localCredentials.cred1value, localCredentials.cred2value, localCredentials.cred3value);
+                connectToObs(localCredentials.OBSHostName, localCredentials.OBSPortNumber, localCredentials.OBSPassword);
             }
         }
         else if (serverConfig.enableobs == "off")
         {
+            localConfig.status.color = "red";
             logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "OBS turned off, skipping reconnect?");
         }
         else
         {
+            localConfig.status.color = "green";
             localConfig.obsConnection.call("GetStats").then(data =>
             {
                 localConfig.streamStats.renderSkippedFrames = data.renderSkippedFrames;
@@ -1648,8 +1718,16 @@ function heartBeatCallback ()
             })
                 .catch(err =>
                 {
+                    if (serverConfig.enableobs == "off")
+                        localConfig.status.color = "red";
+                    else
+                        localConfig.status.color = "orange";
                     if (err.message === "Not connected")
+                    {
                         localConfig.status.connected = false;
+                        localConfig.OBSAvailableScenes = null;
+                        localConfig.sceneList = { current: "", main: [], secondary: [], rest: [] };
+                    }
                     else
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".heartBeatCallback", "GetStats:", err.message);
 
@@ -1709,14 +1787,14 @@ function findSceneData (sceneName)
 
 }
 // ============================================================================
-//                           FUNCTION: findtriggerByMessageType
+//                           FUNCTION: findTriggerByMessageType
 // ============================================================================
 /**
  * Finds the given trigger object by name
  * @param {string} messagetype 
  * @returns trigger object found or null
  */
-function findtriggerByMessageType (messagetype)
+function findTriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -1724,7 +1802,7 @@ function findtriggerByMessageType (messagetype)
             return triggersandactions.triggers[i];
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-        ".findtriggerByMessageType", "failed to find action", messagetype);
+        ".findTriggerByMessageType", "failed to find action", messagetype);
 }
 // ============================================================================
 //                                  EXPORTS

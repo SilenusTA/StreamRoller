@@ -1623,6 +1623,12 @@
         else
             document.getElementById(extension + "_status").style = "color:red";
         document.getElementById(extension + "_visibility_settingswidgetsmall").style.display = "";
+        // indicate on OBS button the status of the obs connection
+        if (extension == "obs")
+        {
+            var element = document.getElementById("OBSDefaultButtons");
+            element.style = "border:1px solid " + status.color
+        }
     }
     // ============================================================================
     //                           FUNCTION: UpdateOBSDefaultButtons
