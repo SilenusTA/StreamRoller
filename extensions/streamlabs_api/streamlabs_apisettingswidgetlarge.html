@@ -1,0 +1,50 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<form id="streamlabs_api_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="streamlabs_api" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">Streamlabs API Settings</h4>
+    This can be found on your streamlabs.com dashboard at Account > settings > Api settings > API Socket Token
+    <BR><a href="https://streamlabs.com/dashboard#/settings/api-settings" target="new">Streamlabs API page</a>
+    <div class="form-group">
+        <label for="streamlabs_api_Token" class="col-form-label">API Socket Token</label>
+        <input type="password" name="streamlabs_api_Token" class="form-control" id="streamlabs_api_Token" value="streamlabs_api_Tokentext">
+    </div>
+    <HR>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="streamlabs_api_restore_defaults" type="checkbox" id="streamlabs_api_restore_defaults"
+                streamlabs_api_restore_defaultschecked>
+            <label class="form-check-label" for="streamlabs_api_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <div class="modal-footer">
+        <button id="closeSettingsstreamlabs_api" type="button" type="close" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

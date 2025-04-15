@@ -261,7 +261,6 @@ function onDataCenterMessage (server_packet)
                 SaveCredentialToServer("streamerID", serverCredentials.streamerID)
             }
 
-
             serverCredentials.username = server_packet.data.username;
             serverCredentials.authToken = server_packet.data.authToken;
             serverCredentials.userID = server_packet.data.userID;
@@ -330,9 +329,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "SettingsWidgetLargeData")
         {
             if (extension_packet.to === serverConfig.extensionname)
-            {
                 parseSettingsWidgetLargeData(extension_packet.data)
-            }
         }
         else if (extension_packet.type === "RequestQueue")
         {
@@ -507,7 +504,7 @@ function SendSettingsWidgetLargeScheduler (to = "")
     {
         if (err)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendSettingsWidgetLarge", "failed to load modal", err);
+                ".SendSettingsWidgetLargeScheduler", "failed to load modal", err);
         else
         {
             let modalString = filedata.toString();
@@ -559,9 +556,13 @@ function parseSettingsWidgetLargeData (extData)
         serverConfig = structuredClone(default_serverConfig);
         //default credentials
         SaveCredentialToServer("username", "");
+        serverCredentials.username = "";
         SaveCredentialToServer("authToken", "");
+        serverCredentials.authToken = "";
         SaveCredentialToServer("userID", "");
+        serverCredentials.userID = "";
         SaveCredentialToServer("streamerID", "");
+        serverCredentials.streamerID = "";
         restartConnection = true;
     }
     else

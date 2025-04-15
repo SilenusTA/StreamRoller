@@ -19,24 +19,6 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-// ############################# STREAMLABS_API.js ###################################
-// This Module/addon/extension (whatever we decide to call these :D) will
-// will handle anything streamlabs_api related
-// -------------------------- Creation ----------------------------------------
-// Author: Silenus aka streamlabs_api.tv/OldDepressedGamer
-// Datatype : JSON message as provided by streamlabs api.
-// Date: 14-Jan-2021
-// --------------------------- functionality ----------------------------------
-// connects to streamlabs API to handle live streamlabs_api alerts and also data
-// This gets sent to the data_center for logging and dissemination to user
-// that wish to register for this information
-// --------------------------- description -------------------------------------
-// ================== schema ==================================================
-// Channel name : STREAMLABS_ALERT
-// GitHub: https://github.com/SilenusTA/StreamRoller
-// ----------------------------- notes ----------------------------------------
-// TBD.
-// ============================================================================
 /**
  * @extension StreamlabsAPI
  * Connects to Streamlabs API and provides alerts for dono's etc.
@@ -44,18 +26,9 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-// Description: Import/Variable section
-// ----------------------------- notes ----------------------------------------
-// none
-// ============================================================================
 import { start as SL_connection_start } from "./streamlabs_api_handler.js";
 // ============================================================================
 //                           FUNCTION: initialise
-// ============================================================================
-// Description: Starts the extension
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// none
 // ============================================================================
 /**
  * Starts the extension using the given data.
@@ -70,10 +43,7 @@ function initialise (app, host, port, heartbeat)
 }
 
 // ============================================================================
-//                           EXPORTS: initialise
-// ============================================================================
-// Description: exports from this module
-// ----------------------------- notes ----------------------------------------
+//                                 EXPORTS
 // ============================================================================
 export { initialise };
 

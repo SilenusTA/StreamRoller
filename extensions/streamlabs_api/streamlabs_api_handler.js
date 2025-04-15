@@ -19,29 +19,9 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-// ######################### streamlabs_api_handler.js ################################
-// Handles the connection to streamlabs api and puts the messages into the
-// twitch alerts channel on the back end
-// -------------------------- Creation ----------------------------------------
-// Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/StreamRoller
-// Date: 14-Jan-2021
-// --------------------------- functionality ----------------------------------
-// 
-// --------------------------- description -------------------------------------
-// 
-// ----------------------------- notes ----------------------------------------
-// TBD. 
-// ============================================================================
-
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
-// ============================================================================
-// Description: Import/Variable secion
-// ----------------------------- notes ----------------------------------------
-// We have to iport two versions of socket.io due to streamlabs using an older
-// version.
 // ============================================================================
 // note this has to be socket.io-client version 2.0.3 to allow support for Streamlabs api.
 import * as fs from "fs";
@@ -53,9 +33,6 @@ import sr_api from "../../backend/data_center/public/streamroller-message-api.cj
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let localConfig = {
-    ENABLE_STREAMLABS_CONNECTION: true, // disables the socket to streamlabs (testing purposes only)
-    OUR_CHANNEL: "STREAMLABS_ALERT",
-    EXTENSION_NAME: "streamlabs_api",
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
@@ -63,21 +40,25 @@ let localConfig = {
         connected: false // this is our connection indicator for discord
     },
     DataCenterSocket: null,
-    StreamlabsSocket: null
+    StreamlabsSocket: null,
+
+    settingsSmallSchedulerHandle: null,
+    settingsSmallSchedulerTimeout: 1000,
+
+    settingsLargeSchedulerHandle: null,
+    settingsLargeSchedulerTimeout: 1000,
 };
 
 const default_serverConfig = {
     __version__: 0.2,
-    extensionname: localConfig.EXTENSION_NAME,
-    channel: localConfig.OUR_CHANNEL,
+    extensionname: "streamlabs_api",
+    channel: "STREAMLABS_ALERT",
     enabled: "off",
-    //credentials variable names to use (in credentials modal)
-    credentialscount: "1",
-    cred1name: "SL_SOCKET_TOKEN",
-    cred1value: "",
 };
 let serverConfig = structuredClone(default_serverConfig)
-
+let serverCredentials = {
+    API_Token: null,
+}
 
 const triggersandactions =
 {
@@ -200,6 +181,20 @@ const triggersandactions =
                 }
             },
             {
+                name: "StreamlabsCharityDonationAlert",
+                displaytitle: "CharityDonation on StreamLabs",
+                description: "Someone donated to charity on your StreamLabs Charity",
+                messagetype: "trigger_CharityDonationReceived",
+                parameters: {
+                    username: "",
+                    twitchDisplayName: "",
+                    amount: "",
+                    formatted_amount: "",
+                    message: "",
+                    campaignId: ""
+                }
+            },
+            {
                 name: "StreamlabsTwitchSubMysteryAlert",
                 displaytitle: "SubMystery gift on Twitch",
                 description: "Someone gifted some subs on your Twitch stream",
@@ -291,26 +286,29 @@ function start (host, port, heartbeat)
         throw ("streamlabs_api_handler.js failed to connect to data socket");
     }
 }
+// ########################## STREAMLABS API CONNECTION #######################
 // ============================================================================
 //                           FUNCTION: connectToStreamlabs
 // ============================================================================
 /**
  * Connect to the streamlabs API
- * @param {object} creds 
  */
-function connectToStreamlabs (creds)
+function connectToStreamlabs ()
 {
-    // ########################## SETUP STREAMLABS CONNECTION ###############################
-    // The token can be found at streamlabs.com, its a long hex string under settings->API Tokens->socket API token 
-    if (!creds.SL_SOCKET_TOKEN)
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "SL_SOCKET_TOKEN not set");
+    if (!serverCredentials.API_Token)
+    {
+        disconnectStreamlabs();
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.js", "Credentials not set");
+    }
     else
     {
         try
         {
-            if (localConfig.ENABLE_STREAMLABS_CONNECTION)
+            if (serverConfig.enabled)
             {
-                localConfig.StreamlabsSocket = StreamlabsIo("https://sockets.streamlabs.com:443?token=" + creds.SL_SOCKET_TOKEN, { transports: ["websocket"] });
+                if (localConfig.StreamlabsSocket)
+                    disconnectStreamlabs();
+                localConfig.StreamlabsSocket = StreamlabsIo("https://sockets.streamlabs.com:443?token=" + serverCredentials.API_Token, { transports: ["websocket"] });
                 // handlers
                 localConfig.StreamlabsSocket.on("connect", (data) => onStreamlabsConnect(data));
                 localConfig.StreamlabsSocket.on("disconnect", (reason) => onStreamlabsDisconnect(reason));
@@ -324,12 +322,31 @@ function connectToStreamlabs (creds)
             }
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectToStreamlabs", "clientio connection failed:", err);
-            throw ("streamlabs_api_handler.js failed to connect to streamlabs");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectToStreamlabs", "Streamlabs connection failed:", err);
         }
     }
 }
-// ########################## STREAMLABS API CONNECTION #######################
+// ============================================================================
+//                           FUNCTION: connectToStreamlabs
+// ============================================================================
+/**
+ * Connect to the streamlabs API
+ */
+function disconnectStreamlabs ()
+{
+    try
+    {
+        if (localConfig.StreamlabsSocket)
+        {
+            localConfig.StreamlabsSocket.removeAllListeners()
+            localConfig.StreamlabsSocket.disconnect();
+            localConfig.StreamlabsSocket = null;
+        }
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "disconnectStreamlabs", "Streamlabs disconnect failed:", err);
+    }
+}
 // ============================================================================
 //                           FUNCTION: onStreamlabsDisconnect
 // ============================================================================
@@ -340,7 +357,15 @@ function connectToStreamlabs (creds)
 function onStreamlabsDisconnect (reason)
 {
     localConfig.status.connected = false;
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsDisconnect", reason);
+    localConfig.StreamlabsSocket.destroy();
+    localConfig.StreamlabsSocket = null;
+
+    SendSettingsWidgetLarge()
+    SendSettingsWidgetSmall()
+    if (serverConfig.enabled == "on")
+        console.log("Streamlabs disconnected, possible reasons(bad credentials, network interruption, service down)")
+    serverConfig.enabled = "off";
+    logger.warn(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onStreamlabsDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onStreamlabsConnect
@@ -371,9 +396,9 @@ function onStreamlabsEvent (data)
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "ChannelData",
-                localConfig.EXTENSION_NAME,
+                serverConfig.extensionname,
                 data,
-                localConfig.OUR_CHANNEL
+                serverConfig.channel
             ));
         // send alerts using trigger system
         parseStreamlabsMessage(data)
@@ -403,10 +428,10 @@ function onDataCenterConnect ()
     logger.log(localConfig.SYSTEM_LOGGING_TAG + "streamlabs_api_handler.onDataCenterConnect", "Creating our channel");
     //register our channels
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL));
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("RequestConfig", localConfig.EXTENSION_NAME));
+        sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
@@ -445,17 +470,27 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
-            logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                serverConfig.extensionname, "Reconnecting due to credentials change");
-            connectToStreamlabs(server_packet.data);
-        }
-        else
-        {
-            if (serverConfig.enabled == "on")
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                    serverConfig.extensionname, "CredentialsFile", "Credential file is empty make sure to set it on the admin page.");
-        }
+            // temp code to change discord token name to newer variable.
+            // remove code in future. Added in 0.3.4
+            if (server_packet.data.SL_SOCKET_TOKEN)
+            {
+                serverCredentials.API_Token = server_packet.data.SL_SOCKET_TOKEN;
+                DeleteCredentialsOnServer()
+                SaveCredentialToServer("API_Token", serverCredentials.API_Token)
+            }
+            else
+            {
+                serverCredentials.API_Token = server_packet.data.API_Token;
+            }
+            // end temp
 
+            if (serverConfig.enabled == "on")
+                connectToStreamlabs();
+            else
+                disconnectStreamlabs()
+            SendSettingsWidgetLarge();
+            SendSettingsWidgetSmall();
+        }
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -463,24 +498,46 @@ function onDataCenterMessage (server_packet)
         // received a reqest for our admin bootstrap modal code
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(extension_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            SendSettingsWidgetLarge(extension_packet.from);
         // received data from our settings widget small. A user has requested some settings be changedd
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.to === serverConfig.extensionname)
             {
-                // lets reset our config checkbox settings (modal will omit ones not checked)
-                serverConfig.enabled = "off";
-                // set our config values to the ones in message
+                let enabledChanged = false;
+                if (serverConfig.enabled != extension_packet.data.enabled_streamlabs_api_small_settings)
+                {
+                    enabledChanged = true;
+                    if (serverConfig.enabled == "on")
+                        serverConfig.enabled = "off"
+                    else
+                        serverConfig.enabled = "on"
+                }
+
+                // get our config values to the ones in message
+                // mostly just sets channel and extension name
                 for (const [key, value] of Object.entries(serverConfig))
                     if (key in extension_packet.data)
                         serverConfig[key] = extension_packet.data[key];
+
+                // check if we have toggled ourselves on or off
+                if (enabledChanged)
+                    if (serverConfig.enabled == "on")
+                        connectToStreamlabs()
+                    else
+                        disconnectStreamlabs()
+
                 // save our data to the server for next time we run
                 SaveConfigToServer();
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
             }
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            if (extension_packet.to === serverConfig.extensionname)
+                parseSettingsWidgetLargeData(extension_packet.data)
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {
@@ -499,14 +556,10 @@ function onDataCenterMessage (server_packet)
                 )
             )
         }
-        else
-        {
-            //logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
-        }
     }
     else if (server_packet.type === "UnknownChannel")
     {
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
         //channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
         // need to add some sort of flood control here so we are only attempting to join one at a time
@@ -516,7 +569,7 @@ function onDataCenterMessage (server_packet)
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("CreateChannel",
-                        localConfig.EXTENSION_NAME,
+                        serverConfig.extensionname,
                         server_packet.data));
             }, 5000);
         }
@@ -526,38 +579,50 @@ function onDataCenterMessage (server_packet)
             {
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket("JoinChannel",
-                        localConfig.EXTENSION_NAME,
+                        serverConfig.extensionname,
                         server_packet.data));
             }, 5000);
         }
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-        || server_packet.type === "LoggingLevel"
-        || server_packet.type === "ChannelData")
-    {
-        // just a blank handler for items we are not using to avoid message from the catchall
-    }
-    // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
+
 }
+
 // ============================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
+// ============================================================================
+/**
+ * schedules the sending of the widget code to squish multiple requests down
+ * @param {string} to 
+ */
+function SendSettingsWidgetSmall (to = "")
+{
+
+    clearTimeout(localConfig.settingsSmallSchedulerHandle)
+    localConfig.settingsSmallSchedulerHandle = setTimeout(() =>
+    {
+        SendSettingsWidgetSmallScheduler(to)
+    }, localConfig.settingsSmallSchedulerTimeout);
+
+
+}
+// ============================================================================
+//                           FUNCTION: SendSettingsWidgetSmallScheduler
 // ============================================================================
 
 /**
  * Send our settings widget code to the given extension
- * @param {string} toextension 
+ * @param {string} to 
  */
-function SendSettingsWidgetSmall (toextension)
+function SendSettingsWidgetSmallScheduler (to = "")
 {
+    let destinationChannel = ""
+    if (to == "")
+        destinationChannel = serverConfig.channel
+
     fs.readFile(__dirname + '/streamlabs_apisettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         //throw err;
         else
@@ -573,74 +638,135 @@ function SendSettingsWidgetSmall (toextension)
                 else if (typeof (value) == "string")
                     modalstring = modalstring.replace(key + "text", value);
             }
+            if (serverConfig.enabled == "on")
+                modalstring = modalstring.replace("enabled_streamlabs_api_small_settingschecked", "checked");
+
             // send the modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
-                    localConfig.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode",
-                        localConfig.EXTENSION_NAME,
+                        serverConfig.extensionname,
                         modalstring,
-                        "",
-                        toextension
+                        destinationChannel,
+                        to
                     ),
-                    "",
-                    toextension
+                    destinationChannel,
+                    to
                 ));
         }
     });
 
 }
+// ============================================================================
+//                           FUNCTION: SendSettingsWidgetLarge
+// ============================================================================
+/**
+ * schedules the sending of the widget code to squish multiple requests down
+ * @param {string} to 
+ */
+function SendSettingsWidgetLarge (to = "")
+{
+    clearTimeout(localConfig.settingsLargeSchedulerHandle)
+    localConfig.settingsLargeSchedulerHandle = setTimeout(() =>
+    {
+        SendSettingsWidgetLargeScheduler(to)
+    }, localConfig.settingsLargeSchedulerTimeout);
+}
 // ===========================================================================
-//                           FUNCTION: SendCredentialsModal
+//                           FUNCTION: SendSettingsWidgetLarge
 // ===========================================================================
 /**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
+ * @param {String} to channel to send to or "" to broadcast
  */
-function SendCredentialsModal (extensionname)
+function SendSettingsWidgetLargeScheduler (to = "")
 {
-
-    fs.readFile(__dirname + "/streamlabs_apicredentialsmodal.html", function (err, filedata)
+    // read our modal file
+    fs.readFile(__dirname + "/streamlabs_apisettingswidgetlarge.html", function (err, filedata)
     {
         if (err)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
         else
         {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
+            let modalString = filedata.toString();
+            // replace any of our server config variables'text' names in the file
             for (const [key, value] of Object.entries(serverConfig))
             {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
-                {
-                    modalstring = modalstring.replace(key + "checked", "checked");
-                }   //value is a string then we need to replace the text
+                    modalString = modalString.replaceAll(key + "checked", "checked");
+                // replace text strings
                 else if (typeof (value) == "string")
-                {
-                    modalstring = modalstring.replace(key + "text", value);
-                }
+                    modalString = modalString.replaceAll(key + "text", value);
             }
-            // send the modal data to the server
+            modalString = modalString.replace("streamlabs_api_Tokentext", serverCredentials.API_Token);
+            // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
+                        "SettingsWidgetLargeCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalString,// data
                         "",
-                        extensionname,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    extensionname)
-            )
+                    to // in this case we only need the "to" channel as we will send only to the requester
+                ))
         }
     });
+}
+// ===========================================================================
+//                           FUNCTION: parseSettingsWidgetLargeData
+/**
+ * parse the received data from a modal submit from the user
+ * @param {object} extData // modal data
+ */
+// ===========================================================================
+function parseSettingsWidgetLargeData (extData)
+{
+    let restartConnection = false;
+    // reset to defaults
+    if (extData.streamlabs_api_restore_defaults == "on")
+    {
+        serverConfig = structuredClone(default_serverConfig);
+        //default credentials
+        serverCredentials.API_Token = ""
+        SaveConfigToServer()
+        DeleteCredentialsOnServer()
+        disconnectStreamlabs()
+        restartConnection = true;
+    }
+    else
+    {
+        // update credentials if they have changed
+        if (extData.streamlabs_api_Token != serverCredentials.API_Token)
+        {
+            restartConnection = true;
+            serverCredentials.API_Token = extData.streamlabs_api_Token;
+            if (serverCredentials.API_Token)
+                SaveCredentialToServer("API_Token", serverCredentials.API_Token);
+        }
+
+        if (restartConnection)
+        {
+            // if we have changed some settings that need us to re-log into the server
+            if (serverConfig.enableStreamerSongList == "on")
+                connectToStreamlabs()
+            else
+                disconnectStreamlabs()
+
+        }
+    }
+    //update anyone who is showing our code at the moment
+    SendSettingsWidgetSmall("");
+    SendSettingsWidgetLarge("");
+    SaveConfigToServer();
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
@@ -653,11 +779,48 @@ function SaveConfigToServer ()
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "SaveConfig",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             serverConfig
         ));
 }
-
+// ============================================================================
+//                           FUNCTION: SaveCredentialToServer
+// ============================================================================
+/**
+ * Sends Credential to the server to be saved
+ * @param {string} name 
+ * @param {string} value 
+ */
+function SaveCredentialToServer (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+                CredentialName: name,
+                CredentialValue: value,
+            },
+        ));
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsOnServer
+// ============================================================================
+/**
+ * Delete our credential file from the server
+ */
+function DeleteCredentialsOnServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
+}
 // ============================================================================
 //                           FUNCTION: heartBeatCallback
 // ============================================================================
@@ -666,16 +829,23 @@ function SaveConfigToServer ()
  */
 function heartBeatCallback ()
 {
-    let connected = localConfig.status.connected
-    if (serverConfig.enabled === "off")
-        connected = false;
+    let color = "red"
+    if (serverConfig.enabled === "on")
+        if (localConfig.status.connected)
+            color = "green"
+        else
+            color = "orange"
+
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
                 "HeartBeat",
                 serverConfig.extensionname,
-                { connected: connected },
+                {
+                    connected: localConfig.status.connected,
+                    color: color
+                },
                 serverConfig.channel),
             serverConfig.channel
         ),
@@ -800,12 +970,27 @@ function parseStreamlabsMessage (data)
     else if (data.type == "twitchcharitydonation" && data.for === "twitch_account")
     {
         trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsTwitchCharityDonationAlert")
+
         if (trigger)
         {
-            trigger.parameters.username = data.message.from;
-            trigger.parameters.message = data.message.message;
-            trigger.parameters.amount = data.message.amount;
-            trigger.parameters.formatted_amount = data.message.formatted_amount;
+            trigger.parameters.username = data.message[0].from;
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.amount = data.message[0].amount;
+            trigger.parameters.formatted_amount = data.message[0].formattedAmount;
+            outputTrigger(trigger)
+        }
+    }
+    else if (data.type == "streamlabscharitydonation" && data.for === "streamlabscharity")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsCharityDonationAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].from;
+            trigger.parameters.twitchDisplayName = data.message[0].twitchDisplayName
+            trigger.parameters.message = data.message[0].message;
+            trigger.parameters.amount = data.message[0].amount;
+            trigger.parameters.formatted_amount = data.message[0].formattedAmount;
+            trigger.parameters.campaignId = data.message[0].campaignId;
             outputTrigger(trigger)
         }
     }
@@ -873,10 +1058,9 @@ function parseStreamlabsMessage (data)
     }
     else
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".parseStreamlabsMessage", "no trigger setup for ", data.for, " message type", data.type);
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".parseStreamlabsMessage", "data: ", data);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".parseStreamlabsMessage", "no trigger setup yet. TBD. If you see this error please let me know and I'll add the trigger :", data.for, " message type:" + data.type);
+        console.log(JSON.stringify(data, null, 2));
     }
 }
 // ============================================================================
