@@ -224,8 +224,6 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.to == serverConfig.extensionname)
-        console.log("onDataCenterMessage", server_packet.type, server_packet.data.type)
     if (server_packet.type === "ConfigFile")
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
@@ -248,7 +246,6 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
         {
-            console.log("CredentialsFile Received", server_packet)
             // temp code to change discord token name to newer variable.
             // remove code in future. Added in 0.3.4
             if (server_packet.data.clientId)
@@ -282,7 +279,6 @@ function onDataCenterMessage (server_packet)
             SendSettingsWidgetLarge(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
-            console.log("SettingsWidgetSmallData received", extension_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 if (extension_packet.data.streamerSongListName != serverCredentials.username)
@@ -333,7 +329,6 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SettingsWidgetLargeData")
         {
-            console.log("SettingsWidgetLargeData received", extension_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 parseSettingsWidgetLargeData(extension_packet.data)
@@ -525,7 +520,6 @@ function SendSettingsWidgetLargeScheduler (to = "")
                 else if (typeof (value) == "string")
                     modalString = modalString.replaceAll(key + "text", value);
             }
-            console.log("SendSettingsWidgetLarge", serverCredentials)
             modalString = modalString.replace("username_StreamerSongListtext", serverCredentials.username);
             modalString = modalString.replace("authToken_StreamerSongListtext", serverCredentials.authToken);
             modalString = modalString.replace("userID_StreamerSongListtext", serverCredentials.userID);
@@ -558,7 +552,6 @@ function SendSettingsWidgetLargeScheduler (to = "")
 // ===========================================================================
 function parseSettingsWidgetLargeData (extData)
 {
-    console.log("parseSettingsWidgetLargeData", extData)
     let restartConnection = false;
     // reset to defaults
     if (extData.streamerSongList_restore_defaults == "on")
@@ -981,7 +974,6 @@ function fetchSongList ()
 {
     if (serverConfig.enableStreamerSongList == "on")
     {
-        console.log("fetching", `${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs`)
         fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs`, {
             headers: { 'Client-ID': serverCredentials.authToken, },
         })
@@ -997,7 +989,6 @@ function fetchSongList ()
             })
             .then(data =>
             {
-                console.log("fetchSongList returned", data)
                 localConfig.songlist = data;
                 outputSongList();
                 localConfig.status.connected = true;
@@ -1308,3 +1299,4 @@ function findtriggerByMessageType (messagetype)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise, triggersandactions };
+
