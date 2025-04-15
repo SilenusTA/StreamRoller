@@ -3456,7 +3456,7 @@
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_StreamlabsDonationReceived":
-                if (alertdata.parameters.message === null)
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation and helping keep the stream alive.'
                 else
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation and helping keep the stream alive. "' + alertdata.parameters.message + '"'
@@ -3467,7 +3467,7 @@
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_TwitchCharityDonationReceived":
-                if (alertdata.parameters.message === null)
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being.'
                 else
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being. "' + alertdata.parameters.message + '"'
@@ -3477,8 +3477,22 @@
                 alerttext = "<div class='text-danger'>Twitch Charity Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
+            case "trigger_CharityDonationReceived":
+                let twitchDisplayName = ""
+                if (alertdata.parameters.twitchDisplayName && alertdata.parameters.twitchDisplayName != "")
+                    twitchDisplayName = "(" + alertdata.parameters.twitchDisplayName + ")"
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
+                    messagetxt += alertdata.parameters.username + twitchDisplayName + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being.'
+                else
+                    messagetxt += alertdata.parameters.username + twitchDisplayName + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being. "' + alertdata.parameters.message + '"'
+                if (serverConfig.donations === "on")
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                postMessageToTwitch(messagetxt, "user")
+                alerttext = "<div class='text-danger'>StreamLAbs Charity Donation: " + alertdata.parameters.username + twitchDisplayName + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
+                DisplayAlertMessages(alerttext);
+                break;
             case "trigger_TwitchBitsReceived":
-                if (alertdata.parameters.message === null)
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits.'
                 else
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"'
@@ -3512,7 +3526,7 @@
                 }
                 break;
             case "trigger_TwitchResubReceived":
-                if (alertdata.parameters.message === null)
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subcriptions (with a streak of ' + alertdata.parameters.streak_months + ').'
                 else
                     messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subcriptions (with a streak of ' + alertdata.parameters.streak_months + '). "' + alertdata.parameters.message + '"'
@@ -3561,7 +3575,7 @@
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_YouTubeSuperchatReceived":
-                if (alertdata.parameters.message === null)
+                if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' superchat, you are an awesome human being.'
                 else
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' superchat, you are an awesome human being. "' + alertdata.parameters.message + '"'
