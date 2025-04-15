@@ -1203,7 +1203,9 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
             (serverConfig.chatbotquerytagstartofline == "on" &&
                 data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
 
-        if (directChatQuestion)
+        if (directChatQuestion && serverConfig.questionbotenabled == "off")
+            return
+        else if (directChatQuestion)
             messages = [{ "role": "user", "content": messages }];
         else
             messages = addPersonality(data.sender, messages, serverConfig.currentprofile)
@@ -1319,6 +1321,9 @@ function processChatMessage (data, maxRollbackCount = 20)
         console.log("!submessage", !submessage)
     }
 
+    if (submessage && serverConfig.submessageenabled == "off")
+        return;
+
     if ((!data.message || typeof data.message !== 'string') && !submessage)
     //if (!data.message && !submessage)
     {
@@ -1350,7 +1355,8 @@ function processChatMessage (data, maxRollbackCount = 20)
         (serverConfig.chatbotquerytagstartofline == "on" &&
             data.message &&
             data.message.toLowerCase().startsWith(serverConfig.chatbotquerytag.toLowerCase())));
-
+    if (directChatQuestion && serverConfig.questionbotenabled == "off")
+        return
     //variable check if we have a direct question to the bot from chat
     let directChatbotTriggerTag = false;
     if (data.message != null)
@@ -1388,7 +1394,7 @@ function processChatMessage (data, maxRollbackCount = 20)
                 || directChatbotTriggerTagTestMessage.endsWith(" " + serverConfig.chatbotname.toLowerCase())
         }
     }
-    if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled != "on")
+    if (directChatbotTriggerTag && serverConfig.chatbottriggerenabled == "off")
     {
         if (serverConfig.DEBUG_MODE === "on")
             console.log("ignoring chatbot trigger as it is turned off in settings")
@@ -1398,9 +1404,11 @@ function processChatMessage (data, maxRollbackCount = 20)
     let translateToEnglish = false;
     if (data.message)
     {
-        translateToEnglish = (serverConfig.translatetoeng == "on"
-            && data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
+        translateToEnglish = (data.message.toLowerCase().startsWith(serverConfig.translatetoengtag.toLowerCase()));
     }
+
+    if (translateToEnglish && serverConfig.translatetoeng == "off")
+        return;
 
     // skip messages we don't want to use for chatbot.
     if (!handledmessage && !submessage && !directChatQuestion && !translateToEnglish && !directChatbotTriggerTag)
