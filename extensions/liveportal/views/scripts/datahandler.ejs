@@ -3462,7 +3462,6 @@
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation and helping keep the stream alive. "' + alertdata.parameters.message + '"'
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
                 alerttext = "<div class='text-danger'>SLDonation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
@@ -3473,31 +3472,34 @@
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being. "' + alertdata.parameters.message + '"'
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
+
                 alerttext = "<div class='text-danger'>Twitch Charity Donation: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_CharityDonationReceived":
+
                 let twitchDisplayName = ""
                 if (alertdata.parameters.twitchDisplayName && alertdata.parameters.twitchDisplayName != "")
                     twitchDisplayName = "(" + alertdata.parameters.twitchDisplayName + ")"
+
                 if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + twitchDisplayName + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being.'
                 else
                     messagetxt += alertdata.parameters.username + twitchDisplayName + " for the " + alertdata.parameters.formatted_amount + ' donation to charity, you are an awesome human being. "' + alertdata.parameters.message + '"'
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
                 alerttext = "<div class='text-danger'>StreamLAbs Charity Donation: " + alertdata.parameters.username + twitchDisplayName + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_TwitchBitsReceived":
+
                 if (alertdata.parameters.message === null || alertdata.parameters.message == "")
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits.'
                 else
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"'
                 if (serverConfig.bits === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+
                 alerttext = "<div class='text-danger'>TwitchBits: " + alertdata.parameters.username + " " + alertdata.parameters.amount + ' bits. "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
@@ -3548,7 +3550,6 @@
                 messagetxt += alertdata.parameters.username + " purchacing my merch. Hope you enjoy the " + alertdata.parameters.product + ". " + alertdata.parameters.imageHref
                 if (serverConfig.merch === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
                 alerttext = "<div class='text-secondary'>SLMerch: " + alertdata.parameters.username + "  " + alertdata.parameters.product + "</div>"
                 DisplayAlertMessages(alerttext);
                 break;
@@ -3556,20 +3557,19 @@
                 messagetxt += alertdata.parameters.username + " for using the your channel points for " + alertdata.parameters.product + ". " + alertdata.parameters.imageHref
                 if (serverConfig.cloudbotredemption === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
                 alerttext = "<div class='text-secondary'>SLLoyalty: " + alertdata.parameters.username + " " + alertdata.parameters.product + "</div>"
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_YouTubeSubscriptionReceived":
                 messagetxt += alertdata.parameters.username + " for the Subscription."
-                if (serverConfig.follows === "on")
+                if (serverConfig.subs === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-secondary'>YouTubeSubscription: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
             case "trigger_YouTubeMemberReceived":
                 messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.months + " Membership."
-                if (serverConfig.follows === "on")
+                if (serverConfig.subs === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-secondary'>YouTubeMembership: " + alertdata.parameters.username + " " + alertdata.parameters.months + "months</div>";
                 DisplayAlertMessages(alerttext);
@@ -3581,7 +3581,6 @@
                     messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.formatted_amount + ' superchat, you are an awesome human being. "' + alertdata.parameters.message + '"'
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
-                postMessageToTwitch(messagetxt, "user")
                 alerttext = "<div class='text-danger'>YouTubeSuperChat: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
                 DisplayAlertMessages(alerttext);
                 break;
