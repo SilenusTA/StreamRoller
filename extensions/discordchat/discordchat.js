@@ -264,7 +264,10 @@ function onDataCenterMessage (server_packet)
             // received data from our settings widget small. A user has requested some settings be changedd
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
+                let enabledChanged = false;
                 // set our config values to the ones in message
+                if (extension_packet.data.discordenabled != serverConfig.discordenabled)
+                    enabledChanged = true
                 serverConfig.discordenabled = "off";
                 // NOTE: this will ignore new items in the page that we don't currently have in our config
                 for (const [key] of Object.entries(serverConfig))
@@ -274,6 +277,10 @@ function onDataCenterMessage (server_packet)
                 }
                 // save our data to the server for next time we run
                 SaveConfigToServer();
+
+                if (enabledChanged)
+                    connectToDiscord()
+
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
                 SendSettingsWidgetLarge("");
@@ -321,30 +328,44 @@ function onDataCenterMessage (server_packet)
                     ".onDataCenterMessage", "Posting Message", extension_packet.data)
                 if (serverConfig.discordenabled === "on")
                 {
-                    const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === extension_packet.data.channel);
-                    if (typeof (channel) != "undefined")
+                    try
                     {
-                        if (extension_packet.data.file && extension_packet.data.file != "")
+                        if (!localConfig.discordClient.channels)
                         {
-                            channel.send(
-                                {
-                                    content: extension_packet.data.message,
-                                    files: [{
-                                        attachment: extension_packet.data.file,
-                                        name: 'AI_Image_File.jpg',
-                                        description: "AI image from stream"
-                                    }]
-                                })
+                            console.log("discord not connected to any channels")
+                            return;
+                        }
+                        const channel = localConfig.discordClient.channels.cache.find(channel => channel.name === extension_packet.data.channel);
+                        if (typeof (channel) != "undefined")
+                        {
+                            if (extension_packet.data.file && extension_packet.data.file != "")
+                            {
+                                channel.send(
+                                    {
+                                        content: extension_packet.data.message,
+                                        files: [{
+                                            attachment: extension_packet.data.file,
+                                            name: 'AI_Image_File.jpg',
+                                            description: "AI image from stream"
+                                        }]
+                                    })
+                            }
+                            else
+                            {
+                                // Send a basic text message
+                                channel.send(extension_packet.data.message);
+                            }
                         }
                         else
-                        {
-                            // Send a basic text message
-                            channel.send(extension_packet.data.message);
-                        }
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                                "Failed to find discord channel to send to", extension_packet.data.channel);
                     }
-                    else
-                        logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
-                            "Failed to find discord channel to send to", extension_packet.data.channel);
+                    catch (err)
+                    {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
+                            "Failed to send discord message", err);
+
+                    }
                 }
                 else
                 {
