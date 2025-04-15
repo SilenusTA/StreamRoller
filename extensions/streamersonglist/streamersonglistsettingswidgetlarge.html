@@ -1,0 +1,83 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<form id="streamersonglist_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="streamersonglist" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">StreamerSonglist Settings</h4>
+    <p>Still need to do more with this extensions but for now we at least have a buffer lol </p>
+    <p>Enable/disable the extension from the main page settings (click on extension name on the right side of the page)
+        <HR>
+
+    <div class="form-group">
+        To get your StreamerSongList client_id is a bit tricky as there isn't currently an easy way to find it from
+        what I
+        can find.<BR>
+        The only way I have found is to visit and login to the StreamerSongList webpage and then inspect the code to
+        find it.<BR>
+        <ol>
+            <li>Go to <a>http://streamersonglist.com</a> and log in with your details.</li>
+            <li>Right click on the webpage and select the 'inspect' option at the bottom of the list</li>
+            <li>In the window the pops up click on the menu item "Application"</li>
+            <li>In the left side click on 'Storage' -> 'Local Storage' 'https://www.streamersonglist.com/'</li>
+            <li>in the right hand side it should show the credentials needed below.</li>
+            <li>Copy and paste them below ('streamersongList_authToken' is the long one that goes in the authtoken
+                field)</li>
+        </ol>
+        If anyone knows a better way to get these details please let me know so I can update these instructions
+        <div class="form-group">
+            <label for="username_StreamerSongList" class="col-form-label">Username</label>
+            <input type="text" name="username_StreamerSongList" class="form-control" id="username_StreamerSongList" value="username_StreamerSongListtext">
+        </div>
+        <div class="form-group">
+            <label for="authToken_StreamerSongList" class="col-form-label">authToken</label>
+            <input type="password" name="authToken_StreamerSongList" class="form-control" id="authToken_StreamerSongList"
+                value="authToken_StreamerSongListtext">
+        </div>
+        <div class="form-group">
+            <label for="userID_StreamerSongList" class="col-form-label">userId</label>
+            <input type="password" name="userID_StreamerSongList" class="form-control" id="userID_StreamerSongList" value="userID_StreamerSongListtext">
+        </div>
+        <div class="form-group">
+            <label for="streamerID_StreamerSongList" class="col-form-label">streamerId</label>
+            <input type="password" name="streamerID_StreamerSongList" class="form-control" id="streamerID_StreamerSongList"
+                value="streamerID_StreamerSongListtext">
+        </div>
+    </div>
+    <HR>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="streamerSongList_restore_defaults" type="checkbox" id="streamerSongList_restore_defaults"
+                streamerSongList_restore_defaultschecked>
+            <label class="form-check-label" for="streamerSongList_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <div class="modal-footer">
+        <button id="closeSettingsStreamerSongList" type="button" type="close" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

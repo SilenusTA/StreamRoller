@@ -3906,6 +3906,13 @@
     // ============================================================================
     function updateSingerSonglistQueue (queue)
     {
+        // if we havent been passed an array just use the stored one (might just be a refresh)
+        if (queue != [] && queue !== undefined)
+            localConfig.setreamersonglist.queue = queue;
+
+        if (!localConfig.setreamersonglist.queue.list || localConfig.setreamersonglist.queue.list == [] || localConfig.setreamersonglist.queue.list.length == 0)
+            return;
+
         const tabletitle = document.getElementById("streamersonglisttitle");
         const queueTableBody = document.querySelector('#queueTableBody');
         queueTableBody.innerHTML = '';
@@ -3917,12 +3924,9 @@
         if (modeDark == "true")
             classes = "bg-dark text-light"
 
-        // if we havent been passed an array just use the stored one (might just be a refresh)
-        if (queue != [] && queue !== undefined)
-            localConfig.setreamersonglist.queue = queue;
 
-        tabletitle.innerHTML = "Song Queue (played today: " + localConfig.setreamersonglist.queue.status.songsPlayedToday
-            + ", in Queue: " + localConfig.setreamersonglist.queue.list.length + ")"
+        tabletitle.innerHTML = "Song Queue (played today: " + localConfig.setreamersonglist.queue.status.songsPlayedToday + ", in Queue: " + localConfig.setreamersonglist.queue.list.length + ")"
+
         localConfig.setreamersonglist.queue.list.forEach((entry) =>
         {
             if (song != null)

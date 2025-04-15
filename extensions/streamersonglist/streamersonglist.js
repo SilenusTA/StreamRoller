@@ -21,21 +21,9 @@
  */
 /**
  * @extension StreamerSongList
- * Connects to the StreamerSongList service to allow adding/removing/viewing songlist data.
+ * Connects to the StreamerSongList service to allow adding/removing/viewing songList data.
  * Mostly used by music streamers to queue music for viewers.
  */
-// ############################# STREAMERSONGLIST.js ##############################
-// Provides streamer songlist functionality
-// ---------------------------- creation --------------------------------------
-// Author: Silenus aka twitch.tv/OldDepressedGamer
-// GitHub: https://github.com/SilenusTA/StreamRoller
-// Date: 25-May-2023
-// --------------------------- functionality ----------------------------------
-// Current functionality:
-//
-// ----------------------------- notes ----------------------------------------
-// ============================================================================
-
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -63,34 +51,34 @@ const localConfig = {
     songlist: [],
     songQueue: [],
     currentsong: "",
-    username: "",
-    clientId: "",
-    userId: "",
-    streamerId: "",
     // set to ignore first load messages
-    firstload: true
+    firstload: true,
+
+    // handle to avoid multiple joins on updated credentials
+    joinsSSLTimer: 1000,
+    joinsSSLHandle: null,
+
+    largeSettingsTimer: 1000,
+    largeSettingsHandle: null,
 };
 const default_serverConfig = {
-    __version__: 0.4,
+    __version__: 0.5,
     extensionname: "streamersonglist",
     channel: "STREAMERSONGLIST_CHANNEL",
     sslURI: "https://api.streamersonglist.com",
-    enablestreamersonglist: "off",
-    streamersonglistname: "",
+    enableStreamerSongList: "off",
+    //streamerSongListName: "",
     pollSongQueueTimeout: 180000, // check for updated queue every 3 minutes in case the socket goes down
     pollSongListTimeout: 300000, // check for updated songs every 5 minutes in case the socket goes down
     heartBeatTimeout: 5000,
-    //credentials variable names to use (in credentials modal)
-    credentialscount: "4",
-    cred1name: "username",
-    cred1value: "",
-    cred2name: "clientId",
-    cred2value: "",
-    cred3name: "userId",
-    cred3value: "",
-    cred4name: "streamerId",
-    cred4value: "",
 };
+let serverCredentials =
+{
+    username: "",
+    authToken: "",
+    userID: "",
+    streamerID: "",
+}
 let serverConfig = structuredClone(default_serverConfig);
 
 const SSL_SOCKET_EVENTS = {
@@ -236,6 +224,8 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
+    if (server_packet.to == serverConfig.extensionname)
+        console.log("onDataCenterMessage", server_packet.type, server_packet.data.type)
     if (server_packet.type === "ConfigFile")
     {
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
@@ -258,11 +248,28 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname && server_packet.data && server_packet.data != "")
         {
-            localConfig.username = server_packet.data.username;
-            localConfig.clientId = server_packet.data.clientId;
-            localConfig.userId = server_packet.data.userId;
-            localConfig.streamerId = server_packet.data.streamerId;
-            if (serverConfig.enablestreamersonglist == "on")
+            console.log("CredentialsFile Received", server_packet)
+            // temp code to change discord token name to newer variable.
+            // remove code in future. Added in 0.3.4
+            if (server_packet.data.clientId)
+            {
+                serverCredentials.username = server_packet.data.username;
+                serverCredentials.authToken = server_packet.data.clientId;
+                serverCredentials.userID = server_packet.data.userId;
+                serverCredentials.streamerID = server_packet.data.streamerId;
+                DeleteCredentialsOnServer()
+                SaveCredentialToServer("username", serverCredentials.username)
+                SaveCredentialToServer("authToken", serverCredentials.authToken)
+                SaveCredentialToServer("userID", serverCredentials.userID)
+                SaveCredentialToServer("streamerID", serverCredentials.streamerID)
+            }
+
+
+            serverCredentials.username = server_packet.data.username;
+            serverCredentials.authToken = server_packet.data.authToken;
+            serverCredentials.userID = server_packet.data.userID;
+            serverCredentials.streamerID = server_packet.data.streamerID;
+            if (serverConfig.enableStreamerSongList == "on")
                 joinSslServer()
         }
     }
@@ -271,25 +278,28 @@ function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             SendSettingsWidgetSmall(extension_packet.from);
-        else if (extension_packet.type === "RequestCredentialsModalsCode")
-            SendCredentialsModal(extension_packet.from);
+        else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            SendSettingsWidgetLarge(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
-
+            console.log("SettingsWidgetSmallData received", extension_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
-                if (extension_packet.data.streamersonglistname != localConfig.username)
+                if (extension_packet.data.streamerSongListName != serverCredentials.username)
                 {
-                    localConfig.username = extension_packet.data.streamersonglistname;
-                    serverConfig.streamersonglistname = extension_packet.data.streamersonglistname
-                    serverConfig.enablestreamersonglist = "off"
+                    serverCredentials.username = extension_packet.data.streamerSongListName;
+                    SaveCredentialToServer("username", serverCredentials.username)
+                    if (extension_packet.data.enableStreamerSongList)
+                        serverConfig.enableStreamerSongList = "on"
+                    else
+                        serverConfig.enableStreamerSongList = "off"
                 }
                 // if we have enabled/disabled connection
-                if (serverConfig.enablestreamersonglist != extension_packet.data.enablestreamersonglist)
+                if (serverConfig.enableStreamerSongList != extension_packet.data.enableStreamerSongList)
                 {
                     // TURNING OFF SSL
                     //we are currently enabled so lets stop polling
-                    if (serverConfig.enablestreamersonglist == "on")
+                    if (serverConfig.enableStreamerSongList == "on")
                     {
                         localConfig.status.connected = false;
                         localConfig.songlist = [];
@@ -297,28 +307,37 @@ function onDataCenterMessage (server_packet)
                         localConfig.currentsong = "";
                         clearTimeout(localConfig.pollSongQueueTimeout);
                         sendSongQueue(extension_packet.from);
-                        serverConfig.enablestreamersonglist = "off";
+                        serverConfig.enableStreamerSongList = "off";
                     }
                     // TURNING ON SSL
                     //currently disabled so lets start
                     else
                     {
                         localConfig.status.connected = true;
-                        serverConfig.enablestreamersonglist = "on";
+                        serverConfig.enableStreamerSongList = "on";
                         pollSongQueueCallback();
                         pollSongListCallback();
                     }
                 }
 
-                serverConfig.enablestreamersonglist = "off";
+                serverConfig.enableStreamerSongList = "off";
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
             }
+            if (serverConfig.enableStreamerSongList == "on")
+                joinSslServer()
             //update anyone who is showing our code at the moment
             SendSettingsWidgetSmall("");
-            if (serverConfig.enablestreamersonglist == "on")
-                joinSslServer()
+
+        }
+        else if (extension_packet.type === "SettingsWidgetLargeData")
+        {
+            console.log("SettingsWidgetLargeData received", extension_packet)
+            if (extension_packet.to === serverConfig.extensionname)
+            {
+                parseSettingsWidgetLargeData(extension_packet.data)
+            }
         }
         else if (extension_packet.type === "RequestQueue")
         {
@@ -326,7 +345,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "RequestSonglist")
         {
-            sendSonglist(extension_packet.from);
+            sendSongList(extension_packet.from);
         }
         else if (extension_packet.type === "action_AddSongToQueue")
         {
@@ -345,7 +364,7 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "SendTriggerAndActions")
         {
-            if (serverConfig.enablestreamersonglist == "on")
+            if (serverConfig.enableStreamerSongList == "on")
             {
                 sendTriggersAndActions(server_packet.from)
             }
@@ -435,6 +454,7 @@ function SendSettingsWidgetSmall (tochannel)
         else
         {
             let modalstring = filedata.toString();
+            modalstring = modalstring.replace("streamerSongListNametext", serverCredentials.username);
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
@@ -462,51 +482,146 @@ function SendSettingsWidgetSmall (tochannel)
         }
     });
 }
+
 // ===========================================================================
-//                           FUNCTION: SendCredentialsModal
+//                           FUNCTION: SendSettingsWidgetLarge
 // ===========================================================================
 /**
- * Send our CredentialsModal to whoever requested it
- * @param {String} extensionname 
+ * @param {String} to channel to send to or "" to broadcast
  */
-function SendCredentialsModal (extensionname)
+function SendSettingsWidgetLarge (to = "")
 {
-
-    fs.readFile(__dirname + "/streamersonglistcredentialsmodal.html", function (err, filedata)
+    clearTimeout(localConfig.largeSettingsHandle)
+    localConfig.largeSettingsHandle = setTimeout(() =>
+    {
+        if (serverConfig.enableStreamerSongList == "on")
+            SendSettingsWidgetLargeScheduler(to);
+        localConfig.largeSettingsHandle = null;
+    }, localConfig.largeSettingsTimer);
+}
+// ===========================================================================
+//                           FUNCTION: SendSettingsWidgetLargeScheduler
+// ===========================================================================
+/**
+ * @param {String} to channel to send to or "" to broadcast
+ */
+function SendSettingsWidgetLargeScheduler (to = "")
+{
+    // read our modal file
+    fs.readFile(__dirname + "/streamersonglistsettingswidgetlarge.html", function (err, filedata)
     {
         if (err)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
         else
         {
-            let modalstring = filedata.toString();
-            // first lets update our modal to the current settings
+            let modalString = filedata.toString();
+            // replace any of our server config variables'text' names in the file
             for (const [key, value] of Object.entries(serverConfig))
             {
-                // true values represent a checkbox so replace the "[key]checked" values with checked
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
-                else if (typeof (value) == "string" || typeof (value) == "number")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalString = modalString.replaceAll(key + "checked", "checked");
+                // replace text strings
+                else if (typeof (value) == "string")
+                    modalString = modalString.replaceAll(key + "text", value);
             }
-            // send the modal data to the server
+            console.log("SendSettingsWidgetLarge", serverCredentials)
+            modalString = modalString.replace("username_StreamerSongListtext", serverCredentials.username);
+            modalString = modalString.replace("authToken_StreamerSongListtext", serverCredentials.authToken);
+            modalString = modalString.replace("userID_StreamerSongListtext", serverCredentials.userID);
+            modalString = modalString.replace("streamerID_StreamerSongListtext", serverCredentials.streamerID);
+            // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalstring,
+                        "SettingsWidgetLargeCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalString,// data
                         "",
-                        extensionname,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    extensionname)
-            )
+                    to // in this case we only need the "to" channel as we will send only to the requester
+                ))
         }
     });
+}
+// ===========================================================================
+//                           FUNCTION: parseSettingsWidgetLargeData
+/**
+ * parse the received data from a modal submit from the user
+ * @param {object} extData // modal data
+ */
+// ===========================================================================
+function parseSettingsWidgetLargeData (extData)
+{
+    console.log("parseSettingsWidgetLargeData", extData)
+    let restartConnection = false;
+    // reset to defaults
+    if (extData.streamerSongList_restore_defaults == "on")
+    {
+        serverConfig = structuredClone(default_serverConfig);
+        //default credentials
+        SaveCredentialToServer("username", "");
+        SaveCredentialToServer("authToken", "");
+        SaveCredentialToServer("userID", "");
+        SaveCredentialToServer("streamerID", "");
+        restartConnection = true;
+    }
+    else
+    {
+        // update credentials if they have changed
+        if (extData.username_StreamerSongList != serverCredentials.username)
+        {
+            restartConnection = true;
+            serverCredentials.username = extData.username_StreamerSongList;
+            if (serverCredentials.username)
+                SaveCredentialToServer("username", serverCredentials.username);
+        }
+        if (extData.authToken_StreamerSongList != serverCredentials.authToken)
+        {
+            restartConnection = true;
+            serverCredentials.authToken = extData.authToken_StreamerSongList;
+            if (serverCredentials.authToken)
+                SaveCredentialToServer("authToken", serverCredentials.authToken);
+        }
+        if (extData.userID_StreamerSongList != serverCredentials.userID)
+        {
+            restartConnection = true;
+            serverCredentials.userID = extData.userID_StreamerSongList;
+            if (serverCredentials.userID)
+                SaveCredentialToServer("userID", serverCredentials.userID);
+        }
+        if (extData.streamerID_StreamerSongList != serverCredentials.streamerID)
+        {
+            restartConnection = true;
+            serverCredentials.streamerID = extData.streamerID_StreamerSongList;
+            if (serverCredentials.streamerID)
+                SaveCredentialToServer("streamerID", serverCredentials.streamerID);
+        }
+
+        if (restartConnection)
+        {
+            // if we have changed some settings that need us to re-log into the server
+            if (serverConfig.enableStreamerSongList == "on")
+                joinSslServer()
+            else
+            {
+                if (localConfig.ssl_client != null)
+                {
+                    localConfig.ssl_client.disconnect();
+                    localConfig.ssl_client == null;
+                }
+            }
+        }
+    }
+    //update anyone who is showing our code at the moment
+    SendSettingsWidgetSmall("");
+    SendSettingsWidgetLarge("");
+    SaveConfigToServer();
 }
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
@@ -523,13 +638,70 @@ function SaveConfigToServer ()
         serverConfig))
 }
 // ============================================================================
+//                           FUNCTION: SaveCredentialToServer
+// ============================================================================
+/**
+ * Sends Credential to the server to be saved
+ * @param {string} name 
+ * @param {string} value 
+ */
+function SaveCredentialToServer (name, value)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "UpdateCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+                CredentialName: name,
+                CredentialValue: value,
+            },
+        ));
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsOnServer
+// ============================================================================
+/**
+ * Delete our credential file from the server
+ */
+function DeleteCredentialsOnServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
+}
+// ============================================================================
 //                      FUNCTION: joinSslServer
 //                        Join the Song list server for updates
 // ============================================================================
 /**
- * Joins the StreamerSonglist service
+ * Joins the StreamerSongList service using a timer to suppress multiple quick joins
+ * These might be called during a credentials file update
  */
 function joinSslServer ()
+{
+    clearTimeout(localConfig.joinsSSLHandle)
+    localConfig.joinsSSLHandle = setTimeout(() =>
+    {
+        if (serverConfig.enableStreamerSongList == "on")
+            joinSslServerScheduler();
+        localConfig.joinsSSLHandle = null;
+    }, localConfig.joinsSSLTimer);
+
+}
+// ============================================================================
+//                      FUNCTION: joinSslServerScheduler
+//                     Join the Song list server for updates
+// ============================================================================
+/**
+ * Joins the StreamerSongList service
+ */
+function joinSslServerScheduler ()
 {
     // if we already have a connection lets remove that one (so we can start a new one with any changed data/creds)
     if (localConfig.ssl_client != null)
@@ -571,7 +743,7 @@ function joinSslServer ()
                     fetchSongQueue();
 
                 }
-                else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enablestreamersonglist == "on")
+                else if (SSL_RELOAD_EVENTS.includes(SSL_SOCKET_EVENTS[key]) && serverConfig.enableStreamerSongList == "on")
                 {
                     logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.on message", "StreamerSonglist socket callback received, updating songs and queue: ", SSL_SOCKET_EVENTS[key]);
                     fetchSongList();
@@ -582,7 +754,7 @@ function joinSslServer ()
 
         try
         {
-            localConfig.ssl_client.emit("join-room", localConfig.streamerId);
+            localConfig.ssl_client.emit("join-room", serverCredentials.streamerID);
         } catch (error)
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage:ssl_client.join room", "Failed to join room");
@@ -592,7 +764,7 @@ function joinSslServer ()
     // perform a fetch of the lists in case we get asked for them later
     fetchSongList()
     fetchSongQueue()
-    // start our times if we havent alreadly
+    // start our times if we haven't already
     pollSongQueueCallback();
     pollSongListCallback();
 }
@@ -605,7 +777,7 @@ function joinSslServer ()
  */
 function sendSongQueue (extensionsname)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
@@ -631,7 +803,7 @@ function sendSongQueue (extensionsname)
  */
 function outputSongQueue ()
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
@@ -654,10 +826,10 @@ function outputSongQueue ()
  */
 function fetchSongQueue ()
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.username}/queue`, {
-            headers: { 'Client-ID': localConfig.clientId, },
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/queue`, {
+            headers: { 'Client-ID': serverCredentials.authToken, },
         })
             .then(response =>
             {
@@ -686,21 +858,26 @@ function fetchSongQueue ()
             })
             .catch(e =>
             {
-                localConfig.status.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue. Check Credentials/login details");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongQueue", "Error getting songs queue, have you setup credentials?", e.Error);
             });
     }
 }
 // ============================================================================
-//                       FUNCTION: sendSonglist
+//                       FUNCTION: sendSongList
 // ============================================================================
 /**
  * Sends the full songlist to given extensionextension
  * @param {string} extension 
  */
-function sendSonglist (extension)
+function sendSongList (extension)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
@@ -728,7 +905,7 @@ function sendSonglist (extension)
  */
 function sendCurrentSongChange (extension)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         let songtext = ""
         if (localConfig.currentsong != "")
@@ -779,7 +956,7 @@ function sendCurrentSongChange (extension)
  */
 function outputSongList ()
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
@@ -802,27 +979,38 @@ function outputSongList ()
  */
 function fetchSongList ()
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.username}/songs`, {
-            headers: { 'Client-ID': localConfig.clientId, },
+        console.log("fetching", `${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs`)
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs`, {
+            headers: { 'Client-ID': serverCredentials.authToken, },
         })
             .then(response =>
             {
                 if (!response.ok)
-                    throw new Error('Request failed with status ' + response.status);
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details. Request failed with status " + response.status)
+                    return
+                }
+
                 return response.json();
             })
             .then(data =>
             {
+                console.log("fetchSongList returned", data)
                 localConfig.songlist = data;
                 outputSongList();
                 localConfig.status.connected = true;
             })
             .catch(e =>
             {
-                localConfig.status.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs queue", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list", e.Error);
             });
     }
 }
@@ -835,7 +1023,7 @@ function fetchSongList ()
  */
 function addSongToQueuebyName (songName)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
         let found = false
         localConfig.songlist.items.forEach((song) =>
@@ -859,13 +1047,13 @@ function addSongToQueuebyName (songName)
  */
 function addSongToQueueById (songId)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${songId}/request`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.streamerID}/queue/${songId}/request`, {
             method: 'POST',
             headers: {
                 "accept": "application/json",
-                "Authorization": "Bearer " + localConfig.clientId,
+                "Authorization": "Bearer " + serverCredentials.authToken,
                 "origin": "StreamRoller",
                 "source": "StreamRoller",
             }
@@ -883,8 +1071,13 @@ function addSongToQueueById (songId)
             })
             .catch(e =>
             {
-                localConfig.status.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song to queue. Check Credentials/login details");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addSongToQueueById", "Error adding song to queue.", e.Error);
             });
     }
 }
@@ -893,22 +1086,21 @@ function addSongToQueueById (songId)
 //                           FUNCTION: removeSongFromQueue
 // ============================================================================
 /**
- * Removes a songqueue song using it's queueId
+ * Removes a song queue song using it's queueId
  * @param {number} queueId Queue id of item to remove
  */
 function removeSongFromQueue (queueId)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        //const url = `${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}`
         const headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localConfig.clientId,
+            "Authorization": "Bearer " + serverCredentials.authToken,
             "origin": "StreamRoller",
             "queueId": queueId
         };
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}`, { method: 'DELETE', headers: headers })
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.streamerID}/queue/${queueId}`, { method: 'DELETE', headers: headers })
             .then(response =>
             {
                 if (!response.ok)
@@ -921,7 +1113,14 @@ function removeSongFromQueue (queueId)
             })
             .catch(e =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song from queue. Check Credentials/login details");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".removeSongFromQueue", "Error removing song from queue.", e.Error);
+
             });
     }
 }
@@ -935,13 +1134,13 @@ function removeSongFromQueue (queueId)
  */
 function markSongAsPlayed (queueId)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue/${queueId}/played`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.streamerID}/queue/${queueId}/played`, {
             method: 'POST',
             headers: {
                 "accept": "application/json",
-                "Authorization": "Bearer " + localConfig.clientId,
+                "Authorization": "Bearer " + serverCredentials.authToken,
                 "origin": "StreamRoller"
             }
         })
@@ -959,7 +1158,13 @@ function markSongAsPlayed (queueId)
             })
             .catch(e =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played, check credentials/login");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".markSongAsPlayed", "Error Marking song as played", e.Error);
             });
     }
 }
@@ -969,13 +1174,13 @@ function markSongAsPlayed (queueId)
 // ============================================================================
 function saveQueue (queue)
 {
-    if (serverConfig.enablestreamersonglist == "on")
+    if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${localConfig.streamerId}/queue`, {
+        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.streamerID}/queue`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Client-ID': localConfig.clientId,
+                'Client-ID': serverCredentials.authToken,
             },
             body: JSON.stringify(queue),
         })
@@ -986,7 +1191,13 @@ function saveQueue (queue)
             })
             .catch(e =>
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue", e.message);
+                if (e.message.indexOf("status 401") > -1)
+                {
+                    localConfig.status.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue. Check Credentials/login details");
+                }
+                else
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".saveQueue", "Error saving queue", e.Error);
             });
     }
 }
@@ -998,7 +1209,7 @@ function saveQueue (queue)
  */
 function pollSongQueueCallback ()
 {
-    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "")//&& localConfig.clientId != "")
+    if (serverConfig.enableStreamerSongList == "on" && serverCredentials.username != "")
     {
         try
         {
@@ -1021,7 +1232,7 @@ function pollSongQueueCallback ()
  */
 function pollSongListCallback ()
 {
-    if (serverConfig.enablestreamersonglist == "on" && localConfig.username != "" && localConfig.clientId != "")
+    if (serverConfig.enableStreamerSongList == "on" && serverCredentials.username != "" && serverCredentials.authToken != "")
     {
         try
         {
@@ -1044,6 +1255,14 @@ function pollSongListCallback ()
  */
 function heartBeatCallback ()
 {
+    let color = "red"
+    if (serverConfig.enableStreamerSongList == "on")
+    {
+        if (localConfig.status.connected)
+            color = "green"
+        else
+            color = "orange"
+    }
     try
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -1052,7 +1271,10 @@ function heartBeatCallback ()
                 sr_api.ExtensionPacket(
                     "HeartBeat",
                     serverConfig.extensionname,
-                    localConfig.status,
+                    {
+                        connected: localConfig.status.connected,
+                        color: color
+                    },
                     serverConfig.channel),
                 serverConfig.channel
             ),
