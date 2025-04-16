@@ -8,22 +8,30 @@ to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
 # Twitch
-## Outgoing channel : TWITCH
+
 - [Twitch](#twitch)
-  - [Outgoing channel : TWITCH](#outgoing-channel--twitch)
 - [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
+
 # About
+
 This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect
 
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
+
 ## Triggers/Actions
+
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
 ReplaceTAGForTriggers
+
 ### Actions
 
 ReplaceTAGForActions

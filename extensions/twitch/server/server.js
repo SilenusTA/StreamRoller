@@ -74,7 +74,7 @@ const default_serverConfig = {
     lastSelectedTwitchTitleId: -1
 }
 let serverConfig = structuredClone(default_serverConfig);
-const localCredentials =
+const serverCredentials =
 {
     twitchName: "",
     twitchOAuthState: "",
@@ -88,7 +88,7 @@ const localCredentials =
 // 1) select the api and functions you want on the left you want to implement/add
 // 2) add the action_ trigger and function
 // 3) check that a callback trigger_ is defined (should be in the triggers list and implemented in the eventsub.js script)
-// 5) run a test to see if the scopes need updating in twitch.js (for authorizing a user, will need to re-authorize through the admin page to update the twitch tokens)
+// 5) run a test to see if the scopes need updating in twitch.js (for authorizing a user, will need to re-authorize through the main settings page to update the twitch tokens)
 //
 // triggers are implemented in eventsub.js
 const triggersandactions =
@@ -1596,24 +1596,26 @@ function onDataCenterMessage (server_packet)
                     && server_packet.data.twitchOAuthToken && server_packet.data.twitchOAuthToken != "")
                 {
                     if (server_packet.data.twitchOAuthState)
-                        localCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
+                        serverCredentials.twitchOAuthState = server_packet.data.twitchOAuthState;
                     if (server_packet.data.twitchOAuthToken)
-                        localCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
-                    localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
+                        serverCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
+                    localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchOAuthToken);
 
                     if (serverConfig.twitchenabled == "off")
                     {
                         // update the username and data even if extension is turned off.
                         // if we have credentials get the username and send them to twitchchat
-                        if (localCredentials.twitchOAuthState != "" && localCredentials.twitchOAuthToken != "")
+                        if (serverCredentials.twitchOAuthState != "" && serverCredentials.twitchOAuthToken != "")
                         {
-                            let tempauth = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchOAuthToken);
+                            // create a new temporary provide for accounts as we are turned off so don't want to have 
+                            // a real account
+                            let tempauth = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchOAuthToken);
                             let tempApiClient = new ApiClient({ authProvider: tempauth });
                             tempApiClient.getTokenInfo()
                                 .then((dataUser) =>
                                 {
-                                    localCredentials.twitchName = dataUser.userName;
-                                    sendTwitchChatCredentials(dataUser.userName, localCredentials.twitchOAuthToken, false);
+                                    serverCredentials.twitchName = dataUser.userName;
+                                    sendTwitchChatCredentials(dataUser.userName, serverCredentials.twitchOAuthToken, false);
                                 })
                                 .catch((err) =>
                                 {
@@ -1629,20 +1631,20 @@ function onDataCenterMessage (server_packet)
                 {
                     // update our creds
                     if (server_packet.data.twitchBotOAuthState)
-                        localCredentials.twitchBotOAuthState = server_packet.data.twitchBotOAuthState;
+                        serverCredentials.twitchBotOAuthState = server_packet.data.twitchBotOAuthState;
                     if (server_packet.data.twitchBotOAuthToken)
-                        localCredentials.twitchBotOAuthToken = server_packet.data.twitchBotOAuthToken;
+                        serverCredentials.twitchBotOAuthToken = server_packet.data.twitchBotOAuthToken;
 
                     // if we have credentials get the username and send them to twitchchat
-                    if (localCredentials.twitchBotOAuthState != "" && localCredentials.twitchBotOAuthToken != "")
+                    if (serverCredentials.twitchBotOAuthState != "" && serverCredentials.twitchBotOAuthToken != "")
                     {
-                        let tempauth = new StaticAuthProvider(localConfig.clientId, localCredentials.twitchBotOAuthToken);
+                        let tempauth = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchBotOAuthToken);
                         let tempApiClient = new ApiClient({ authProvider: tempauth });
                         tempApiClient.getTokenInfo()
                             .then((dataUser) =>
                             {
-                                localCredentials.twitchBotName = dataUser.userName;
-                                sendTwitchChatCredentials(dataUser.userName, localCredentials.twitchBotOAuthToken, true);
+                                serverCredentials.twitchBotName = dataUser.userName;
+                                sendTwitchChatCredentials(dataUser.userName, serverCredentials.twitchBotOAuthToken, true);
                             })
                             .catch((err) =>
                             {
@@ -1665,7 +1667,6 @@ function onDataCenterMessage (server_packet)
         // -----------------------------------------------------------------------------------
         else if (server_packet.type === "ExtensionMessage")
         {
-
             let extension_packet = server_packet.data;
             // -----------------------------------------------------------------------------------
             //                   REQUEST FOR SETTINGS DIALOG
@@ -1675,38 +1676,52 @@ function onDataCenterMessage (server_packet)
                 SendSettingsWidgetSmall(extension_packet.from);
             }
             // -----------------------------------------------------------------------------------
-            //                   REQUEST FOR CREDENTIALS DIALOG
+            //                   REQUEST FOR SETTINGS DIALOG
             // -----------------------------------------------------------------------------------
-            //else if (extension_packet.type === "RequestCredentialsModalsCode")
-            //SendCredentialsModal(extension_packet.from);
+            if (extension_packet.type === "RequestSettingsWidgetLargeCode")
+            {
+                SendSettingsWidgetLarge(extension_packet.from);
+            }
             // -----------------------------------------------------------------------------------
-            //                   SETTINGS DIALOG DATA
+            //                   SettingsWidgetSmallData
             // -----------------------------------------------------------------------------------
             else if (extension_packet.type === "SettingsWidgetSmallData")
             {
                 if (extension_packet.to === serverConfig.extensionname)
                 {
-                    // check if we have asked to reset to defaults
-                    if (extension_packet.data.twitchresetdefaults == "on")
+
+                    let restart = handleSettingsWidgetSmallData(extension_packet.data);
+                    SaveConfigToServer();
+
+                    if (restart)
                     {
-                        serverConfig = structuredClone(default_serverConfig);
-                        console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
-                        SaveConfigToServer();
+                        if (localConfig.status.connected)
+                            disconnectTwitch();
+                        connectTwitch()
                     }
 
-                    else
-                    {
-                        let restart = handleSettingsWidgetSmallData(extension_packet.data);
-                        SaveConfigToServer();
-
-                        if (restart)
-                        {
-                            if (localConfig.status.connected)
-                                disconnectTwitch();
-                            connectTwitch()
-                        }
-                    }
                     SendSettingsWidgetSmall();
+                }
+            }
+            // -----------------------------------------------------------------------------------
+            //                   SettingsWidgetLargeData
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "SettingsWidgetLargeData")
+            {
+                // check if we have asked to reset to defaults
+                if (extension_packet.data.twitchresetdefaults == "on")
+                {
+                    serverConfig = structuredClone(default_serverConfig);
+                    console.log("\x1b[31m" + serverConfig.extensionname + " Defaults restored", "The config files have been reset. Your settings may have changed" + "\x1b[0m");
+                    DeleteCredentialsOnServer()
+                    serverConfig.twitchenabled = "off"
+                    SaveConfigToServer();
+                    SendSettingsWidgetSmall("");
+                    SendSettingsWidgetLarge("");
+                }
+                else
+                {
+                    // nothing in our large settings to do other than reset defaults.                  
                 }
             }
             // -----------------------------------------------------------------------------------
@@ -2165,7 +2180,7 @@ function SendSettingsWidgetSmall (toChannel = "")
     {
         if (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         }
         else
@@ -2238,54 +2253,55 @@ function SendSettingsWidgetSmall (toChannel = "")
     });
 }
 // ===========================================================================
-//                           FUNCTION: SendCredentialsModal
+//                           FUNCTION: SendSettingsWidgetLarge
 // ===========================================================================
 /**
- * Send our CredentialsModal to whoever requested it
- * @param {string} extensionname 
+ * @param {String} to channel to send to or "" to broadcast
  */
-/*
-function SendCredentialsModal (extensionname)
+function SendSettingsWidgetLarge (to = "")
 {
-    fs.readFile(__dirname + "/twitchcredentialsmodal.html", function (err, filedata)
+    // read our modal file
+    fs.readFile(__dirname + "/twitchsettingswidgetlarge.html", function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-                ".SendCredentialsModal", "failed to load modal", err);
-        //throw err;
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
         else
         {
             let modalString = filedata.toString();
+            // replace any of our server config variables'text' names in the file
             for (const [key, value] of Object.entries(serverConfig))
             {
                 if (value === "on")
                     modalString = modalString.replaceAll(key + "checked", "checked");
-                else if (typeof (value) == "string" || typeof (value) == "number")
+                // replace text strings
+                else if (typeof (value) == "string")
                     modalString = modalString.replaceAll(key + "text", value);
             }
+            // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
-                sr_api.ServerPacket("ExtensionMessage",
+                sr_api.ServerPacket(
+                    "ExtensionMessage", // this type of message is just forwarded on to the extension
                     serverConfig.extensionname,
                     sr_api.ExtensionPacket(
-                        "CredentialsModalCode",
-                        serverConfig.extensionname,
-                        modalString,
+                        "SettingsWidgetLargeCode", // message type
+                        serverConfig.extensionname, //our name
+                        modalString,// data
                         "",
-                        extensionname,
+                        to,
                         serverConfig.channel
                     ),
                     "",
-                    extensionname)
-            )
+                    to // in this case we only need the "to" channel as we will send only to the requester
+                ))
         }
     });
-}*/
+}
 // ===========================================================================
-//                           FUNCTION: handleSettingsWidgetSmallData
+//                           FUNCTION: sendTwitchChatCredentials
 // ===========================================================================
-//function sendTwitchChatCredentialsScheduler (name, oauth, bot = false)
 /**
- * updates the twitch chat extension with creadentials
+ * updates the twitch chat extension with credentials
  * @param {string} name 
  * @param {string} oauth 
  * @param {string} bot 
@@ -2391,7 +2407,7 @@ function handleSettingsWidgetSmallData (modalCode)
                             setStreamGame(game.id)
                     }
                     else
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                             ".handleSettingsWidgetSmallData", "Couldn't find game id on twitch. Id:", userSelectedCategoryId);
 
                     /* Process Twitch Title */
@@ -2418,6 +2434,23 @@ function handleSettingsWidgetSmallData (modalCode)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".handleSettingsWidgetSmallData", "Error", err, err.message);
     }
+}
+// ============================================================================
+//                           FUNCTION: DeleteCredentialsOnServer
+// ============================================================================
+/**
+ * Delete our credential file from the server
+ */
+function DeleteCredentialsOnServer ()
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "DeleteCredentials",
+            serverConfig.extensionname,
+            {
+                ExtensionName: serverConfig.extensionname,
+            },
+        ));
 }
 // ============================================================================
 //                           FUNCTION: heartBeat
@@ -2460,11 +2493,11 @@ async function connectTwitch ()
 {
     try
     {
-        if (!localCredentials.twitchOAuthToken || localCredentials.twitchOAuthToken == undefined || localCredentials.twitchOAuthToken == "")
+        if (!serverCredentials.twitchOAuthToken || serverCredentials.twitchOAuthToken == undefined || serverCredentials.twitchOAuthToken == "")
         {
             serverConfig.twitchenabled = "off"
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch",
-                "Missing authorization, go to http://localhost:3000/adminpage/ to authorise for twitch, turning off extension");
+                "Missing authorization, go to the main settings page to authorise for twitch. Turning off extension");
             return;
         }
 
@@ -2473,19 +2506,19 @@ async function connectTwitch ()
         localConfig.apiClient = new ApiClient({ authProvider: auth });
 
         let datauser = await localConfig.apiClient.getTokenInfo()
-        localCredentials.twitchName = datauser.userName;
+        serverCredentials.twitchName = datauser.userName;
 
         if (serverConfig.twitchstreamername == "")
         {
 
-            if (localCredentials.twitchName && localCredentials.twitchName != "")
-                serverConfig.twitchstreamername = localCredentials.twitchName;
+            if (serverCredentials.twitchName && serverCredentials.twitchName != "")
+                serverConfig.twitchstreamername = serverCredentials.twitchName;
             else
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Missing stream name, please set a stream name to work with in the settings");
         }
 
         //send the streamer details to twitchchat
-        sendTwitchChatCredentials(localCredentials.twitchName, localCredentials.twitchOAuthToken, false);
+        sendTwitchChatCredentials(serverCredentials.twitchName, serverCredentials.twitchOAuthToken, false);
         // get some data about the streamer (id etc)
         localConfig.streamerData = await localConfig.apiClient.users.getUserByName(serverConfig.twitchstreamername)
 

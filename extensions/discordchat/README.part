@@ -7,28 +7,33 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
- # Discord Chat
+# Discord Chat
+
 Contents
+
 - [Discord Chat](#discord-chat)
-- [Setup](#setup)
-  - [Outgoing channel : "DISCORD\_CHAT"](#outgoing-channel--discord_chat)
-  - [Authorization fields](#authorization-fields)
+- [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-# Setup
 
-## Outgoing channel : "DISCORD_CHAT"
-## Authorization fields
-- Name: DISCORD_TOKEN 
-- Value: discord bot token
+# About
+
+Allows sending and receiving of discord messages.
+
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
 
 ## Triggers/Actions
+
 ReplaceTAGForTriggersUpdatedDocTime
 
 ### Triggers
 
 ReplaceTAGForTriggers
+
 ### Actions
 
 ReplaceTAGForActions

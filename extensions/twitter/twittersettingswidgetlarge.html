@@ -1,0 +1,62 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.twitch.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<form id="twitter_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="twitter" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">Twitter Settings</h4>
+    To get twitter api credentials go to <a href="https://developer.twitter.com/en/portal/dashboard"
+        target="newwindow">https://developer.twitter.com/en/portal/dashboard</a> and get them from your project
+    (need to set up a project to get keys)
+    <div class="form-group">
+        <label for="twitterAPIkey" class="col-form-label">API key</label>
+        <input type="password" name="twitterAPIkey" class="form-control" id="twitterAPIkey" value="twitterAPIkeytext">
+    </div>
+    <div class="form-group">
+        <label for="twitterAPISecret" class="col-form-label">API Secret</label>
+        <input type="password" name="twitterAPISecret" class="form-control" id="twitterAPISecret" value="twitterAPISecrettext">
+    </div>
+    <div class="form-group">
+        <label for="twitterAccessToken" class="col-form-label">Access Token</label>
+        <input type="password" name="twitterAccessToken" class="form-control" id="twitterAccessToken" value="twitterAccessTokentext">
+    </div>
+    <div class="form-group">
+        <label for="TwitterAccessTokenSecret" class="col-form-label">Access Token Secret</label>
+        <input type="password" name="TwitterAccessTokenSecret" class="form-control" id="TwitterAccessTokenSecret" value="TwitterAccessTokenSecrettext">
+    </div>
+    <HR>
+    <div class="form-group">
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="twitter_restore_defaults" type="checkbox" id="twitter_restore_defaults" twitter_restore_defaultschecked>
+            <label class="form-check-label" for="twitter_restore_defaults">Restore Defaults</label>
+        </div>
+    </div>
+    <HR>
+    <div class="modal-footer">
+        <button id="closeSettingstwitter" type="button" type="close" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>
