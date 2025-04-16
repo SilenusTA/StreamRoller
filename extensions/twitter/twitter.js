@@ -162,6 +162,8 @@ function onDataCenterMessage (server_packet)
             else
                 serverConfig = structuredClone(server_packet.data);
 
+            if (serverConfig.twitterenabled == "on")
+                connectToTwitter();
             SaveConfigToServer();
         }
     }
@@ -171,8 +173,7 @@ function onDataCenterMessage (server_packet)
         {
             serverCredentials = structuredClone(server_packet.data);
             // start twitter connection
-            connectToTwitter();
-            if (serverConfig.enabled == "on")
+            if (serverConfig.twitterenabled == "on")
                 connectToTwitter();
             SendSettingsWidgetLarge();
             SendSettingsWidgetSmall();
@@ -193,13 +194,18 @@ function onDataCenterMessage (server_packet)
             SendSettingsWidgetLarge(extension_packet.from);
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
+            let restart = false;
             // check that it was our modal
             if (extension_packet.data.extensionname === serverConfig.extensionname)
             {
+                if (serverConfig.twitterenabled != extension_packet.data.twitterenabled)
+                    restart = true;
                 serverConfig.twitterenabled = "off";
                 for (const [key, value] of Object.entries(extension_packet.data))
                     serverConfig[key] = value;
                 SaveConfigToServer();
+                if (restart)
+                    connectToTwitter()
                 // broadcast our modal out so anyone showing it can update it
                 SendSettingsWidgetSmall("");
             }
@@ -267,7 +273,7 @@ function connectToTwitter ()
 {
     try
     {
-        if (serverConfig.twitterenabled == "on")
+        if (serverConfig.twitterenabled == "on" && serverCredentials.twitterAPIkey != "")
         {
             localConfig.twitterClient = new TwitterClient({
                 apiKey: serverCredentials.twitterAPIkey,
@@ -534,7 +540,7 @@ function tweetmessage (message)
     catch (e)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-            ".tweetmessage", "Failed ... ", e.name, e.message);
+            ".tweetmessage", "Failed ... ", e);
     }
 }
 // ============================================================================
