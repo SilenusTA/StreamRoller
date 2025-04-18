@@ -60,6 +60,11 @@ const localConfig =
     twitchCategoryErrorsText: "",
     twitchCategoryErrorsShowCounter: 0,
     currentTwitchGameCategoryId: -1, // as reported by twitch
+
+    sendUserTwitchChatCredentialsTimeout: 5000,
+    sendUserTwitchChatCredentialsHandle: null,
+    sendBotTwitchChatCredentialsTimeout: 5000,
+    sendBotTwitchChatCredentialsHandle: null,
 }
 const default_serverConfig = {
     __version__: "0.5",
@@ -1601,28 +1606,36 @@ function onDataCenterMessage (server_packet)
                         serverCredentials.twitchOAuthToken = server_packet.data.twitchOAuthToken;
                     localConfig.authProvider = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchOAuthToken);
 
-                    if (serverConfig.twitchenabled == "off")
+                    // update the username and data even if extension is turned off.
+                    // if we have credentials get the username and send them to twitchchat
+                    if (serverCredentials.twitchOAuthState != "" && serverCredentials.twitchOAuthToken != "")
                     {
-                        // update the username and data even if extension is turned off.
-                        // if we have credentials get the username and send them to twitchchat
-                        if (serverCredentials.twitchOAuthState != "" && serverCredentials.twitchOAuthToken != "")
-                        {
-                            // create a new temporary provide for accounts as we are turned off so don't want to have 
-                            // a real account
-                            let tempauth = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchOAuthToken);
-                            let tempApiClient = new ApiClient({ authProvider: tempauth });
-                            tempApiClient.getTokenInfo()
-                                .then((dataUser) =>
-                                {
-                                    serverCredentials.twitchName = dataUser.userName;
-                                    sendTwitchChatCredentials(dataUser.userName, serverCredentials.twitchOAuthToken, false);
-                                })
-                                .catch((err) =>
-                                {
-                                    logger.err(serverConfig.extensionname + ".onDataCenterMessage received CredentialsFile, getting user token", "Unhandled exception:", err);
-                                })
-                        }
+                        // create a new temporary provide for accounts as we are turned off so don't want to have 
+                        // a real account
+                        let tempauth = new StaticAuthProvider(localConfig.clientId, serverCredentials.twitchOAuthToken);
+                        let tempApiClient = new ApiClient({ authProvider: tempauth });
+                        tempApiClient.getTokenInfo()
+                            .then((dataUser) =>
+                            {
+                                // get the display name of the user
+                                tempApiClient.users.getUserByName(dataUser.userName)
+                                    .then((details) =>
+                                    {
+                                        serverCredentials.twitchName = details.displayName;
+                                        // delay sending in case twitch chat hasn't initialized yet during startup.
+                                        clearTimeout(localConfig.sendUserTwitchChatCredentialsHandle)
+                                        localConfig.sendUserTwitchChatCredentialsHandle = setTimeout(() =>
+                                        {
+                                            sendTwitchChatCredentials(details.displayName, serverCredentials.twitchOAuthToken, false);
+                                        }, localConfig.sendUserTwitchChatCredentialsTimeout);
+                                    })
+                            })
+                            .catch((err) =>
+                            {
+                                logger.err(serverConfig.extensionname + ".onDataCenterMessage received CredentialsFile, getting user token", "Unhandled exception:", err);
+                            })
                     }
+
                 }
 
                 // bot account
@@ -1643,8 +1656,19 @@ function onDataCenterMessage (server_packet)
                         tempApiClient.getTokenInfo()
                             .then((dataUser) =>
                             {
-                                serverCredentials.twitchBotName = dataUser.userName;
-                                sendTwitchChatCredentials(dataUser.userName, serverCredentials.twitchBotOAuthToken, true);
+
+                                // get the display name of the user
+                                tempApiClient.users.getUserByName(dataUser.userName)
+                                    .then((details) =>
+                                    {
+                                        serverCredentials.twitchBotName = details.displayName;
+                                        // delay sending in case twitchchat hasn't initialized yet during startup.
+                                        clearTimeout(localConfig.sendBotTwitchChatCredentialsHandle)
+                                        localConfig.sendBotTwitchChatCredentialsHandle = setTimeout(() =>
+                                        {
+                                            sendTwitchChatCredentials(details.displayName, serverCredentials.twitchBotOAuthToken, true);
+                                        }, localConfig.sendBotTwitchChatCredentialsTimeout);
+                                    })
                             })
                             .catch((err) =>
                             {
@@ -2324,7 +2348,7 @@ function sendTwitchChatCredentials (name, oauth, bot = false)
             'ExtensionMessage',
             serverConfig.extensionname,
             sr_api.ExtensionPacket(
-                "CredentialsFile",
+                "CredentialsFileFromTwitch",
                 serverConfig.extensionname,
                 data,
                 '',
@@ -2517,8 +2541,6 @@ async function connectTwitch ()
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "Missing stream name, please set a stream name to work with in the settings");
         }
 
-        //send the streamer details to twitchchat
-        sendTwitchChatCredentials(serverCredentials.twitchName, serverCredentials.twitchOAuthToken, false);
         // get some data about the streamer (id etc)
         localConfig.streamerData = await localConfig.apiClient.users.getUserByName(serverConfig.twitchstreamername)
 

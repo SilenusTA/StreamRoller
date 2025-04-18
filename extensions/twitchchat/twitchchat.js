@@ -63,11 +63,19 @@ const localConfig = {
     heartBeatHandle: null,
     saveDataHandle: null,
     logRawMessages: false,
+
+    // avoid sending too many message out too fast
+    joinChannelScheduleTimeout: 500,
     joinChannelScheduleHandle: null,
 
     //avoid swamping reconnection
-    connectToTwitchSchedulerTimeout: 3000,
+    connectToTwitchSchedulerTimeout: 2000,
     connectToTwitchSchedulerHandle: [],
+
+    //avoid swamping reconnection (needs to be higher than the above timer for connection)
+    reconnectChatSchedulerTimeout: 3000,
+    reconnectChatSchedulerHandle: [],
+
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
@@ -105,8 +113,6 @@ const default_serverConfig = {
     checkforbots: "on",
     updateUserLists: "off",
     streamername: "OldDepressedGamer",// channel we are streaming on (set from settings submits by user)
-    botname: "Botname", // only used so we can put a hint in the credentials box
-    username: "Username",
     chatMessageBufferMaxSize: "300",
     chatMessageBackupTimer: "60",
     twitchchat_restore_defaults: "off",
@@ -742,7 +748,7 @@ function onDataCenterMessage (server_packet)
                     serverConfig = structuredClone(server_packet.data);
 
                 SaveConfigToServer();
-                // restart the sceduler in case we changed the values
+                // restart the scheduler in case we changed the values
                 SaveChatMessagesToServerScheduler();
             }
         }
@@ -752,32 +758,55 @@ function onDataCenterMessage (server_packet)
             // if it is empty we will use our current default and send it to the server 
             if (server_packet.to === serverConfig.extensionname)
             {
+                let changedUsers = [];
+                changedUsers["user"] = false;
+                changedUsers["bot"] = false;
+
                 // check we have been sent something
                 if (server_packet.data != "")
                 {
                     if (server_packet.data.twitchchatuser && server_packet.data.twitchchatuseroauth)
                     {
-                        serverConfig.username = server_packet.data.twitchchatuser
-                        localConfig.usernames.user = [];
-                        localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
-                        localConfig.usernames.user["oauth"] = server_packet.data.twitchchatuseroauth;
+                        if (!localConfig.usernames.user)
+                            localConfig.usernames.user = [];
+                        if (localConfig.usernames.user["name"] != server_packet.data.twitchchatuser)
+                        {
+                            changedUsers.user = true;
+                            localConfig.usernames.user["name"] = server_packet.data.twitchchatuser;
+                        }
+                        if (localConfig.usernames.user["oauth"] != server_packet.data.twitchchatuseroauth)
+                        {
+                            changedUsers.user = true;
+                            localConfig.usernames.user["oauth"] = server_packet.data.twitchchatuseroauth;
+                        }
                     }
                     if (server_packet.data.twitchchatbot && server_packet.data.twitchchatbotoauth)
                     {
-                        serverConfig.botname = server_packet.data.twitchchatbot
-                        localConfig.usernames.bot = [];
-                        localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
-                        localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth;
+                        if (!localConfig.usernames.bot)
+                            localConfig.usernames.bot = [];
+                        if (localConfig.usernames.bot["name"] != server_packet.data.twitchchatbot)
+                        {
+                            changedUsers.bot = true;
+                            localConfig.usernames.bot["name"] = server_packet.data.twitchchatbot;
+                        }
+                        if (localConfig.usernames.bot["oauth"] != server_packet.data.twitchchatbotoauth)
+                        {
+                            changedUsers.bot = true;
+                            localConfig.usernames.bot["oauth"] = server_packet.data.twitchchatbotoauth
+                        }
                     }
                     // start connection
                     if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
                     {
                         for (const [key, value] of Object.entries(localConfig.usernames))
                         {
-                            if (localConfig.twitchClient[key].state.connected)
-                                reconnectChat(key);
-                            else
-                                connectToTwitch(key);
+                            if (changedUsers[key])
+                            {
+                                if (localConfig.twitchClient[key].state.connected)
+                                    reconnectChatScheduler(key);
+                                else
+                                    connectToTwitch(key);
+                            }
                         }
                     }
                     else
@@ -799,7 +828,7 @@ function onDataCenterMessage (server_packet)
                         for (const [key, value] of Object.entries(localConfig.usernames))
                         {
                             if (localConfig.twitchClient[key].state.connected)
-                                reconnectChat(key);
+                                reconnectChatScheduler(key);
                             else
                                 connectToTwitch(key);
                         }
@@ -832,34 +861,59 @@ function onDataCenterMessage (server_packet)
             // -------------------- PROCESSING SETTINGS WIDGET SMALLS -----------------------
             if (extension_packet.type === "RequestSettingsWidgetSmallCode")
                 SendSettingsWidgetSmall(server_packet.from);
-            else if (extension_packet.type === "CredentialsFile")
+            else if (extension_packet.type === "CredentialsFileFromTwitch")
             {
                 // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
                 // if it is empty we will use our current default and send it to the server 
                 if (extension_packet.to === serverConfig.extensionname)
                 {
+                    let changedUsers = [];
+                    changedUsers["user"] = false;
+                    changedUsers["bot"] = false;
                     // check we have been sent something
                     if (extension_packet.data != "")
                     {
                         if (extension_packet.data.twitchchatuser && extension_packet.data.twitchchatuseroauth)
                         {
-                            serverConfig.username = extension_packet.data.twitchchatuser
-                            localConfig.usernames.user = [];
-                            localConfig.usernames.user["name"] = extension_packet.data.twitchchatuser;
-                            localConfig.usernames.user["oauth"] = extension_packet.data.twitchchatuseroauth;
+                            if (!localConfig.usernames.user)
+                                localConfig.usernames.user = [];
+                            if (localConfig.usernames.user["name"] != extension_packet.data.twitchchatuser)
+                            {
+                                changedUsers["user"] = true;
+                                localConfig.usernames.user["name"] = extension_packet.data.twitchchatuser;
+                                SaveCredential("twitchchatuser", extension_packet.data.twitchchatuser)
+                            }
+                            if (localConfig.usernames.user["oauth"] != extension_packet.data.twitchchatuseroauth)
+                            {
+                                changedUsers["user"] = true;
+                                localConfig.usernames.user["oauth"] = extension_packet.data.twitchchatuseroauth
+                                SaveCredential("twitchchatuseroauth", extension_packet.data.twitchchatuseroauth)
+                            }
                         }
                         if (extension_packet.data.twitchchatbot && extension_packet.data.twitchchatbotoauth)
                         {
-                            serverConfig.botname = extension_packet.data.twitchchatbot
-                            localConfig.usernames.bot = [];
-                            localConfig.usernames.bot["name"] = extension_packet.data.twitchchatbot;
-                            localConfig.usernames.bot["oauth"] = extension_packet.data.twitchchatbotoauth;
+                            if (!localConfig.usernames.bot)
+                                localConfig.usernames.bot = [];
+                            if (localConfig.usernames.bot["name"] != extension_packet.data.twitchchatbot)
+                            {
+                                changedUsers["bot"] = true;
+                                localConfig.usernames.bot["name"] = extension_packet.data.twitchchatbot;
+                                SaveCredential("twitchchatbot", extension_packet.data.twitchchatbot)
+                            }
+                            if (localConfig.usernames.bot["oauth"] != extension_packet.data.twitchchatbotoauth)
+                            {
+                                changedUsers["bot"] = true;
+                                localConfig.usernames.bot["oauth"] = extension_packet.data.twitchchatbotoauth;
+                                SaveCredential("twitchchatbotoauth", extension_packet.data.twitchchatbotoauth)
+                            }
+
                         }
                         // start connection
                         if (localConfig.usernames != [] && Object.keys(localConfig.usernames).length > 0)
                         {
                             for (const [key, value] of Object.entries(localConfig.usernames))
-                                connectToTwitch(key);
+                                if (changedUsers["bot"])
+                                    connectToTwitch(key);
                         }
                         else
                         {
@@ -879,8 +933,9 @@ function onDataCenterMessage (server_packet)
                         {
                             for (const [key, value] of Object.entries(localConfig.usernames))
                             {
+
                                 if (localConfig.twitchClient[key].state.connected)
-                                    reconnectChat(key);
+                                    reconnectChatScheduler(key);
                                 else
                                     connectToTwitch(key);
                             }
@@ -934,7 +989,7 @@ function onDataCenterMessage (server_packet)
                         for (const [key, value] of Object.entries(localConfig.usernames))
                         {
                             if (localConfig.twitchClient[key].state.connected)
-                                reconnectChat(key);
+                                reconnectChatScheduler(key);
                             else
                                 connectToTwitch(key);
                         }
@@ -996,7 +1051,7 @@ function onDataCenterMessage (server_packet)
                         for (const [key, value] of Object.entries(localConfig.usernames))
                         {
                             if (localConfig.twitchClient[key].state.connected)
-                                reconnectChat(key);
+                                reconnectChatScheduler(key);
                             else
                                 connectToTwitch(key);
                         }
@@ -1072,7 +1127,7 @@ function onDataCenterMessage (server_packet)
                         "JoinChannel",
                         localConfig.EXTENSION_NAME,
                         server_packet.channel));
-            }, 5000);
+            }, localConfig.joinChannelScheduleTimeout);
         }
         else if (server_packet.type === "ChannelJoined"
             || server_packet.type === "ChannelCreated"
@@ -1134,7 +1189,6 @@ function sendAccountNames (toExtension)
         usrlist[id] = localConfig.usernames[id]["name"];
         countusers++;
     }
-
     if (countusers > 0)
     {
         // send the modified modal data to the server
@@ -1502,6 +1556,21 @@ function action_SendChatMessage (channel, data, attempts = 0)
 }
 // ############################# IRC Client #########################################
 // ============================================================================
+//                     FUNCTION: reconnectChatScheduler
+// ============================================================================
+/**
+ * reconnect to the IRC client/ buffers calls to avoid swaming connection on startup
+ * @param {string} account 
+ */
+function reconnectChatScheduler (account)
+{
+    clearTimeout(localConfig.reconnectChatSchedulerHandle[account])
+    localConfig.reconnectChatSchedulerHandle[account] = setTimeout(() =>
+    {
+        reconnectChat(account);
+    }, localConfig.reconnectChatSchedulerTimeout);
+}
+// ============================================================================
 //                     FUNCTION: reconnectChat
 // ============================================================================
 /**
@@ -1510,7 +1579,6 @@ function action_SendChatMessage (channel, data, attempts = 0)
  */
 function reconnectChat (account)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".reconnectChat", "Reconnecting chat " + serverConfig.streamername + ":" + serverConfig.enabletwitchchat);
     //if we are already connecting then return (might have been multiple requests sent though at the same time)
     if (localConfig.twitchClient[account].connecting)
     {
@@ -1521,27 +1589,20 @@ function reconnectChat (account)
     {
         localConfig.twitchClient[account].connecting = true;
         var connectedChannels = localConfig.twitchClient[account].connection.getChannels();
-        if (connectedChannels.length == 0)
+        connectedChannels.forEach(element =>
         {
-            joinChatChannel(account);
-        }
-        else
-        {
-            connectedChannels.forEach(element =>
-            {
-                localConfig.twitchClient[account].connection.part(element)
-                    .then(channel => 
-                    {
-                        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
+            localConfig.twitchClient[account].connection.part(element)
+                .then(channel => 
+                {
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "left Chat channel " + channel)
 
-                    })
-                    .catch((err) => 
-                    {
-                        localConfig.twitchClient[account].state.connected = false;
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
-                    });
-            })
-        }
+                })
+                .catch((err) => 
+                {
+                    localConfig.twitchClient[account].state.connected = false;
+                    //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".leaveAllChannels", "Leave chat failed", element, err)
+                });
+        })
         if (serverConfig.enabletwitchchat === "on")
         {
             joinChatChannel(account);
@@ -1577,7 +1638,7 @@ function joinChatChannel (account)
                 {
                     localConfig.twitchClient[account].state.connected = true;
                     localConfig.twitchClient[account].channelState[serverConfig.streamername] = "connected";
-                    process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
+                    //process_chat_data(chatmessagename, chatmessagetags, "[" + account + "]Chat channel changed to " + serverConfig.streamername);
                 }
                 )
                 .catch((err) =>
@@ -1588,7 +1649,7 @@ function joinChatChannel (account)
                     process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                     setTimeout(() =>
                     {
-                        reconnectChat(account)
+                        reconnectChatScheduler(account)
                     }, 5000)
                 });
         }
@@ -1603,11 +1664,8 @@ function joinChatChannel (account)
 // ############################# Initial connection is readonly #########################################
 import * as tmi from "tmi.js";
 
-
 function connectToTwitch (account)
 {
-    if (!localConfig.connectToTwitchSchedulerHandle[account])
-        localConfig.connectToTwitchSchedulerHandle[account] = null
     clearTimeout(localConfig.connectToTwitchSchedulerHandle[account])
     localConfig.connectToTwitchSchedulerHandle[account] = setTimeout(() =>
     {
@@ -1746,6 +1804,7 @@ function chatLogin (account)
             {
                 file_log("ban", userstate, reason);
                 userstate['display-name'] = localConfig.usernames.bot["name"];
+                userstate['username'] = localConfig.usernames.bot["name"].toLowerCase();
                 userstate["message-type"] = "ban";
                 process_chat_data(channel, userstate, " Ban: (" + username + "), reason: " + ((reason) ? reason : "Not Specified"));
 
@@ -1894,7 +1953,8 @@ function chatLogin (account)
             localConfig.twitchClient[account].connection.on("timeout", (channel, username, reason, duration, userstate) => 
             {
                 file_log("timeout", userstate, reason);
-                userstate['display-name'] = localConfig.usernames.bot["name"]; userstate["message-type"] = "timeout";
+                userstate['display-name'] = localConfig.usernames.bot["name"];
+                userstate["message-type"] = "timeout";
                 process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
                 triggertosend = findtriggerByMessageType("trigger_ChatTimeout")
                 triggertosend.parameters.type = "trigger_ChatTimeout"
@@ -1905,10 +1965,10 @@ function chatLogin (account)
                 postChatTrigger(triggertosend)
             });
 
-            //////////////////////////////// Anything above here is considered done here, and in liveportal 
             localConfig.twitchClient[account].connection.on("submysterygift", (channel, username, numbOfSubs, methods, userstate) => 
             {
-                file_log("submysterygift", userstate, username); userstate['display-name'] = localConfig.usernames.bot["name"];
+                file_log("submysterygift", userstate, username);
+                userstate['display-name'] = localConfig.usernames.bot["name"];
                 process_chat_data(channel, userstate, userstate['system-msg']);
                 triggertosend = findtriggerByMessageType("trigger_ChatSubMysteryGift")
                 triggertosend.parameters.type = "trigger_ChatSubMysteryGift"
@@ -2155,7 +2215,7 @@ function chatLogin (account)
         localConfig.twitchClient[account].connection.on("notice", (channel, msgid, message) => 
         {
             file_log("notice", msgid, message);
-            process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
+            process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, "notice: " + localConfig.usernames[account].name + "> " + message);
             triggertosend = findtriggerByMessageType("trigger_ChatNotice")
             triggertosend.parameters.type = "trigger_ChatNotice"
             triggertosend.parameters.textMessage = "Notice: " + message
@@ -2281,7 +2341,6 @@ function file_log (type, tags, message)
 {
     try
     {
-        //console.log("file_log", type, tags, message)
         if (serverConfig.DEBUG_LOG_DATA_TO_FILE)
         {
             var newfile = false;

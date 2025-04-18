@@ -2742,11 +2742,10 @@
             var user_icons = "";
             var action = "";
             var endaction = "";
-            //chatdata.data.username
             var banicon = "<img onclick='banUserClicked(\"" + chatdata.data.username + "\")' style='width: 20px; cursor:pointer;' alt='BanUser' title='BanUser' src = '/liveportal/images/banhammer.png'>"
             let icons = "";
             if (localConfig.bannedUsersList.includes(chatdata.data.username))
-                banicon = "< img  onclick = 'unBanUserClicked(\"" + chatdata.data.username + "\")' style = 'width:20px; cursor:pointer;' alt='UnBanUser' title='UnBanUser' src='/liveportal/images/unbanhammer.png'>"
+                banicon = "<img onclick='unBanUserClicked(\"" + chatdata.data.username + "\")' style='width:20px; cursor:pointer;' alt='UnBanUser' title='UnBanUser' src='/liveportal/images/unbanhammer.png'>"
 
 
             icons = banicon + "<img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>"
