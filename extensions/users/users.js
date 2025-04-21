@@ -184,7 +184,6 @@ function onDataCenterMessage (server_packet)
         if (server_packet.to === serverConfig.extensionname)
             if (server_packet.data.userData)
                 serverData.userData = JSON.parse(JSON.stringify(server_packet.data.userData));
-        SaveDataToServer();
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -238,75 +237,79 @@ function onDataCenterMessage (server_packet)
     {
         let extension_packet = server_packet.data;
         //serverData.userData = {};
-        if (extension_packet.type === "trigger_ChatJoin" || extension_packet.type === "trigger_ChatMessageReceived")
+        if (serverConfig.enableusersextension == "on")
         {
-            let platform = extension_packet.data.parameters.platform
-            let username = ""
-            if (extension_packet.type === "trigger_ChatJoin")
-                username = extension_packet.data.parameters.username.toLowerCase()
-            else
-                username = extension_packet.data.parameters.sender.toLowerCase()
-            let timeStamp = Date.now()
-            // new platform
-            if (serverData.userData[platform] == undefined)
-                serverData.userData[platform] = {};
-            // new user
-            if (serverData.userData[platform][username] == undefined)
+            if (extension_packet.type === "trigger_ChatJoin" || extension_packet.type === "trigger_ChatMessageReceived")
             {
-                getUserIDData(username)
-                serverData.userData[platform][username] = {};
-                serverData.userData[platform][username].firstseen = timeStamp;
-                serverData.userData[platform][username]
-                setTwitchBotStatus(username)
-                sendNewUserTrigger(server_packet.data)
-            }
-            // check if we need to update the users profile data from twitch
-            // ignore users with invalid names (chinese chars etc as twitch fails on that call)
-            else if (
-                !serverData.userData[platform][username].userNameInvalid
-                && (serverData.userData[platform][username].lastProfileUpdate == undefined
-                    ||
-                    (timeStamp - serverData.userData[platform][username].lastProfileUpdate) >
-                    (serverConfig.profiletimeout * millisecondsInDay)))
-            {
-                getUserIDData(username)
-                setTwitchBotStatus(username)
-            }
-
-            serverData.userData[platform][username].lastseen = timeStamp;
-            if (extension_packet.type === "trigger_ChatMessageReceived" && extension_packet.data.parameters.message)
-            {
-                let message = extension_packet.data.parameters.message
-                if (!serverData.userData[platform][username].messages)
-                    serverData.userData[platform][username].messages = [];
-                serverData.userData[platform][username].messages[timeStamp] = message;
-
-            }
-            pruneUsers(platform);
-            SaveDataToServer();
-            //console.log(JSON.stringify(serverData, null, 2))
-        }
-        else if (extension_packet.type === "trigger_TwitchUserDetails")
-        {
-            //serverData.userData = {}
-            try
-            {
-                let platform = "twitch";
-                let username = extension_packet.data.parameters.username.toLowerCase()
+                let platform = extension_packet.data.parameters.platform
+                let username = ""
+                if (extension_packet.type === "trigger_ChatJoin")
+                    username = extension_packet.data.parameters.username.toLowerCase()
+                else
+                    username = extension_packet.data.parameters.sender.toLowerCase()
                 let timeStamp = Date.now()
+                // new platform
+                if (serverData.userData[platform] == undefined)
+                    serverData.userData[platform] = {};
+                // new user
                 if (serverData.userData[platform][username] == undefined)
+                {
+                    getUserIDData(username)
                     serverData.userData[platform][username] = {};
+                    serverData.userData[platform][username].firstseen = timeStamp;
+                    serverData.userData[platform][username]
+                    setTwitchBotStatus(username)
+                    sendNewUserTrigger(server_packet.data)
+                }
+                // check if we need to update the users profile data from twitch
+                // ignore users with invalid names (chinese chars etc as twitch fails on that call)
+                else if (
+                    !serverData.userData[platform][username].userNameInvalid
+                    && (serverData.userData[platform][username].lastProfileUpdate == undefined
+                        ||
+                        (timeStamp - serverData.userData[platform][username].lastProfileUpdate) >
+                        (serverConfig.profiletimeout * millisecondsInDay)))
+                {
+                    getUserIDData(username)
+                    setTwitchBotStatus(username)
+                }
 
-                for (const [key, value] of Object.entries(extension_packet.data.parameters))
-                    serverData.userData[platform][username][key] = value;
                 serverData.userData[platform][username].lastseen = timeStamp;
-                serverData.userData[platform][username].lastProfileUpdate = timeStamp
+                if (extension_packet.type === "trigger_ChatMessageReceived" && extension_packet.data.parameters.message)
+                {
+                    let message = extension_packet.data.parameters.message
+                    if (!serverData.userData[platform][username].messages)
+                        serverData.userData[platform][username].messages = [];
+                    serverData.userData[platform][username].messages[timeStamp] = message;
+
+                }
                 pruneUsers(platform);
                 SaveDataToServer();
             }
-            catch (error)
+            //console.log(JSON.stringify(serverData, null, 2))
+
+            else if (extension_packet.type === "trigger_TwitchUserDetails")
             {
-                logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + " packet trigger_TwitchUserDetails", error.message);
+                //serverData.userData = {}
+                try
+                {
+                    let platform = "twitch";
+                    let username = extension_packet.data.parameters.username.toLowerCase()
+                    let timeStamp = Date.now()
+                    if (serverData.userData[platform][username] == undefined)
+                        serverData.userData[platform][username] = {};
+
+                    for (const [key, value] of Object.entries(extension_packet.data.parameters))
+                        serverData.userData[platform][username][key] = value;
+                    serverData.userData[platform][username].lastseen = timeStamp;
+                    serverData.userData[platform][username].lastProfileUpdate = timeStamp
+                    pruneUsers(platform);
+                    SaveDataToServer();
+                }
+                catch (error)
+                {
+                    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + " packet trigger_TwitchUserDetails", error.message);
+                }
             }
         }
         // add this in to see all messages that are not handled
