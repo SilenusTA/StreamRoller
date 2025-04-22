@@ -50,8 +50,6 @@ let debugStartTime = performance.now()
 let debugEndTime = performance.now()
 // END testing startup time
 
-// load our config settings from the config store
-let config = cm.loadConfig("datacenter");
 let localConfig =
 {
     version: cm.loadSoftwareVersion(),
@@ -60,7 +58,6 @@ let localConfig =
 }
 
 let defaultconfig = {
-    name: "StreamRoller",
     extensionname: "datacenter",
     SYSTEM_LOGGING_TAG: "DATA-CENTER",
     HOST: "localhost",
@@ -71,22 +68,26 @@ let defaultconfig = {
     softwareversion: localConfig.version,
     overlayfolder: "/repos/ODGOverlay/", // need to fix this and get a proper overlay area setup
     testing: 0,// used to import extra extensions during testing
-    uuid: false
+    uuid: false,
+    enabledExtensions: {}
 };
 
-// check we have a config. if this is a new instance the we need to create a config from the default
-if (config === "" | !config.uuid)
+
+// load our config settings from the config store
+let serverConfig = cm.loadConfig(defaultconfig.extensionname);
+// check we have a serverConfig. if this is a new instance the we need to create a serverConfig from the default
+if (serverConfig === "" | !serverConfig.uuid)
 {
-    config = defaultconfig;
-    config.uuid = crypto.randomUUID();
-    cm.saveConfig(config.extensionname, config);
+    serverConfig = defaultconfig;
+    serverConfig.uuid = crypto.randomUUID();
+    cm.saveConfig(serverConfig.extensionname, serverConfig);
 }
-// check if we have updated the software, if so we will reload the default config
-if (config.softwareversion != localConfig.version)
+// check if we have updated the software, if so we will reload the default serverConfig
+if (serverConfig.softwareversion != localConfig.version)
 {
-    console.log("New software version detected. resetting server config.")
-    config = defaultconfig;
-    cm.saveConfig(config.extensionname, config);
+    console.log("New software version detected. resetting serverConfig.")
+    serverConfig = defaultconfig;
+    cm.saveConfig(serverConfig.extensionname, serverConfig);
 }
 
 // set the local IP address to this machine for using other devices (ie the fake stream deck macros page)
@@ -106,12 +107,11 @@ for (var k in interfaces)
     }
 }
 if (addresses[0] != undefined || addresses[0] != "")
-    config.HOST = addresses[0];
+    serverConfig.HOST = addresses[0];
 */
-logger.setLoggingLevel(config.logginglevel);
-console.log("serverSettings: ", config);
-console.log("\x1b[1m\x1b[33mload the url\x1b[31m", config.HOST + ":" + config.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");
-console.log("\x1b[1m\x1b[33mNote: Only load one version of the browser as mutliple versions will conflict with each other leading to repeated messages in chat\x1b[0m");
+logger.setLoggingLevel(serverConfig.logginglevel);
+console.log("\x1b[1m\x1b[33mStreamRoller running on\x1b[31m", serverConfig.HOST + ":" + serverConfig.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");
+console.log("\x1b[1m\x1b[33mNote: Only load one version of the browser as multiple versions will conflict with each other leading to repeated messages in chat\x1b[0m");
 // ============================================================================
 //                          IMPORTS/VARIABLES
 // ============================================================================
@@ -135,7 +135,7 @@ if (DEBUG_TIMING)
     console.log("start to http.createServer(app) took:", Math.round(debugEndTime - debugStartTime), "ms");
     debugStartTime = debugEndTime
 }
-server.listen(config.PORT);
+server.listen(serverConfig.PORT);
 if (DEBUG_TIMING)
 {
     debugEndTime = performance.now()
@@ -151,7 +151,7 @@ server.on('error', (e) =>
         setTimeout(() =>
         {
             server.close();
-            server.listen(config.PORT);
+            server.listen(serverConfig.PORT);
         }, 1000);
     }
 });
@@ -173,9 +173,9 @@ app.get("/", function (req, res)
 {
     let debugWebPageLoadStartTime = performance.now()
     res.render(__dirname + "/../../extensions/liveportal/views/pages/index", {
-        host: "http://" + config.HOST,
-        port: config.PORT,
-        heartbeat: config.heartbeat
+        host: "http://" + serverConfig.HOST,
+        port: serverConfig.PORT,
+        heartbeat: serverConfig.heartbeat
     });
     if (DEBUG_TIMING)
     {
@@ -197,11 +197,11 @@ app.get("/", function (req, res)
 // #### Maybe this is passed in or setup on the admin page #####
 // ### This is only here as my overly was writting using php ###
 // #############################################################
-//config.overlayfolder = __dirname + "/../../../ODGOverlay";
-//config.overlayfolder = "/repos/ODGOverlay";
+//serverConfig.overlayfolder = __dirname + "/../../../ODGOverlay";
+//serverConfig.overlayfolder = "/repos/ODGOverlay";
 import { execPHP } from "./execphp.js";
-execPHP.phpFolder = config.overlayfolder;
-var webfiles = config.overlayfolder;
+execPHP.phpFolder = serverConfig.overlayfolder;
+var webfiles = serverConfig.overlayfolder;
 
 app.use("*.php", function (request, response, next)
 {
@@ -242,22 +242,21 @@ if (DEBUG_TIMING)
 async function loadExtensionsAndStartServer ()
 {
     // Just some debugging code to test new extensions
-    if (config.testing > 0)
+    if (serverConfig.testing > 0)
     {
         console.log("#### running extra DEBUG extensions ####")
         logger.usecoloredlogs("default");
         await loadExtensions(__dirname + "/../../test-ext")
         await loadExtensions(__dirname + "/../../extensions")
-        // ################### start StreamRoller  ####################################
-        ServerSocket.start(app, server, Object.keys(localConfig.extensions))
     }
     else
     {
         logger.usecoloredlogs("default");
         await loadExtensions(__dirname + "/../../extensions")
-        // ################### start StreamRoller  ####################################
-        ServerSocket.start(app, server, Object.keys(localConfig.extensions))
     }
+
+    // ################### start StreamRoller  ####################################
+    ServerSocket.start(app, server, Object.keys(localConfig.extensions), serverConfig, saveConfig)
 }
 
 // ########################################################
@@ -273,7 +272,7 @@ async function loadExtensions (extensionFolder)
     }
     // get a list of extension filenames
     try { files = await fs.readdir(extensionFolder) }
-    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: loading extension filenames", err); }
+    catch (err) { logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js:Error: loading extension filenames", err); }
     if (DEBUG_TIMING)
     {
         debugEndTime = performance.now()
@@ -287,7 +286,20 @@ async function loadExtensions (extensionFolder)
         modules = await Promise.all(
             Array.from(files).map((value) =>
             {
-                if (!value.startsWith("~~") && !value.startsWith("datahandlers"))
+                // check if we have enabledExtensions (might not if an existing user has loaded their config)
+                if (!serverConfig.enabledExtensions)
+                    serverConfig.enabledExtensions = {}
+                // do we have this extension or is it a new one
+                if (serverConfig.enabledExtensions[value] == undefined)
+                {
+                    console.log("setting to true", value, serverConfig.enabledExtensions[value])
+                    serverConfig.enabledExtensions[value] = true;
+                }
+                // ignore ~~ prefixed extensions
+                if (value.startsWith("~~"))
+                    serverConfig.enabledExtensions[value] = false;
+                // check if we have this extension enabled.
+                if (serverConfig.enabledExtensions[value] && serverConfig.enabledExtensions[value] == true)
                 {
                     debugStartTimeArray[value] = performance.now()
                     let x = import(pathToFileURL(extensionFolder + "/" + value + "/" + value + ".js").href)
@@ -307,12 +319,17 @@ async function loadExtensions (extensionFolder)
                     return x;
                 }
                 else
+                {
+                    if (!value.startsWith("~~"))
+                        console.log("\x1b[1m\x1b[33mNot loading extension", value, "as it turned off in datacenter settings.\x1b[0m");
                     return null
+                }
             }
             ),
         )
+        saveConfig();
     }
-    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: importing extension modules", err.message); }
+    catch (err) { logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js:Error: importing extension modules", err.message); }
 
     // for each extension call it's initialise function
     try
@@ -328,12 +345,12 @@ async function loadExtensions (extensionFolder)
                     localConfig.extensions[files[index]] = { initialise: module.initialise };
                     if (typeof localConfig.extensions[files[index]].initialise === "function")
                         module.initialise(
-                            app, "http://" + config.HOST,
-                            config.PORT,
+                            app, "http://" + serverConfig.HOST,
+                            serverConfig.PORT,
                             // add a slight offset to the heartbeat so they don't all end up synced
-                            config.heartbeat + (Math.floor(Math.random() * 100)));
+                            serverConfig.heartbeat + (Math.floor(Math.random() * 100)));
                     else
-                        logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an initialise function");
+                        logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an initialise function");
                     if (DEBUG_TIMING)
                         console.log("extension", files[index], " loaded:", Math.round(performance.now() - debugStartTime[files[index]]), "ms");
                     else
@@ -341,12 +358,21 @@ async function loadExtensions (extensionFolder)
                 }
                 catch (err) 
                 {
-                    logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on ", files[index], err.message);
+                    logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on ", files[index], err.message);
                 }
             }
         })
     }
-    catch (err) { logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err, err.message); }
+    catch (err) { logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js:Error: calling initialise on extensions", err, err.message); }
+}
+
+// ####################################################
+// ################### saveConfig #####################
+// ####################################################
+function saveConfig (conf = serverConfig)
+{
+    serverConfig = conf;
+    cm.saveConfig(serverConfig.extensionname, conf);
 }
 // ####################################################
 // ################### pingServer #####################
@@ -355,7 +381,7 @@ function pingServer ()
 {
     try
     {
-        https.get('https://streamroller.stream/api/telemetry.php?UUID=' + config.uuid + '&version=' + localConfig.version, res =>
+        https.get('https://streamroller.stream/api/telemetry.php?UUID=' + serverConfig.uuid + '&version=' + localConfig.version, res =>
         {
             let data = [];
 
@@ -378,7 +404,7 @@ function pingServer ()
     }
     catch (err)
     {
-        //logger.err("[" + config.SYSTEM_LOGGING_TAG + "]server.js:Error: pinging server ", err.message);
+        //logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js:Error: pinging server ", err.message);
     }
     setTimeout(() =>
     {

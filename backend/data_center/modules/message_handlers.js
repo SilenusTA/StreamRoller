@@ -41,11 +41,22 @@ import * as cm from "./common.js";
 import * as logger from "./logger.js";
 
 const SYSTEM_LOGGING_TAG = "DATA-CENTER";
-const EXTENSION_NAME = "datacenter";
+let EXTENSION_NAME = null;
 let monitorSocketSentData = false;
 let socketSentSize = 0;
 
 
+// ============================================================================
+//                           FUNCTION: setExtensionName
+// ============================================================================
+/**
+ * loads and sends the config file to the given extension
+ * @param {String} extensionname extension name
+ */
+function setExtensionName (extensionname)
+{
+    EXTENSION_NAME = extensionname;
+}
 // ============================================================================
 //                           FUNCTION: sendConfig
 // ============================================================================
@@ -484,6 +495,6 @@ function sendDataLoad (server_socket, receivedSize)
 // ============================================================================
 export
 {
-    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, DeleteCredentials, sendDataLoad
+    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, DeleteCredentials, sendDataLoad, setExtensionName
 };
 
