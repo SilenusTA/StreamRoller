@@ -993,6 +993,8 @@ function triggerMacroButton (name)
         if (serverData.userPairings.pairings[i].trigger.name == name)
         {
             let params = {}
+            if (serverData.userPairings.pairings[i].action.paused)
+                continue;
             for (var j in serverData.userPairings.pairings[i].action.data)
             {
                 for (const property in serverData.userPairings.pairings[i].action.data[j])
