@@ -1058,6 +1058,20 @@ const triggersandactions =
                     triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
+            {
+                name: "RaidingChannel",
+                displaytitle: "Raiding a channel",
+                description: "We are Raiding a channel",
+                messagetype: "trigger_TwitchRaidChannel",
+                parameters: {
+                    username: "",
+                    username_UIDescription: "user we are raiding",
+                    raidDate: "",
+                    raidDate_UIDescription: "Datestamp when raid was started",
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
         ],
     actions:
         [
@@ -1450,6 +1464,19 @@ const triggersandactions =
                     triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
             },
+            {
+                name: "TwitchRaid",
+                displaytitle: "Raid a username",
+                description: "Raids the username specified",
+                messagetype: "action_TwitchRaidChannel",
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible",
+                    username: "",
+                    username_UIDescription: "The user you wish to raid"
+
+                }
+            }
 
         ],
 }
@@ -2148,6 +2175,14 @@ function onDataCenterMessage (server_packet)
             {
                 sendCurrentGameData(extension_packet.data.actionID)
             }
+            // -----------------------------------------------------------------------------------
+            //                   action_GetTwitchStats
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchRaidChannel")
+            {
+                raidChannel(extension_packet.data.triggerActionRef, extension_packet.data.username)
+            }
+
         }
         // -----------------------------------------------------------------------------------
         //                           UNKNOWN CHANNEL MESSAGE RECEIVED
@@ -3974,6 +4009,30 @@ function sendCurrentGameData (triggerId = "twitch")
         trigger.parameters = { triggerId: triggerId, id: game.id, name: game.name, imageURL: game.imageURL }
         sendTrigger(trigger)
     }
+}
+// ===========================================================================
+//                           FUNCTION: raidChannel
+// ===========================================================================
+/**
+ * sends trigger_TwitchGamedChanged
+ * @param {string} username ref id from action
+ */
+async function raidChannel (ref, username)
+{
+    try
+    {
+        //const raid = await api.raids.startRaid(from,to);
+        let user = await localConfig.apiClient.users.getUserByName(username)
+        const raid = await localConfig.apiClient.raids.startRaid(localConfig.streamerData.id, user.id);
+        let trigger = findTriggerByMessageType("trigger_TwitchRaidChannel");
+        trigger.parameters = { triggerActionRef: ref, username: username, raidDate: raid.creationDate }
+        sendTrigger(trigger)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".raidChannel", "Raid channel failed", err);
+    }
+
 }
 // ===========================================================================
 //                           FUNCTION: pubSubTriggerCallback
