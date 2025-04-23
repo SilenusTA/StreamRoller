@@ -833,7 +833,7 @@ function connectToObs ()
                 //Need to setup a reschedule if we have a connection failure
                 if (serverConfig.enableobs == "on")
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", "Are websocket login details correct?");
+                    logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectToObs ", "Failed to connect to OBS, scheduling reconnect", "Are websocket login details correct?");
                     localConfig.obsConnecting = true
                     clearTimeout(localConfig.obsTimeoutHandle)
                     localConfig.obsTimeoutHandle = setTimeout(() =>
@@ -842,7 +842,6 @@ function connectToObs ()
                     }, 5000);
                 }
             })
-
     }
     else
     {
