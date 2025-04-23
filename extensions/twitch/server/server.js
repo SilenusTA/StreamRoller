@@ -2556,7 +2556,7 @@ async function connectTwitch ()
         {
             serverConfig.twitchenabled = "off"
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch",
-                "Missing authorization, go to the main settings page to authorise for twitch. Turning off extension");
+                "Missing streamer authorization, go to the main twitch settings page to authorise for twitch. Turning off extension");
             return;
         }
 
