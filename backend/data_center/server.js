@@ -291,10 +291,7 @@ async function loadExtensions (extensionFolder)
                     serverConfig.enabledExtensions = {}
                 // do we have this extension or is it a new one
                 if (serverConfig.enabledExtensions[value] == undefined)
-                {
-                    console.log("setting to true", value, serverConfig.enabledExtensions[value])
                     serverConfig.enabledExtensions[value] = true;
-                }
                 // ignore ~~ prefixed extensions
                 if (value.startsWith("~~"))
                     serverConfig.enabledExtensions[value] = false;

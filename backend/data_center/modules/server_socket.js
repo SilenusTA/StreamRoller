@@ -333,10 +333,6 @@ function onDisconnect (socket, reason)
  */
 function onMessage (socket, server_packet)
 {
-    if (server_packet.type == "action_StreamRollerChangeStartupExtension"
-    )//|| server_packet.data.type == "action_StreamRollerChangeStartupExtension")
-        console.log(server_packet)
-
     // make sure we are using the same api version
     if (server_packet.version != localConfig.serverConfig.apiVersion)
     {
@@ -627,15 +623,12 @@ function processSettingsWidgetSmallData (data)
     {
         if (data[key])
         {
-            console.log(key, true)
-
             if (!localConfig.serverConfig.enabledExtensions[key])
                 restart = true;
             localConfig.serverConfig.enabledExtensions[key] = true;
         }
         else
         {
-            console.log(key, false)
             if (localConfig.serverConfig.enabledExtensions[key])
                 restart = true;
             localConfig.serverConfig.enabledExtensions[key] = false;
