@@ -949,6 +949,7 @@ function onDataCenterMessage (server_packet)
                         }
                     }
                 }
+                sendAccountNames("")
             }
             else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
                 SendSettingsWidgetLarge(server_packet.from);
@@ -1179,7 +1180,7 @@ function sendChatBuffer (toExtension)
 /**
  * @param {String} toExtension 
  */
-function sendAccountNames (toExtension)
+function sendAccountNames (toExtension = "")
 {
     // TBD create list from available names otherwise we need to supply both names
     let usrlist = {}
