@@ -127,6 +127,100 @@ const localConfig =
     // callback to main server to save the updated server config
     saveServerConfigFunc: null,
 }
+const triggersandactions =
+{
+    extensionname: localConfig.extensionname,
+    description: "StreamRoller server settings",
+    version: "0.3",
+    channel: localConfig.channel,
+    // these are messages we can sendout that other extensions might want to use to trigger an action
+    triggers:
+        [
+            {
+                name: "StreamRoller IP Address Changed",
+                displaytitle: "URL/IP of StreamRoller changed",
+                description: "The URL or IP of main StreamRoller server has changed",
+                messagetype: "trigger_StreamRollerIPChanged",
+                parameters:
+                {
+                    triggerActionRef: "",
+                    triggerActionRef_UIDescription: "Identifying references for this action",
+                    address: "",
+                    address_UIDescription: "IP or url name for the socket. ie localhost",
+                    port: "",
+                    port_UIDescription: "port number for the socket. ie 3000",
+                }
+            },
+            {
+                name: "Extension startup setting changed",
+                displaytitle: "Extension startup changed",
+                description: "The given extension name startup flag was changed",
+                messagetype: "trigger_ExtensionStartupChanged",
+                parameters:
+                {
+                    triggerActionRef: "",
+                    triggerActionRef_UIDescription: "Identifying references for this action",
+                    extension: "",
+                    extension_UIDescription: "extensions name to set",
+                    startup: "",
+                    startup_UIDescription: "true or false",
+                }
+            },
+
+        ],
+    // these are messages we can receive to perform an action
+    actions:
+        [
+            {
+                name: "Change StreamRoller IP Address",
+                displaytitle: "Change URL/IP of StreamRoller",
+                description: "Change he URL or IP of main StreamRoller server has",
+                messagetype: "action_StreamRollerChangeIP",
+                parameters:
+                {
+                    triggerActionRef: "",
+                    triggerActionRef_UIDescription: "Identifying references for this action",
+                    address: "",
+                    address_UIDescription: "IP or url name for the socket. ie localhost",
+                    port: "",
+                    port_UIDescription: "port number for the socket. ie 3000",
+                }
+            },
+            {
+                name: "Change extension startup",
+                displaytitle: "Change startup extension",
+                description: "Change the startup state for an extension",
+                messagetype: "action_StreamRollerChangeStartupExtension",
+                parameters:
+                {
+                    triggerActionRef: "",
+                    triggerActionRef_UIDescription: "Identifying references for this action",
+                    extension: "",
+                    extension_UIDescription: "extensions name to set",
+                    startup: "",
+                    startup_UIDescription: "true or false",
+                }
+            },
+            {
+                name: "Reboot Server",
+                displaytitle: "Reboot Server",
+                description: "Reboot the StreamRoller Server",
+                messagetype: "action_RebootServer",
+                parameters:
+                {
+                }
+            },
+            {
+                name: "Stop Server",
+                displaytitle: "Stop Server",
+                description: "Stop the StreamRoller Server",
+                messagetype: "action_StopServer",
+                parameters:
+                {
+                }
+            }
+        ],
+}
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -141,8 +235,9 @@ function start (app, server, exts, serverConfig, saveServerConfigFunc)
     // save the server config in our temp config
     localConfig.serverConfig = serverConfig;
     //update our extension name to match the server
-    localConfig.extensionname = serverConfig.extensionname
-    // save teh callback function to save the servers data file
+    localConfig.extensionname = serverConfig.extensionname;
+    triggersandactions.extensionname = serverConfig.extensionname
+    // save the callback function to save the servers data file
     localConfig.saveServerConfigFunc = saveServerConfigFunc;
     //add ourselves to the list of extensions that the server will load
     // done here so we don't use this in the extensions loading section in the loader
@@ -150,7 +245,7 @@ function start (app, server, exts, serverConfig, saveServerConfigFunc)
     //add ourselves to the list of extensions we have connected so we can send
     // those out to the extensions that ask for the list
     localConfig.connected_extensionlist[localConfig.extensionname] = true;
-    mh.setExtensionName(serverConfig.extensionname)
+    mh.setExtensionName(serverConfig.extensionname);
     // create our extension array
     exts.forEach((elem, i) =>
     {
@@ -202,6 +297,8 @@ function start (app, server, exts, serverConfig, saveServerConfigFunc)
 function onConnect (socket)
 {
     socket.emit("connected", socket.id);
+    socket.join(localConfig.channel);
+    sendAddressTrigger();
 }
 // ============================================================================
 //                           FUNCTION: onDisconnect
@@ -236,6 +333,10 @@ function onDisconnect (socket, reason)
  */
 function onMessage (socket, server_packet)
 {
+    if (server_packet.type == "action_StreamRollerChangeStartupExtension"
+    )//|| server_packet.data.type == "action_StreamRollerChangeStartupExtension")
+        console.log(server_packet)
+
     // make sure we are using the same api version
     if (server_packet.version != localConfig.serverConfig.apiVersion)
     {
@@ -334,14 +435,68 @@ function onMessage (socket, server_packet)
         mh.leaveChannel(socket, server_packet.from, server_packet.data);
     else if (server_packet.type === "ExtensionMessage")
     {
+        let extension_packet = server_packet.data;
         if (server_packet.to === undefined)
             mh.errorMessage(socket, "No extension name specified for ExtensionMessage", server_packet);
-        else if (server_packet.to === localConfig.extensionname
-            && server_packet.data.type === "RequestSettingsWidgetSmallCode")
-            SendSettingsWidgetSmall(server_packet.from);
-        else if (server_packet.to === localConfig.extensionname
-            && server_packet.data.type === "SettingsWidgetSmallData")
-            processSettingsWidgetSmallData(server_packet.data.data);
+        else if (server_packet.to === localConfig.extensionname)
+        {
+            // *******************************************
+            // we are the target of this extension message
+            // *******************************************
+            if (server_packet.data.type === "RequestSettingsWidgetSmallCode")
+                SendSettingsWidgetSmall(server_packet.from);
+            else if (server_packet.data.type === "SettingsWidgetSmallData")
+                processSettingsWidgetSmallData(server_packet.data.data);
+            else if (extension_packet.type === "SendTriggerAndActions")
+            {
+                sr_api.sendMessage(socket,
+                    sr_api.ServerPacket("ExtensionMessage",
+                        localConfig.extensionname,
+                        sr_api.ExtensionPacket(
+                            "TriggerAndActions",
+                            localConfig.extensionname,
+                            triggersandactions,
+                            "",
+                            server_packet.from
+                        ),
+                        "",
+                        server_packet.from
+                    )
+                )
+            }
+            else if (extension_packet.type === "action_StreamRollerChangeIP")
+            {
+                localConfig.serverConfig.url = extension_packet.data.address;
+                sendAddressTrigger();
+                localConfig.saveServerConfigFunc();
+                RestartServer();
+            }
+            else if (extension_packet.type === "action_StreamRollerChangeStartupExtension")
+            {
+                try
+                {
+                    if (extension_packet.data.startup == "true")
+                        localConfig.serverConfig.enabledExtensions[extension_packet.data.extension] = true
+                    else
+                        localConfig.serverConfig.enabledExtensions[extension_packet.data.extension] = false
+                    localConfig.saveServerConfigFunc();
+                    sendExtensionEnabledTrigger(extension_packet.data.triggerActionRef, extension_packet.data.extension);
+                    SendSettingsWidgetSmall();
+                }
+                catch (err)
+                {
+                    console.log("action_StreamRollerChangeStartupExtension:Error", err)
+                }
+            }
+            else if (extension_packet.type === "action_StopServer")
+            {
+                process.exit()
+            }
+            else if (extension_packet.type === "action_RebootServer")
+            {
+                RestartServer();
+            }
+        }
         else
             mh.forwardMessage(socket, server_packet, localConfig.channels, localConfig.extensions);
     }
@@ -566,6 +721,9 @@ function socketReceiveDebug (socket, server_packet)
     localConfig.socketReceivedSize = localConfig.socketReceivedSize + Buffer.byteLength(JSON.stringify(server_packet))
     onMessage(socket, server_packet)
 }
+// ============================================================================
+//                           FUNCTION: dataMonitorScheduler
+// ============================================================================
 function dataMonitorScheduler ()
 {
     mh.sendDataLoad(localConfig.server_socket, localConfig.socketReceivedSize);
@@ -581,6 +739,84 @@ function dataMonitorScheduler ()
     }
 }
 // ============================================================================
+//                           FUNCTION: sendAddressTrigger
+// ============================================================================
+/**
+ * Finds the trigger using the passed messagetype
+ * @returns trigger
+ */
+function sendAddressTrigger ()
+{
+    let message = findTriggerByMessageType("trigger_StreamRollerIPChanged")
+    if (localConfig.serverConfig.HOST != "" && localConfig.serverConfig.PORT != "")
+    {
+        message.address = localConfig.serverConfig.HOST
+        message.address = localConfig.serverConfig.PORT
+        sendTrigger(message)
+    }
+    else
+        logger.err(localConfig.serverConfig.SYSTEM_LOGGING_TAG + localConfig.serverConfig.extensionname + ".onDataCenterMessage", localConfig.serverConfig.extensionname + " sendAddressTrigger", "address or port empty", "'" + localConfig.serverConfig.HOST + "'", "'" + localConfig.serverConfig.PORT + "'");
+}
+// ============================================================================
+//                           FUNCTION: sendExtensionEnabledTrigger
+// ============================================================================
+/**
+ * Sends out a extensions startup flag for the given extensions
+ * @param {string} ref reference from action 
+ * @param {string} ext extension name
+ */
+function sendExtensionEnabledTrigger (ref, ext)
+{
+    let message = findTriggerByMessageType("trigger_ExtensionStartupChanged")
+    message.parameters.triggerActionRef = ref;
+    message.parameters.extension = ext;
+    message.parameters.startup = localConfig.serverConfig.enabledExtensions[ext].toString();
+    sendTrigger(message)
+}
+// ============================================================================
+//                           FUNCTION: findTriggerByMessageType
+// ============================================================================
+/**
+ * Finds the trigger using the passed messagetype
+ * @param {string} messagetype 
+ * @returns trigger
+ */
+function findTriggerByMessageType (messagetype)
+{
+    for (let i = 0; i < triggersandactions.triggers.length; i++)
+    {
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return triggersandactions.triggers[i];
+    }
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname +
+        ".findTriggerByMessageType", "failed to find trigger", messagetype);
+}
+// ===========================================================================
+//                           FUNCTION: sendTrigger
+// ===========================================================================
+/**
+ * Sends the given trigger or action out on our channel if to is ""
+ * or sends to the extension as an extension message if to specifies extension name
+ * @param {object} data 
+ */
+function sendTrigger (data)
+{
+    sr_api.sendMessage(localConfig.server_socket,
+        sr_api.ServerPacket(
+            'ChannelData',
+            localConfig.extensionname,
+            sr_api.ExtensionPacket(
+                data.messagetype,
+                localConfig.extensionname,
+                data,
+                localConfig.channel,
+                ''),
+            localConfig.channel,
+            ''
+        )
+    );
+}
+// ============================================================================
 //                           EXPORTS:
 // ============================================================================
-export { start };
+export { start, triggersandactions };
