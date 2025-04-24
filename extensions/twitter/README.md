@@ -13,48 +13,24 @@ This was the only way I could find to autoupdate the triggers and actions lists
 Contents
 
 - [Twitter](#twitter)
-  - [Outgoing channel : "TWITTER\_CHANNEL"](#outgoing-channel--twitter_channel)
-  - [Authorization fields](#authorization-fields)
-    - [Field 1](#field-1)
-    - [Field 2](#field-2)
-    - [Field 3](#field-3)
-    - [Field 4](#field-4)
   - [Current features](#current-features)
+  - [Credentials](#credentials)
   - [Sending messages](#sending-messages)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "TWITTER_CHANNEL"
-
-## Authorization fields
-
-### Field 1
-
-- Name: twitterAPIkey
-- Value: API key
-
-### Field 2
-
-- Name: twitterAPISecret
-- Value: API key secret
-
-### Field 3
-
-- Name: twitterAccessToken
-- Value: Access Token
-
-### Field 4
-
-- Name: TwitterAccessTokenSecret
-- Value: Access Token Secret
 
 ## Current features
 
-Curently the twitter extension only allows posting of messages to twitter. It will be upgraded at some point to receive messages and send them out on the channel when I get time to do it.
+Currently the twitter extension only allows posting of messages to twitter. It will be upgraded at some point to receive messages etc when I get round to updating it or if someone requests it.
+
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
 
 ## Sending messages
 
-Send an extension message of type "PostTweet" to the "twitter" extension with the data field containing the message to be posted.
+Send an extension an action of type "PostTweet" with the relevant data from the autopilot page
 
 ## Triggers/Actions
 
@@ -62,7 +38,7 @@ Send an extension message of type "PostTweet" to the "twitter" extension with th
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
 ### Triggers
 

@@ -12,12 +12,8 @@ This was the only way I could find to autoupdate the triggers and actions lists
 Contents
 
 - [OBS](#obs)
-- [Setup](#setup)
-  - [Outgoing channel : "OBS\_CHANNEL"](#outgoing-channel--obs_channel)
-  - [Authorization fields](#authorization-fields)
-    - [Field 1](#field-1)
-    - [Field 2](#field-2)
-    - [Field 3](#field-3)
+- [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
@@ -26,30 +22,15 @@ Contents
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
-# Setup
-
-## Outgoing channel : "OBS_CHANNEL"
-
-## Authorization fields
-
-#### Field 1
-
-- Name: "obshost"
-- Value: hostname (ie localhost)
-
-#### Field 2
-
-- Name: "obsport"
-- Port to use
-
-#### Field 3
-
-- Name: "obspass"
-- Value: password
+# About
 
 Provides connection to OBS for information and control.
+
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
 
 ## Triggers/Actions
 

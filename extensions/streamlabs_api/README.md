@@ -7,39 +7,39 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
- # Streamlabs API
+# Streamlabs API
+
 Contents
+
 - [Streamlabs API](#streamlabs-api)
   - [Outgoing channel : "STREAMLABS\_ALERT"](#outgoing-channel--streamlabs_alert)
-  - [Authorization fields](#authorization-fields)
-      - [Field 1](#field-1)
 - [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
+
 ## Outgoing channel : "STREAMLABS_ALERT"
-## Authorization fields
-#### Field 1
-- Name: "SL_SOCKET_TOKEN"
-- Value: Socket token
 
 These can be found on your streamlabs.com dashboard at Account > settings > Api settings"
+
 # About
+
 This extension connects to the streamlabs API to retrieve live alert data so that other extensions can consume it (ie overlays, sharing alerts on discord, twitter etc)
 
 Note: You can also use this api for other streaming platoforms. ie youtube streaming.
 
-The following features are provided
-- creates a "STREAMLABS_ALERT" channel to send out streamlabs messages
-- Provides an SettingsWidgetSmall so that the adminpage can turn on or off the messages
-- Messages sent are of the following format
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
 
 ## Triggers/Actions
 
 
+
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
 ### Triggers
 
@@ -55,6 +55,7 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 | StreamlabsTwitchBitsAlert | trigger_TwitchBitsReceived | Someone Donated bits on Twitch |
 | StreamlabsTwitchRaidAlert | trigger_TwitchRaidReceived | Someone Raided your stream on Twitch |
 | StreamlabsTwitchCharityDonationAlert | trigger_TwitchCharityDonationReceived | Someone donated to charity on your Twitch stream |
+| StreamlabsCharityDonationAlert | trigger_CharityDonationReceived | Someone donated to charity on your StreamLabs Charity |
 | StreamlabsTwitchSubMysteryAlert | trigger_TwitchSubMysteryGiftReceived | Someone gifted some subs on your Twitch stream |
 | StreamlabsYouTubeSubscriptionAlert | trigger_YouTubeSubscriptionReceived | Someone Subscribed on YouTube |
 | StreamlabsYouTubeMemberAlert | trigger_YouTubeMemberReceived | A Member joined on YouTube |
@@ -62,7 +63,9 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 | StreamlabsDataDump | trigger_StreamlabsDataDump | Stream labs data dump, ie subs/month, top10 donators etc etc |
 | StreamlabsDataDumpUnderlying | trigger_StreamlabsDataDumpUnderlying | Stream labs Underlying data dump, ie subs/month, top10 donators etc etc |
 
+
 ### Actions
 
 | name | trigger | description |
 | --- | --- | --- |
+
