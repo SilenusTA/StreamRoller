@@ -377,7 +377,7 @@ function onDataCenterMessage (server_packet)
             else
             {
                 // check if we have turned on the extension
-                if (server_packet.multistreamEnabled == "on" && server_packet.multistreamEnabled == "off")
+                if (serverConfig.multistreamEnabled == "off" && server_packet.data.multistreamEnabled == "on")
                     ffmpegChanged = true;
                 serverConfig = structuredClone(server_packet.data);
                 SaveConfigToServer();
