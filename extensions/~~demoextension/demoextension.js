@@ -50,20 +50,10 @@ import sr_api from "../../backend/data_center/public/streamroller-message-api.cj
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// we use this to count how many attempts have been made to connect to a channel
-// we should have a counter for each channel we wish to join.
-let connectionAttempts =
-    [{ "STREAMLABS_ALERT_ConnectionAttempts": 0 }]
-
-
 
 const localConfig = {
-    // settings for how we connect to the backend server
-    // normally localhost unless running the extension remotely
-    // what we want to call our channel so that others can see the data we post
-    OUR_CHANNEL: "DEMOEXT_CHANNEL",
-    // this must match the folder and file name of the extension
-    EXTENSION_NAME: "demoextension",
+    // Temporary settings that don't get saved over restarts
+
     // logging tag used so we can easily work out what part of the system the 
     // console log data is from
     SYSTEM_LOGGING_TAG: "[EXTENSION]",
@@ -71,8 +61,10 @@ const localConfig = {
     // this socket is used to send data for others to use and receive
     // data for you to use in your extension
     DataCenterSocket: null,
-    // how many times will we attempt to register for a channel if it hasn't been created yet
-    MAX_CONNECTION_ATTEMPTS: 5
+    //Timeout for how often we send heartbeat messages
+    heartBeatTimeout: 5000,
+    // heartbeat handle to hold the heartbeat timer
+    heartBeatHandle: null,
 };
 
 // serverConfig is how we store our data that is needed to persist
@@ -82,14 +74,14 @@ const default_serverConfig = {
     // version number. when updated the first run will force an overwrite of config data
     __version__: "0.2",
     // add our name so we can tell if we receive this localConfig from the server
-    extensionname: localConfig.EXTENSION_NAME,
+    extensionname: "demoextension",
     // the channel name this extension will use for sending/receiving data.
     // this is also used in the settings widget small code
-    channel: localConfig.OUR_CHANNEL,
+    channel: "DEMOEXT_CHANNEL",
     // these are fields we will use in our bit of the admin page code (the modal)
     // good to store them so that we can keep the page up to date when 
     // we send it back
-    demovar1: "on",  // example of a checkbox. "on" or "off"
+    demoExtensionEnabled: "off",  // example of a checkbox. "on" or "off"
     demotext1: "demo text", // example of a text field
 
     demoextension_restore_defaults: "off"
@@ -106,15 +98,22 @@ const triggersandactions =
     description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
     version: "0.2",
     channel: serverConfig.channel,
-    // these are messages we can sendout that other extensions might want to use to trigger an action
+    // these are messages we can send out that other extensions might want to use to trigger an action
     triggers:
         [
             {
                 name: "demoextensionSomethingHappened",
+                name_UIDescription: "tooltip",
                 displaytitle: "Somthing happened",
+                displaytitle_UIDescription: "tooltip",
                 description: "The Demo extension did something that you might like to know about",
+                description_UIDescription: "tooltip",
                 messagetype: "trigger_DemoextensionSomethingHappened",
-                parameters: { message: "" }
+                messagetype_UIDescription: "tooltip",
+                parameters: {
+                    message: "",
+                    message_UIDescription: "tooltip",
+                }
             }
         ],
     // these are messages we can receive to perform an action
@@ -122,10 +121,14 @@ const triggersandactions =
         [
             {
                 name: "demoextensionDoSomething",
+                name_UIDescription: "tooltip",
                 displaytitle: "Do your Stuff",
+                displaytitle_UIDescription: "tooltip",
                 description: "A request for the demo extension to do something useful",
+                description_UIDescription: "tooltip",
                 messagetype: "action_DemoextensionDoStuff",
-                parameters: { message: "" }
+                messagetype_UIDescription: "tooltip",
+                parameters: { message: "", message_UIDescription: "tooltip" }
             }
 
         ],
@@ -133,16 +136,19 @@ const triggersandactions =
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
-// Description: Starts the extension
-// Parameters: none
-// ----------------------------- notes ----------------------------------------
-// this funcion is required by the backend to start the extensions.
-// creates the connection to the data server and registers our message handlers
-// ============================================================================
+/**
+ * Starts the extension
+ * @param {string} app 
+ * @param {string} host 
+ * @param {string} port 
+ * @param {number} heartbeat 
+ */
 function initialise (app, host, port, heartbeat)
 {
     try
     {
+        // store the heartbeat timeout value
+        localConfig.heartBeatTimeout = heartbeat;
         // start the socket connection by using the extensionhelper setupConnection function. we give it our callbaks to 
         // use to process messages 
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
@@ -150,12 +156,12 @@ function initialise (app, host, port, heartbeat)
     } catch (err)
     {
         // using the logger module to log message to the console. message generally take the format of
-        // message nomrally take the form of 
+        // message normally take the form of 
         // "[<SYSTEM LOCATION>]<EXTENSIONNAME><FILE><FUNCTION><MESSAGES ...>
         // i.e.
         // log("[EXTENSION]demoextension.initialise","Something happened"
         // there are log,info,warn and err functions to use
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
     }
 }
 
@@ -169,7 +175,7 @@ function initialise (app, host, port, heartbeat)
 function onDataCenterDisconnect (reason)
 {
     // do something here when disconnects happens if you want to handle them
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterDisconnect", reason);
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterDisconnect", reason);
 }
 // ============================================================================
 //                           FUNCTION: onDataCenterConnect
@@ -190,7 +196,7 @@ function onDataCenterConnect (socket)
 {
     // log a message for debugging purposes. Once you have your extension up and running
     // please delete any spurious messages like this to save on the spam in the log window
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
+    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
 
     // Request our config from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -198,7 +204,7 @@ function onDataCenterConnect (socket)
 
     // Create a channel for messages to be sent out on
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, localConfig.OUR_CHANNEL)
+        sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
     );
 
     // register here for any channels you want to listen to. this example is going to listen on the 
@@ -207,8 +213,11 @@ function onDataCenterConnect (socket)
     // this can happen if during startup you faster than the extension that creates this channel and it
     // doesn't exist yet.
     sr_api.sendMessage(localConfig.DataCenterSocket,
-        sr_api.ServerPacket("JoinChannel", localConfig.EXTENSION_NAME, "STREAMLABS_ALERT")
+        sr_api.ServerPacket("JoinChannel", serverConfig.extensionname, "STREAMLABS_ALERT")
     );
+
+    //start our heartbeat messages
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 
 }
 // ============================================================================
@@ -225,32 +234,52 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    //logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "message received ", server_packet);
-
     // if we have requested our stored data we will receive a 'ConfigFile' type of packet
     if (server_packet.type === "ConfigFile")
     {
-        // check if there is any data in this packet. This could be empty if it is our first run or we have never 
-        // saved any config data before. 
-        // if it has data we need to update our serverConfig varable.
-        // if it is empty we will use our current default and send it to the server 
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.data && server_packet.data.extensionname
+            && server_packet.data.extensionname === serverConfig.extensionname)
         {
-            // check for updates to the version. if the version has changed we need to 
-            // load the defaults instead.
-            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            let connectionChanged
+            let configSubVersions = 0;
+            let defaultSubVersions = default_serverConfig.__version__.split('.');
+            // should only be hit on very first run when there is no saved data file
+            if (!server_packet.data.__version__)
             {
                 serverConfig = structuredClone(default_serverConfig);
-                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+                SaveConfigToServer();
+            }
+            // split the version numbers as we can merge and save user settings for minor changes
+            configSubVersions = server_packet.data.__version__.split('.')
+
+            if (configSubVersions[0] != defaultSubVersions[0])
+            {
+                serverConfig = structuredClone(default_serverConfig);
+                console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                SaveConfigToServer();
+                connectionChanged = true;
+            }
+            else if (configSubVersions[1] != defaultSubVersions[1])
+            {
+                serverConfig = { ...default_serverConfig, ...server_packet.data };
+                serverConfig.__version__ = default_serverConfig.__version__;
+                console.log(serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__);
+                SaveConfigToServer();
+                connectionChanged = true;
             }
             else
+            {
+                // check if we have turned on the extension
+                if (serverConfig.demoExtensionEnabled == "on" && !server_packet.data.demoExtensionEnabled)
+                    connectionChanged = true;
                 serverConfig = structuredClone(server_packet.data);
+                SaveConfigToServer();
+            }
 
-            // send the config back to the server. This is only need if the server config
-            // and our raw congig elements differ sending back is quick and not done often
-            // so lets just be lazy and send it back
-            SaveConfigToServer();
-
+            if (connectionChanged)
+                //check for reconnection required, ie extension turned on/off etc
+                SendSettingsWidgetSmall();
+            //SendSettingsWidgetLarge();
         }
     }
     // This is a message from an extension. the content format will be described by the extension
@@ -285,17 +314,17 @@ function onDataCenterMessage (server_packet)
                 }
                 else
                 {
-                    // This data has come from the html modal for sumit action (user clicked submit on the page)
+                    // This data has come from the html modal for submit action (user clicked submit on the page)
                     // It will only contain items we have set in our modal html file we sent above
                     // lets reset our config checkbox settings (modal will omit ones not checked so 
-                    // they wont get changed below if the user has deselcted them so we do it here and 
+                    // they wont get changed below if the user has deselected them so we do it here and 
                     // set them back on as we loop through the data if they are there)
-                    serverConfig.demovar1 = "off";
+                    serverConfig.demoExtensionEnabled = "off";
 
                     // set our config values to the ones in message
                     // note this for loop requires the modal html code names to match what we want in the config variable
                     // means we can just assign them here without having to work out what the config name is 
-                    // for the given name in the modal html (note: only if we have a flat stucture in our config)
+                    // for the given name in the modal html (note: only if we have a flat structure in our config)
                     for (const [key, value] of Object.entries(extension_packet.data))
                         serverConfig[key] = value;
 
@@ -306,7 +335,7 @@ function onDataCenterMessage (server_packet)
                 SaveConfigToServer();
                 // the SendSettingsWidgetSmall function will update pages that have our settings widget on it
                 // ideally it should only be sent if our settings have changed but we just send it here as it is low
-                // bandwidth overally
+                // bandwidth overall
                 SendSettingsWidgetSmall("");
             }
         }
@@ -333,7 +362,7 @@ function onDataCenterMessage (server_packet)
             console.log("action_DemoextensionDoStuff called with", extension_packet.data)
         }
         else
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
 
     }
     // looks like a channel we requested to join isn't available. Maybe the extension hasn't started up yet so lets just set a timer
@@ -341,16 +370,16 @@ function onDataCenterMessage (server_packet)
     else if (server_packet.type === "UnknownChannel")
     {
         // check if we have failed too many times to connect (maybe the service wasn't started)
-        if (server_packet.data == "STREAMLABS_ALERT" && connectionAttempts[0].STREAMLABS_ALERT_ConnectionAttempts++ < localConfig.MAX_CONNECTION_ATTEMPTS)
+        if (server_packet.data == "STREAMLABS_ALERT")
         {
-            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Channel " + server_packet.data + " doesn't exist, scheduling rejoin");
             // channel might not exist yet, extension might still be starting up so lets rescehuled the join attempt
             setTimeout(() =>
             {
                 // resent the register command to see if the extension is up and running yet
                 sr_api.sendMessage(localConfig.DataCenterSocket,
                     sr_api.ServerPacket(
-                        "JoinChannel", localConfig.EXTENSION_NAME, server_packet.data
+                        "JoinChannel", serverConfig.extensionname, server_packet.data
                     ));
             }, 5000);
         }
@@ -369,30 +398,18 @@ function onDataCenterMessage (server_packet)
         else
         {
             // might want to log message to see if we are not handling something we should be
-            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received message from unhandled channel ", server_packet.dest_channel);
         }
     }
     else if (server_packet.type === "InvalidMessage")
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage",
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage",
             "InvalidMessage ", server_packet.data.error, server_packet);
     }
     else if (server_packet.type === "LoggingLevel")
     {
         logger.setLoggingLevel(server_packet.data)
     }
-    else if (server_packet.type === "ChannelJoined"
-        || server_packet.type === "ChannelCreated"
-        || server_packet.type === "ChannelLeft"
-    )
-    {
-
-        // just a blank handler for items we are not using to avoid message from the catchall
-    }
-    // ------------------------------------------------ unknown message type received -----------------------------------------------
-    else
-        logger.warn(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
-            ".onDataCenterMessage", "Unhandled message type", server_packet.type);
 }
 
 // ============================================================================
@@ -410,8 +427,8 @@ function onDataCenterMessage (server_packet)
 function process_stream_alert (server_packet)
 {
     // for this type of message we need to know the format of the data packet. 
-    //and do something usefull with it 
-    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".process_stream_alert", "empty function");
+    //and do something useful with it 
+    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".process_stream_alert", "empty function");
 
 }
 // ===========================================================================
@@ -436,13 +453,13 @@ function SendSettingsWidgetSmall (toextension)
     fs.readFile(__dirname + '/demoextensionsettingswidgetsmall.html', function (err, filedata)
     {
         if (err)
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME +
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                 ".SendSettingsWidgetSmall", "failed to load modal", err);
         //throw err;
         else
         {
             //get the file as a string
-            let modalstring = filedata.toString();
+            let modalString = filedata.toString();
             // now is the time to set any data we want in the form. ie what checkboxes should be
             // set to match our current serverConfig settings etc
             // this works as our config names are the same as the names in the modal form
@@ -458,25 +475,25 @@ function SendSettingsWidgetSmall (toextension)
 
                 // checkboxes
                 if (value === "on")
-                    modalstring = modalstring.replace(key + "checked", "checked");
+                    modalString = modalString.replace(key + "checked", "checked");
                 // replace text strings
                 else if (typeof (value) == "string")
-                    modalstring = modalstring.replace(key + "text", value);
+                    modalString = modalString.replace(key + "text", value);
             }
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage", // this type of message is just forwarded on to the extension
-                    localConfig.EXTENSION_NAME,
+                    serverConfig.extensionname,
                     sr_api.ExtensionPacket(
                         "SettingsWidgetSmallCode", // message type
-                        localConfig.EXTENSION_NAME, //our name
-                        modalstring,// data
-                        "",
+                        serverConfig.extensionname, //our name
+                        modalString,// data
+                        serverConfig.channel,
                         toextension,
-                        localConfig.OUR_CHANNEL
+
                     ),
-                    "",
+                    serverConfig.channel,
                     toextension // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
@@ -493,12 +510,56 @@ function SaveConfigToServer ()
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
         ("SaveConfig",
-            localConfig.EXTENSION_NAME,
+            serverConfig.extensionname,
             serverConfig))
+}
+// ============================================================================
+//                           FUNCTION: heartBeat
+// ============================================================================
+/**
+ * Provides a heartbeat message to inform other extensions of our status
+ */
+function heartBeatCallback ()
+{
+    // we can send a color for things like the liveportal page to use to show on the icon.
+    let color = "red";
+    // local variable to determine if we are in an intermediate state.
+    // ie extension turned on but can't connect to a service etc
+    // for teh demo we just leave it false so this extension should have an orange icon next to it in liveportal
+    let connected = false;
+
+    // determine the color we wish to show for our status
+    if (serverConfig.demoExtensionEnabled === "on")
+    {
+        connected = false;
+        if (!connected)
+            color = "orange"
+        else
+            color = "green"
+    }
+    else
+        color = "red"
+
+    // send the status message. These should be short but you can add extra data if you wish to provide status for other extension (ie obs bitrate, connection quality etc). if more than a couple of items it is recommended to setup a status message timer to send them out separately
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ChannelData",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "HeartBeat",
+                serverConfig.extensionname,
+                {
+                    connected: connected,
+                    color: color
+                },
+                serverConfig.channel),
+            serverConfig.channel
+        ),
+    );
+    localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
 //                                  EXPORTS
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
-export { initialise };
+export { initialise, triggersandactions };
 
