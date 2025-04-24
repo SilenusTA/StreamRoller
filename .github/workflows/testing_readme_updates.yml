@@ -3,9 +3,9 @@ name: Test readme auto update and upload
 run-name: ${{ github.actor }} Test readme auto update and upload
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "ci*.*.*"
+#  push:
+#    tags:
+#      - "ci*.*.*"
 env:
   VERSION_TAG: ${{ github.ref_name }}
   #VERSION_TAG: ci1.1.1
