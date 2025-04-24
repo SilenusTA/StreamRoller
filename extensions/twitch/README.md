@@ -8,22 +8,29 @@ to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
 # Twitch
-## Outgoing channel : TWITCH
+
 - [Twitch](#twitch)
-  - [Outgoing channel : TWITCH](#outgoing-channel--twitch)
 - [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
+
 # About
+
 This extension provides triggers/actions for twitch to allow things like changing of title/category to banning users ect
+
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
 
 ## Triggers/Actions
 
 
+
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
 ### Triggers
 
@@ -90,6 +97,8 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 | VodClip | trigger_TwitchVodClip | A twitch vod clip |
 | UserDetails | trigger_TwitchUserDetails | Twitch User Data |
 | GameCategories | trigger_TwitchGameCategories | Updated list of games |
+| RaidingChannel | trigger_TwitchRaidChannel | We are Raiding a channel |
+
 
 ### Actions
 
@@ -130,4 +139,5 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 | GetClipsForGame | action_TwitchGetClipsForGame | Get clips for a game |
 | TwitchGameCategories | action_GetTwitchGameCategories | Get the list of games |
 | TwitchGetStats | action_GetTwitchStats | Return will be a set of triggers for current game etc |
+| TwitchRaid | action_TwitchRaidChannel | Raids the username specified |
 

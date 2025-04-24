@@ -7,23 +7,32 @@ if found it will attempt to load hte file and use the exported 'triggersandactio
 to create the tables shown in the parsed README.md files
 This was the only way I could find to autoupdate the triggers and actions lists
  -->
-# StreamerSonglist
+# StreamerSongList
+
 Contents
-- [StreamerSonglist](#streamersonglist)
-  - [Outgoing channel : "STREAMERSONGLIST\_CHANNEL"](#outgoing-channel--streamersonglist_channel)
-  - [Description](#description)
+
+- [StreamerSongList](#streamersonglist)
+  - [About](#about)
+  - [Credentials](#credentials)
   - [Triggers/Actions](#triggersactions)
     - [Triggers](#triggers)
     - [Actions](#actions)
-## Outgoing channel : "STREAMERSONGLIST_CHANNEL"
-## Description
-Handles song request queues from the [StreamerSonglist](http://streamersonglist.com/) website. Shows queue, add/remove/played new songs etc
+
+## About
+
+Handles song request queues from the [StreamerSongList](http://StreamerSongList.com/) website. Shows queue, add/remove/played new songs etc
+
+## Credentials
+
+Follow the steps on the the StreamRoller main settings page for the extension
+
 ## Triggers/Actions
+
 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
 ### Triggers
 
@@ -32,9 +41,11 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
 | SSLSongAddedToQueue | trigger_SongAddedToQueue | Song was added to queue |
 | SSLCurrentSongChanged | trigger_CurrentSongChange | Current song changed |
 
+
 ### Actions
 
 | name | trigger | description |
 | --- | --- | --- |
 | SSLAddSongToQueue | action_AddSongToQueue | Add a song to the queue |
 | SSLPlaySong | action_MarkSongAsPlayed | Mark a song as played |
+

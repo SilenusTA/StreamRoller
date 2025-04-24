@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,283)
+### Current count (5,286)
 
-```Triggers: 3,709 / Actions: 1,574```
+```Triggers: 3,711 / Actions: 1,575```
 
 Contents
 
@@ -36,7 +36,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*## Extensions
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*## Extensions
 
 ## autopilot
 
@@ -5274,6 +5274,7 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*## Extensions
 | StreamlabsTwitchBitsAlert | trigger_TwitchBitsReceived | Someone Donated bits on Twitch |
 | StreamlabsTwitchRaidAlert | trigger_TwitchRaidReceived | Someone Raided your stream on Twitch |
 | StreamlabsTwitchCharityDonationAlert | trigger_TwitchCharityDonationReceived | Someone donated to charity on your Twitch stream |
+| StreamlabsCharityDonationAlert | trigger_CharityDonationReceived | Someone donated to charity on your StreamLabs Charity |
 | StreamlabsTwitchSubMysteryAlert | trigger_TwitchSubMysteryGiftReceived | Someone gifted some subs on your Twitch stream |
 | StreamlabsYouTubeSubscriptionAlert | trigger_YouTubeSubscriptionReceived | Someone Subscribed on YouTube |
 | StreamlabsYouTubeMemberAlert | trigger_YouTubeMemberReceived | A Member joined on YouTube |
@@ -5382,6 +5383,7 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*## Extensions
 | VodClip | trigger_TwitchVodClip | A twitch vod clip |
 | UserDetails | trigger_TwitchUserDetails | Twitch User Data |
 | GameCategories | trigger_TwitchGameCategories | Updated list of games |
+| RaidingChannel | trigger_TwitchRaidChannel | We are Raiding a channel |
 ### Actions
 
 | name | trigger | description |
@@ -5421,6 +5423,7 @@ Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*## Extensions
 | GetClipsForGame | action_TwitchGetClipsForGame | Get clips for a game |
 | TwitchGameCategories | action_GetTwitchGameCategories | Get the list of games |
 | TwitchGetStats | action_GetTwitchStats | Return will be a set of triggers for current game etc |
+| TwitchRaid | action_TwitchRaidChannel | Raids the username specified |
 ## twitchchat
 
 ### Triggers

@@ -52,7 +52,7 @@ Timers provide a great way to give more control over the system. You can set a t
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 12 Apr 2025 14:26:16 GMT*
+Table last updated: *Thu, 24 Apr 2025 00:00:56 GMT*
 
 ### Triggers
 
