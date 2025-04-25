@@ -1895,12 +1895,19 @@ function onDataCenterMessage (server_packet)
             // -----------------------------------------------------------------------------------
             else if (extension_packet.type === "action_TwitchBan")
             {
-                if (serverConfig.twitchenabled == "on")
+                try
                 {
-                    if (extension_packet.data.user != "")
-                        banUser(extension_packet.data.user, extension_packet.data.reason)
-                    else
-                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to ban a user with no username provided");
+                    if (serverConfig.twitchenabled == "on")
+                    {
+                        if (extension_packet.data.user != "")
+                            banUser(extension_packet.data.user, extension_packet.data.reason)
+                        else
+                            logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to ban a user with no username provided");
+                    }
+                }
+                catch (err)
+                {
+                    console.log("action_TwitchBan", err)
                 }
             }
             // -----------------------------------------------------------------------------------
@@ -1908,12 +1915,19 @@ function onDataCenterMessage (server_packet)
             // -----------------------------------------------------------------------------------
             else if (extension_packet.type === "action_TwitchUnban")
             {
-                if (serverConfig.twitchenabled == "on")
+                try
                 {
-                    if (extension_packet.data.user != "")
-                        unbanUser(extension_packet.data.user, extension_packet.data.reason)
-                    else
-                        logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unban user with no username provided");
+                    if (serverConfig.twitchenabled == "on")
+                    {
+                        if (extension_packet.data.user != "")
+                            unbanUser(extension_packet.data.user, extension_packet.data.reason)
+                        else
+                            logger.err(serverConfig.extensionname + ".onDataCenterMessage", "Attempt to unban user with no username provided");
+                    }
+                }
+                catch (err)
+                {
+                    console.log("action_TwitchBan", err)
                 }
             }
             // -----------------------------------------------------------------------------------

@@ -922,7 +922,7 @@
             // -------------------------------------------------------------------------------------------------
             //                           TWITCH_CHAT
             // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "TWITCH_CHAT")
+            else if (server_packet.dest_channel == "TWITCH_CHAT" || server_packet.dest_channel == "TWITCH")
             {
                 if (extension_packet.type === "ChatMessage")
                 {
@@ -2698,9 +2698,9 @@
             //console.log("received chatdata.data['message-type']", chatdata.data["message-type"], chatdata.message)
             // Message we have currently handled, use this to develope handling of new messages yet to be seen
             // hard to test all messages as we can't generate them
-            var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected", "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "System", "raided", "notice", "usernotice", "viewermilestone", "redeem"]
+            var messages_handled = ["chat", "action", "resub", "primepaidupgrade", "submysterygift", "join", "connecting", "logon", "connected", "twitchchat_extension", "disconnected", "reconnect", "sub", "resub", "messagedeleted", "timeout", "ban", "unban", "System", "raided", "unraid", "notice", "usernotice", "viewermilestone", "redeem"]
             var sub_messages = ["sub", "resub", "primepaidupgrade", "submysterygift"];
-            var modactions = ["messagedeleted", "timeout", "ban", "notice"]
+            var modactions = ["messagedeleted", "timeout", "ban", "unban", "notice", "raid", "unraid"]
 
             if (!messages_handled.includes(chatdata.data["message-type"]) && chatdata.data["display-name"] != "System" && chatdata.data["display-name"].indexOf("(localpost)") == -1)
                 console.log("parseTwitchChatMessage() not handling these messages yet, still work in progress", chatdata.data)

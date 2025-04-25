@@ -1261,8 +1261,31 @@ function onChannelUnban (data)
         let trigger = findTriggerByMessageType("trigger_TwitchUserUnBanned");
         trigger.parameters.streamer = data.broadcasterDisplayName;
         trigger.parameters.moderator = data.moderatorDisplayName;
-        trigger.parameters.user = data.userDisplayName;
+        trigger.parameters.user = data.userName;
         sendTrigger(trigger)
+        // this message goes out as if it was a normal chat message(so liveportal etc can display in on screen)
+        // we have to do this here as the normal twitch chat extension doesn't receive unban messages
+        sr_api.sendMessage(parentLocalConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ChannelData",
+                parentServerConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "ChatMessage",
+                    parentServerConfig.extensionname,
+                    {
+                        channel: data.broadcasterDisplayName,
+                        message: "User " + data.userDisplayName + " was unbanned",
+                        dateStamp: Date.now(),
+                        data: {
+                            'display-name': data.userDisplayName,
+                            'username': data.userName,
+                            "message-type": "unban"
+                        }
+                    },
+                    parentServerConfig.channel
+                ),
+                parentServerConfig.channel
+            ));
     }
     catch (err)
     {
