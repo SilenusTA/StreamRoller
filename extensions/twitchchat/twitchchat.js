@@ -187,7 +187,7 @@ const triggersandactions =
         }, {
             name: "TwitchChatBanReceived",
             displaytitle: "Chat Ban",
-            description: "A chat users was banned",
+            description: "A chat user was banned",
             messagetype: "trigger_ChatBanReceived",
             parameters: {
                 type: "trigger_ChatBanReceived",
@@ -1817,6 +1817,7 @@ function chatLogin (account)
 
                 postChatTrigger(triggertosend)
             });
+            // note there is on unban message
             localConfig.twitchClient[account].connection.on("chat", (channel, userstate, message, self) => 
             {
                 file_log("chat", userstate, message);
@@ -2342,7 +2343,7 @@ function file_log (type, tags, message)
 {
     try
     {
-        if (serverConfig.DEBUG_LOG_DATA_TO_FILE)
+        if (serverConfig.DEBUG_LOG_DATA_TO_FILE == "on")
         {
             var newfile = false;
             var filename = "__noname__";
