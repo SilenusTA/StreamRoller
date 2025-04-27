@@ -32,7 +32,7 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*
+Table last updated: *Sun, 27 Apr 2025 16:28:18 GMT*
 
 ### Triggers
 
@@ -40,7 +40,7 @@ Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*
 | --- | --- | --- |
 | TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
 | TwitchChatActionReceived | trigger_ChatActionReceived | A chat action was received (a /me message) |
-| TwitchChatBanReceived | trigger_ChatBanReceived | A chat users was banned |
+| TwitchChatBanReceived | trigger_ChatBanReceived | A chat user was banned |
 | TwitchChatMessageDeletedReceived | trigger_ChatMessageDeleted | A chat message was deleted  |
 | TwitchChatPrimePaidUpgradeReceived | trigger_ChatPrimePaidUpgrade | A user paid to upgrade their prime sub  |
 | TwitchChatRaidReceived | trigger_ChatRaid | Another streamer raided you |
