@@ -192,7 +192,7 @@ function createReadmeFiles ()
                         `\n\nTriggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.\n\nTable last updated: *${datestamp}*
                         \n\n<div style='color:red'>
                         > Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.
-                        To see the full list of Triggers/Actions available checkout (README_All_TRIGGERS.md)[https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md]</div>`
+                        To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS.md](https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md)</div>`
                     );
                     partFile = partFile.replace("ReplaceTAGForTriggers", header + "\n" + hdivider + "\n" + allExtTriggers)
                     partFile = partFile.replace("ReplaceTAGForActions", header + "\n" + hdivider + "\n" + allExtActions)
