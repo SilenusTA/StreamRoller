@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,286)
+### Current count (5,287)
 
-```Triggers: 3,711 / Actions: 1,575```
+```Triggers: 3,712 / Actions: 1,575```
 
 Contents
 
@@ -16,6 +16,7 @@ Contents
     - [autopilot](#autopilot)
     - [chatbot](#chatbot)
     - [discordchat](#discordchat)
+    - [kick](#kick)
     - [msfs2020](#msfs2020)
     - [multistream](#multistream)
     - [obs](#obs)
@@ -36,7 +37,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*## Extensions
+Table last updated: *Sun, 27 Apr 2025 16:42:43 GMT*## Extensions
 
 ## autopilot
 
@@ -80,6 +81,17 @@ Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*## Extensions
 | name | trigger | description |
 | --- | --- | --- |
 | DiscordPostMessage | action_DiscordPostMessage | Post a message to a discord channel |
+## kick
+
+### Triggers
+
+| name | trigger | description |
+| --- | --- | --- |
+| Kick message received | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+### Actions
+
+| name | trigger | description |
+| --- | --- | --- |
 ## msfs2020
 
 ### Triggers
@@ -5432,7 +5444,7 @@ Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*## Extensions
 | --- | --- | --- |
 | TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
 | TwitchChatActionReceived | trigger_ChatActionReceived | A chat action was received (a /me message) |
-| TwitchChatBanReceived | trigger_ChatBanReceived | A chat users was banned |
+| TwitchChatBanReceived | trigger_ChatBanReceived | A chat user was banned |
 | TwitchChatMessageDeletedReceived | trigger_ChatMessageDeleted | A chat message was deleted  |
 | TwitchChatPrimePaidUpgradeReceived | trigger_ChatPrimePaidUpgrade | A user paid to upgrade their prime sub  |
 | TwitchChatRaidReceived | trigger_ChatRaid | Another streamer raided you |

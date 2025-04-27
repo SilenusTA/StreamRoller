@@ -27,7 +27,7 @@ Allows the setting, monitoring and triggering actions from timers. This gives te
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Thu, 24 Apr 2025 00:04:28 GMT*
+Table last updated: *Sun, 27 Apr 2025 16:42:43 GMT*
 
 ### Triggers
 
