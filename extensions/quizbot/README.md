@@ -29,7 +29,7 @@ An example set of triggers for twitch chat can be seen in the image below.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 27 Apr 2025 16:28:18 GMT*
+Table last updated: *Sun, 27 Apr 2025 16:42:43 GMT*
 
 ### Triggers
 
