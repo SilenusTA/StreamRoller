@@ -282,12 +282,12 @@ async function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
-            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
                 SendSettingsWidgetSmall(extension_packet.from);
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
         {
-            if (extension_packet.data.extensionname === serverConfig.extensionname)
+            if (extension_packet.to === serverConfig.extensionname)
                 SendSettingsWidgetLarge();
         }
         else if (extension_packet.type === "SettingsWidgetSmallData")
