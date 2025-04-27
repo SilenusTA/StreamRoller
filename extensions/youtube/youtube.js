@@ -843,7 +843,7 @@ function sendChatMessageTrigger (ytmessage, time)
     {
         let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
         let safemessage = sanitiseHTML(ytmessage.message);
-        safemessage = ytmessage.message.text.replace(/[^\x00-\x7F]/g, "");
+        safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
         triggerToSend.parameters = {
 
             textMessage: ytmessage.author.name + ": " + ytmessage.message.text,

@@ -682,7 +682,7 @@ function startYoutubeMonitor ()
                                 safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
                                 // remove unicode
                                 safemessage = safemessage.replace(/[\u{0080}-\u{FFFF}]/gu, "");
-                                triggerToSend.parameters.safemessage = message.sender + ":" + message.message;
+                                triggerToSend.parameters.safemessage = message.sender + ":" + safemessage;
                                 postTrigger(triggerToSend);
 
                             });

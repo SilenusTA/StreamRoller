@@ -1093,7 +1093,7 @@ function SaveCredentialsToServer (name, value)
 //                           FUNCTION: DeleteCredentialsOnServer
 // ============================================================================
 /**
- * Sends Credentials to the server
+ * Deletes the Credentials on the server
  */
 function DeleteCredentialsOnServer ()
 {
