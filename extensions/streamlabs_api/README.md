@@ -39,7 +39,12 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 27 Apr 2025 16:42:43 GMT*
+Table last updated: *Sun, 27 Apr 2025 16:46:47 GMT*
+                        
+
+<div style='color:red'>
+                        > Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.
+                        To see the full list of Triggers/Actions available checkout (README_All_TRIGGERS.md)[https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md]</div>
 
 ### Triggers
 
