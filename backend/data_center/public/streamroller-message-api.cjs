@@ -175,7 +175,44 @@ function setupConnection (onMessage, onConnect, onDisconnect, host, port)
         throw "streamroller-message-api failed to create connection";
     }
 }
+// ============================================================================
+//                           FUNCTION: sendLogMessage
+// ============================================================================
+/**
+ * 
+ * @param {socket} connection 
+ * @param {string} ref 
+ * @param {string} extensionName 
+ * @param {string} logMessage 
+ * @param {string} logToConsole 
+ * @param {string} logToFile true or false
+ */
+function sendLogMessage (connection, ref, extensionName, logMessage, logToConsole = "true", logToFile = "false")
+{
+    let action = {
 
+        triggerActionRef: ref,
+        extension: extensionName,
+        logMessage: logMessage,
+        logToFile: logToFile.toString(),
+        logToConsole: logToConsole.toString(),
+    }
+
+    connection.emit("message",
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            extensionName,
+            sr_api.ExtensionPacket(
+                "action_LogError",
+                extensionName,
+                action,
+                "",
+                "datacenter",
+            ),
+            "",
+            "datacenter"
+        ));
+}
 // ============================================================================
 //                                  EXPORTS
 // ============================================================================
@@ -194,6 +231,7 @@ let sr_api = {
     ServerPacket,
     setupConnection,
     sendMessage,
+    sendLogMessage,
     __api_version__
 };
 if (typeof module !== "undefined" && module.exports)
@@ -218,6 +256,7 @@ else
         ServerPacket,
         setupConnection,
         sendMessage,
+        sendLogMessage,
         __api_version__
     };
 }

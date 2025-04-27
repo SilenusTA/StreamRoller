@@ -218,6 +218,25 @@ const triggersandactions =
                 parameters:
                 {
                 }
+            },
+            {
+                name: "Log error",
+                displaytitle: "Log an error to the server log",
+                description: "Logs an error either to the console or server log depending on settings",
+                messagetype: "action_LogError",
+                parameters:
+                {
+                    triggerActionRef: "EmptyRef",
+                    triggerActionRef_UIDescription: "Ref will be added to the log",
+                    extension: "",
+                    extension_UIDescription: "extensions raising the error",
+                    logMessage: "",
+                    logMessage_UIDescription: "Message to log",
+                    logToFile: "false",
+                    logToFile_UIDescription: "Should we add this to the file log",
+                    logToConsole: "false",
+                    logToConsole_UIDescription: "Should we add this to the console.",
+                }
             }
         ],
 }
@@ -487,6 +506,12 @@ function onMessage (socket, server_packet)
             else if (extension_packet.type === "action_StopServer")
             {
                 process.exit()
+            }
+            else if (extension_packet.type === "action_LogError")
+            {
+                let data = extension_packet.data;
+                if (extension_packet.data.logToConsole == "true")
+                    console.log(`<action_LogError: ${data.extension}: ${data.triggerActionRef}> ${data.logMessage}`)
             }
             else if (extension_packet.type === "action_RebootServer")
             {
