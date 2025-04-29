@@ -1185,6 +1185,7 @@ function sendAccountNames (toExtension = "")
     // TBD create list from available names otherwise we need to supply both names
     let usrlist = {}
     let countusers = 0
+
     for (const id in localConfig.usernames)
     {
         usrlist[id] = localConfig.usernames[id]["name"];
@@ -1646,7 +1647,7 @@ function joinChatChannel (account)
                 {
                     localConfig.twitchClient[account].state.connected = false;
                     localConfig.twitchClient[account].channelState[serverConfig.streamername] = "connect failed";
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "stream join threw an error", err, " sheduling reconnect");
+                    //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".joinChatChannel", "chat join threw an error", err, " sheduling reconnect");
                     process_chat_data(chatmessagename, chatmessagetags, "Failed to join " + serverConfig.streamername)
                     setTimeout(() =>
                     {
@@ -1680,48 +1681,70 @@ function connectToTwitch (account)
  */
 async function connectToTwitchSheduler (account)
 {
-    if (localConfig.twitchClient[account].connection)
+    try
     {
-        await localConfig.twitchClient[account].connection.removeAllListeners();
-        await localConfig.twitchClient[account].connection.disconnect();
-    }
-    // check for readonly user account login (bot doesn't get logged in if no credentials set)
-    if (account === "user" && serverConfig.enabletwitchchat == "on" &&
-        (typeof localConfig.usernames.user["name"] === "undefined" || typeof localConfig.usernames.user["oauth"] === "undefined" ||
-            localConfig.usernames.user["name"] === "" || localConfig.usernames.user["oauth"] === ""))
-    {
-        logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Connecting readonly")
-        localConfig.twitchClient[account].connection = new tmi.Client({ channels: [serverConfig.streamername] });
-        localConfig.twitchClient[account].connection.connect()
-            .then(() =>
-            {
-                localConfig.twitchClient[account].state.readonly = true;
-                localConfig.twitchClient[account].state.connected = true;
-                logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Twitch chat client connected readonly");
-                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Chat connected readonly: " + serverConfig.streamername);
-            }
-            )
-            .catch((err) => 
-            {
-                localConfig.twitchClient[account].state.readonly = true;
-                localConfig.twitchClient[account].state.connected = false;
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
-                process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Failed to join " + serverConfig.streamername)
-            }
-            )
-
-        localConfig.twitchClient[account].connection.on("message", (channel, tags, message, self) =>
+        if (localConfig.twitchClient[account].connection)
         {
-            process_chat_data(channel, tags, message);
-        });
+            try
+            {
+                await localConfig.twitchClient[account].connection.removeAllListeners();
+            }
+            catch (err)
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler.removeAllListeners", "Error", err)
+            }
+            try
+            {
+                await localConfig.twitchClient[account].connection.disconnect();
+            }
+            catch (err)
+            {
+                // most likely we are already disconnecting or joining so ignore these errors for now.
+                //logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler.disconnect", "Error", err)
+            }
+        }
+        // check for readonly user account login (bot doesn't get logged in if no credentials set)
+        if (account === "user" && serverConfig.enabletwitchchat == "on" &&
+            (typeof localConfig.usernames.user["name"] === "undefined" || typeof localConfig.usernames.user["oauth"] === "undefined" ||
+                localConfig.usernames.user["name"] === "" || localConfig.usernames.user["oauth"] === ""))
+        {
+            logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Connecting readonly")
+            localConfig.twitchClient[account].connection = new tmi.Client({ channels: [serverConfig.streamername] });
+            localConfig.twitchClient[account].connection.connect()
+                .then(() =>
+                {
+                    localConfig.twitchClient[account].state.readonly = true;
+                    localConfig.twitchClient[account].state.connected = true;
+                    logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Twitch chat client connected readonly");
+                    process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Chat connected readonly: " + serverConfig.streamername);
+                }
+                )
+                .catch((err) => 
+                {
+                    localConfig.twitchClient[account].state.readonly = true;
+                    localConfig.twitchClient[account].state.connected = false;
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Twitch chat connect failed for " + account + ":" + localConfig.usernames[account]["name"], err)
+                    process_chat_data("#" + serverConfig.streamername, { "display-name": "System", "emotes": "", "message-type": "twitchchat_extension" }, "Failed to join " + serverConfig.streamername)
+                }
+                )
+
+            localConfig.twitchClient[account].connection.on("message", (channel, tags, message, self) =>
+            {
+                process_chat_data(channel, tags, message);
+            });
+        }
+        else if (serverConfig.enabletwitchchat == "on")
+        // connect with Oauth connection
+        {
+            chatLogin(account);
+        }
+        else
+            logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "twitch chat currently set to off")
     }
-    else if (serverConfig.enabletwitchchat == "on")
-    // connect with Oauth connection
+    catch (err)
     {
-        chatLogin(account);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "Error", err)
     }
-    else
-        logger.info(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".connectToTwitchSheduler", "twitch chat currently set to off")
 }
 // ============================================================================
 //                           FUNCTION: chatLogin
@@ -2464,6 +2487,7 @@ function heartBeatCallback ()
                 {
                     color: colour,
                     connected: connected,
+                    channel: serverConfig.streamername,
                     stats
                 },
                 serverConfig.channel),

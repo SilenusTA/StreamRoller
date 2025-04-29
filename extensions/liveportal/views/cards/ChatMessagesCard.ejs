@@ -20,54 +20,28 @@
       along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
 -->
-<div id="ChatMessagesCard"
-    class="card bg-light text-dark">
+<div id="ChatMessagesCard" class="card bg-light text-dark">
     <!--img class=" card-img-top" src="..." alt="Card image cap" -->
     <div class="card-body px-1">
         <!-- div class="col-md-10 border bg-light px-1">Chat</div -->
-        <div id="ChatMessagesCardTitle"
-            class="card-title">Chat: (Please select a stream to join)</div>
+        <div id="ChatMessagesCardTitle" class="card-title">Chat: (Please select a stream to join)</div>
         <!-- div class="" -->
         <!-- style="overflow-y: auto;  max-height: 300px" -->
         <!-- p id="ChatMessagesCardText1" class="card-text d-flex" style="overflow-y: auto;  max-height: 200px" -->
         <form>
-            <div id="ChatMessagesCardText"
-                style="overflow-y: scroll; max-height: 35vh;"></div>
-            <div id="ChatMessageGroup"
-                class="input-group">
-                <select class="selectpicker btn-secondary"
-                    data-style="btn-danger"
-                    data-width="150px"
-                    title="box one"
-                    id="ChatMessageDropdown"
-                    value="5"
-                    name="ChatMessageDropdown"
-                    required=""
-                    onchange='userDropdownChanged( this )'>
-                    <option value="bot"
-                        selected>Select a user to chat as</option>
+            <div id="ChatMessagesCardText" style="overflow-y: scroll; max-height: 35vh;"></div>
+            <div id="ChatMessageGroup" class="input-group">
+                <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="User to chat as" id="ChatMessageDropdown"
+                    name="ChatMessageDropdown" required="" value="bot" onchange='userDropdownChanged( this )'>
+                    <option value="bot" selected>Select a user to chat as</option>
                 </select>
-                <select class="selectpicker btn-secondary"
-                    data-style="btn-danger"
-                    data-width="150px"
-                    title="box one"
-                    id="ChatPlatformMessageDropdown"
-                    value="5"
-                    name="ChatPlatformMessageDropdown"
-                    required=""
-                    onchange='platformDropdownChanged( this )'>
-                    <option value="None"
-                        selected>Connecting ...</option>
+                <select class="selectpicker btn-secondary" data-style="btn-danger" data-width="150px" title="box one" id="ChatPlatformMessageDropdown" value="5"
+                    name="ChatPlatformMessageDropdown" required="" onchange='platformDropdownChanged( this )'>
+                    <option value="None" selected>Connecting ...</option>
                 </select>
-                <input id="chatInputText"
-                    class="form-control card bg-light text-dark border-secondary"
-                    type="text"
-                    placeholder="Say something smart to chat">
+                <input id="chatInputText" class="form-control card bg-light text-dark border-secondary" type="text" placeholder="Say something smart to chat">
                 <span class="input-group-btn">
-                    <button class="btn btn-secondary"
-                        for="chatInputText"
-                        type="submit"
-                        onclick="chatInput(event)">Chat:
+                    <button class="btn btn-secondary" for="chatInputText" type="submit" onclick="chatInput(event)">Chat:
                     </button>
                 </span>
             </div>

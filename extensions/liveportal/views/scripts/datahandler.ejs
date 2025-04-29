@@ -31,7 +31,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.4",
+        __version__: "0.5",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -71,7 +71,8 @@
         merch: "off",
         bits: "off",
         donations: "off",
-        chatAsUsername: "user",
+        currentChatAsUsername: "user",
+        currentchatAsPlatform: "twitch",
 
         // ##### settings widget variables
         // TTS settings
@@ -116,10 +117,14 @@
         obslive: false, // set on a heartbeat from obs messages
         deadmansHeartBeatTimeout: "6000", // sets extensions to off if heartbeat stops
         deadmansHeartBeatHandle: null,
+        // object usernamelist.platform[]=username
+        usernamelist: {}, // needs to be an object as code below loops this and we need a named array
         twitchchatchannel: "",
         twitchplatformavailable: false,
-        youtubeplatformavailable: false,
         youtubechatchannel: "",
+        youtubeplatformavailable: false,
+        kickchatchannel: "",
+        kickplatformavailable: false,
         chatMessageBuffer: [],
         modMessageBuffer: [],
         mouseDown: 0,
@@ -396,6 +401,8 @@
             {
                 RequestRandomFact();
                 RequestTwitchAccountNames("twitchchat");
+                RequestTwitchAccountNames("youtube");
+                RequestTwitchAccountNames("kick");
                 setTimeout(() =>
                 {
                     RequestChatBuffer("twitchchat");
@@ -728,11 +735,16 @@
                     )
             }
             // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Twitch chat buffer
+            //                   RECEIVED UserAccountNames
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "UserAccountNames")
             {
-                processTwitchAccountNames(extension_packet)
+                if (extension_packet.from === "twitchchat")
+                    processTwitchAccountNames(extension_packet)
+                else if (extension_packet.from === "youtube")
+                    processYoutubeAccountNames(extension_packet)
+                else if (extension_packet.from === "kick")
+                    processKickAccountNames(extension_packet)
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED Discord chat buffer
@@ -745,7 +757,6 @@
                     .then(() =>
                         // display the chat buffer
                         displayChatMessages()
-
                     )
             }
             // -------------------------------------------------------------------------------------------------
@@ -878,7 +889,13 @@
                         if (localConfig.twitchplatformavailable != connected)
                         {
                             localConfig.twitchplatformavailable = connected
-                            updateChatPlatforms();
+                            updateChatPlatformsList();
+                        }
+                        //check if chat channel has changed
+                        if (localConfig.twitchchatchannel != extension_packet.data.channel)
+                        {
+                            localConfig.twitchchatchannel = extension_packet.data.channel;
+                            setChatMessagesCardTitle();
                         }
                     }
                     else if (extension_packet.from == "youtube" || extension_packet.from == "youtubeapi")
@@ -887,9 +904,26 @@
                         if (extension_packet.data.connected != localConfig.youtubeplatformavailable)
                         {
                             localConfig.youtubeplatformavailable = extension_packet.data.connected
-                            updateChatPlatforms();
+                            updateChatPlatformsList();
                         }
 
+                    }
+                    else if (extension_packet.from == "kick")
+                    {
+                        // check if we are able to use the platform
+                        let connected = extension_packet.data.connected
+                        // check if we need to do an update or not
+                        if (localConfig.kickplatformavailable != connected)
+                        {
+                            localConfig.kickplatformavailable = connected
+                            updateChatPlatformsList();
+                        }
+                        //check if chat channel has changed
+                        if (localConfig.kickchatchannel != extension_packet.data.streamerName)
+                        {
+                            localConfig.kickchatchannel = extension_packet.data.streamerName;
+                            setChatMessagesCardTitle();
+                        }
                     }
                 }
                 else
@@ -1080,8 +1114,10 @@
                         OBSLiveCheck();
                     }
                 }
+                /*
                 else
                     console.log(".onDataCenterMessage", "OBS_CHANNEL message ignored ", extension_packet.type, " from ", extension_packet.from);
+                */
             }
             else if (server_packet.dest_channel == "STREAMERSONGLIST_CHANNEL")
             {
@@ -1155,10 +1191,6 @@
             )
             {
                 //just igore these messages
-            }
-            else
-            {
-                console.log(".onDataCenterMessage", "Channel Data " + server_packet.dest_channel + " not handled");
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -2451,41 +2483,93 @@
     // ============================================================================
     async function processTwitchAccountNames (extension_packet)
     {
-        // as we have received a bufer lets delete the old data
-        let newchatternames = ""
-        let twitchnamedropdowns = ""
-        let optioncode = ""
-        let selectedname = false;
-        let newChatAsUsername = ""
-        localConfig.usernamelist = extension_packet.data;
-        // if we have a username set in our config and that is in the current list of names lets use that one
-        let ele = document.getElementById("ChatMessageDropdown");
-        ele.innerHTML = ""
-        for (const [profile_id, value] of Object.entries(extension_packet.data))
+        localConfig.usernamelist["twitch"] = extension_packet.data;
+        if (serverConfig.currentChatAsUsername == "")
         {
-            if (serverConfig.chatAsUsername && serverConfig.chatAsUsername == value
-                || serverConfig.chatAsUsername && serverConfig.chatAsUsername == profile_id
-            )
-            {
-                selectedname = true;
-                optioncode += "<option value='" + profile_id + "' selected>" + value + "</option>"
-            }
-            //hide the current profile on the modal box
-            else
-            {
-                newChatAsUsername = value;
-                optioncode += "<option value='" + profile_id + "'>" + value + "</option>"
-            }
+            if (localConfig.usernamelist["twitch"].user && localConfig.usernamelist["twitch"].user != "")
+                serverConfig.currentChatAsUsername = "user"
+            else if (localConfig.usernamelist["twitch"].bot && localConfig.usernamelist["twitch"].bot != "")
+                serverConfig.currentChatAsUsername = "bot"
         }
-        // if our current selection isn't in the list then set it to the first one received if any
-        if (!selectedname && newChatAsUsername != "")
-            serverConfig.chatAsUsername = newChatAsUsername
-        ele.innerHTML = optioncode
+        updateUsernameDropdownList();
     }
     // ============================================================================
-    //                           FUNCTION: updateChatPlatforms
+    //                           FUNCTION: processYouTubeAccountNames
     // ============================================================================
-    function updateChatPlatforms ()
+    async function processYouTubeAccountNames (extension_packet)
+    {
+        localConfig.usernamelist["youtube"] = extension_packet.data;
+        if (serverConfig.currentChatAsUsername == "")
+        {
+            if (localConfig.usernamelist["youtube"].user && localConfig.usernamelist["youtube"].user != "")
+                serverConfig.currentChatAsUsername = "user"
+            else if (localConfig.usernamelist["youtube"].bot && localConfig.usernamelist["youtube"].bot != "")
+                serverConfig.currentChatAsUsername = "bot"
+        }
+        updateUsernameDropdownList();
+    }
+    // ============================================================================
+    //                           FUNCTION: processKickAccountNames
+    // ============================================================================
+    async function processKickAccountNames (extension_packet)
+    {
+        localConfig.usernamelist["kick"] = extension_packet.data;
+        if (serverConfig.currentChatAsUsername == "")
+        {
+            if (localConfig.usernamelist["kick"].user && localConfig.usernamelist["kick"].user != "")
+                serverConfig.currentChatAsUsername = "user"
+            else if (localConfig.usernamelist["kick"].bot && localConfig.usernamelist["kick"].bot != "")
+                serverConfig.currentChatAsUsername = "bot"
+        }
+        updateUsernameDropdownList();
+    }
+    // ============================================================================
+    //                           FUNCTION: updateUsernameDropdownList
+    // ============================================================================
+    function updateUsernameDropdownList ()
+    {
+        let haveUserName = false;
+        let haveBotName = false;
+        let twitchnamedropdowns = ""
+        let optioncode = ""
+        let selectedname = "user";
+        let ele = document.getElementById("ChatMessageDropdown");
+        ele.innerHTML = ""
+        //localConfig.usernamelist
+        for (const [platform, names] of Object.entries(localConfig.usernamelist))
+        {
+            if ("user" in names)
+                haveUserName = true;
+            if ("bot" in names)
+                haveBotName = true;
+            // platform = twitch,kick etc
+
+            if (haveUserName && serverConfig.currentChatAsUsername == "user")
+            {
+                optioncode += "<option value='user' selected>user</option>"
+            }
+            else
+            {
+                optioncode += "<option value='user'>user</option>"
+            }
+            if (haveBotName && serverConfig.currentChatAsUsername == "bot")
+            {
+                selectedname = "bot"
+                optioncode += "<option value='bot' selected>bot</option>"
+            }
+            else
+            {
+                optioncode += "<option value='bot'>bot</option>"
+            }
+            ele.innerHTML = optioncode;
+            ele.valuse = selectedname;
+        };
+    }
+
+    // ============================================================================
+    //                           FUNCTION: updateChatPlatformsList
+    // ============================================================================
+    function updateChatPlatformsList ()
     {
         let twitchnamedropdowns = ""
         let value = "none"
@@ -2513,15 +2597,15 @@
             else
                 optioncode += "<option value='youtube_platform_select'>YouTube</option>"
         }
-        if (localConfig.twitchplatformavailable && localConfig.youtubeplatformavailable)
+        if (localConfig.kickplatformavailable)
         {
             if (firstitem)
             {
                 firstitem = false
-                optioncode += "<option value='youtubetwitch_platform_select' selected>YouTube and Twitch</option>"
+                optioncode += "<option value='kick_platform_select' selected>Kick</option>"
             }
             else
-                optioncode += "<option value='youtubetwitch_platform_select'>YouTube and Twitch</option>"
+                optioncode += "<option value='kick_platform_select'>Kick</option>"
         }
         ele.innerHTML = optioncode
     }
@@ -2531,10 +2615,13 @@
     function userDropdownChanged (e)
     {
         // if we have changed users update the config to remember it
-        if (serverConfig.chatAsUsername != localConfig.usernamelist[e.value])
+        let platform = ""
+        let selection = e.value
+
+        if (serverConfig.currentChatAsUsername == "" || serverConfig.currentChatAsUsername != selection)
         {
-            document.getElementById("ChatMessageDropdown").value = e.value
-            serverConfig.chatAsUsername = localConfig.usernamelist[e.value];
+            document.getElementById("ChatMessageDropdown").value = selection
+            serverConfig.currentChatAsUsername = selection;
             SaveConfigToServer()
         }
     }
@@ -2639,21 +2726,32 @@
     // ============================================================================
     function platformDropdownChanged (e)
     {
+        let newPlatform = ""
         let iconsize = "style='width: 20px';"
         if (e.innerHTML == "twitch")
         {
             document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/twitch_icon.png' " + iconsize + ">";
-            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'twitch');
+            document.getElementById("ChatPlatformMessageDropdown").value = "twitch_platform_select";
+            newPlatform = "twitch";
         }
         else if (e.innerHTML == "youtube")
         {
             document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/youtube_icon.png' " + iconsize + ">";
-            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'youtube');
+            document.getElementById("ChatPlatformMessageDropdown").value = "youtube_platform_select";
+            newPlatform = "youtube";
         }
-        else if (e.innerHTML == "youtube and twitch")
+        else if (e.innerHTML == "kick")
         {
-            document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/twitch_icon.png' " + iconsize + "><img src='/liveportal/images/youtube_icon.png' " + iconsize + ">";
-            document.getElementById("ChatPlatformMessageDropdown").setAttribute('data-value', 'youtubetwitch');
+            document.getElementById("chatplatformselect").innerHTML = "<img src='/liveportal/images/kick_icon.png' " + iconsize + "><img src='/liveportal/images/kick_icon.png' " + iconsize + ">";
+            document.getElementById("ChatPlatformMessageDropdown").value = "kick_platform_select";
+            newPlatform = "kick";
+        }
+
+        if (serverConfig.currentChatAsPlatform != newPlatform)
+        {
+            document.getElementById("chatplatformselect").value = newPlatform
+            serverConfig.currentChatAsPlatform = newPlatform
+            SaveConfigToServer()
         }
     }
     // ============================================================================
@@ -2785,9 +2883,9 @@
             sanitiser.innerText = chatdata.message
             var message = sanitiser.innerHTML
             // set the window title (might have updated)
-            localConfig.twitchchatchannel = chatdata.channel
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + localConfig.twitchchatchannel + ":" + localConfig.youtubechatchannel
-
+            if (chatdata.channel)
+                localConfig.twitchchatchannel = chatdata.channel
+            setChatMessagesCardTitle()
             //  #################################
             //   check for an action messge '/me'
             //  ################################
@@ -2809,10 +2907,10 @@
             //  ##################################
             //  check if someone @'d us
             //  ##################################
-            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            if (localConfig.usernamelist && localConfig.usernamelist.twitch && localConfig.usernamelist.twitch.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.twitch.user.toLowerCase()) > -1)
             {
-                var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
-                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
+                var myregex = new RegExp("@" + localConfig.usernamelist.twitch.user, "gi")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.twitch.user + "</span>")
             }
 
             //  ##################################
@@ -2839,7 +2937,7 @@
             // ########################################## 
             //  Our Bot messages (ie chatbot)
             // ##########################################
-            else if (localConfig.usernamelist && chatdata.data['display-name'] === localConfig.usernamelist.bot && chatdata.data["message-type"] == "chat")
+            else if (localConfig.usernamelist && localConfig.usernamelist.twitch && (chatdata.data['display-name'] === localConfig.usernamelist.twitch.bot || chatdata.data['display-name'] === "bot" || chatdata.data['display-name'] === "System") && chatdata.data["message-type"] == "chat")
             {
                 icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
@@ -2976,17 +3074,19 @@
             var sanitiser = document.createElement('div');
             sanitiser.innerText = chatdata.message
             var message = sanitiser.innerHTML
+
             // set the window title (might have updated)
-            localConfig.youtubechatchannel = chatdata.channel
-            document.getElementById("ChatMessagesCardTitle").innerHTML = "Chat: " + localConfig.twitchchatchannel + ":" + localConfig.youtubechatchannel
+            if (chatdata.channel)
+                localConfig.youtubechatchannel = chatdata.channel
+            setChatMessagesCardTitle()
 
             //  ##################################
             //  check if someone @'d us
             //  ##################################
-            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            if (localConfig.usernamelist && localConfig.usernamelist.youtube && localConfig.usernamelist.youtube.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.youtube.user.toLowerCase()) > -1)
             {
-                var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
-                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
+                var myregex = new RegExp("@" + localConfig.usernamelist.youtube.user, "gi")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.youtube.user + "</span>")
             }
 
             //  ##################################
@@ -2996,7 +3096,7 @@
             // ########################################## 
             //  Our Bot messages (ie chatbot)
             // ##########################################
-            if (localConfig.usernamelist && chatdata.sender === localConfig.usernamelist.bot)
+            if (localConfig.usernamelist && localConfig.usernamelist.youtube && (chatdata.sender === localConfig.usernamelist.youtube.bot || chatdata.sender === "bot" || chatdata.sender === "System"))
             {
                 icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
@@ -3068,13 +3168,18 @@
             sanitiser.innerText = chatdata.message
             var message = sanitiser.innerHTML
 
+            // set the window title (might have updated)
+            if (chatdata.channel)
+                localConfig.kickchatchannel = chatdata.channel
+            setChatMessagesCardTitle()
+
             //  ##################################
             //  check if someone @'d us
             //  ##################################
-            if (localConfig.usernamelist && localConfig.usernamelist.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.user.toLowerCase()) > -1)
+            if (localConfig.usernamelist && localConfig.usernamelist.kick && localConfig.usernamelist.kick.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.kick.user.toLowerCase()) > -1)
             {
-                var myregex = new RegExp("@" + localConfig.usernamelist.user, "gi")
-                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.user + "</span>")
+                var myregex = new RegExp("@" + localConfig.usernamelist.kick.user, "gi")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.kick.user + "</span>")
             }
 
             //  ##################################
@@ -3084,7 +3189,7 @@
             // ########################################## 
             //  Our Bot messages (ie chatbot)
             // ##########################################
-            if (localConfig.usernamelist && chatdata.sender === localConfig.usernamelist.bot)
+            if (localConfig.usernamelist && localConfig.usernamelist.kick && (chatdata.sender === localConfig.usernamelist.kick.bot || chatdata.sender === "bot" || chatdata.sender === "System"))
             {
                 icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
@@ -3114,6 +3219,21 @@
         {
             console.log("ERROR:parseKickChatMessage:", error)
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: setChatMessagesCardTitle
+    // ============================================================================
+    function setChatMessagesCardTitle ()
+    {
+        var titleChannels = "";
+        if (localConfig.twitchplatformavailable)
+            titleChannels += " <img style='width: 20px;' alt='Twitch' title='Twitch' src='/liveportal/images/twitch_icon.png'>" + localConfig.twitchchatchannel
+        if (localConfig.youtubeplatformavailable)
+            titleChannels += " <img style='width: 20px;' alt='YouTube' title='YouTube' src='/liveportal/images/youtube_icon.png'>" + localConfig.youtubechatchannel
+        if (localConfig.kickplatformavailable)
+            titleChannels += " <img style='width: 20px;' alt='Kick' title='Kick' src='/liveportal/images/kick_icon.png'>" + localConfig.kickchatchannel
+
+        document.getElementById("ChatMessagesCardTitle").innerHTML = titleChannels;
     }
     // ============================================================================
     //                           FUNCTION: parseTwitchRedemption
@@ -3772,7 +3892,6 @@
                 "twitchchat"
             ));
     }
-
     // ============================================================================
     //                           FUNCTION: postMessageToYoutube
     // ============================================================================
@@ -3814,6 +3933,28 @@
                 ));
     }
     // ============================================================================
+    //                           FUNCTION: postMessageToKick
+    // ============================================================================
+    function postMessageToKick (msg, account = "bot")
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "action_SendChatMessage",
+                    serverConfig.extensionname,
+                    // need to read accounts from kick ext and give an option to chose who to send the message as
+                    {
+                        account: account,
+                        message: msg,
+                    },
+                    "",
+                    "kick"),
+                "",
+                "kick"
+            ));
+    }
+    // ============================================================================
     //                           FUNCTION: changeDiscordListeningChannel
     // ============================================================================
     function changeDiscordListeningChannel (channel)
@@ -3839,9 +3980,11 @@
         let platform = document.getElementById("ChatPlatformMessageDropdown").value;
         event.preventDefault();
         if (platform.includes("twitch"))
-            postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.chatAsUsername)
+            postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.currentChatAsUsername)
         if (platform.includes("youtube"))
             postMessageToYoutube(document.getElementById("chatInputText").value)
+        if (platform.includes("kick"))
+            postMessageToKick(document.getElementById("chatInputText").value)
 
         document.getElementById("chatInputText").value = ""
     }

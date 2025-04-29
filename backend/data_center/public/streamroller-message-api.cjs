@@ -45,8 +45,8 @@ let __api_version__ = "0.2";
  * @param {string} type Type of message being sent
  * @param {string} from Extension name
  * @param {*} data Data to be sent (optional)
- * @param {string} dest_channel Destination Channel name (optional)
- * @param {string} to Extension to be sent to (optional)
+ * @param {string} dest_channel Destination Channel name (optional) if omitted defaults to broadcasting
+ * @param {string} to Extension to be sent to (optional) if omitted defaults to sending to channel
  * @param {string} ret_channel return channel (optional)
  * @param {string} version Interface version for debugging purposes only(optional)
  * @return {string} A JSON stringified version of the message object
