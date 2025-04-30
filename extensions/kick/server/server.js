@@ -644,7 +644,10 @@ function heartBeatCallback ()
             color = "green"
     }
     else
+    {
+        connected = false;
         color = "red"
+    }
 
     // send the status message. These should be short but you can add extra data if you wish to provide status for other extension (ie obs bitrate, connection quality etc). if more than a couple of items it is recommended to setup a status message timer to send them out separately
     sr_api.sendMessage(localConfig.DataCenterSocket,

@@ -890,6 +890,7 @@
                         {
                             localConfig.twitchplatformavailable = connected
                             updateChatPlatformsList();
+                            setChatMessagesCardTitle();
                         }
                         //check if chat channel has changed
                         if (localConfig.twitchchatchannel != extension_packet.data.channel)
@@ -905,6 +906,7 @@
                         {
                             localConfig.youtubeplatformavailable = extension_packet.data.connected
                             updateChatPlatformsList();
+                            setChatMessagesCardTitle();
                         }
 
                     }
@@ -917,6 +919,7 @@
                         {
                             localConfig.kickplatformavailable = connected
                             updateChatPlatformsList();
+                            setChatMessagesCardTitle();
                         }
                         //check if chat channel has changed
                         if (localConfig.kickchatchannel != extension_packet.data.streamerName)
