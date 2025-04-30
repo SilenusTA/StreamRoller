@@ -77,18 +77,11 @@ function connectChat (channelName, userName, streamerName = "TBD")
         // When connection is established, subscribe to a channel
         if (message.event === 'pusher:connection_established')
         {
-            const socketData = JSON.parse(message.data);
+            //const socketData = JSON.parse(message.data);
             //console.log(`Kick:Socket established with ID: ${socketData.socket_id}`);
 
             // Now subscribe to a channel
-            const subscribeMessage = {
-                event: 'pusher:subscribe',
-                data: {
-                    channel: localConfig.channelName
-                }
-            };
-
-            localConfig.websocket.send(JSON.stringify(subscribeMessage));
+            subscribeToChannel(localConfig.channelName)
         }
         else if (message.event === 'pusher_internal:subscription_succeeded')
         {
@@ -115,6 +108,28 @@ function connectChat (channelName, userName, streamerName = "TBD")
         localConfig.connected = false;
         localConfig.createDummyChatMessageCallback(`Connected closed for ${localConfig.userName} chatroom on Kick`)
     });
+}
+// ============================================================================
+//                           FUNCTION: subscribeToChannel
+// ============================================================================
+function subscribeToChannel (channelName)
+{
+    const subscribeMessage = {
+        event: 'pusher:subscribe',
+        data: {
+            channel: channelName
+        }
+    };
+
+    try
+    {
+        localConfig.websocket.send(JSON.stringify(subscribeMessage));
+    }
+    catch (err)
+    {
+        console.log("Subscribe to channel '", channelName, "' failed, retrying", err)
+        setTimeout(subscribeToChannel(channelName), 1000)
+    }
 }
 // ============================================================================
 //                           FUNCTION: disconnectChat
