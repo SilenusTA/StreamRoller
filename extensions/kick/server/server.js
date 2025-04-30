@@ -631,12 +631,10 @@ function heartBeatCallback ()
 {
     // we can send a color for things like the liveportal page to use to show on the icon.
     let color = "red";
-    // local variable to determine if we are in an intermediate state.
-
-    // ie extension turned on but can't connect to a service etc
-    // for teh demo we just leave it false so this extension should have an orange icon next to it in liveportal
     let connected = localConfig.apiConnected && localConfig.chatConnected;
 
+    // need to fix this for the bots etc, when disabled it stops teh ability to send chat message from live portal
+    connected = true;
     // determine the color we wish to show for our status
     if (serverConfig.kickEnabled === "on")
     {
