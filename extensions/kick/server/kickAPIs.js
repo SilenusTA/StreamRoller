@@ -73,13 +73,25 @@ function checkCredentials (log = false)
     if (Credentials.kickAccessToken == undefined
         || Credentials.kickAccessToken == "")
     {
-        if (log) console.log("Kick: Missing Access token")
+        if (log) console.log("Kick: Missing Streamer Access token")
         returnValue = false;
     }
     if (Credentials.kickRefreshToken == undefined
         || Credentials.kickRefreshToken == "")
     {
-        if (log) console.log("Kick: Missing refresh token")
+        if (log) console.log("Kick: Missing Streamer refresh token")
+        returnValue = false;
+    }
+    if (Credentials.kickBotAccessToken == undefined
+        || Credentials.kickBotAccessToken == "")
+    {
+        if (log) console.log("Kick: Missing Bot Access token")
+        returnValue = false;
+    }
+    if (Credentials.kickBotRefreshToken == undefined
+        || Credentials.kickBotRefreshToken == "")
+    {
+        if (log) console.log("Kick: Missing Bot refresh token")
         returnValue = false;
     }
     return returnValue;
@@ -89,21 +101,28 @@ function checkCredentials (log = false)
 // ============================================================================
 /**
  * 
- * @param {string} clientId 
- * @param {object} Credentials 
- * @returns access token or Error
+ * @param {boolean} forStreamer are we refreshing the streamer or bot token
+ * @returns tokens
  */
-function refreshToken ()
+function refreshToken (forStreamer = true)
 {
-    console.log("############### refreshToken ##################", Credentials)
     return new Promise((resolve, reject) =>
     {
-        const postData = querystring.stringify({
-            refresh_token: Credentials.kickRefreshToken,
-            client_id: Credentials.kickApplicationClientId,
-            client_secret: Credentials.kickApplicationSecret,
-            grant_type: 'refresh_token'
-        });
+        let postData = null
+        if (forStreamer)
+            postData = querystring.stringify({
+                refresh_token: Credentials.kickRefreshToken,
+                client_id: Credentials.kickApplicationClientId,
+                client_secret: Credentials.kickApplicationSecret,
+                grant_type: 'refresh_token'
+            });
+        else
+            postData = querystring.stringify({
+                refresh_token: Credentials.kickBotRefreshToken,
+                client_id: Credentials.kickApplicationClientId,
+                client_secret: Credentials.kickApplicationSecret,
+                grant_type: 'refresh_token'
+            });
         const options = {
             hostname: 'id.kick.com',
             path: '/oauth/token',
@@ -126,7 +145,6 @@ function refreshToken ()
                         const parsed = JSON.parse(data);
                         if (parsed.access_token)
                         {
-                            console.log('🔑 New token received!', parsed);
                             resolve(parsed);
                         } else
                         {
@@ -134,7 +152,6 @@ function refreshToken ()
                         }
                     } catch (e)
                     {
-                        console.log("refreshToken: err.type", e.type)
                         reject(new Error('Failed to parse token response'));
                     }
                 } else
@@ -157,8 +174,6 @@ function refreshToken ()
 //                           FUNCTION: getUsersWithToken
 // ============================================================================
 /**
- * only really need the details from the signed in user so no need to pass any user details
- * the api will return the details for the token's user
  * @param {string} token // kick oauth/access token
  * @returns user object
  */
@@ -186,7 +201,6 @@ function getUsersWithToken (token)
             {
                 if (res.statusCode === 401)
                 {
-                    console.log("ERROR: getUsersWithToken: ", res.statusCode)
                     reject({ type: 'unauthorized' });
                 } else
                 {
@@ -214,38 +228,59 @@ function getUsersWithToken (token)
 //                           FUNCTION: getUser
 // ============================================================================
 /**
- * gets the user details for the currently logged in user
+ * gets the user details for either streamer or the bot
+ * @param {boolean} forStreamer 
+ * @returns user object
  */
-async function getUser ()
+async function getUser (forStreamer)
 {
     try
     {
-        if (!checkCredentials())
-            return;
+        checkCredentials()
+        //if (!checkCredentials())
+        //    return;
         try
         {
-            const data = await getUsersWithToken(Credentials.kickAccessToken);
+            let data = null;
+            // check if we are using the streamer or bot account for this request
+            if (forStreamer)
+                data = await getUsersWithToken(Credentials.kickAccessToken);
+            else
+                data = await getUsersWithToken(Credentials.kickBotAccessToken);
             return data;
         } catch (err)
         {
             if (err.type === 'unauthorized')
             {
                 // Token likely expired
-                let tokens = await refreshToken();
-                Credentials.kickAccessToken = tokens.access_token
-                Credentials.kickRefreshToken = tokens.refresh_token
-                callbacks.updateRefreshTokenFn(Credentials)
+                let tokens = null;
+                tokens = await refreshToken(forStreamer);
+                if (forStreamer)
+                {
+                    Credentials.kickAccessToken = tokens.access_token;
+                    Credentials.kickRefreshToken = tokens.refresh_token;
+                }
+                else
+                {
+                    Credentials.kickBotAccessToken = tokens.access_token;
+                    Credentials.kickBotRefreshToken = tokens.refresh_token;
+                }
+                callbacks.updateRefreshTokenFn(Credentials);
                 try
                 {
-                    const data = await getUsersWithToken(Credentials.kickAccessToken);
+                    let data = null;
+                    if (forStreamer)
+                        data = await getUsersWithToken(Credentials.kickAccessToken);
+                    else
+                        data = await getUsersWithToken(Credentials.kickBotAccessToken);
                     return data;
                 } catch (err2)
                 {
-                    console.error('❌ getUser: Still failed after refresh:', err2);
+                    console.log('❌ getUser: Still failed after refresh:', err2);
                 }
             } else
             {
-                console.error('❌getUser: Request failed:', err);
+                console.log('❌getUser: Request failed:', err);
             }
         }
     }
@@ -307,7 +342,7 @@ function getChannelsWithToken (token)
 //                           FUNCTION: getChannel
 // ============================================================================
 /**
- * get the channel data for the currently logged in user
+ * get the channel data for the currently logged in streamer
  */
 async function getChannel ()
 {
@@ -321,7 +356,6 @@ async function getChannel ()
             return data;
         } catch (err)
         {
-            console.log("ERROR: getChannel: Failed will try refresh ", err.type)
             if (err.type === 'unauthorized')
             {
 
@@ -336,11 +370,11 @@ async function getChannel ()
                     return data;
                 } catch (err2)
                 {
-                    console.error('❌ ERROR: getChannel Still failed after refresh:', err2);
+                    console.log('❌ ERROR: getChannel Still failed after refresh:', err2);
                 }
             } else
             {
-                console.error('❌ ERROR: getChannel Request failed:', err);
+                console.log('❌ ERROR: getChannel Request failed:', err);
             }
         }
     }
@@ -354,6 +388,11 @@ async function getChannel ()
 // ============================================================================
 //                           FUNCTION: getLivestreamsWithToken
 // ============================================================================
+/**
+ * 
+ * @param {string} username 
+ * @returns 
+ */
 function getChannelData (username)
 {
     return new Promise((resolve, reject) =>
@@ -456,7 +495,7 @@ function getLivestreamsWithToken (userId)
     });
 }
 // ============================================================================
-//                           FUNCTION: getLivestreamsWithToken
+//                           FUNCTION: getLivestream
 // ============================================================================
 /**
  * 
@@ -472,11 +511,9 @@ async function getLivestream (userId)
         try
         {
             const data = await getLivestreamsWithToken(userId);
-            //console.log('✅ getLivestreamsWithToken: Success:', data);
             return data;
         } catch (err)
         {
-            console.log("ERROR: getLivestreamsWithToken: Failed will try refresh ", err.type)
             if (err.type === 'unauthorized')
             {
 
@@ -488,15 +525,14 @@ async function getLivestream (userId)
                 try
                 {
                     const data = await getLivestreamsWithToken(userId);
-                    //console.log('✅ getLivestreamsWithToken: Success after refresh:', data);
                     return data;
                 } catch (err2)
                 {
-                    console.error('❌ ERROR: getLivestreamsWithToken Still failed after refresh:', err2);
+                    console.log('❌ ERROR: getLivestreamsWithToken Still failed after refresh:', err2);
                 }
             } else
             {
-                console.error('❌ ERROR: getLivestreamsWithToken Request failed:', err);
+                console.log('❌ ERROR: getLivestreamsWithToken Request failed:', err);
             }
         }
     }
@@ -505,4 +541,114 @@ async function getLivestream (userId)
         console.log("ERROR: getLivestreamsWithToken:", err)
     }
 }
-export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData };
+
+// ============================================================================
+//                           FUNCTION: sendChatMessageWithToken
+// ============================================================================
+/**
+ * 
+ * @param {object} messageData {account : "bot|user", message : "message"}
+ * @param {string} token kick access token
+ * @returns promise
+ */
+async function sendChatMessageWithToken (messageData, token)
+{
+    return new Promise((resolve, reject) =>
+    {
+        let postData = JSON.stringify({
+            broadcaster_user_id: Credentials.userId,
+            content: messageData.message,
+            type: messageData.account
+        });
+
+        const options = {
+            hostname: 'api.kick.com',
+            path: '/public/v1/chat',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Content-Length': postData.length
+            },
+        };
+
+        const req = https.request(options, (res) =>
+        {
+            let responseData = '';
+            res.on('data', (chunk) => { responseData += chunk; });
+            res.on('end', () =>
+            {
+                if (res.statusCode === 401)
+                {
+                    reject({ type: 'sendChatMessageWithToken: unauthorized' });
+                }
+                else if (res.statusCode === 200)
+                    resolve("Message Sent ")
+                else
+                    reject({ code: res.statusCode, message: responseData })
+            });
+        });
+
+        req.on('error', (err) =>
+        {
+            reject(err);
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
+// ============================================================================
+//                           FUNCTION: sendChatMessage
+// ============================================================================
+/**
+ * 
+ * @param {object} messageData {account : "bot|user", message : "message"}
+ * @returns response from kick or null
+ */
+async function sendChatMessage (messageData)
+{
+    try
+    {
+        /*
+        if (!checkCredentials(true))
+        {
+            console.log("sendChatMessage Invalid credentials")
+            return null;
+        }*/
+        try
+        {
+            const response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+            return response;
+        } catch (err)
+        {
+            if (err.type === 'unauthorized')
+            {
+                // Token likely expired
+                let tokens = await refreshToken();
+                Credentials.kickAccessToken = tokens.access_token
+                Credentials.kickRefreshToken = tokens.refresh_token
+                callbacks.updateRefreshTokenFn(Credentials)
+                try
+                {
+                    const response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+                    return response;
+                } catch (err2)
+                {
+                    console.log('❌ ERROR: sendChatMessage Still failed after refresh:', err2);
+                    return null;
+                }
+            } else
+            {
+                console.log('❌ ERROR: sendChatMessage Request failed:', err);
+                return null;
+            }
+        }
+    }
+    catch (err)
+    {
+        console.log("ERROR: sendChatMessage:", err)
+        return null;
+    }
+}
+export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData, sendChatMessage };

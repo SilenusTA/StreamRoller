@@ -20,13 +20,38 @@ import * as logger from "../../../backend/data_center/modules/logger.js";
 const localConfig =
 {
     onMessageCallback: null,
+    createDummyChatMessageCallback: null,
+    userName: "",
+    channelName: "",
+    connected: false,
+    websocket: null,
+    connectToChatScheduleHandle: null,
+    connectToChatTimeout: 2000,
 }
-function init (onMessageCallback)
+// ============================================================================
+//                           FUNCTION: connectChat
+// ============================================================================
+/**
+ * initialise the chat system
+ * @param {function} onMessageCallback 
+ */
+function init (onMessageCallback, createDummyChatMessage)
 {
     localConfig.onMessageCallback = onMessageCallback;
+    localConfig.createDummyChatMessageCallback = createDummyChatMessage
 }
-function connectChat (channelname)
+// ============================================================================
+//                           FUNCTION: connectChat
+// ============================================================================
+/**
+ * Start chat
+ * @param {string} channelName 
+ */
+function connectChat (channelName, userName, streamerName = "TBD")
 {
+    localConfig.channelName = channelName;
+    localConfig.userName = userName;
+    localConfig.streamerName = streamerName;
     // Pusher WebSocket URL
     const pusherWsUrl = 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0-rc2&flash=false';
     const commonHeaders = {
@@ -37,19 +62,18 @@ function connectChat (channelname)
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
         'Sec-WebSocket-Extensions': 'permessage-deflate; client_max_window_bits',
     };
-    const ws = new WebSocket(pusherWsUrl, {
+    localConfig.websocket = new WebSocket(pusherWsUrl, {
         headers: { ...commonHeaders }
     });
-
-    ws.on('open', () =>
+    localConfig.websocket.on('open', () =>
     {
         //console.log(`Kick:Connection opened.`);
     });
 
-    ws.on('message', (data) =>
+    localConfig.websocket.on('message', (data) =>
     {
         const message = JSON.parse(data);
-
+        localConfig.connected = true;
         // When connection is established, subscribe to a channel
         if (message.event === 'pusher:connection_established')
         {
@@ -60,33 +84,56 @@ function connectChat (channelname)
             const subscribeMessage = {
                 event: 'pusher:subscribe',
                 data: {
-                    channel: channelname
+                    channel: localConfig.channelName
                 }
             };
 
-            ws.send(JSON.stringify(subscribeMessage));
-            //console.log(`Kick: Sent subscription request to channel: ${channelname}`);
+            localConfig.websocket.send(JSON.stringify(subscribeMessage));
         }
         else if (message.event === 'pusher_internal:subscription_succeeded')
         {
-            console.log(`Kick: successfully connected to ${channelname} chat`)
+            // delay here as on startup the other extension might not be ready to receive yet
+            setTimeout(() =>
+            {
+                localConfig.createDummyChatMessageCallback(`${localConfig.userName} connected to ${localConfig.userName} chatroom on Kick`)
+            }, 5000);
+
         }
         else if (message.event === 'App\\Events\\ChatMessageEvent')
             onChatMessage(message)
         else
-            console.log("Kick: not handling these messages yet", message.event)
-
+            console.log("Kick: not handling these messages yet", message)
     });
 
-    ws.on('error', (error) =>
+    localConfig.websocket.on('error', (error) =>
     {
-        console.log(`Kick: Error`, error);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "Kick.connectChat", "Websocket Error Received:", error);
     });
 
-    ws.on('close', (code, reason) =>
+    localConfig.websocket.on('close', (code, reason) =>
     {
-        console.log(`Kick: Connection closed. Code: ${code}, Reason: ${reason}`);
+        localConfig.connected = false;
+        localConfig.createDummyChatMessageCallback(`Connected closed for ${localConfig.userName} chatroom on Kick`)
     });
+}
+// ============================================================================
+//                           FUNCTION: disconnectChat
+// ============================================================================
+/**
+ * Disconnect socket
+ */
+function disconnectChat ()
+{
+    localConfig.websocket.removeAllListeners();
+    localConfig.websocket.close();
+    localConfig.websocket = null;
+}
+// ============================================================================
+//                           FUNCTION: connected
+// ============================================================================
+function connected ()
+{
+    return localConfig.connected
 }
 // ============================================================================
 //                           FUNCTION: onChatMessage
@@ -99,4 +146,5 @@ function onChatMessage (message)
 {
     localConfig.onMessageCallback(JSON.parse(message.data));
 }
-export { init, connectChat }
+
+export { init, connectChat, disconnectChat, connected }

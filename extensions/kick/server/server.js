@@ -41,6 +41,8 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     setClientSecretFn: null,// callback to set the client secret for the server to use when authorizing
+    chatConnected: false,
+    apiConnected: false
 };
 
 const default_serverConfig = {
@@ -48,7 +50,7 @@ const default_serverConfig = {
     extensionname: "kick",
     channel: "KICK_CHANNEL",
     kickEnabled: "off",
-    demotext1: "demo text",
+    currentCategory: "TBH",
     kick_restore_defaults: "off",
     channelData: null, // only storing this until we can get the official api returning the data. until then we are using a third party API to get the chatroom id so we store it to minimise usage of this api.
 };
@@ -57,7 +59,9 @@ const default_serverCredentials =
 {
     version: "0.1",
     kickApplicationClientId: "",
-    kickApplicationSecret: ""
+    kickApplicationSecret: "",
+    streamerName: "",
+    botName: ""
 };
 let serverCredentials = structuredClone(default_serverCredentials);
 const triggersandactions =
@@ -98,17 +102,16 @@ const triggersandactions =
         ],
     actions:
         [
-            /*{
-                name: "demoextensionDoSomething",
-                name_UIDescription: "tooltip",
-                displaytitle: "Do your Stuff",
-                displaytitle_UIDescription: "tooltip",
-                description: "A request for the demo extension to do something useful",
-                description_UIDescription: "tooltip",
-                messagetype: "action_DemoextensionDoStuff",
-                messagetype_UIDescription: "tooltip",
-                parameters: { message: "",message_UIDescription: "tooltip" }
-            }*/
+            {
+                name: "KickChatSendChatMessage",
+                displaytitle: "Post Kick Message",
+                description: "Post a message to Kick chat (Note user is case sensitive)",
+                messagetype: "action_SendChatMessage",
+                parameters: {
+                    account: "",
+                    message: ""
+                }
+            }
 
         ],
 }
@@ -133,10 +136,11 @@ function start (host, port, nonce, clientId, heartbeat, setClientSecretFn)
 
         // setup callbacks and data for the kick API
         kickAPI.init(updateRefreshToken);
+        // only have the app id at the moment but more will be sent when received
         kickAPI.setCredentials(serverCredentials);
 
         // setup callbacks and data for the kick chat API
-        chatService.init(onChatMessage);
+        chatService.init(onChatMessage, createDummyChatMessage);
 
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
@@ -220,7 +224,7 @@ async function onDataCenterMessage (server_packet)
             else
             {
                 // check if we have turned on the extension
-                if (server_packet.multistreamEnabled == "on" && server_packet.multistreamEnabled == "off")
+                if (serverConfig.kickEnabled == "off" && server_packet.kickEnabled == "on")
                     connectionChanged = true;
                 serverConfig = structuredClone(server_packet.data);
                 SaveConfigToServer();
@@ -250,32 +254,55 @@ async function onDataCenterMessage (server_packet)
                 serverCredentials.kickApplicationClientId,
                 serverCredentials.kickApplicationSecret)
 
-        // update the kickAPI credentials
+        // update the kickAPI credentials for initial call
         kickAPI.setCredentials(serverCredentials);
 
-        // test the api
-        localConfig.streamer = await kickAPI.getUser()
-        // temp fix until the official api returns the chatroom id.
-        // should really do this each time after initial dev is done
-        // TBD PreRelease - remove if statement before release
-        if (serverConfig.channelData == null)
+        // ##################### Streamer setup #############################
+        if (serverCredentials.kickAccessToken)
         {
-            console.log("getting channel id")
-            serverConfig.channelData = await kickAPI.getChannelData(localConfig.streamer.data[0].name)
-            SaveConfigToServer()
+            localConfig.streamer = await kickAPI.getUser(true)
+
+            if (localConfig.streamer && localConfig.streamer.data[0].name)
+            {
+                localConfig.apiConnected = true;
+                serverCredentials.streamerName = localConfig.streamer.data[0].name;
+                serverCredentials.userId = localConfig.streamer.data[0].user_id
+                sendAccountNames();
+                // update the kickAPI credentials 
+                kickAPI.setCredentials(serverCredentials);
+            }
+            if (serverConfig.kickEnabled == "on")
+            {
+                // temp fix until the official api returns the chatroom id.
+                // should really do this each time after initial dev is done
+                // TBD PreRelease - remove if statement before release
+                if (serverConfig.channelData == null)
+                {
+                    serverConfig.channelData = await kickAPI.getChannelData(localConfig.streamer.data[0].name)
+                    SaveConfigToServer()
+                }
+                localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+                localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
+
+                connectToChatScheduler()
+            }
+            localConfig.chatConnected = chatService.connected()
         }
 
-        localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
-        localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
-        //chatService.connectPusher("chatrooms.6734242.v2")
-        chatService.connectChat(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`)
-
-        // dev logging data
-        // TBD PreRelease - remove before release
-        //console.log("############## Data retrieved #############")
-        //console.log("localConfig.kickChannel", JSON.stringify(localConfig.kickChannel, null, 2));
-        //console.log("localConfig.kickLiveStream", JSON.stringify(localConfig.kickLiveStream, null, 2));
-        //console.log("serverConfig.channelData", JSON.stringify(serverConfig.channelData, null, 2));
+        // ##################### Bot setup #############################
+        // bot doesn't need all the setup that the streamer does as we assume both are
+        // working in the same channel
+        if (serverCredentials.kickBotAccessToken)
+        {
+            localConfig.bot = await kickAPI.getUser(false)
+            if (localConfig.bot.data[0].name)
+            {
+                serverCredentials.botName = localConfig.bot.data[0].name
+                sendAccountNames();
+                // update the kickAPI credentials 
+                kickAPI.setCredentials(serverCredentials);
+            }
+        }
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -316,9 +343,11 @@ async function onDataCenterMessage (server_packet)
                     server_packet.from
                 )
             )
+        } else if (extension_packet.type === "action_SendChatMessage")
+        {
+            if (serverConfig.kickEnabled == "on")
+                kickAPI.sendChatMessage(extension_packet.data)
         }
-        else if (extension_packet.type === "action_DemoextensionDoStuff")
-            console.log("action_DemoextensionDoStuff called with", extension_packet.data)
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
     }
@@ -443,8 +472,9 @@ function SendSettingsWidgetLarge (to = "")
  * 
  * @param {object} data // data from user submitted form
  */
-function parseSettingsWidgetSmall (data)
+async function parseSettingsWidgetSmall (data)
 {
+    let enabledStateChangedTo = null
     if (data.kick_restore_defaults == "on")
     {
         serverConfig = structuredClone(default_serverConfig);
@@ -452,13 +482,73 @@ function parseSettingsWidgetSmall (data)
     }
     else
     {
+        if (serverConfig.kickEnabled != data.kickEnabled)
+        {
+            if (serverConfig.kickEnabled == "on")
+                enabledStateChangedTo = "off"
+            else
+                enabledStateChangedTo = "on"
+        }
         serverConfig.kickEnabled = "off";
         for (const [key, value] of Object.entries(data))
             serverConfig[key] = value;
 
+        if (enabledStateChangedTo != null)
+        {
+            if (enabledStateChangedTo == "off")
+                chatService.disconnectChat()
+            else
+                connectToChatScheduler()
+        }
     }
     SaveConfigToServer();
     SendSettingsWidgetSmall("");
+}
+// ============================================================================
+//                           FUNCTION: connectToChatScheduler
+// ============================================================================
+/**
+ * 
+ */
+function connectToChatScheduler ()
+{
+    clearTimeout(localConfig.connectToChatScheduleHandle)
+    localConfig.connectToChatScheduleHandle = setTimeout(() =>
+    {
+        connectToChat()
+    },
+        localConfig.connectToChatTimeout
+    )
+}
+// ============================================================================
+//                           FUNCTION: connectToChat
+// ============================================================================
+/**
+ * 
+ */
+async function connectToChat ()
+{
+    try
+    {
+        // temp fix until the official api returns the chatroom id.
+        // should really do this each time after initial dev is done
+        // TBD PreRelease - remove if statement before release
+        if (serverConfig.channelData == null)
+        {
+            serverConfig.channelData = await kickAPI.getChannelData(localConfig.streamer.data[0].name)
+            SaveConfigToServer()
+        }
+        localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+        localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
+
+        // setup chat connection for the streamer.
+        chatService.connectChat(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`, localConfig.streamer.data[0].name)
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+            ".connectToChat", "Error connecting to chat", err);
+    }
 }
 // ============================================================================
 //                           FUNCTION: parseSettingsWidgetLarge
@@ -545,12 +635,11 @@ function heartBeatCallback ()
 
     // ie extension turned on but can't connect to a service etc
     // for teh demo we just leave it false so this extension should have an orange icon next to it in liveportal
-    let connected = false;
+    let connected = localConfig.apiConnected && localConfig.chatConnected;
 
     // determine the color we wish to show for our status
     if (serverConfig.kickEnabled === "on")
     {
-        connected = true;
         if (!connected)
             color = "orange"
         else
@@ -568,7 +657,9 @@ function heartBeatCallback ()
                 serverConfig.extensionname,
                 {
                     connected: connected,
-                    color: color
+                    color: color,
+                    botName: serverCredentials.botName,
+                    streamerName: serverCredentials.streamerName,
                 },
                 serverConfig.channel),
             serverConfig.channel
@@ -586,7 +677,6 @@ function heartBeatCallback ()
 function updateRefreshToken (token)
 {
     // dev need to check this is working. remove once seen working ok
-    console.log("update refresh token called", token)
     SaveCredentialToServer("kickAccessToken", token.kickAccessToken)
     SaveCredentialToServer("kickRefreshToken", token.kickRefreshToken)
 }
@@ -685,72 +775,49 @@ function sanitiseHTML (string)
 // ============================================================================
 function onChatMessage (message)
 {
-    /* Emote message
-        will need to parse these messages in live portal to insert the relent emotes (broadcaster/mods icons as well)
-        postTrigger {
-        name: 'Kick message received',
-        displaytitle: 'Kick Chat Message',
-        description: 'A chat message was received. textMessage field has name and message combined',
-        messagetype: 'trigger_ChatMessageReceived',
-        parameters: {
-            textMessage: 'OldDepressedGamer: [emote:1730756:emojiCheerful]',
-            safemessage: '[emote:1730756:emojiCheerful]',
-            color: '#DEB2FF',
-            id: '9a...eb021fd',
-            messagetype: 'message',
-            message: '[emote:1730756:emojiCheerful]',
-            timestamp: '2025-04-27T07:01:49+00:00',
-            sender: 'OldDepressedGamer',
-            senderid: 6...95,
-            senderbadges: [ [Object] ]
-        }
-        }
-    */
-
-    /* Text message
-    sending kick message {
-        "id": "9a970...72947eb021fd",
-        "chatroom_id": 6734242,
-        "content": "[emote:1730756:emojiCheerful]",
-        "type": "message",
-        "created_at": "2025-04-27T07:01:49+00:00",
-        "sender": {
-            "id": 688...5,
-            "username": "OldDepressedGamer",
-            "slug": "olddepressedgamer",
-            "identity": {
-            "color": "#DEB2FF",
-            "badges": [
-                {
-                "type": "broadcaster",
-                "text": "Broadcaster"
-                }
-            ]
-            }
-        }
-        }
-    */
-    //console.log("sending kick message", JSON.stringify(message, null, 2))
     try
     {
+        let parsedTextMessage = message.content
+        let safeMessage = message.content;
+        //if (message.sender.identity.badges)
+        //    console.log("DEBUG:Kick:onChatMessage sender badges", message)
+
+        // split out emotes from messages
+        const matches = [...message.content.matchAll(/\[emote:(s?)(\d+):([^\]]+)\]/g)];
+        const emotes = {};
+        for (const match of matches)
+        {
+            const fullMatch = match[0];      // full string like "[emote:s23440756:emojiFeerful]"
+            const id = parseInt(match[2]);   // extract the numeric part only
+            const name = match[3];           // emote name
+            emotes[fullMatch] = { id: id, name: name };
+        }
+        // store the message ready for parsing emotes
+
+        for (const [key, value] of Object.entries(emotes))
+        {
+            // add emotes to parsed message
+            parsedTextMessage = parsedTextMessage.replaceAll(key, `<img src='https://files.kick.com/emotes/${value.id}/fullsize' title='${value.name}' width='28px' height='28px'>`)
+
+            safeMessage = parsedTextMessage.replaceAll(key, "");
+        }
         let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
-        let safeMessage = sanitiseHTML(message.content);
+        // kick appears to sanitise source text but lets replace unicode anyway
         safeMessage = safeMessage.replace(/[^\x00-\x7F]/g, "");
+
         triggerToSend.parameters = {
-            textMessage: message.sender.username + ": " + safeMessage,
+            textMessage: parsedTextMessage,
             safemessage: safeMessage,
             color: message.sender.identity.color,// possibly use color from menu for mods etc
-
+            category: localConfig.currentCategory,
+            channel: message.channel,
             // youtube message data
             id: message.id,
             messagetype: message.type,
             message: safeMessage,
             timestamp: message.created_at,
-
-            //youtube author data
             sender: message.sender.username,
             senderid: message.sender.id,
-
             senderbadges: message.sender.identity.badges,
         }
         postTrigger(triggerToSend);
@@ -760,6 +827,75 @@ function onChatMessage (message)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
             ".SendSettingsWidgetSmall", "failed to load modal", err);
+    }
+}
+// ============================================================================
+//                           FUNCTION: createDummyChatMessage
+// ============================================================================
+/**
+ * Simulates a message from kick chat.
+ * @param {object} data 
+ */
+function createDummyChatMessage (message)
+{
+    let dummyMessage =
+    {
+        "id": "1",
+        "chatroom_id": 1,
+        "channel": serverCredentials.streamerName,
+        "content": message,
+        "type": "message",
+        "created_at": "2025-04-27T07:01:49+00:00",
+        "sender":
+        {
+            "id": 1,
+            "username": "System",
+            "identity": { "color": "Red", "badges": [{ "type": "bot", "text": "bot" }] }
+        }
+    }
+    onChatMessage(dummyMessage);
+}
+
+// ===========================================================================
+//                           FUNCTION: sendAccountNames
+// ===========================================================================
+/**
+ * @param {String} toExtension 
+ */
+function sendAccountNames (toExtension = "")
+{
+    // TBD create list from available names otherwise we need to supply both names
+    let usrlist = {}
+    let countusers = 0
+    if (serverCredentials.streamerName && serverCredentials.streamerName != "")
+    {
+        countusers++;
+        usrlist["user"] = serverCredentials.streamerName;
+    }
+
+    if (serverCredentials.botName && serverCredentials.botName != "")
+    {
+        countusers++;
+        usrlist["bot"] = serverCredentials.botName;
+    }
+
+    if (countusers > 0)
+    {
+        // send the modified modal data to the server
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket(
+                "ExtensionMessage",
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    "UserAccountNames",
+                    serverConfig.extensionname,
+                    usrlist,
+                    serverConfig.channel,
+                    toExtension),
+                serverConfig.channel,
+                toExtension,
+
+            ));
     }
 }
 // ============================================================================

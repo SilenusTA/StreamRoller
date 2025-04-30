@@ -3137,7 +3137,8 @@
             var today = new Date();
             let datestamp = new Date(today)
             let icons = "<img style='width: 20px;' alt='Kick' title='Kick' src='/liveportal/images/kick_icon.png'>"
-
+            if (chatdata.senderbadges[0].type == "broadcaster")
+                icons += "<img style='width: 20px;' alt='Kick' title='Kick Broadcaster' src='/liveportal/images/kick_broadcaster.png'>"
             let time = datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0');
 
             // make setup our fields for parts of the message
@@ -3161,13 +3162,8 @@
             var line_field = "<BR><span>";
             var end_line_field = "</span>";
 
-            // lets sanitise the message before we add the emotes
-            // we do this by pushing it into an html div and then pulling it out again
-            // kind of a hack but it works :D
-            var sanitiser = document.createElement('div');
-            sanitiser.innerText = chatdata.message
-            var message = sanitiser.innerHTML
-
+            // kick messages are pre sanitised
+            var message = chatdata.textMessage
             // set the window title (might have updated)
             if (chatdata.channel)
                 localConfig.kickchatchannel = chatdata.channel
@@ -3895,7 +3891,7 @@
     // ============================================================================
     //                           FUNCTION: postMessageToYoutube
     // ============================================================================
-    function postMessageToYoutube (msg)
+    function postMessageToYoutube (msg, account = "bot")
     {
         // work out if we are on youtube extension or youtubeAPI
         if (livePortalVolatileData.extensions.youtubeapi)
@@ -3982,9 +3978,9 @@
         if (platform.includes("twitch"))
             postMessageToTwitch(document.getElementById("chatInputText").value, serverConfig.currentChatAsUsername)
         if (platform.includes("youtube"))
-            postMessageToYoutube(document.getElementById("chatInputText").value)
+            postMessageToYoutube(document.getElementById("chatInputText").value, serverConfig.currentChatAsUsername)
         if (platform.includes("kick"))
-            postMessageToKick(document.getElementById("chatInputText").value)
+            postMessageToKick(document.getElementById("chatInputText").value, serverConfig.currentChatAsUsername)
 
         document.getElementById("chatInputText").value = ""
     }
