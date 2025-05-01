@@ -96,15 +96,16 @@
             audio output.
             <BR>You can then select the device you want the TTS to go out on.
             <HR>
+            <H3>Voices Filter</H3>
+            Filter voices out of the list (if you have a lot of voices installed), ie only show entries with English in name or leave blank to show all.
+            <input type="text" style="width: 40%;" name="TTSVoiceFilter_SettingsSmallFormItem" id="TTSVoiceFilter_SettingsSmallFormItem"
+                value="TTSVoiceFilter_SettingsSmallFormItemtext"><label for="TTSVoiceFilter_SettingsSmallFormItem" class="">Filter</label>
+            <BR>
+            <HR>
             <!-- Twitch Voices-->
             <div class="form-group">
-                <H3>Voices Filter</H3>
-                Filter voices out of the list (if you have a lot of voices installed), ie only show entries with English in name or leave blank to show all.
-
-                <input type="text" style="width: 40%;" name="TTSVoiceFilter_SettingsSmallFormItem" id="TTSVoiceFilter_SettingsSmallFormItem"
-                    value="TTSVoiceFilter_SettingsSmallFormItemtext"><label for="TTSVoiceFilter_SettingsSmallFormItem" class="">Filter</label>
-                <BR>
-                <HR>
+                <H4 class="text-center"><img src="/liveportal/images/twitch_icon.png" width="30px" height="30px"> Twitch Chat TTS Settings
+                </H4>
                 <!-- enable twitch check box-->
                 <div class="input-group">
                     <div class="form-check form-check-inline">
@@ -126,7 +127,7 @@
                     value="twitchBlackList_SettingsSmallFormItemtext">
 
                 <!-- voice select -->
-                <div class="input-group3">
+                <div class="input-group">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
                         id="twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="twitchTTSVoiceSelectionDropdown_SettingsSmallFormItem"
                         required="" onchange='twitchVoiceDropdownChanged( this )'>
@@ -138,9 +139,7 @@
             <HR>
             <!-- YouTube Voices-->
             <div class="form-group">
-                <BR>
-                <img src="/liveportal/images/youtube_icon.png" width="30px" height="30px"> YouTube Chat TTS Settings
-                <BR>
+                <H4 class="text-center"><img src="/liveportal/images/youtube_icon.png" width="30px" height="30px"> YouTube Chat TTS Settings </H4>
 
                 <!-- enable YouTube check box-->
                 <div class="input-group">
@@ -160,7 +159,7 @@
                 <input type="text" name="youtubeBlackList_SettingsSmallFormItem" class="form-control" id="youtubeBlackList_SettingsSmallFormItem"
                     value="youtubeBlackList_SettingsSmallFormItemtext">
                 <!-- voice select -->
-                <div class="input-group3">
+                <div class="input-group">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
                         id="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem"
                         required="" onchange='youtubeVoiceDropdownChanged( this )'>
@@ -169,12 +168,43 @@
                     <label class="form-check-label" for="youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem">Voice</label>
                 </div>
             </div>
+            <!-- Kick Voices-->
+            <div class="form-group">
+                <H4 class="text-center"><img src="/liveportal/images/kick_icon.png" width="30px" height="30px"> Kick Chat TTS Settings</H4>
+
+                <!-- enable Kick check box-->
+                <div class="input-group">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" name="winttskickenabled_SettingsSmallFormItem" type="checkbox"
+                            id="winttskickenabled_SettingsSmallFormItem" winttskickenabled_SettingsSmallFormItemchecked>
+                        <label class="form-check-label" for="winttskickenabled_SettingsSmallFormItem">Enable TTS</label>
+                    </div>
+                </div>
+
+                <label for="kickTTSVolume_SettingsSmallFormItem" class="">Volume </label>
+                <input type="text" style="width: 40px;" name="kickTTSVolume_SettingsSmallFormItem" id="kickTTSVolume_SettingsSmallFormItem"
+                    value="kickTTSVolume_SettingsSmallFormItemtext">
+                <BR>
+                <!-- kick user blacklist-->
+                <label for="kickBlackList_SettingsSmallFormItem" class="col-form-label">Comma separated names of users to ignore</label>
+                <input type="text" name="kickBlackList_SettingsSmallFormItem" class="form-control" id="kickBlackList_SettingsSmallFormItem"
+                    value="kickBlackList_SettingsSmallFormItemtext">
+                <!-- voice select -->
+                <div class="input-group">
+                    <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
+                        id="kickTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="kickTTSVoiceSelectionDropdown_SettingsSmallFormItem"
+                        required="" onchange='kickVoiceDropdownChanged( this )'>
+                        KickTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData
+                    </select>
+                    <label class="form-check-label" for="kickTTSVoiceSelectionDropdown_SettingsSmallFormItem">Voice</label>
+                </div>
+            </div>
             <!-- Text To Speech Section-->
             <HR>
-            <h4 class="modal-title"> Test Voices</h4>
+            <h4 class="modal-title text-center"> Test Voices</h4>
             <div class="form-group">
                 <!-- voice select -->
-                <div class="input-group3">
+                <div class="input-group">
                     <select class="selectpicker btn-secondary" style="max-width: 100%;" data-style="btn-danger" data-width="150px" title="box one"
                         id="TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem" value="0" name="TestVoiceTTSVoiceSelectionDropdown_SettingsSmallFormItem"
                         required="">

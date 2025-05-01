@@ -31,7 +31,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.5",
+        __version__: "0.6",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -76,19 +76,25 @@
 
         // ##### settings widget variables
         // TTS settings
+        TTSVoiceFilter: "English", // filter out voices you are interested in
+        //twith tts
         winttstwitchenabled: "off",
         twitchTTSVolume: "1",
         twitchBlackList: "",
-        TTSVoiceFilter: "English", // filter out voices you are interested in
         twitchTTSVoiceName: "Please select a windows voice",
         twitchTTSVoiceIndex: -1,
+        //youtube tts
         winttsyoutubeenabled: "off",
         youtubeTTSVolume: "1",
         youtubeBlackList: "",
         YouTubeTTSVoiceName: "Please select a windows voice",
         YouTubeTTSVoiceIndex: -1,
-
-
+        //kick tts
+        winttskickenabled: "off",
+        kickTTSVolume: "1",
+        kickBlackList: "",
+        kickTTSVoiceName: "Please select a windows voice",
+        kickTTSVoiceIndex: -1,
         // random facts twitter settings
         randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
@@ -1002,10 +1008,10 @@
             {
                 if (extension_packet.type === "trigger_ChatMessageReceived")
                 {
-                    if (serverConfig.winttsKickEnabled == "on")
+                    if (serverConfig.winttskickenabled == "on")
                     {
-                        if (serverConfig.KickBlackList.toLowerCase().indexOf(extension_packet.data.parameters.sender.toLowerCase()) == -1)
-                            TTSSpeak(serverConfig.KickTTSVoiceIndex, extension_packet.data.parameters.message, serverConfig.KickTTSVolume)
+                        if (serverConfig.kickBlackList.toLowerCase().indexOf(extension_packet.data.parameters.sender.toLowerCase()) == -1)
+                            TTSSpeak(serverConfig.kickTTSVoiceIndex, extension_packet.data.parameters.message, serverConfig.kickTTSVolume)
                     }
                     parseKickChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
@@ -2151,32 +2157,46 @@
         {
             let twitchoptioncode = "";
             let ytoptioncode = "";
+            let kickoptioncode = "";
             let testoptioncode = "";
             // check if we have anything selected, if not set a default option
             if (serverConfig.twitchTTSVoiceIndex != -1)
                 twitchoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
             if (serverConfig.YouTubeTTSVoiceIndex != -1)
                 ytoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
+            if (serverConfig.kickTTSVoiceIndex != -1)
+                kickoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
+
             testoptioncode += "<option value='-1' selected>Please Select a Voice</option>"
 
             // make up the list for each dropdown
             localConfig.TTSVoiceList.forEach((voice, index) =>
             {
+                // twitch
                 if (index == serverConfig.twitchTTSVoiceIndex)
                     twitchoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
                 else
                     twitchoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
-
+                // youtube
                 if (index == serverConfig.YouTubeTTSVoiceIndex)
                     ytoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
                 else
                     ytoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
+
+                // kick
+                if (index == serverConfig.kickTTSVoiceIndex)
+                    kickoptioncode += "<option value='" + index + "' selected>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
+                else
+                    kickoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
+
                 testoptioncode += "<option value='" + index + "'>" + voice.name.replace(/^(Microsoft\.*)/, "") + "</option>"
             });
             //update the modal boxes for each platform and the test button
             + "_SettingsSmallFormItem"
             modalstring = modalstring.replace("TwitchTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", twitchoptioncode);
             modalstring = modalstring.replace("YouTubeTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", ytoptioncode);
+            modalstring = modalstring.replace("KickTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", kickoptioncode);
+
             modalstring = modalstring.replace("TestVoiceTTSVoicesReplacedInUpdateOwnSettingsWidgetSmallData", testoptioncode);
         }
         else
@@ -2289,6 +2309,8 @@
             else if (key === "winttstwitchenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
             else if (key === "winttsyoutubeenabled" && !fieldsAsObject[key])
+                serverConfig[key] = "off";
+            else if (key === "winttskickenabled" && !fieldsAsObject[key])
                 serverConfig[key] = "off";
             else if (key in fieldsAsObject)
                 serverConfig[key] = fieldsAsObject[key];
@@ -2684,6 +2706,19 @@
             document.getElementById("youtubeTTSVoiceSelectionDropdown_SettingsSmallFormItem").value = e.value
             serverConfig.YouTubeTTSVoiceName = localConfig.TTSVoiceList[e.value].name
             serverConfig.YouTubeTTSVoiceIndex = e.value;
+            SaveConfigToServer()
+        }
+    }
+    // ============================================================================
+    //                           FUNCTION: kickVoiceDropdownChanged
+    // ============================================================================
+    function kickVoiceDropdownChanged (e)
+    {
+        if (serverConfig.kickTTSVoiceIndex != e.value)
+        {
+            document.getElementById("kickTTSVoiceSelectionDropdown_SettingsSmallFormItem").value = e.value
+            serverConfig.kickTTSVoiceName = localConfig.TTSVoiceList[e.value].name
+            serverConfig.kickTTSVoiceIndex = e.value;
             SaveConfigToServer()
         }
     }
