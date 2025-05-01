@@ -348,8 +348,8 @@ async function getChannel ()
 {
     try
     {
-        if (!checkCredentials())
-            return;
+        //if (!checkCredentials())
+        // return;
         try
         {
             const data = await getChannelsWithToken(Credentials.kickAccessToken);
@@ -651,4 +651,236 @@ async function sendChatMessage (messageData)
         return null;
     }
 }
-export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData, sendChatMessage };
+// ============================================================================
+//                           FUNCTION: setTitleAndCategoryWithToken
+// ============================================================================
+/**
+ * 
+ * @param {string} title 
+ * @param {number} category 
+ * @param {string} token kick access token
+ * @returns promise
+ */
+async function setTitleAndCategoryWithToken (title, category, token)
+{
+    return new Promise((resolve, reject) =>
+    {
+        let postData = JSON.stringify({
+            category_id: category,
+            stream_title: title,
+        });
+
+        const options = {
+            hostname: 'api.kick.com',
+            path: '/public/v1/channels',
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Content-Length': Buffer.byteLength(postData)
+            },
+        };
+        const req = https.request(options, (res) =>
+        {
+            let responseData = '';
+            res.on('data', (chunk) => { responseData += chunk; });
+            res.on('end', () =>
+            {
+                if (res.statusCode === 401)
+                {
+                    reject({ type: 'setTitleAndCategoryWithToken: unauthorized' });
+                }
+                else if (res.statusCode === 204)
+                    resolve("Channel title and Category Updated ")
+                else
+                    reject({ code: res.statusCode, message: responseData })
+            });
+        });
+
+        req.on('error', (err) =>
+        {
+            reject(err);
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
+// ============================================================================
+//                           FUNCTION: setTitleAndCategory
+// ============================================================================
+/**
+ * 
+ * @param {string} title 
+ * @param {number} category 
+ * @returns 
+ */
+async function setTitleAndCategory (title, category)
+{
+    try
+    {
+        /*
+        if (!checkCredentials(true))
+        {
+            console.log("sendChatMessage Invalid credentials")
+            return null;
+        }*/
+        try
+        {
+            const response = await setTitleAndCategoryWithToken(title, category, Credentials.kickAccessToken);
+            return response;
+        } catch (err)
+        {
+            if (err.type === 'unauthorized')
+            {
+                // Token likely expired
+                let tokens = await refreshToken();
+                Credentials.kickAccessToken = tokens.access_token
+                Credentials.kickRefreshToken = tokens.refresh_token
+                callbacks.updateRefreshTokenFn(Credentials)
+                try
+                {
+                    const response = await setTitleAndCategoryWithToken(title, category, Credentials.kickAccessToken);
+                    return response;
+                } catch (err2)
+                {
+                    console.log('❌ ERROR: setTitleAndCategory Still failed after refresh:', err2);
+                    return null;
+                }
+            } else
+            {
+                console.log('❌ ERROR: setTitleAndCategory Request failed:', err);
+                return null;
+            }
+        }
+    }
+    catch (err)
+    {
+        console.log("ERROR: setTitleAndCategory:", err)
+        return null;
+    }
+}
+// ============================================================================
+//                           FUNCTION: searchCategoriesWithToken
+// ============================================================================
+/**
+ * 
+ * @param {string} title 
+ * @param {number} category 
+ * @param {string} token kick access token
+ * @returns promise
+ */
+async function searchCategoriesWithToken (categoryName)
+{
+    return new Promise((resolve, reject) =>
+    {
+        let responseData = '';
+        const queryParams = new URLSearchParams({
+            q: categoryName
+        }).toString();
+
+        const options = {
+            hostname: 'api.kick.com',
+            path: `/public/v1/categories?${queryParams}`,
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${Credentials.kickAccessToken}`,
+                'Accept': '*/*'
+            },
+        };
+
+
+        const req = https.request(options, (res) =>
+        {
+            res.on('data', (chunk) =>
+            {
+                responseData += chunk;
+            });
+            res.on('end', () =>
+            {
+                if (res.statusCode === 401)
+                {
+                    reject({ type: 'searchCategoriesWithToken: unauthorized' });
+                }
+                else if (res.statusCode === 200)
+                    resolve(JSON.parse(responseData))
+                else
+                    reject({ code: res.statusCode, message: responseData })
+            });
+        });
+
+        req.on('error', (err) =>
+        {
+            reject(err);
+        });
+
+        req.write(responseData);
+        req.end();
+    });
+}
+// ============================================================================
+//                           FUNCTION: searchCategories
+// ============================================================================
+/**
+ * 
+ * @param {string} title 
+ * @param {number} category 
+ * @returns 
+ */
+async function searchCategories (categoryName)
+{
+    return new Promise((resolve, reject) =>
+    {
+        /*
+        if (!checkCredentials(true))
+        {
+            console.log("sendChatMessage Invalid credentials")
+            return null;
+        }*/
+        try
+        {
+            searchCategoriesWithToken(categoryName)
+                .then((response) =>
+                {
+                    resolve(response);
+                })
+                .catch((err) =>
+                {
+                    reject("failed call to searchCategoriesWithToken", err)
+                })
+        } catch (err)
+        {
+            if (err.type === 'unauthorized')
+            {
+                // Token likely expired
+                refreshToken()
+                    .then((tokens) =>
+                    {
+                        Credentials.kickAccessToken = tokens.access_token
+                        Credentials.kickRefreshToken = tokens.refresh_token
+                        callbacks.updateRefreshTokenFn(Credentials)
+                        searchCategoriesWithToken(categoryName)
+                            .then((response) =>
+                            {
+                                resolve(response);
+                            })
+                            .catch((err) =>
+                            {
+                                reject("failed to call searchCategoriesWithToken after refresh", err)
+                            })
+
+                    })
+                    .catch((err) =>
+                    {
+                        reject("failed to get refresh tokens", err)
+                    })
+            } else
+            {
+                console.log('❌ ERROR: searchCategoriesWithPage Request failed:', err);
+                reject("failed");
+            }
+        }
+    });
+}
+
+export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData, sendChatMessage, setTitleAndCategory, searchCategories };

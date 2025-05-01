@@ -41,18 +41,29 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     setClientSecretFn: null,// callback to set the client secret for the server to use when authorizing
-    chatConnected: false,
-    apiConnected: false
+    apiConnected: false,
+    connectToChatScheduleHandle: null,
+    connectToChatTimeout: 5000,
+
+    gameSearchCategories: [],
+    // use these fields to send errors in searching back to the user
+    kickCategoryErrorsText: "",
+    kickCategoryErrorsShowCounter: 0,
+    currentKickGameCategoryId: -1, // as reported by kick
 };
 
 const default_serverConfig = {
-    __version__: "0.1",
+    __version__: "0.2",
     extensionname: "kick",
     channel: "KICK_CHANNEL",
     kickEnabled: "off",
-    currentCategory: "TBH",
-    kick_restore_defaults: "off",
+    currentCategoryId: -1,
+    currentCategoryName: "none selected",
     channelData: null, // only storing this until we can get the official api returning the data. until then we are using a third party API to get the chatroom id so we store it to minimise usage of this api.
+    kickCategoriesHistory: [],
+    kickTitlesHistory: ["StreamRoller, the most versatile streaming tool around"],
+    lastSelectedKickTitleId: -1
+
 };
 let serverConfig = structuredClone(default_serverConfig)
 const default_serverCredentials =
@@ -79,9 +90,10 @@ const triggersandactions =
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
 
-                    triggerId: "KickChatMessage", //Identifier that users can use to identify this particular trigger message if triggered by an action
+                    triggerActionRef: "KickChatMessage",
+                    triggerActionRef_UIDescription: "Reference for this message",
                     // streamroller settings
-                    type: "trigger_ChatMessageReceived",
+                    type: "",
                     platform: "Kick",
                     textMessage: "[username]: [message]",
                     safemessage: "",
@@ -99,6 +111,42 @@ const triggersandactions =
                     senderbadges: "",
                 }
             },
+            {
+                name: "Category search results",
+                displaytitle: "Results from a SearchForKickGame request ",
+                description: "Results of a search request in a JSON object",
+                messagetype: "trigger_searchedKickGames",
+                parameters: {
+
+                    triggerActionRef: "KickSearchedCategories",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                    searchName: "",
+                    searchName_UIDescription: "Name that was used for the search",
+                    categories: "",
+                    categories_UIDescription: "JSON string object of categories",
+                }
+            },
+            {
+                name: "Category history cleared",
+                displaytitle: "The Category history was cleared",
+                description: "The Category history was cleared",
+                messagetype: "trigger_categoryHistoryCleared",
+                parameters: {
+                    triggerActionRef: "KickCategoryHistoryCleared",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                }
+            }
+            ,
+            {
+                name: "Title history cleared",
+                displaytitle: "The Title history was cleared",
+                description: "The Title history was cleared",
+                messagetype: "trigger_titleHistoryCleared",
+                parameters: {
+                    triggerActionRef: "KickTitleHistoryCleared",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                }
+            }
         ],
     actions:
         [
@@ -108,8 +156,42 @@ const triggersandactions =
                 description: "Post a message to Kick chat (Note user is case sensitive)",
                 messagetype: "action_SendChatMessage",
                 parameters: {
+                    triggerActionRef: "KickChatMessage",
+                    triggerActionRef_UIDescription: "Reference for this message",
                     account: "",
                     message: ""
+                }
+            },
+            {
+                name: "SearchForKickGame",
+                displaytitle: "Search for a game category on kick",
+                description: "Triggers the action trigger_searchedKickGames",
+                messagetype: "action_searchForKickGame",
+                parameters: {
+                    triggerActionRef: "KickChatMessage",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                    searchName: "",
+                    searchName_UIDescription: "Name to search for",
+                }
+            },
+            {
+                name: "ClearCategoryHistory",
+                displaytitle: "Clear Category History for kick",
+                description: "Clears out the Category history list",
+                messagetype: "action_clearCategoryHistory",
+                parameters: {
+                    triggerActionRef: "KickClearCategoryHistory",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                }
+            },
+            {
+                name: "ClearTitleHistory",
+                displaytitle: "Clear Title History for kick",
+                description: "Clears out the Title history list",
+                messagetype: "action_clearKickTitleHistory",
+                parameters: {
+                    triggerActionRef: "KickClearTitleHistory",
+                    triggerActionRef_UIDescription: "Reference for this message",
                 }
             }
 
@@ -261,7 +343,6 @@ async function onDataCenterMessage (server_packet)
         if (serverCredentials.kickAccessToken)
         {
             localConfig.streamer = await kickAPI.getUser(true)
-
             if (localConfig.streamer && localConfig.streamer.data[0].name)
             {
                 localConfig.apiConnected = true;
@@ -286,7 +367,6 @@ async function onDataCenterMessage (server_packet)
 
                 connectToChatScheduler()
             }
-            localConfig.chatConnected = chatService.connected()
         }
 
         // ##################### Bot setup #############################
@@ -343,10 +423,37 @@ async function onDataCenterMessage (server_packet)
                     server_packet.from
                 )
             )
-        } else if (extension_packet.type === "action_SendChatMessage")
+        }
+        else if (extension_packet.type === "action_SendChatMessage")
         {
             if (serverConfig.kickEnabled == "on")
                 kickAPI.sendChatMessage(extension_packet.data)
+        }
+        else if (extension_packet.type === "action_searchForKickGame")
+        {
+            // if we have an empty search item then just return.
+            if (extension_packet.data.name == "")
+                return
+            localConfig.gameSearchCategories = await kickAPI.searchCategories(extension_packet.data.name);
+            // this request comes from the small settings widget normally
+            sendGameCategoriesSearchTrigger(extension_packet.data.triggerActionRef)
+            SendSettingsWidgetSmall()
+        }
+        else if (extension_packet.type === "action_clearCategoryHistory")
+        {
+            // if we have an empty search item then just return.
+            serverConfig.kickCategoriesHistory = [];
+            SaveConfigToServer();
+            sendGameCategoriesClearedTrigger(extension_packet.data.triggerActionRef)
+            SendSettingsWidgetSmall()
+        }
+        else if (extension_packet.type === "action_clearKickTitleHistory")
+        {
+            // if we have an empty search item then just return.
+            serverConfig.kickTitlesHistory = [];
+            SaveConfigToServer();
+            sendTitleClearedTrigger(extension_packet.data.triggerActionRef)
+            SendSettingsWidgetSmall()
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -392,6 +499,11 @@ function SendSettingsWidgetSmall (to = "")
         else
         {
             let modalString = filedata.toString();
+            let statusHtml = ""
+            if (serverConfig.kickEnabled == "off")
+                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Extension turned off</div>`
+            else if (!localConfig.apiConnected)
+                statusHtml = `<BR><div style = "color:rgb(255 255 0 / 80%)">Waiting for extension to get data from kick</div>`
             for (const [key, value] of Object.entries(serverConfig))
             {
                 // checkboxes
@@ -401,6 +513,43 @@ function SendSettingsWidgetSmall (to = "")
                 else if (typeof (value) == "string")
                     modalString = modalString.replace(key + "text", value);
             }
+            // This code could be hardcoded but we only want to show it when the kick extensions is up and running
+            if (serverConfig.kickEnabled == "off" || !localConfig.apiConnected)
+            {
+                modalString = modalString.replace("kickStreamTitleSelector", statusHtml);
+                modalString = modalString.replace("kickGameCategorySelector", statusHtml);
+                modalString = modalString.replace("kickSearchForGame", statusHtml);
+            }
+            else
+            {
+                modalString = modalString.replace("kickStreamTitleSelector", getTextboxWithHistoryHTML(
+                    "kickTitleDropdownSelector",
+                    "kickTitleTextElement",
+                    serverConfig.kickTitlesHistory,
+                    serverConfig.lastSelectedKickTitleId
+                )
+                    + `<button type="button" class="btn btn-secondary"  onClick="sendAction('action_clearKickTitleHistory', 'kick', {});return false;">ClearHistory</button>`);
+
+                // add our searchable dropdown category selector
+                modalString = modalString.replace("kickGameCategorySelector",
+                    createDropdownWithSearchableHistory(
+                        "kickGameCategoryDropdownSelector",
+                        localConfig.gameSearchCategories.data,
+                        serverConfig.kickCategoriesHistory,
+                        serverConfig.currentCategoryId)
+                    + `<button type="button" class="btn btn-secondary"  onClick="sendAction('action_clearCategoryHistory', 'kick', {});return false;">ClearHistory</button>`);
+                modalString = modalString.replace("kickSearchForGame", `<input type="text" class="form-control" id="kickSearchForKickGameElementId" name="kickSearchForKickGameElementId" placeholder="Enter Game name to search for (added to history when found)"><button type="button" class="btn btn-secondary"  onClick="sendAction('action_searchForKickGame', 'kick', {name:document.getElementById('kickSearchForKickGameElementId').value});return false;">Search</button>`);
+            }
+            if (localConfig.kickCategoryErrorsShowCounter > 0)
+            {
+                localConfig.kickCategoryErrorsShowCounter--;
+                modalString = modalString.replace("kickGameCategorySearchErrors",
+                    "<div>" + localConfig.kickCategoryErrorsText + "</div>"
+                )
+            }
+            else
+                modalString = modalString.replace("kickGameCategorySearchErrors", "")
+
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -431,7 +580,7 @@ function SendSettingsWidgetLarge (to = "")
     {
         if (err)
             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                ".SendSettingsWidgetSmall", "failed to load modal", err);
+                ".SendSettingsWidgetLarge", "failed to load modal", err);
         else
         {
             let modalString = filedata.toString();
@@ -472,37 +621,109 @@ function SendSettingsWidgetLarge (to = "")
  * 
  * @param {object} data // data from user submitted form
  */
-async function parseSettingsWidgetSmall (data)
+async function parseSettingsWidgetSmall (modalData)
 {
-    let enabledStateChangedTo = null
-    if (data.kick_restore_defaults == "on")
+    try
     {
-        serverConfig = structuredClone(default_serverConfig);
-        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
-    }
-    else
-    {
-        if (serverConfig.kickEnabled != data.kickEnabled)
+        let enabledStateChangedTo = null
+        let DataChanged = false;
+        if (modalData.kick_restore_defaults == "on")
         {
-            if (serverConfig.kickEnabled == "on")
-                enabledStateChangedTo = "off"
-            else
-                enabledStateChangedTo = "on"
+            serverConfig = structuredClone(default_serverConfig);
+            console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
+            DataChanged = true;
         }
-        serverConfig.kickEnabled = "off";
-        for (const [key, value] of Object.entries(data))
-            serverConfig[key] = value;
+        else
+        {
+            if (serverConfig.kickEnabled != modalData.kickEnabled)
+            {
+                if (serverConfig.kickEnabled == "on")
+                    enabledStateChangedTo = "off"
+                else
+                    enabledStateChangedTo = "on"
+                DataChanged
+            }
+            // Process kick Title 
+            if (modalData["kickTitleTextElement"] && modalData["kickTitleDropdownSelector"] != "")
+            {
+                // lets check and store the title if we don't already have it
+                let historyTitleIndex = serverConfig.kickTitlesHistory.findIndex(x => x === modalData["kickTitleTextElement"]);
 
-        if (enabledStateChangedTo != null)
-        {
-            if (enabledStateChangedTo == "off")
-                chatService.disconnectChat()
-            else
-                connectToChatScheduler()
+                // is this a new title
+                if (historyTitleIndex == -1)
+                {
+                    DataChanged = true;
+                    serverConfig.lastSelectedKickTitleId = serverConfig.kickTitlesHistory.push(modalData["kickTitleTextElement"]) - 1
+                }
+                // not new but changed
+                else if (historyTitleIndex != serverConfig.lastSelectedKickTitleId)
+                {
+                    DataChanged = true
+                    serverConfig.lastSelectedKickTitleId = historyTitleIndex
+                }
+            }
+            /* Process kick Category */
+            let categoryId = ""
+            let categoryName = ""
+            const userSelectedCategoryId = modalData["kickGameCategoryDropdownSelector"]
+            if (userSelectedCategoryId)
+            {
+                const historyIndex = serverConfig.kickCategoriesHistory.findIndex(e => e.id == userSelectedCategoryId);
+                if (historyIndex == -1)
+                {
+                    const game = localConfig.gameSearchCategories.data.find(item => item.id == userSelectedCategoryId);
+                    categoryId = game.id;
+                    categoryName = game.name;
+                    addGameToHistoryFromGameName(categoryName)
+                    DataChanged = true;
+                }
+                else
+                {
+                    categoryId = serverConfig.kickCategoriesHistory[historyIndex].id;
+                    categoryName = serverConfig.kickCategoriesHistory[historyIndex].name;
+                }
+                if (serverConfig.currentCategoryId != categoryId)
+                {
+                    serverConfig.currentCategoryId = categoryId
+                    serverConfig.currentCategoryName = categoryName
+                    DataChanged = true;
+                }
+
+                if (enabledStateChangedTo != null)
+                {
+                    if (enabledStateChangedTo == "off")
+                    {
+                        serverConfig.kickEnabled = "off";
+                        chatService.disconnectChat()
+                    }
+                    else
+                    {
+                        serverConfig.kickEnabled = "on";
+                        connectToChatScheduler()
+                    }
+                    DataChanged = true;
+                }
+            }
+            // do we need to change title on kick
+            if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != ""
+                && serverConfig.lastSelectedKickTitleId && serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId] && serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId] != ""
+                && serverConfig.kickEnabled
+            )
+            {
+                //update stream title/description
+                kickAPI.setTitleAndCategory(serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId], serverConfig.currentCategoryId)
+            }
+            if (DataChanged)
+            {
+                SaveConfigToServer();
+                SendSettingsWidgetSmall("");
+            }
         }
     }
-    SaveConfigToServer();
-    SendSettingsWidgetSmall("");
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".parseSettingsWidgetSmall", "Error", err, err.message);
+    }
 }
 // ============================================================================
 //                           FUNCTION: connectToChatScheduler
@@ -590,6 +811,55 @@ function parseSettingsWidgetLarge (data)
     SaveConfigToServer();
     SendSettingsWidgetLarge("");
 }
+// ===========================================================================
+//                           FUNCTION: addGameToHistoryFromGameName
+// ===========================================================================
+/**
+ * Adds a game by name to the history list
+ * @param {string} gameName 
+ */
+async function addGameToHistoryFromGameName (gameName)
+{
+    try
+    {
+        // get the game index if we already have the data
+        const categoryIndex = localConfig.gameSearchCategories.data.findIndex(e => e.name === gameName);
+        if (categoryIndex == -1)
+        {
+            if (serverConfig.kickCategoriesHistory
+                && serverConfig.kickCategoriesHistory.findIndex(e => e.name === gameName) > -1)
+            {
+                const gameObject = { id: serverConfig.kickCategoriesHistory[categoryIndex].id, name: serverConfig.kickCategoriesHistory[categoryIndex].name }
+                serverConfig.kickCategoriesHistory.push(gameObject);
+                localConfig.kickCategoryErrorsShowCounter = 0
+                SendSettingsWidgetSmall()
+            }
+            else
+            {
+                localConfig.kickCategoryErrorsText = "Couldn't Find Game '" + gameName + "'"
+                // how many reloads to keep displaying the error 
+                // due to the chance of another update going out too quickly
+                localConfig.kickCategoryErrorsShowCounter = 3;
+                SendSettingsWidgetSmall()
+            }
+        }
+        else
+        {
+            // get the game from our list
+            let game = localConfig.gameSearchCategories.data[categoryIndex]
+            // if not in the history already then add it.
+            if (!serverConfig.kickCategoriesHistory || serverConfig.kickCategoriesHistory.findIndex(e => e.name === game.name) == -1)
+            {
+                serverConfig.kickCategoriesHistory.push(game);
+                localConfig.kickCategoryErrorsShowCounter = 0;
+            }
+        }
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".addGameToHistoryFromGameName", "Error fetching categories:", err, err.message);
+        return null
+    }
+}
 // ============================================================================
 //                           FUNCTION: SaveConfigToServer
 // ============================================================================
@@ -629,10 +899,10 @@ function DeleteCredentialsOnServer ()
  */
 function heartBeatCallback ()
 {
+    clearTimeout(localConfig.heartBeatHandle)
     // we can send a color for things like the liveportal page to use to show on the icon.
     let color = "red";
-    let connected = localConfig.apiConnected && localConfig.chatConnected;
-
+    let connected = localConfig.apiConnected && chatService.connected();
     // need to fix this for the bots etc, when disabled it stops teh ability to send chat message from live portal
     connected = true;
     // determine the color we wish to show for our status
@@ -810,7 +1080,7 @@ function onChatMessage (message)
             textMessage: parsedTextMessage,
             safemessage: safeMessage,
             color: message.sender.identity.color,// possibly use color from menu for mods etc
-            category: localConfig.currentCategory,
+            category: serverConfig.currentCategoryName,
             channel: message.channel,
             // youtube message data
             id: message.id,
@@ -898,6 +1168,141 @@ function sendAccountNames (toExtension = "")
 
             ));
     }
+}
+// ============================================================================
+//                           FUNCTION: sendGameCategoriesSearchTrigger
+// ============================================================================
+/**
+ * 
+ * @param {string} reference 
+ * @param {string} searchName 
+ */
+function sendGameCategoriesSearchTrigger (reference, searchName)
+{
+    let trigger = findTriggerByMessageType("trigger_searchedKickGames")
+    trigger.parameters.triggerActionRef = reference;
+    trigger.parameters.searchName = searchName;
+    trigger.parameters.categories = JSON.stringify(localConfig.gameSearchCategories.data)
+    postTrigger(trigger)
+}
+// ============================================================================
+//                           FUNCTION: sendGameCategoriesClearedTrigger
+// ============================================================================
+/**
+ * 
+ * @param {string} reference 
+ */
+function sendGameCategoriesClearedTrigger (reference)
+{
+    let trigger = findTriggerByMessageType("trigger_categoryHistoryCleared")
+    trigger.parameters.triggerActionRef = reference;
+    postTrigger(trigger)
+}
+// ============================================================================
+//                           FUNCTION: createDropdownWithSearchableHistory
+// ============================================================================
+function sendTitleClearedTrigger (reference)
+{
+    let trigger = findTriggerByMessageType("trigger_titleHistoryCleared")
+    trigger.parameters.triggerActionRef = reference;
+    postTrigger(trigger)
+}
+// ============================================================================
+//                           FUNCTION: createDropdownWithSearchableHistory
+// ============================================================================
+/**
+ * Creates an html dropdown list that is searchable using the given information
+ * @param {string} id 
+ * @param {string} categories 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing dropdown code
+ */
+function createDropdownWithSearchableHistory (id, categories = [], history = [], currentSelectedId = -1)
+{
+    let dropdownHtml = ""
+    dropdownHtml += '<div class="d-flex-align w-100">';
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Game Category' id="${id}" value='${currentSelectedId}' name="${id}" required="">`
+    // add history section if we have one
+    if (history.length)
+    {
+        // add history separator
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--HISTORY--</option>'
+        // Append history options first
+        history.forEach(item =>
+        {
+            if (item.id == currentSelectedId)
+                dropdownHtml += "<option value=\"" + item.id + "\" selected>" + item.name + "</option>";
+            else
+                dropdownHtml += "<option value=\"" + item.id + "\">" + item.name + "</option>";
+        });
+
+        // add history separator
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--SEARCH RESULTS--</option>';
+    }
+    else
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--Select an option--</option>'
+    // check if we have loaded the categories yet
+    if (serverConfig.kickEnabled == "off")
+        dropdownHtml += '<option value="separator" disabled style="color:red;font-weight: bold">Extension turned off ...</option>';
+    else if (!categories.length)
+        dropdownHtml += '<option value="separator" disabled style="color:red;font-weight: bold">LOADING...</option>';
+    // append categories
+    categories.forEach(option =>
+    {
+        // only include if it isn't already in the history list
+        if (!history.some(e => e.id === option.id))
+        {
+            if (option.id == currentSelectedId)
+                dropdownHtml += '<option value="' + option.id + '" selected>' + option.name + '</option>';
+            else
+                dropdownHtml += '<option value="' + option.id + '">' + option.name + '</option>';
+        }
+    });
+    dropdownHtml += '</select>';
+    dropdownHtml += '</div>';
+    return dropdownHtml;
+}
+// ============================================================================
+//                           FUNCTION: getTextboxWithHistoryHTML
+// ============================================================================
+/**
+ * Creates an html dropdown list on a text box is searchable using the given information
+ * @param {string} SelectEleId 
+ * @param {string} TextEleId 
+ * @param {string} history 
+ * @param {string} currentSelectedId 
+ * @returns html string containing textbox code
+ */
+function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSelectedId)
+{
+    let dropdownHtml = "";
+    dropdownHtml += '<div class="d-flex-align w-100">';
+    if (history[currentSelectedId])
+        dropdownHtml += `<input type="text" class="form-control" id="${TextEleId}" name="${TextEleId}" value = "${history[currentSelectedId]}" placeholder="${history[currentSelectedId]}">`
+    else
+        dropdownHtml += `<input type="text" class="form-control" id="${TextEleId}" name="${TextEleId}" placeholder="Please Enter a new Title or select one from the history">`
+
+
+    dropdownHtml += `<select class='selectpicker btn-secondary' data-style='btn-danger' style="max-width: 85%;" title='Current Title' id="${SelectEleId}" value='${currentSelectedId}' name="${SelectEleId}" onchange="document.getElementById('${TextEleId}').value = this.options[this.selectedIndex].text">`
+
+    if (history.length)
+    {
+        history.forEach((item, i) => 
+        {
+            if (i == currentSelectedId)
+                dropdownHtml += `<option value="` + i + `" selected >` + item + `</option>`;
+
+            else
+                dropdownHtml += `<option value="` + i + `">` + item + `</option>`;
+        });
+    }
+    else
+        dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--No History Available--</option>'
+    dropdownHtml += '</select>';
+    dropdownHtml += "</div>"
+
+    return dropdownHtml
 }
 // ============================================================================
 //                                  EXPORTS

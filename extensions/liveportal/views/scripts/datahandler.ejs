@@ -4591,6 +4591,28 @@
         }
     }
     // ============================================================================
+    //                           FUNCTION: sendAction
+    // ============================================================================
+    // called from modals if we want to send an action (ie clear kick title history)
+    function sendAction (action, to, data)
+    {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                'ExtensionMessage',
+                serverConfig.extensionname,
+                sr_api.ExtensionPacket(
+                    action,
+                    serverConfig.extensionname,
+                    data,
+                    '',
+                    to)
+                ,
+                '',
+                to
+            )
+        );
+    }
+    // ============================================================================
     //                     FUNCTION: getFileNameDateString
     // ============================================================================
     function getFileNameDateString ()

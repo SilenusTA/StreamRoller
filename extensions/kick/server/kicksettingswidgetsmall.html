@@ -43,7 +43,32 @@
                     <label class="form-check-label" for="kickEnabled">Enable/Disable extension</label>
                 </div>
             </div>
-
+            <HR>
+            <h4>Title</h4>
+            Set the stream title.
+            <span style="color:chocolate">Note the current API only allows changing of title when live</span>
+            <div id=" kicktitleformgroup" class="form-group">
+                <label for="kicktitleformgroup" class="col-form-label">Kick Stream Title</label>
+                kickStreamTitleSelector
+            </div>
+            <!-- kick Stream Game/Category-->
+            <HR>
+            <h4>Game/Category</h4>
+            Select your game/category to stream in
+            <span style="color:chocolate">Note the current API only allows changing of category when live</span>
+            <div id="kickcategoryformgroup" class="form-group">
+                <label for="kickcategoryformgroup" class="col-form-label">Kick Games Categories To Stream In</label>
+                kickGameCategorySelector
+            </div>
+            <BR>
+            <div id="kicksearchforgamegroup" class="form-group">
+                <label for="kicksearchforgamegroup" class="col-form-label">Search for games, the results will be added in the list below the history history
+                    items, if any are found</label>
+                kickSearchForGame
+            </div>
+            <div style="color:chocolate">
+                kickGameCategorySearchErrors
+            </div>
             <HR>
             <!-- Standard footer with submit and cancel buttons -->
             <div class="modal-footer">
