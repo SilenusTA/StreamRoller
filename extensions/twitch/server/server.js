@@ -2436,9 +2436,9 @@ function handleSettingsWidgetSmallData (modalCode)
             serverConfig.twitchstreamername = modalCode["twitchstreamername"]
         }
 
-        /* check clear history/cagegories flag */
-        let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"]
-        let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"]
+        /* check clear history/categories flag */
+        let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"] == "on"
+        let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"] == "on"
 
         if (clearTwitchTitles || clearTwitchCategories)
         {
