@@ -42,11 +42,11 @@
 // only the user account is monitored for messages.
 // ============================================================================
 import * as fs from "fs";
-import * as twitch_IRC from "./irc.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import * as logger from "../../backend/data_center/modules/logger.js";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
+import * as twitch_IRC from "./irc.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     OUR_CHANNEL: "TWITCH_CHAT",
@@ -131,7 +131,7 @@ const serverData =
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'textMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
+    description: "Twitch chat and alerts (ie subs, redeeems etc), this contans raw data fields plus 'htmlMessage' which is a formatted message to use directly<BR> NOTE: use the message field for checking string typed into chat (ie for commands)",
     version: "0.2",
     channel: serverConfig.channel,
     triggers:
@@ -142,7 +142,7 @@ const triggersandactions =
             messagetype: "trigger_ChatMessageReceived",
             parameters: {
                 type: "trigger_ChatMessageReceived",
-                textMessage: "[username]: [message]",
+                htmlMessage: "[username]: [message]",
                 sender: "",
                 message: "",
                 color: "",
@@ -159,7 +159,7 @@ const triggersandactions =
             messagetype: "trigger_ChatActionReceived",
             parameters: {
                 type: "trigger_ChatActionReceived",
-                textMessage: "[message]",
+                htmlMessage: "[message]",
                 sender: "",
                 message: "",
                 color: "",
@@ -174,7 +174,7 @@ const triggersandactions =
             messagetype: "trigger_ChatBanReceived",
             parameters: {
                 type: "trigger_ChatBanReceived",
-                textMessage: "[username] was banned for [timeout]s: [reason]",
+                htmlMessage: "[username] was banned for [timeout]s: [reason]",
                 username: "",
                 message: ""
             }
@@ -185,7 +185,7 @@ const triggersandactions =
             messagetype: "trigger_ChatMessageDeleted",
             parameters: {
                 type: "trigger_ChatMessageDeleted",
-                textMessage: "[Username]'s message was deleted",
+                htmlMessage: "[Username]'s message was deleted",
                 username: "",
                 message: ""
             }
@@ -196,7 +196,7 @@ const triggersandactions =
             messagetype: "trigger_ChatPrimePaidUpgrade",
             parameters: {
                 type: "trigger_ChatPrimePaidUpgrade",
-                textMessage: "[Username] upgraded their prime",
+                htmlMessage: "[Username] upgraded their prime",
                 username: ""
             }
         }, {
@@ -206,7 +206,7 @@ const triggersandactions =
             messagetype: "trigger_ChatRaid",
             parameters: {
                 type: "trigger_ChatRaid",
-                textMessage: "[Username] raided with [viewers]",
+                htmlMessage: "[Username] raided with [viewers]",
                 username: "",
                 viewers: ""
             }
@@ -217,7 +217,7 @@ const triggersandactions =
             messagetype: "trigger_ChatRedeem",
             parameters: {
                 type: "trigger_ChatRedeem",
-                textMessage: "[Username] redeemed chat points",
+                htmlMessage: "[Username] redeemed chat points",
                 username: "",
                 message: "",
                 rewardType: ""
@@ -229,7 +229,7 @@ const triggersandactions =
             messagetype: "trigger_ChatResub",
             parameters: {
                 type: "trigger_ChatResub",
-                textMessage: "[Username] resubbed: [message]",
+                htmlMessage: "[Username] resubbed: [message]",
                 username: "",
                 message: "",
                 months: ""
@@ -252,7 +252,7 @@ const triggersandactions =
             messagetype: "trigger_ChatRoomstate",
             parameters: {
                 type: "trigger_ChatRoomstate",
-                textMessage: "Roomstate changed",
+                htmlMessage: "Roomstate changed",
                 channel: "",
                 emoteonly: false,
                 followersonly: "-1",
@@ -267,7 +267,7 @@ const triggersandactions =
             messagetype: "trigger_ChatSubscription",
             parameters: {
                 type: "trigger_ChatSubscription",
-                textMessage: "[Username] subscribed: [message]",
+                htmlMessage: "[Username] subscribed: [message]",
                 username: "",
                 message: "",
                 subplan: ""
@@ -279,7 +279,7 @@ const triggersandactions =
             messagetype: "trigger_ChatTimeout",
             parameters: {
                 type: "trigger_ChatTimeout",
-                textMessage: "[Username] was timedout for [duration]:[reason]",
+                htmlMessage: "[Username] was timedout for [duration]:[reason]",
                 username: "",
                 message: "",
                 duration: ""
@@ -291,7 +291,7 @@ const triggersandactions =
             messagetype: "trigger_ChatSubMysteryGift",
             parameters: {
                 type: "trigger_ChatSubMysteryGift",
-                textMessage: "[Username] received a giftsub",
+                htmlMessage: "[Username] received a giftsub",
                 username: "",
                 message: ""
             }
@@ -303,7 +303,7 @@ const triggersandactions =
             messagetype: "trigger_ChatAutoMod",
             parameters: {
                 type: "trigger_ChatAutoMod",
-                textMessage: "no default message",
+                htmlMessage: "no default message",
                 msgID: "",
                 message: ""
             }
@@ -315,7 +315,7 @@ const triggersandactions =
             messagetype: "trigger_ChatReconnect",
             parameters: {
                 type: "trigger_ChatReconnect",
-                textMessage: "Reconnect",
+                htmlMessage: "Reconnect",
             }
         }, {
             name: "twitchchatAnonGiftPaidUpgradeReceived",
@@ -324,7 +324,7 @@ const triggersandactions =
             messagetype: "trigger_ChatAnonGiftPaidUpgrade",
             parameters: {
                 type: "trigger_ChatAnonGiftPaidUpgrade",
-                textMessage: "[Username] received an annonomous paid upgrade (I think)",
+                htmlMessage: "[Username] received an annonomous paid upgrade (I think)",
                 username: ""
             }
         }, {
@@ -334,7 +334,7 @@ const triggersandactions =
             messagetype: "trigger_ChatAnonSubMysteryGift",
             parameters: {
                 type: "trigger_ChatAnonSubMysteryGift",
-                textMessage: "anon sub mystery gift x[numbOfSubs]",
+                htmlMessage: "anon sub mystery gift x[numbOfSubs]",
                 numbOfSubs: "",
                 message: ""
             }
@@ -345,7 +345,7 @@ const triggersandactions =
             messagetype: "trigger_ChatAnonSubGift",
             parameters: {
                 type: "trigger_ChatAnonSubGift",
-                textMessage: "[Username] received an anon sub gift: [message]",
+                htmlMessage: "[Username] received an anon sub gift: [message]",
                 username: "",
                 message: ""
             }
@@ -356,7 +356,7 @@ const triggersandactions =
             messagetype: "trigger_ChatCheer",
             parameters: {
                 type: "trigger_ChatCheer",
-                textMessage: "[Username] Cheered with [bits]",
+                htmlMessage: "[Username] Cheered with [bits]",
                 username: "",
                 message: ""
             }
@@ -368,7 +368,7 @@ const triggersandactions =
             messagetype: "trigger_ChatMod",
             parameters: {
                 type: "trigger_ChatMod",
-                textMessage: "no default message",
+                htmlMessage: "no default message",
                 username: ""
             }
         },
@@ -379,7 +379,7 @@ const triggersandactions =
                 messagetype: "trigger_ChatMods",
                             parameters: {
                     type: "trigger_ChatMods",
-                    textMessage: "mod list received",  
+                    htmlMessage: "mod list received",  
                     message: ""
                 }
             },*/
@@ -390,7 +390,7 @@ const triggersandactions =
             messagetype: "trigger_ChatSubGift",
             parameters: {
                 type: "trigger_ChatSubGift",
-                textMessage: "[Username] gifed a sub to [Username] ",
+                htmlMessage: "[Username] gifed a sub to [Username] ",
                 gifter: "",
                 recipient: ""
 
@@ -402,7 +402,7 @@ const triggersandactions =
             messagetype: "trigger_ChatSubscribers",
             parameters: {
                 type: "trigger_ChatSubscribers",
-                textMessage: "List of subscribers (I think)",
+                htmlMessage: "List of subscribers (I think)",
                 channel: "",
                 enabled: "",
             }
@@ -413,7 +413,7 @@ const triggersandactions =
             messagetype: "trigger_ChatVips",
             parameters: {
                 type: "trigger_ChatVips",
-                textMessage: "List of Vips(I think)",
+                htmlMessage: "List of Vips(I think)",
                 channel: "",
                 vips: "",
             }
@@ -424,7 +424,7 @@ const triggersandactions =
             messagetype: "trigger_ChatClear",
             parameters: {
                 type: "trigger_ChatClear",
-                textMessage: "Chat was cleared",
+                htmlMessage: "Chat was cleared",
                 channel: "",
             }
         },
@@ -435,7 +435,7 @@ const triggersandactions =
             messagetype: "trigger_ChatUnmod",
                         parameters: {
                 type: "trigger_ChatUnmod",
-                textMessage: "no default message",  
+                htmlMessage: "no default message",  
                 username: "",
             }
         },         {
@@ -445,7 +445,7 @@ const triggersandactions =
             messagetype: "trigger_ChatEmoteSet",
                         parameters: {
                 type: "trigger_ChatEmoteSet",
-                textMessage: "emote set received",  
+                htmlMessage: "emote set received",  
                 message: "",
             }
         }, */
@@ -456,7 +456,7 @@ const triggersandactions =
             messagetype: "trigger_ChatFollowersOnly",
             parameters: {
                 type: "trigger_ChatFollowersOnly",
-                textMessage: "Follower only mode [enabled] for [length]",
+                htmlMessage: "Follower only mode [enabled] for [length]",
                 enabled: false,
                 length: ""
             }
@@ -467,7 +467,7 @@ const triggersandactions =
             messagetype: "trigger_ChatGiftPaidUpgrade",
             parameters: {
                 type: "trigger_ChatGiftPaidUpgrade",
-                textMessage: "[Username] upgraded [Username] to a paid sub",
+                htmlMessage: "[Username] upgraded [Username] to a paid sub",
                 sender: "",
                 recipient: "",
             }
@@ -478,7 +478,7 @@ const triggersandactions =
             messagetype: "trigger_ChatEmoteOnly",
             parameters: {
                 type: "trigger_ChatEmoteOnly",
-                textMessage: "Emote only mode [enabled]",
+                htmlMessage: "Emote only mode [enabled]",
                 enabled: false
             }
         }, {
@@ -488,7 +488,7 @@ const triggersandactions =
             messagetype: "trigger_Chatr9kbeta",
             parameters: {
                 type: "trigger_Chatr9kbeta",
-                textMessage: "r9kBeta mode [message]",
+                htmlMessage: "r9kBeta mode [message]",
                 message: ""
             }
         }, {
@@ -498,7 +498,7 @@ const triggersandactions =
             messagetype: "trigger_ChatSlowmode",
             parameters: {
                 type: "trigger_ChatSlowmode",
-                textMessage: "Slowmode [enabled] for [length]",
+                htmlMessage: "Slowmode [enabled] for [length]",
                 enabled: false,
                 length: ""
             }
@@ -509,7 +509,7 @@ const triggersandactions =
             messagetype: "trigger_ChatWhisper",
             parameters: {
                 type: "trigger_ChatWhisper",
-                textMessage: "Whisper from [Username]: [message]",
+                htmlMessage: "Whisper from [Username]: [message]",
                 from: "",
                 message: ""
             }
@@ -520,7 +520,7 @@ const triggersandactions =
             messagetype: "trigger_ChatNotice",
             parameters: {
                 type: "trigger_ChatNotice",
-                textMessage: "Notice: [message]",
+                htmlMessage: "Notice: [message]",
                 msgid: "",
                 message: ""
             }
@@ -531,7 +531,7 @@ const triggersandactions =
             messagetype: "trigger_ChatUserNotice",
             parameters: {
                 type: "trigger_ChatUserNotice",
-                textMessage: "UserNotice: [message]",
+                htmlMessage: "UserNotice: [message]",
                 msgid: "",
                 message: ""
             }
@@ -542,7 +542,7 @@ const triggersandactions =
             messagetype: "trigger_ChatDisconnected",
             parameters: {
                 type: "trigger_ChatDisconnected",
-                textMessage: "Disconnected: [reason]",
+                htmlMessage: "Disconnected: [reason]",
                 reason: ""
             }
         },
@@ -553,7 +553,7 @@ const triggersandactions =
             messagetype: "trigger_ChatServerChange",
                         parameters: {
                 type: "trigger_ChatServerChange",
-                textMessage: "Server changed to [channel]",  
+                htmlMessage: "Server changed to [channel]",  
                 channel: ""
             }
         },*/
@@ -564,7 +564,7 @@ const triggersandactions =
             messagetype: "trigger_ChatConnected",
             parameters: {
                 type: "trigger_ChatConnected",
-                textMessage: "Connected to [address][port]",
+                htmlMessage: "Connected to [address][port]",
                 address: "",
                 port: ""
             }
@@ -576,7 +576,7 @@ const triggersandactions =
             messagetype: "trigger_ChatConnecting",
                             parameters: {
                 type: "trigger_ChatConnecting",
-                textMessage: "Connecting to [address][port]",  
+                htmlMessage: "Connecting to [address][port]",  
                 address: "",
                 port: ""
             }
@@ -587,7 +587,7 @@ const triggersandactions =
             messagetype: "trigger_ChatLogon",
                             parameters: {
                 type: "trigger_ChatLogon",
-                textMessage: "Logon",  
+                htmlMessage: "Logon",  
             }
         }, 
         */
@@ -598,7 +598,7 @@ const triggersandactions =
             messagetype: "trigger_ChatJoin",
             parameters: {
                 type: "trigger_ChatJoin",
-                textMessage: "[username] Joined [channel]",
+                htmlMessage: "[username] Joined [channel]",
                 username: "",
                 channel: "",
                 platform: ""
@@ -611,7 +611,7 @@ const triggersandactions =
                 messagetype: "trigger_ChatPart",
                                 parameters: {
                     type: "trigger_ChatPart",
-                    textMessage: "[username] Left",
+                    htmlMessage: "[username] Left",
                     username: ""
                 }
             }*/
@@ -1462,7 +1462,7 @@ function handleMessage (account, data)
                     // Setup trigger
                     triggertosend = findtriggerByMessageType("trigger_ChatMessageReceived")
                     triggertosend.parameters.type = "trigger_ChatMessageReceived"
-                    triggertosend.parameters.textMessage = data.tags['display-name'] + ": " + message
+                    triggertosend.parameters.htmlMessage = data.tags['display-name'] + ": " + message
                     triggertosend.parameters.sender = data.tags['display-name']
                     triggertosend.parameters.message = message
                     triggertosend.parameters.firstmessage = data.tags['first-msg']
@@ -1511,7 +1511,7 @@ function handleMessage (account, data)
                         process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "join" }, "joined");
                         triggertosend = findtriggerByMessageType("trigger_ChatJoin")
                         triggertosend.parameters.type = "trigger_ChatJoin"
-                        triggertosend.parameters.textMessage = username + " Joined " + channel
+                        triggertosend.parameters.htmlMessage = username + " Joined " + channel
                         triggertosend.parameters.username = username
                         triggertosend.parameters.channel = channel
                         triggertosend.parameters.platform = "twitch"
@@ -1579,7 +1579,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, message);
                     triggertosend = findtriggerByMessageType("trigger_ChatActionReceived")
                     triggertosend.parameters.type = "trigger_ChatActionReceived"
-                    triggertosend.parameters.textMessage = message
+                    triggertosend.parameters.htmlMessage = message
                     triggertosend.parameters.sender = userstate['display-name']
                     triggertosend.parameters.message = message
                     triggertosend.parameters.firstmessage = userstate['first-msg']
@@ -1598,7 +1598,7 @@ function handleMessage (account, data)
     
                     triggertosend = findtriggerByMessageType("trigger_ChatBanReceived")
                     triggertosend.parameters.type = "trigger_ChatBanReceived"
-                    triggertosend.parameters.textMessage = username + " was banned for " + userstate['ban-duration'] + "s:" + ((reason) ? reason : "")
+                    triggertosend.parameters.htmlMessage = username + " was banned for " + userstate['ban-duration'] + "s:" + ((reason) ? reason : "")
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = reason
     
@@ -1611,7 +1611,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "Message deleted: (" + username + ") " + deletedMessage);
                     triggertosend = findtriggerByMessageType("trigger_ChatMessageDeleted")
                     triggertosend.parameters.type = "trigger_ChatMessageDeleted"
-                    triggertosend.parameters.textMessage = username + "'s message was deleted"
+                    triggertosend.parameters.htmlMessage = username + "'s message was deleted"
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = deletedMessage
                     postChatTrigger(triggertosend)
@@ -1622,7 +1622,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "");
                     triggertosend = findtriggerByMessageType("trigger_ChatPrimePaidUpgrade")
                     triggertosend.parameters.type = "trigger_ChatPrimePaidUpgrade"
-                    triggertosend.parameters.textMessage = username + " upgraded their prime"
+                    triggertosend.parameters.htmlMessage = username + " upgraded their prime"
                     triggertosend.parameters.username = username
                     postChatTrigger(triggertosend)
                 });
@@ -1632,7 +1632,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "raided", "viewers": viewers }, "raided: Raid from " + username + " with " + viewers);
                     triggertosend = findtriggerByMessageType("trigger_ChatRaid")
                     triggertosend.parameters.type = "trigger_ChatRaid"
-                    triggertosend.parameters.textMessage = username + " raided with " + viewers
+                    triggertosend.parameters.htmlMessage = username + " raided with " + viewers
                     triggertosend.parameters.username = username
                     triggertosend.parameters.viewers = viewers
                     postChatTrigger(triggertosend)
@@ -1645,7 +1645,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "redeem", tags: tags }, message + "");
                     triggertosend = findtriggerByMessageType("trigger_ChatRedeem")
                     triggertosend.parameters.type = "trigger_ChatRedeem"
-                    triggertosend.parameters.textMessage = username + " redeemed chat points"
+                    triggertosend.parameters.htmlMessage = username + " redeemed chat points"
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = message
                     triggertosend.parameters.rewardType = rewardType
@@ -1658,7 +1658,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, ((message) ? message : ""));
                     triggertosend = findtriggerByMessageType("trigger_ChatResub")
                     triggertosend.parameters.type = "trigger_ChatResub"
-                    triggertosend.parameters.textMessage = username + " resubbed: " + ((message) ? message : "")
+                    triggertosend.parameters.htmlMessage = username + " resubbed: " + ((message) ? message : "")
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = message
                     triggertosend.parameters.months = months
@@ -1688,7 +1688,7 @@ function handleMessage (account, data)
     
                     triggertosend = findtriggerByMessageType("trigger_ChatRoomstate")
                     triggertosend.parameters.type = "trigger_ChatRoomstate"
-                    triggertosend.parameters.textMessage = "Roomstate changed"
+                    triggertosend.parameters.htmlMessage = "Roomstate changed"
                     triggertosend.parameters.channel = channel
                     triggertosend.parameters.emoteonly = state["emote-only"]
                     triggertosend.parameters.followersonly = (state['followers-only'] === false) ? 0 : state['followers-only']
@@ -1704,7 +1704,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, message);
                     triggertosend = findtriggerByMessageType("trigger_ChatSubscription")
                     triggertosend.parameters.type = "trigger_ChatSubscription"
-                    triggertosend.parameters.textMessage = username + " subscribed: " + message
+                    triggertosend.parameters.htmlMessage = username + " subscribed: " + message
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = message
                     triggertosend.parameters.subplan = userstate["msg-param-sub-plan"]
@@ -1716,7 +1716,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, " Timeout: (" + username + ") " + duration + " " + ((reason) ? reason : ""));
                     triggertosend = findtriggerByMessageType("trigger_ChatTimeout")
                     triggertosend.parameters.type = "trigger_ChatTimeout"
-                    triggertosend.parameters.textMessage = username + " was timedout for " + duration + "s:" + ((reason) ? reason : "")
+                    triggertosend.parameters.htmlMessage = username + " was timedout for " + duration + "s:" + ((reason) ? reason : "")
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = reason
                     triggertosend.parameters.duration = duration
@@ -1730,7 +1730,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, userstate['system-msg']);
                     triggertosend = findtriggerByMessageType("trigger_ChatSubMysteryGift")
                     triggertosend.parameters.type = "trigger_ChatSubMysteryGift"
-                    triggertosend.parameters.textMessage = userstate['system-msg']
+                    triggertosend.parameters.htmlMessage = userstate['system-msg']
                     triggertosend.parameters.username = username
                     triggertosend.parameters.message = userstate['system-msg']
                     postChatTrigger(triggertosend)
@@ -1742,7 +1742,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "automod" }, "automod:" + msgID + " : " + message);
                     triggertosend = findtriggerByMessageType("trigger_ChatAutoMod")
                     triggertosend.parameters.type = "trigger_ChatAutoMod"
-                    triggertosend.parameters.textMessage = "no default message"
+                    triggertosend.parameters.htmlMessage = "no default message"
                     triggertosend.parameters.msgID = msgID
                     triggertosend.parameters.message = message
     
@@ -1753,7 +1753,7 @@ function handleMessage (account, data)
                     process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "reconnect" }, "reconnect: Reconnect");
                     triggertosend = findtriggerByMessageType("trigger_ChatReconnect")
                     triggertosend.parameters.type = "trigger_ChatReconnect"
-                    triggertosend.parameters.textMessage = "Reconnect"
+                    triggertosend.parameters.htmlMessage = "Reconnect"
                     postChatTrigger(triggertosend);
                 });
                 localConfig.twitchClient[account].connection.on("anongiftpaidupgrade", (channel, username, userstate) => 
@@ -1762,7 +1762,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "anongiftpaidupgrade: " + username);
                     triggertosend = findtriggerByMessageType("trigger_ChatAnonGiftPaidUpgrade")
                     triggertosend.parameters.type = "trigger_ChatAnonGiftPaidUpgrade"
-                    triggertosend.parameters.textMessage = username + " received an annonomous paid upgrade (I think)"
+                    triggertosend.parameters.htmlMessage = username + " received an annonomous paid upgrade (I think)"
                     triggertosend.parameters.username = username
     
                     postChatTrigger(triggertosend);
@@ -1773,7 +1773,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "anonsubmysterygift: " + numbOfSubs);
                     triggertosend = findtriggerByMessageType("trigger_ChatAnonSubMysteryGift")
                     triggertosend.parameters.type = "trigger_ChatAnonSubMysteryGift"
-                    triggertosend.parameters.textMessage = "anon sub mystery gift x" + numbOfSubs
+                    triggertosend.parameters.htmlMessage = "anon sub mystery gift x" + numbOfSubs
                     triggertosend.parameters.numbOfSubs = numbOfSubs
                     triggertosend.parameters.message = "anonsubmysterygift: " + numbOfSubs
                     postChatTrigger(triggertosend);
@@ -1785,7 +1785,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "anonsubgift: " + streakMonths + " : " + recipient);
                     triggertosend = findtriggerByMessageType("trigger_ChatAnonSubGift")
                     triggertosend.parameters.type = "trigger_ChatAnonSubGift"
-                    triggertosend.parameters.textMessage = recipient + " received an anon sub gift"
+                    triggertosend.parameters.htmlMessage = recipient + " received an anon sub gift"
                     triggertosend.parameters.recipient = recipient
                     postChatTrigger(triggertosend);
                 });
@@ -1795,7 +1795,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, userstate, "cheer: " + message);
                     triggertosend = findtriggerByMessageType("trigger_ChatCheer")
                     triggertosend.parameters.type = "trigger_ChatCheer"
-                    triggertosend.parameters.textMessage = userstate["username"] + " received an anon sub gift: " + message
+                    triggertosend.parameters.htmlMessage = userstate["username"] + " received an anon sub gift: " + message
                     triggertosend.parameters.username = userstate["username"]
                     triggertosend.parameters.message = message
                     postChatTrigger(triggertosend);
@@ -1806,7 +1806,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "mod" }, "mod:" + username);
                     triggertosend = findtriggerByMessageType("trigger_ChatMod")
                     triggertosend.parameters.type = "trigger_ChatMod"
-                    triggertosend.parameters.textMessage = "no default message"
+                    triggertosend.parameters.htmlMessage = "no default message"
                     triggertosend.parameters.username = username
                     postChatTrigger(triggertosend);
                 });
@@ -1819,7 +1819,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, tags, "mods: " + message);
                     triggertosend = findtriggerByMessageType("trigger_ChatMods")
                     triggertosend.parameters.type= "trigger_ChatMods"
-                    triggertosend.parameters.textMessage= "mod list received"
+                    triggertosend.parameters.htmlMessage= "mod list received"
                     triggertosend.parameters.message= message
                     postChatTrigger(triggertosend);
                 });
@@ -1831,7 +1831,7 @@ function handleMessage (account, data)
         process_chat_data(channel, userstate, "subgift: Subgift from " + username + " for " + recipient + " months " + streakMonths);
         triggertosend = findtriggerByMessageType("trigger_ChatSubGift")
         triggertosend.parameters.type = "trigger_ChatSubGift"
-        triggertosend.parameters.textMessage = username + " gifed a sub to " + recipient
+        triggertosend.parameters.htmlMessage = username + " gifed a sub to " + recipient
         triggertosend.parameters.gifter = username
         triggertosend.parameters.recipient = recipient
         postChatTrigger(triggertosend);
@@ -1842,7 +1842,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "subscribers" }, "subscribers: " + enabled);
         triggertosend = findtriggerByMessageType("trigger_ChatSubscribers")
         triggertosend.parameters.type = "trigger_ChatSubscribers"
-        triggertosend.parameters.textMessage = "List of subscribers (I think)"
+        triggertosend.parameters.htmlMessage = "List of subscribers (I think)"
         triggertosend.parameters.channel = channel
         triggertosend.parameters.enabled = enabled
         postChatTrigger(triggertosend);
@@ -1853,7 +1853,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "vips" }, "vips: VIPS are :" + vips.join(" : "));
         triggertosend = findtriggerByMessageType("trigger_ChatVips")
         triggertosend.parameters.type = "trigger_ChatVips"
-        triggertosend.parameters.textMessage = "List of Vips(I think)"
+        triggertosend.parameters.htmlMessage = "List of Vips(I think)"
         triggertosend.parameters.channel = channel
         triggertosend.parameters.vips = vips
         postChatTrigger(triggertosend);
@@ -1864,7 +1864,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "clearchat" }, "clearchat: Chat has been cleared");
         triggertosend = findtriggerByMessageType("trigger_ChatClear")
         triggertosend.parameters.type = "trigger_ChatClear"
-        triggertosend.parameters.textMessage = "Chat was cleared"
+        triggertosend.parameters.htmlMessage = "Chat was cleared"
         triggertosend.parameters.channel = channel
         postChatTrigger(triggertosend);
     });
@@ -1880,7 +1880,7 @@ function handleMessage (account, data)
                     process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "unmod" }, "unmod: " + username + " UnModded");
                     triggertosend = findtriggerByMessageType("trigger_ChatUnmod")
                     triggertosend.parameters.type= "trigger_ChatUnmod"
-                    triggertosend.parameters.textMessage= "no default message"  
+                    triggertosend.parameters.htmlMessage= "no default message"  
                     triggertosend.parameters.username= username
                     postChatTrigger(triggertosend);
                 });
@@ -1890,7 +1890,7 @@ function handleMessage (account, data)
                     process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "emotesets" }, "emotesets: " + sets);
                     triggertosend = findtriggerByMessageType("trigger_ChatEmoteSet")
                     triggertosend.parameters.type= "trigger_ChatEmoteSet"
-                    triggertosend.parameters.textMessage= "emote set received"
+                    triggertosend.parameters.htmlMessage= "emote set received"
                     postChatTrigger(triggertosend);
                 });
                 ----------------------------------------------- */
@@ -1901,7 +1901,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "followersonly" }, "followersonly: " + length + " Follower Only mode : " + enabled);
         triggertosend = findtriggerByMessageType("trigger_ChatFollowersOnly")
         triggertosend.parameters.type = "trigger_ChatFollowersOnly"
-        triggertosend.parameters.textMessage = "Follower only mode " + enabled + " for " + length
+        triggertosend.parameters.htmlMessage = "Follower only mode " + enabled + " for " + length
         triggertosend.parameters.enabled = enabled
         triggertosend.parameters.length = length
         postChatTrigger(triggertosend);
@@ -1912,7 +1912,7 @@ function handleMessage (account, data)
         process_chat_data(channel, userstate, "giftpaidupgrade: " + sender + " updradeged " + username + " with a gift paid upgrade");
         triggertosend = findtriggerByMessageType("trigger_ChatGiftPaidUpgrade")
         triggertosend.parameters.type = "trigger_ChatGiftPaidUpgrade"
-        triggertosend.parameters.textMessage = sender + " upgraded " + username + " to a paid sub"
+        triggertosend.parameters.htmlMessage = sender + " upgraded " + username + " to a paid sub"
         triggertosend.parameters.sender = sender
         triggertosend.parameters.recipient = username
         postChatTrigger(triggertosend);
@@ -1925,7 +1925,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "emoteonly" }, "emoteonly: Chat emote only mode :" + enabled);
         triggertosend = findtriggerByMessageType("trigger_ChatEmoteOnly")
         triggertosend.parameters.type = "trigger_ChatEmoteOnly"
-        triggertosend.parameters.textMessage = "Emote only mode " + enabled
+        triggertosend.parameters.htmlMessage = "Emote only mode " + enabled
         triggertosend.parameters.enabled = enabled
         postChatTrigger(triggertosend);
     });
@@ -1935,7 +1935,7 @@ function handleMessage (account, data)
         process_chat_data(channel, tags, "r9kbeta: " + message);
         triggertosend = findtriggerByMessageType("trigger_Chatr9kbeta")
         triggertosend.parameters.type = "trigger_Chatr9kbeta"
-        triggertosend.parameters.textMessage = "r9kBeta mode " + message
+        triggertosend.parameters.htmlMessage = "r9kBeta mode " + message
         triggertosend.parameters.message = message
         postChatTrigger(triggertosend);
     });
@@ -1945,7 +1945,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "slowmode" }, "slowmode: " + enabled + " enabled for " + length);
         triggertosend = findtriggerByMessageType("trigger_ChatSlowmode")
         triggertosend.parameters.type = "trigger_ChatSlowmode"
-        triggertosend.parameters.textMessage = "Slowmode " + enabled + " for " + length
+        triggertosend.parameters.htmlMessage = "Slowmode " + enabled + " for " + length
         triggertosend.parameters.enabled = enabled
         triggertosend.parameters.length = length
         postChatTrigger(triggertosend);
@@ -1957,7 +1957,7 @@ function handleMessage (account, data)
         process_chat_data(channel, tags, message);
         triggertosend = findtriggerByMessageType("trigger_ChatUserNotice")
         triggertosend.parameters.type = "trigger_ChatUserNotice"
-        triggertosend.parameters.textMessage = "UserNotice: " + message
+        triggertosend.parameters.htmlMessage = "UserNotice: " + message
         triggertosend.parameters.msgid = msgid
         triggertosend.parameters.message = message
         postChatTrigger(triggertosend);
@@ -1976,7 +1976,7 @@ function handleMessage (account, data)
         process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": from, "emotes": "", "message-type": "whisper" }, "whisper: " + message);
         triggertosend = findtriggerByMessageType("trigger_ChatWhisper")
         triggertosend.parameters.type = "trigger_ChatWhisper"
-        triggertosend.parameters.textMessage = "Whisper from " + from + ": " + message
+        triggertosend.parameters.htmlMessage = "Whisper from " + from + ": " + message
         triggertosend.parameters.from = from
         triggertosend.parameters.message = message
         postChatTrigger(triggertosend);
@@ -1987,7 +1987,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": channel, "emotes": "", "message-type": "notice" }, message);
         triggertosend = findtriggerByMessageType("trigger_ChatNotice")
         triggertosend.parameters.type = "trigger_ChatNotice"
-        triggertosend.parameters.textMessage = "Notice: " + message
+        triggertosend.parameters.htmlMessage = "Notice: " + message
         triggertosend.parameters.msgid = msgid
         triggertosend.parameters.message = message
         postChatTrigger(triggertosend);
@@ -2000,7 +2000,7 @@ function handleMessage (account, data)
         process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "disconnected" }, "disconnected: " + reason);
         triggertosend = findtriggerByMessageType("trigger_ChatDisconnected")
         triggertosend.parameters.type = "trigger_ChatDisconnected"
-        triggertosend.parameters.textMessage = "Disconnected: " + reason
+        triggertosend.parameters.htmlMessage = "Disconnected: " + reason
         triggertosend.parameters.reason = reason
         postChatTrigger(triggertosend);
     });
@@ -2012,7 +2012,7 @@ function handleMessage (account, data)
         process_chat_data(channel, { "display-name": "System", "emotes": "", "message-type": "serverchange" }, "serverchange: " + channel);
         triggertosend = findtriggerByMessageType("trigger_ChatServerChange")
         triggertosend.parameters.type= "trigger_ChatServerChange"
-        triggertosend.parameters.textMessage= "Server changed to " + channel  
+        triggertosend.parameters.htmlMessage= "Server changed to " + channel  
         triggertosend.parameters.channel= channel
         postChatTrigger(triggertosend);
     });
@@ -2024,7 +2024,7 @@ function handleMessage (account, data)
         process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connected" }, "connected:" + address + ": " + port);
         triggertosend = findtriggerByMessageType("trigger_ChatConnected")
         triggertosend.parameters.type = "trigger_ChatConnected"
-        triggertosend.parameters.textMessage = "Connected to " + address + ":" + port
+        triggertosend.parameters.htmlMessage = "Connected to " + address + ":" + port
         triggertosend.parameters.address = address
         triggertosend.parameters.port = port
         postChatTrigger(triggertosend);
@@ -2037,7 +2037,7 @@ function handleMessage (account, data)
         process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "connecting" }, "connecting: " + address + ":" + port);
         triggertosend = findtriggerByMessageType("trigger_ChatConnecting")
         triggertosend.parameters.type= "trigger_ChatConnecting"
-        triggertosend.parameters.textMessage= "Connecting to " + address + ":" + port     
+        triggertosend.parameters.htmlMessage= "Connecting to " + address + ":" + port     
         triggertosend.parameters.address= address
         triggertosend.parameters.port= port
         postChatTrigger(triggertosend);
@@ -2048,7 +2048,7 @@ function handleMessage (account, data)
         process_chat_data("#" + serverConfig.streamername.toLocaleLowerCase(), { "display-name": "System", "emotes": "", "message-type": "logon" }, "logon:");
         triggertosend = findtriggerByMessageType("trigger_ChatLogon")
         triggertosend.parameters.type= "trigger_ChatLogon"
-        triggertosend.parameters.textMessage= "Logon "
+        triggertosend.parameters.htmlMessage= "Logon "
         postChatTrigger(triggertosend);
     });
     ----------------------------------------------- */
@@ -2068,7 +2068,7 @@ file_log("part", channel, username);
 //process_chat_data(channel, { "display-name": username, "emotes": "", "message-type": "part" }, "part: " + username);
 triggertosend = findtriggerByMessageType("trigger_ChatPart")
 triggertosend.parameters.type= "trigger_ChatPart"
-triggertosend.parameters.textMessage= username+ " Left"
+triggertosend.parameters.htmlMessage= username+ " Left"
 triggertosend.parameters.username= username
 postChatTrigger(triggertosend);
 });  -----------------------------------------------*/

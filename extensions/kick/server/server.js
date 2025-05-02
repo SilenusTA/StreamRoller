@@ -29,9 +29,8 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import * as logger from "../../../backend/data_center/modules/logger.js";
 import sr_api from "../../../backend/data_center/public/streamroller-message-api.cjs";
-import * as kickAPI from './kickAPIs.js';
 import * as chatService from './chat.js';
-
+import * as kickAPI from './kickAPIs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -79,36 +78,48 @@ const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
     description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
-    version: "0.2",
+    version: "0.3",
     channel: serverConfig.channel,
     triggers:
         [
             {
                 name: "Kick message received",
                 displaytitle: "Kick Chat Message",
-                description: "A chat message was received. textMessage field has name and message combined",
+                description: "A chat message was received. htmlMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
+                    type: "chat",//required
+                    type_UIDescription: "StreamRoller message type for chat messages",
+                    platform: "Kick",//required
+                    platform_UIDescription: "Source of message platform",
+                    htmlMessage: "Not set",//required
+                    htmlMessage_UIDescription: "Message with addef html links to emotes etc",
+                    safeMessage: "",//required
+                    safeMessage_UIDescription: "parsed text only message",
+                    message: "",//required
+                    message_UIDescription: "raw unprocessed message",
+                    sender: "",//required
+                    sender_UIDescription: "kick sender/user name",
 
-                    triggerActionRef: "KickChatMessage",
+                    id: "",//optional
+                    id_UIDescription: "kick message id",
+                    messagetype: "",//optional
+                    messagetype_UIDescription: "kick message type",
+                    timestamp: -1,//required
+                    timestamp_UIDescription: "kick message timestamp",
+
+                    senderId: "",//optional
+                    senderId_UIDescription: "kick sender/user id",
+                    userRoles: "",//optional
+                    userRoles_UIDescription: "comma separated string of user roles",
+                    senderBadges: "",//optional
+                    senderBadges_UIDescription: "kick sender/user badges",
+                    color: "#FF0000",//optional
+                    color_UIDescription: "chat message color for this user/message",
+                    emotes: "",
+                    emotes_UIDescription: "string containing emote id's and names",
+                    triggerActionRef: "KickChatMessage",//optional
                     triggerActionRef_UIDescription: "Reference for this message",
-                    // streamroller settings
-                    type: "",
-                    platform: "Kick",
-                    textMessage: "[username]: [message]",
-                    safemessage: "",
-                    color: "#FF0000",
-
-                    // youtube message data
-                    id: "",
-                    message: "",
-                    messagetype: "",
-                    timestamp: -1,
-
-                    //youtube author data
-                    sender: "",
-                    senderid: "",
-                    senderbadges: "",
                 }
             },
             {
@@ -375,14 +386,20 @@ async function onDataCenterMessage (server_packet)
         if (serverCredentials.kickBotAccessToken)
         {
             localConfig.bot = await kickAPI.getUser(false)
-            if (localConfig.bot.data[0].name)
+            if (localConfig.bot && localConfig.bot.data[0].name)
             {
                 serverCredentials.botName = localConfig.bot.data[0].name
+                serverCredentials.botId = localConfig.bot.data[0].user_id
                 sendAccountNames();
                 // update the kickAPI credentials 
                 kickAPI.setCredentials(serverCredentials);
             }
         }
+        /*let testdata = {
+            account: "bot",
+            message: "paste message in that is causing issues here to get it to send the message on startup"
+        }
+        kickAPI.sendChatMessage(testdata)*/
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -1077,19 +1094,26 @@ function onChatMessage (message)
         safeMessage = safeMessage.replace(/[^\x00-\x7F]/g, "");
 
         triggerToSend.parameters = {
-            textMessage: parsedTextMessage,
-            safemessage: safeMessage,
-            color: message.sender.identity.color,// possibly use color from menu for mods etc
-            category: serverConfig.currentCategoryName,
-            channel: message.channel,
-            // youtube message data
+            triggerActionRef: "KickChatMessage",
+            // streamroller settings
+            type: "chat",
+            platform: "Kick",
+            htmlMessage: message.sender.username + ": " + parsedTextMessage,
+            safeMessage: safeMessage,
+            color: message.sender.identity.color,
+
+            // kick message data
             id: message.id,
+            message: message.content,
             messagetype: message.type,
-            message: safeMessage,
             timestamp: message.created_at,
+            emotes: JSON.stringify(emotes),
+
+            //kick author data
             sender: message.sender.username,
-            senderid: message.sender.id,
-            senderbadges: message.sender.identity.badges,
+            senderId: message.sender.id,
+            senderBadges: message.sender.identity.badges,
+            roles: "viewer"
         }
         postTrigger(triggerToSend);
 

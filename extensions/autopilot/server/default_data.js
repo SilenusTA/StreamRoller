@@ -52,8 +52,8 @@ const default_serverData = {
                             "type": ""
                         },
                         {
-                            "MATCHER_textMessage": "1",
-                            "textMessage": ""
+                            "MATCHER_htmlMessage": "1",
+                            "htmlMessage": ""
                         },
                         {
                             "MATCHER_sender": "1",

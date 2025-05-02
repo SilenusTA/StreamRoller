@@ -19,8 +19,8 @@
  *      You should have received a copy of the GNU Affero General Public License
  *      along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import * as fs from "fs";
 import express from "express";
+import * as fs from "fs";
 import { OAuth2Client } from 'google-auth-library';
 import { google } from "googleapis";
 import { dirname } from 'path';
@@ -116,13 +116,13 @@ const triggersandactions =
             {
                 name: "YouTubeAPIMessageReceived",
                 displaytitle: "YouTubeAPI Chat Message",
-                description: "A chat message was received. textMessage field has name and message combined",
+                description: "A chat message was received. htmlMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
                     // streamroller settings
                     type: "trigger_ChatMessageReceived",
                     platform: "Youtube",
-                    textMessage: "[username]: [message]",
+                    htmlMessage: "[username]: [message]",
                     safemessage: "",
                     color: "#FF0000",
                     channel: "",
@@ -675,7 +675,7 @@ function startYoutubeMonitor ()
                             {
                                 let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
                                 triggerToSend.parameters = { ...triggerToSend.parameters, ...message };
-                                triggerToSend.parameters.textMessage = message.sender + ":" + message.message;
+                                triggerToSend.parameters.htmlMessage = message.sender + ":" + message.message;
                                 // replace the html parts of the string with their escape chhars
                                 let safemessage = sanitiseHTML(message);
                                 // remove non ascii chars
@@ -765,7 +765,7 @@ async function getLiveChatMessages ()
                         id: message.id, // Track message ID to avoid re-processing
                         message: message.snippet.displayMessage,
                         ytmessagetype: message.snippet.type,
-                        textmessagedetails: message.snippet.textMessageDetails.messageText,
+                        textmessagedetails: message.snippet.htmlMessageDetails.messageText,
                         publishedat: message.snippet.publishedAt,
                         hasdisplaycontent: message.snippet.hasDisplayContent,
 
@@ -827,8 +827,8 @@ async function postLiveChatMessages (message)
                 requestBody: {
                     snippet: {
                         liveChatId: localConfig.liveChatId,
-                        type: 'textMessageEvent',
-                        textMessageDetails: {
+                        type: 'htmlMessageEvent',
+                        htmlMessageDetails: {
                             messageText: message.message,
                         },
                     },

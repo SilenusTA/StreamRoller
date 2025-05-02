@@ -18,6 +18,10 @@
 import https from 'https';
 import { Buffer } from 'buffer';
 import * as querystring from 'querystring';
+const localConfig =
+{
+    maxChatMessageLength: 500
+}
 // callbacks so we can update our refresh token if it expires
 const callbacks =
 {
@@ -101,11 +105,13 @@ function checkCredentials (log = false)
 // ============================================================================
 /**
  * 
- * @param {boolean} forStreamer are we refreshing the streamer or bot token
+ * @param {boolean} [forStreamer = true] are we refreshing the streamer or bot token
  * @returns tokens
  */
 function refreshToken (forStreamer = true)
 {
+    //console.log("refreshToken:", forStreamer)
+    //console.log(Credentials)
     return new Promise((resolve, reject) =>
     {
         let postData = null
@@ -156,6 +162,8 @@ function refreshToken (forStreamer = true)
                     }
                 } else
                 {
+                    console.log("refreshToken:", JSON.parse(data).error, ": ", JSON.parse(data).error_description)
+                    console.log("refreshToken code:", res.statusCode, "message", res.statusMessage)
                     reject(new Error(`Token refresh failed with status ${res.statusCode}`));
                 }
             });
@@ -555,10 +563,18 @@ async function sendChatMessageWithToken (messageData, token)
 {
     return new Promise((resolve, reject) =>
     {
+        // lets pre-parse the message for kick specifically
+        let message = messageData.message;
+        // truncate message if longer than the chat API can handle
+        if (messageData.message.length > localConfig.maxChatMessageLength)
+            message = message.substring(0, localConfig.maxChatMessageLength - 4) + "...";
+        message = message.replace(/\p{Emoji_Presentation}/gu, '');
+        // need to figure out a way for users to specify different emotes for different platforms.
+        message = message.replaceAll('olddepMarv ', "[emote:3626103:olddepressedgamerMarv]");
         let postData = JSON.stringify({
             broadcaster_user_id: Credentials.userId,
-            content: messageData.message,
-            type: messageData.account
+            content: message.toString(),
+            type: "user"
         });
 
         const options = {
@@ -618,16 +634,32 @@ async function sendChatMessage (messageData)
         }*/
         try
         {
-            const response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+            let response = "Message Not sent"
+            if (messageData.account == "user")
+                response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+
+            if (messageData.account == "bot")
+                response = await sendChatMessageWithToken(messageData, Credentials.kickBotAccessToken);
             return response;
+
         } catch (err)
         {
             if (err.type === 'unauthorized')
             {
                 // Token likely expired
-                let tokens = await refreshToken();
-                Credentials.kickAccessToken = tokens.access_token
-                Credentials.kickRefreshToken = tokens.refresh_token
+                let tokens = {};
+                if (messageData.account == "user")
+                {
+                    tokens = await refreshToken();
+                    Credentials.kickAccessToken = tokens.access_token
+                    Credentials.kickRefreshToken = tokens.refresh_token
+                }
+                else (messageData.account == "bot")
+                {
+                    tokens = await refreshToken(false);
+                    Credentials.kickBotAccessToken = tokens.access_token
+                    Credentials.kickBotRefreshToken = tokens.refresh_token
+                }
                 callbacks.updateRefreshTokenFn(Credentials)
                 try
                 {

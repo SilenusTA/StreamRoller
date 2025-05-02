@@ -118,7 +118,7 @@ const triggersandactions =
                 messagetype: "trigger_SongAddedToQueue",
                 parameters: {
                     songName: "",
-                    textMessage: ""
+                    htmlMessage: ""
                 }
             }
             ,
@@ -129,7 +129,7 @@ const triggersandactions =
                 messagetype: "trigger_CurrentSongChange",
                 parameters: {
                     songName: "",
-                    textMessage: ""
+                    htmlMessage: ""
                 }
             }
 
@@ -721,7 +721,7 @@ function joinSslServerScheduler ()
                     {
                         let triggertosend = findtriggerByMessageType("trigger_SongAddedToQueue")
                         triggertosend.parameters.songName = msg.title
-                        triggertosend.parameters.textMessage = "Song Added to queue: " + msg.title
+                        triggertosend.parameters.htmlMessage = "Song Added to queue: " + msg.title
                         sr_api.sendMessage(localConfig.DataCenterSocket,
                             sr_api.ServerPacket("ChannelData",
                                 serverConfig.extensionname,
@@ -907,7 +907,7 @@ function sendCurrentSongChange (extension)
 
         let triggertosend = findtriggerByMessageType("trigger_CurrentSongChange")
         triggertosend.parameters.songName = localConfig.currentsong
-        triggertosend.parameters.textMessage = songtext
+        triggertosend.parameters.htmlMessage = songtext
         if (extension != "")
         {
             sr_api.sendMessage(localConfig.DataCenterSocket,

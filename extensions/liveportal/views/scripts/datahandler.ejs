@@ -616,6 +616,8 @@
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname && livePortalVolatileData.extensions[extension_packet.from])
                 {
+                    if (!livePortalVolatileData.extensions[extension_packet.from])
+                        livePortalVolatileData.extensions[extension_packet.from] = {}
                     livePortalVolatileData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
                     addSettingsWidgetSmall(extension_packet.from);
                 }
@@ -629,6 +631,8 @@
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname)
                 {
+                    if (!livePortalVolatileData.extensions[extension_packet.from])
+                        livePortalVolatileData.extensions[extension_packet.from] = {}
                     livePortalVolatileData.extensions[extension_packet.from].settingswidgetlarge = extension_packet.data
                     addALLSettingsWidgetLargeScheduler();
                 }
@@ -3175,10 +3179,12 @@
             var today = new Date();
             let datestamp = new Date(today)
             let icons = "<img style='width: 20px;' alt='Kick' title='Kick' src='/liveportal/images/kick_icon.png'>"
-            if (chatdata.senderbadges[0].type == "broadcaster")
-                icons += "<img style='width: 20px;' alt='Kick' title='Kick Broadcaster' src='/liveportal/images/kick_broadcaster.png'>"
+            if (chatdata.senderBadges.lenght > 1)
+            {
+                if (chatdata.senderBadges[0].type == "broadcaster")
+                    icons += "<img style='width: 20px;' alt='Kick' title='Kick Broadcaster' src='/liveportal/images/kick_broadcaster.png'>"
+            }
             let time = datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0');
-
             // make setup our fields for parts of the message
             var time_color = "<span style='color: " + chatcolors.default_timecode_color + "'>";
             var end_time_color = "</span>"
@@ -3201,7 +3207,7 @@
             var end_line_field = "</span>";
 
             // kick messages are pre sanitised
-            var message = chatdata.textMessage
+            var message = chatdata.htmlMessage
             // set the window title (might have updated)
             if (chatdata.channel)
                 localConfig.kickchatchannel = chatdata.channel

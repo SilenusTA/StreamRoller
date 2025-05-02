@@ -64,6 +64,12 @@ const localConfig = {
     openAIKey: "",
     // number of messages added to history so far
     chatMessageCount: 0,
+    // chat history will be of form
+    // {
+    //  kick : {}
+    //  twitch : {}
+    // etc
+    // }
     chatHistory: [],
     // are we currently inTimerWindow (ie time has expired and chatbot started)
     inTimerWindow: false,
@@ -75,7 +81,7 @@ const localConfig = {
     // min time between requests (to avoid 429 errors)
     overloadprotection: 500,
     lastAIResponse: "",
-    lastAIRequest: ""
+    lastAIRequest: []
 };
 const default_serverConfig = {
     __version__: "0.6",
@@ -379,6 +385,39 @@ const triggersandactions =
                     maxtokens: ""
                 }
             },*/
+
+
+            // new revamp starts here
+            {
+                name: "OpenAIChatbotChatMessageReceived",
+                displaytitle: "Process a chat message",
+                description: "This message will be treated as a standard message from a chat window and will be added to conversations for auto responses as well as being tested for direct messages",
+                messagetype: "action_ProcessChatMessage",
+                parameters: {
+                    platform: "",
+                    platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                    sender: "",
+                    sender_UIDescription: "(Required)The user/chatter name of the sender of this message",
+                    message: "",
+                    message_UIDescription: "(Required)The message that was sent",
+                    triggerActionRef: "KickChatMessage",
+                    triggerActionRef_UIDescription: "(Optional)Reference for this message",
+                    engine: "",
+                    engine_UIDescription: "(Optional)OpenAI engin to use",
+                    temperature: "",
+                    temperature_UIDescription: "(Optional)Temperature to use for the Engine",
+                    maxtokens: "",
+                    maxtokens_UIDescription: "(Optional)Maximum tokens to use for this message (limits response length)",
+                }
+            },
+
+
+
+
+
+
+
+
             {
                 name: "OpenAIChatbotProcessImage",
                 displaytitle: "Process Image",
@@ -512,6 +551,7 @@ function onDataCenterMessage (server_packet)
                 }
             }
         }
+        // old message previously sent directly from twitch
         else if (extension_packet.type === "action_ProcessText")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -525,6 +565,43 @@ function onDataCenterMessage (server_packet)
                     extension_packet.data.sender = serverConfig.chatbotname
                 processTextMessage(extension_packet.data, true);
             }
+        }
+        else if (extension_packet.type === "action_ProcessChatMessage") 
+        {
+            // new action for the new system of using autopilot to handle these messages
+            /* Example extension_packet.data packet from kick
+                {
+                triggerparams: {
+                    name: 'Kick message received',
+                    displaytitle: 'Kick Chat Message',
+                    description: 'A chat message was received. htmlMessage field has name and message combined',
+                    messagetype: 'trigger_ChatMessageReceived',
+                    parameters: {
+                    htmlMessage: 'test',
+                    safemessage: 'test',
+                    color: '#DEB2FF',
+                    category: 'Elite: Dangerous',
+                    id: '2d67171d-ffc5-46de-862c-2a6168207a71',
+                    messagetype: 'message',
+                    message: 'test',
+                    timestamp: '2025-05-01T18:52:02+00:00',
+                    sender: 'OldDepressedGamer',
+                    senderid: 6886595,
+                    senderBadges: [Array]
+                    }
+                },
+                platform: 'kick',
+                sender: 'OldDepressedGamer',
+                message: 'test',
+                triggerActionRef: 'KickChatAutopilotTrigger',
+                engine: '',
+                temperature: '',
+                maxtokens: ''
+                }
+            */
+            // 
+            if (extension_packet.data.platform.toLowerCase() == "kick")
+                parseKickMessage(extension_packet.data)
         }
         else if (extension_packet.type === "action_ProcessImage")
         {
@@ -1141,7 +1218,7 @@ function heartBeatCallback ()
  * @param {boolean} [triggerresponse=false] send a trigger out when completed processing
  * @param {number} [maxRollbackCount=20] used for spam relief 
  */
-function processTextMessage (data, triggerresponse = false, maxRollbackCount = 20)
+function processTextMessage (data, triggerresponse = false, maxRollbackCount = 20, platform = "twitch")
 {
     try
     {
@@ -1190,7 +1267,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
             }
             setTimeout(() =>
             {
-                processTextMessage(data, triggerresponse, maxRollbackCount--)
+                processTextMessage(data, triggerresponse, maxRollbackCount--, platform)
             }, randomTimeout);
             return;
         }
@@ -1208,7 +1285,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
         else if (directChatQuestion)
             messages = [{ "role": "user", "content": messages }];
         else
-            messages = addPersonality(data.sender, messages, serverConfig.currentprofile)
+            messages = addPersonality(data.sender, messages, serverConfig.currentprofile, platform)
 
         // update the engine to the data sent if filled in
         if (data.engine && data.engine != "")
@@ -1218,7 +1295,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
         if (data.maxtokens && data.maxtokens != "")
             modelToUse.max_tokens = data.maxtokens.toString();
 
-        callOpenAI(messages, modelToUse)
+        callOpenAI(messages, modelToUse, platform)
             .then(chatMessageToPost =>
             {
                 let msg = findtriggerByMessageType("trigger_chatbotResponse")
@@ -1271,6 +1348,31 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
     }
 }
 // ============================================================================
+//                    FUNCTION: parseKickMessage
+// ============================================================================
+/**
+ * This function is called we we see a chat message posted from twitchchat extension
+ * @param {object} data 
+ * @param {number} [maxRollbackCount =20]
+  */
+function parseKickMessage (data)
+{
+    // convert the data into the old style format for parsing
+    let messagedata =
+    {
+        message: data.message,
+        engine: data.engine,
+        temperature: data.temperature,
+        maxtokens: data.maxtokens,
+        data:
+        {
+            "message-type": "chat",
+            "display-name": data.sender
+        }
+    }
+    processChatMessage(messagedata, 20, "kick")
+}
+// ============================================================================
 //                    FUNCTION: processChatMessage
 // ============================================================================
 /**
@@ -1278,7 +1380,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
  * @param {object} data 
  * @param {number} [maxRollbackCount =20]
  */
-function processChatMessage (data, maxRollbackCount = 20)
+function processChatMessage (data, maxRollbackCount = 20, platform = "twitch")
 {
     // debug message colors
     let brightText = "\x1b[1m";
@@ -1512,7 +1614,7 @@ function processChatMessage (data, maxRollbackCount = 20)
         }
         setTimeout(() =>
         {
-            processChatMessage(data, maxRollbackCount--)
+            processChatMessage(data, maxRollbackCount--, platform)
         }, randomTimeout);
         return;
     }
@@ -1593,14 +1695,28 @@ function processChatMessage (data, maxRollbackCount = 20)
 
         if (serverConfig.translatetoeng === "on" || serverConfig.submessageenabled === "on")
         {
-            callOpenAI(messages, modelToUse)
+            callOpenAI(messages, modelToUse, platform)
                 .then(chatMessageToPost =>
                 {
                     if (chatMessageToPost)
-                        if (!submessage)
-                            postMessageToTwitch(" (" + data.data['display-name'] + ") " + chatMessageToPost)
+                    {
+                        if (platform == "twitch")
+                        {
+                            if (!submessage)
+                                postMessageToTwitch(" (" + data.data['display-name'] + ") " + chatMessageToPost)
+                            else
+                                postMessageToTwitch(chatMessageToPost)
+                        }
+                        else if (platform == "kick")
+                        {
+                            if (!submessage)
+                                postMessageToKick(" (" + data.data['display-name'] + ") " + chatMessageToPost)
+                            else
+                                postMessageToKick(chatMessageToPost)
+                        }
                         else
-                            postMessageToTwitch(chatMessageToPost)
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "failed to post sub message, no platform set:");
+                    }
                     return;
                 })
                 .catch(e =>
@@ -1639,24 +1755,37 @@ function processChatMessage (data, maxRollbackCount = 20)
             // ##############################################
             //         Processing a question message
             // ##############################################
-            //let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
-            let message = [{ "role": "user", "content": chatdata.message }]
+            if (chatdata && chatdata.message && chatdata.message.length > 0)
+            {
+                //let messages = addPersonality(chatdata.message, serverConfig.currentprofile)
+                let message = [{ "role": "user", "content": chatdata.message }]
 
-            callOpenAI(message, modelToUse)
-                .then(chatMessageToPost =>
-                {
-                    if (chatMessageToPost)
+                callOpenAI(message, modelToUse, platform)
+                    .then(chatMessageToPost =>
                     {
-                        postMessageToTwitch(chatMessageToPost)
-                    }
-                    return;
-                })
-                .catch(e =>
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI question request failed:", e.message);
-                    return;
-                })
-            return;
+                        if (chatMessageToPost)
+                        {
+                            if (platform == "twitch")
+                                postMessageToTwitch(chatMessageToPost)
+                            else if (platform == "kick")
+                                postMessageToKick(chatMessageToPost)
+                            else
+                                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "failed to post question message, no platform set:");
+                        }
+                        return;
+                    })
+                    .catch(e =>
+                    {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "openAI question request failed:", e.message);
+                        return;
+                    })
+                return;
+            }
+            else
+            {
+                console.log("Chatbot, ignoring message, did it contain a http reference or was was it to short? message:", data.message)
+                return;
+            }
         }
         else
             // add CD timer here to stop spam messages
@@ -1688,7 +1817,9 @@ function processChatMessage (data, maxRollbackCount = 20)
     {
         if (chatdata && chatdata.message && chatdata.message != "")
         {
-            localConfig.chatHistory.push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
+            if (!localConfig.chatHistory[platform])
+                localConfig.chatHistory[platform] = [];
+            localConfig.chatHistory[platform].push({ "role": "user", "content": data.data['display-name'] + ": " + chatdata.message })
             localConfig.chatMessageCount++;
         }
         else
@@ -1744,7 +1875,7 @@ function processChatMessage (data, maxRollbackCount = 20)
         // TODO Need a hitory bufffer to add ig we want to
         // do we want previous history
         //if (!directChatbotTriggerTag || (directChatbotTriggerTag && serverConfig.chatbotnametriggertagaddhistory))
-        messages = addPersonality(data.data['display-name'], "", serverConfig.currentprofile)
+        messages = addPersonality(data.data['display-name'], "", serverConfig.currentprofile, platform)
 
 
         if (serverConfig.DEBUG_MODE === "on")
@@ -1758,7 +1889,7 @@ function processChatMessage (data, maxRollbackCount = 20)
 
         }
 
-        callOpenAI(messages, modelToUse)
+        callOpenAI(messages, modelToUse, platform)
             .then(chatMessageToPost =>
             {
                 if (chatMessageToPost)
@@ -1772,13 +1903,22 @@ function processChatMessage (data, maxRollbackCount = 20)
                         console.log("wordcount: ", wordcount, ": ", serverConfig.chatbottypingdelay)
                         console.log("delay response: ", delaytime / 1000, "s")
                     }
-                    setTimeout(() => { postMessageToTwitch(chatMessageToPost) }, delaytime);
+                    setTimeout(() =>
+                    {
+                        if (platform == "twitch")
+                            postMessageToTwitch(chatMessageToPost)
+                        else if (platform == "kick")
+                            postMessageToKick(chatMessageToPost)
+                        else
+                            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "failed to post message, no platform set:");
+
+                    }, delaytime);
                     // if we don't have a time inTimerWindow start a new one (might have been called from a chat question)
                     if (localConfig.chatTimerHandle._destroyed)
                         startChatbotTimer()
 
                     //clear the buffer for next time (probably had some async messages while waiting for api to return)
-                    localConfig.chatHistory = []
+                    localConfig.chatHistory[platform] = []
                 }
                 localConfig.requestPending = false;
             })
@@ -1800,7 +1940,7 @@ function processChatMessage (data, maxRollbackCount = 20)
  * @param {object} modelToUse The openAI model detailsto use
  * @returns OpenAI response or error message
  */
-async function callOpenAI (string_array, modelToUse)
+async function callOpenAI (string_array, modelToUse, platform)
 {
     if (serverConfig.DEBUG_MODE === "on")
         console.log("Calling OpenAI with model ", string_array, modelToUse)
@@ -1858,11 +1998,14 @@ async function callOpenAI (string_array, modelToUse)
                     openAIResponce = openAIResponce + " ..."
                 openAIResponce = openAIResponce.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
                 localConfig.lastAIResponse = openAIResponce;
-                localConfig.lastAIRequest = ""
-                for (let index = 0; index < localConfig.chatHistory.length; index++)
-                    localConfig.lastAIRequest += localConfig.chatHistory[index].content + ". "
+                localConfig.lastAIRequest[platform] = ""
+                if (!localConfig.chatHistory[platform])
+                    localConfig.chatHistory[platform] = [];
+                for (let index = 0; index < localConfig.chatHistory[platform].length; index++)
+                    localConfig.lastAIRequest[platform] += localConfig.chatHistory[platform][index].content + ". "
                 openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotname + ":", "");
                 openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotnametriggertag + ":", "");
+                openAIResponce = replaceUnusualChars(openAIResponce)
                 return openAIResponce;
             }
             else
@@ -1903,7 +2046,7 @@ async function callOpenAI (string_array, modelToUse)
  * @param {string} profile profile to attatch to the message
  * @returns message with included personality
  */
-function addPersonality (username, message, profile)
+function addPersonality (username, message, profile, platform)
 {
     let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
 
@@ -1926,8 +2069,11 @@ function addPersonality (username, message, profile)
         if (localConfig.lastAIResponse != "" && serverConfig.chatbotpreviousresponseinhistoryenabled == "on")
             outputmessage.push({ "role": "user", "content": serverConfig.chatbotnametriggertag + ": " + localConfig.lastAIResponse })
         //add chat messages
-        for (const obj of localConfig.chatHistory)
-            outputmessage.push(obj);
+        if (localConfig.chatHistory[platform])
+        {
+            for (const obj of localConfig.chatHistory[platform])
+                outputmessage.push(obj);
+        }
     }
     else
         outputmessage.push({ "role": "user", "content": username + ": " + message })
@@ -1947,7 +2093,7 @@ function parseData (data, translation = false)
     let messageEmotes = data.data.emotes;
     let emoteposition = null
     let emotetext = null
-    if (messageEmotes != null && messageEmotes != "")
+    if (messageEmotes && messageEmotes != null && messageEmotes != "")
     {
         emotetext = []
         for (var key in messageEmotes) 
@@ -1999,6 +2145,15 @@ function parseData (data, translation = false)
     return data
 }
 // ============================================================================
+//                           FUNCTION: replaceUnusualChars
+//            replaces some of the unusal chars we might get back in a response
+// ============================================================================
+function replaceUnusualChars (message)
+{
+    message = message.replaceAll("’", "'");
+    return message
+}
+// ============================================================================
 //                           FUNCTION: createImageFromAction
 //            Creates an image from a description
 // ============================================================================
@@ -2008,7 +2163,7 @@ function parseData (data, translation = false)
  * @param {object} data action_ProcessImage params {usechatbot,prompt,message,append,requester}
  * @returns error messages
  */
-async function createImageFromAction (data)
+async function createImageFromAction (data, platform = "twitch")
 {
     if (serverConfig.generateimages != "on")
     {
@@ -2023,10 +2178,14 @@ async function createImageFromAction (data)
         // Create our image prompt for OpenAI
         if (data.message == "")
         {
+
             if (data.usechatbot == "true")
                 messages = data.prompt + " " + localConfig.lastAIResponse + " " + data.append
+            else if (localConfig.lastAIRequest[platform])
+                messages = data.prompt + " " + localConfig.lastAIRequest[platform] + " " + data.append
             else
-                messages = data.prompt + " " + localConfig.lastAIRequest + " " + data.append
+                messages = data.prompt + " " + data.append
+
         }
         else
             messages = data.prompt + " " + data.message + " " + data.append;
@@ -2278,6 +2437,32 @@ function postMessageToTwitch (message)
     );
 }
 // ============================================================================
+//                           FUNCTION: postMessageToKick
+// ============================================================================
+/**
+ * sends a action_SendChatMessage to twitchchat to post a twitch message to chat
+ * @param {string} message 
+ */
+function postMessageToKick (message)
+{
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "action_SendChatMessage",
+                serverConfig.extensionname,
+                {
+                    account: "bot",
+                    message: serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + message
+                },
+                "",
+                "kick"),
+            "",
+            "kick"
+        )
+    );
+}
+// ============================================================================
 //                           FUNCTION: startChatbotTimer
 // ============================================================================
 /**
@@ -2467,3 +2652,4 @@ function parseUserRequestSaveDataFile (extensions_message)
 // Note that initialise is mandatory to allow the server to start this extension
 // ============================================================================
 export { initialise, triggersandactions };
+

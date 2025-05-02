@@ -24,13 +24,12 @@
  * @extension YouTube
  * YouTube functionality without the google API limits (limited free Tokens) or need for complicated OAUTH for the users requiring a google cloud account with a valid application setup to get the ClientId and ClientSecret needed.
  */
-import { Innertube, UniversalCache, YTNodes } from 'youtubei.js';
-import { Log } from 'youtubei.js';
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import * as fs from "fs";
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { Innertube, Log, UniversalCache, YTNodes } from 'youtubei.js';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 
 const DEBUG_LOGGING = false
 // set logging level for youtube.js : NONE, ERROR, WARNING, INFO, DEBUG
@@ -88,7 +87,7 @@ const triggersandactions =
             {
                 name: "Youtube message received",
                 displaytitle: "YouTube Chat Message",
-                description: "A chat message was received. textMessage field has name and message combined",
+                description: "A chat message was received. htmlMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
 
@@ -96,7 +95,7 @@ const triggersandactions =
                     // streamroller settings
                     type: "trigger_ChatMessageReceived",
                     platform: "Youtube",
-                    textMessage: "[username]: [message]",
+                    htmlMessage: "[username]: [message]",
                     safemessage: "",
                     color: "#FF0000",
 
@@ -111,7 +110,7 @@ const triggersandactions =
                     senderid: "",
 
                     senderprofileimageurl: "",
-                    senderbadges: "",
+                    senderBadges: "",
                     senderisverified: false,
                     senderischatmoderator: false,
                 }
@@ -846,7 +845,7 @@ function sendChatMessageTrigger (ytmessage, time)
         safemessage = safemessage.replace(/[^\x00-\x7F]/g, "");
         triggerToSend.parameters = {
 
-            textMessage: ytmessage.author.name + ": " + ytmessage.message.text,
+            htmlMessage: ytmessage.author.name + ": " + ytmessage.message.text,
             safemessage: safemessage,
             color: "#FF0000",// possibly use color from menu for mods etc
 
@@ -862,7 +861,7 @@ function sendChatMessageTrigger (ytmessage, time)
             senderid: ytmessage.author.id,
 
             senderprofileimageurl: ytmessage.author.thumbnails[0].url,
-            senderbadges: ytmessage.author.badges,
+            senderBadges: ytmessage.author.badges,
             senderisverified: ytmessage.author.is_verified,
             senderischatmoderator: ytmessage.author.is_moderator,
         }
@@ -1025,3 +1024,4 @@ function file_log (data, override_debug = false)
     }
 }
 export { initialise, triggersandactions };
+
