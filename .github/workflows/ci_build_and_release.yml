@@ -3,12 +3,11 @@ name: CI process chain
 run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "ci*.*.*"
+#  push:
+#    tags:
+#      - "ci*.*.*"
 env:
   VERSION_TAG: ${{ github.ref_name }}
-  #VERSION_TAG: ci1.1.1
 jobs:
   createReleaseTag:
     runs-on: windows-latest
@@ -59,7 +58,7 @@ jobs:
         shell: pwsh
   BuildRelease:
     needs: createReleaseTag
-    uses: ./.github/workflows/create_release.yml
+    uses: ./.github/workflows/create_dev_build.yml
     with:
       tag: ${{ needs.createReleaseTag.outputs.tag_name }}
   UpdateDocs:

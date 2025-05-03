@@ -1,0 +1,99 @@
+name: Create a new Release
+run-name: ${{github.actor}} delivering exe to live repo release
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+env:
+  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+  GITHUB_TOKEN: ${{ github.token }}
+  VERSION_TAG: ${{inputs.tag}}
+jobs:
+  minify_code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{inputs.tag}}
+      - name: minifying
+        uses: nizarmah/auto-minify@v2.1
+        with:
+          overwrite: true
+          js_engine: "uglify-js"
+      - name: removing git folder (to keep space down in exe)
+        run: |
+          ls -la
+          rm -fr .git/*
+          rmdir .git
+          ls -la
+      - name: removing automated documents folder
+        run: |
+          ls -la docs/
+          rm -fr docs/apidocs/*
+          rmdir docs/apidocs
+          ls -la docs/
+      - name: removing older extensions ~~
+        run: |
+          ls -la extensions/
+          rm -fr extensions/~~*
+          ls -la extensions/
+      - name: uploading artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-artifacts
+          path: .
+  creating_exe:
+    runs-on: windows-latest
+    needs: minify_code
+    steps:
+      - name: importing artecfact
+        uses: actions/download-artifact@v4
+        with:
+          name: mini-artifacts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.16.0"
+      - name: Create SoftwareVersion.txt
+        run: |
+          echo  ${{inputs.tag}} > SoftwareVersion.txt
+      - name: Printing version from SoftwareVersion.txt
+        run: |
+          cat SoftwareVersion.txt
+      - name: Creating exe
+        run: |
+          npm i -D caxa
+          npm install
+          npx caxa -m "Unpacking " -i . -o StreamRoller${{inputs.tag}}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
+      - name: Create Release.txt
+        run: |
+          echo Release version ${{inputs.tag}} >> Release.txt
+      - name: Zip up exe
+        run: |
+          7z a StreamRoller${{inputs.tag}}.zip StreamRoller${{inputs.tag}}.exe
+      - name: Get previous release notes
+        id: get-previous-release
+        run: |
+          PREV_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          echo "Previous tag: $PREV_RELEASE"
+          NOTES=$(gh release view "$PREV_RELEASE" --json body --jq '.body')
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push Release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+#          body: Version ${{inputs.tag}} of StreamRoller
+          body: ${{ steps.get-previous-release.outputs.release_notes }}
+          name: "dev_StreamRoller${{inputs.tag}}"
+          tag_name: ${{inputs.tag}}
+          token: ${{ secrets.API_TOKEN_GITHUB }}
+          repository: SilenusTA/StreamRoller
+          files: |
+            Release.txt
+            StreamRoller${{inputs.tag}}.zip
+            StreamRoller${{inputs.tag}}.exe
