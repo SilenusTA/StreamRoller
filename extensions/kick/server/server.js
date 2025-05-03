@@ -70,8 +70,9 @@ const default_serverCredentials =
     version: "0.1",
     kickApplicationClientId: "",
     kickApplicationSecret: "",
-    streamerName: "",
-    botName: ""
+    streamerName: "", // streamer we are connecting to (ie channel for that streamer)
+    userName: "", // currently log in user
+    botName: "" // currently logged in bot
 };
 let serverCredentials = structuredClone(default_serverCredentials);
 const triggersandactions =
@@ -103,7 +104,7 @@ const triggersandactions =
 
                     id: "",//optional
                     id_UIDescription: "kick message id",
-                    messagetype: "",//optional
+                    messagetype: "",//optional kick message type
                     messagetype_UIDescription: "kick message type",
                     timestamp: -1,//required
                     timestamp_UIDescription: "kick message timestamp",
@@ -358,6 +359,7 @@ async function onDataCenterMessage (server_packet)
             {
                 localConfig.apiConnected = true;
                 serverCredentials.streamerName = localConfig.streamer.data[0].name;
+                serverCredentials.userName = localConfig.streamer.data[0].name;
                 serverCredentials.userId = localConfig.streamer.data[0].user_id
                 sendAccountNames();
                 // update the kickAPI credentials 
@@ -370,11 +372,11 @@ async function onDataCenterMessage (server_packet)
                 // TBD PreRelease - remove if statement before release
                 if (serverConfig.channelData == null)
                 {
-                    serverConfig.channelData = await kickAPI.getChannelData(localConfig.streamer.data[0].name)
+                    serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
                     SaveConfigToServer()
                 }
                 localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
-                localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
+                localConfig.kickLiveStream = await kickAPI.getLivestream(serverCredentials.userId)
 
                 connectToChatScheduler()
             }
@@ -773,14 +775,14 @@ async function connectToChat ()
         // TBD PreRelease - remove if statement before release
         if (serverConfig.channelData == null)
         {
-            serverConfig.channelData = await kickAPI.getChannelData(localConfig.streamer.data[0].name)
+            serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
             SaveConfigToServer()
         }
         localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
         localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
 
         // setup chat connection for the streamer.
-        chatService.connectChat(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`, localConfig.streamer.data[0].name)
+        chatService.connectChat(serverConfig.channelData.chatroom.id, serverConfig.channelData.id, serverCredentials.streamerName, serverCredentials.streamerName)
     }
     catch (err)
     {
@@ -962,11 +964,13 @@ function heartBeatCallback ()
  * Store an updated refresh token
  * @param {string} token 
  */
-function updateRefreshToken (token)
+function updateRefreshToken (credentials)
 {
     // dev need to check this is working. remove once seen working ok
-    SaveCredentialToServer("kickAccessToken", token.kickAccessToken)
-    SaveCredentialToServer("kickRefreshToken", token.kickRefreshToken)
+    SaveCredentialToServer("kickAccessToken", credentials.kickAccessToken)
+    SaveCredentialToServer("kickRefreshToken", credentials.kickRefreshToken)
+    SaveCredentialToServer("kickBotAccessToken", credentials.kickBotAccessToken)
+    SaveCredentialToServer("kickBotRefreshToken", credentials.kickBotRefreshToken)
 }
 
 // ============================================================================
@@ -1098,7 +1102,7 @@ function onChatMessage (message)
             // streamroller settings
             type: "chat",
             platform: "Kick",
-            htmlMessage: message.sender.username + ": " + parsedTextMessage,
+            htmlMessage: parsedTextMessage,
             safeMessage: safeMessage,
             color: message.sender.identity.color,
 
@@ -1125,13 +1129,13 @@ function onChatMessage (message)
     }
 }
 // ============================================================================
-//                           FUNCTION: createDummyChatMessage
+//                           FUNCTION: createDummyChatMessageFromMessage
 // ============================================================================
 /**
  * Simulates a message from kick chat.
  * @param {object} data 
  */
-function createDummyChatMessage (message)
+function createDummyChatMessageFromMessage (message)
 {
     let dummyMessage =
     {
@@ -1150,7 +1154,18 @@ function createDummyChatMessage (message)
     }
     onChatMessage(dummyMessage);
 }
-
+// ============================================================================
+//                           FUNCTION: createDummyChatMessage
+// ============================================================================
+/**
+ * Simulates a message from kick chat.
+ * @param {object} data 
+ */
+function createDummyChatMessage (message)
+{
+    //message.type("system")
+    onChatMessage(message);
+}
 // ===========================================================================
 //                           FUNCTION: sendAccountNames
 // ===========================================================================

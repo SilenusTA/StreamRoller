@@ -3206,6 +3206,9 @@
             var line_field = "<BR><span>";
             var end_line_field = "</span>";
 
+            let botMessage = localConfig.usernamelist && localConfig.usernamelist.kick && (chatdata.sender === localConfig.usernamelist.kick.bot || chatdata.sender === "bot" || chatdata.sender === "System")
+
+
             // kick messages are pre sanitised
             var message = chatdata.htmlMessage
             // set the window title (might have updated)
@@ -3229,7 +3232,7 @@
             // ########################################## 
             //  Our Bot messages (ie chatbot)
             // ##########################################
-            if (localConfig.usernamelist && localConfig.usernamelist.kick && (chatdata.sender === localConfig.usernamelist.kick.bot || chatdata.sender === "bot" || chatdata.sender === "System"))
+            if (botMessage)
             {
                 icons = icons + mod_badge;
                 line_field = "<BR><span style='color: " + chatcolors.default_greyout_color + "'>"
@@ -3237,6 +3240,7 @@
                 message_field = message;
                 // set the card data
                 localConfig.chatMessageBuffer.push(line_field + time_field + icons + name_field + message_field + end_line_field);
+                return;
             }
 
             // ##################### username colors and icons
@@ -3846,6 +3850,27 @@
                 if (serverConfig.donations === "on")
                     PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
                 alerttext = "<div class='text-danger'>YouTubeSuperChat: " + alertdata.parameters.username + "  " + alertdata.parameters.formatted_amount + ' "' + alertdata.parameters.message + '"</div>';
+                DisplayAlertMessages(alerttext);
+                break;
+            //Kick alerts
+            case "trigger_KickSubscriptionReceived":
+
+                let submessage = alertdata.parameters.message;
+                if (submessage === null)
+                    submessage = ""
+                if (alertdata.parameters.months === 1)
+                    messagetxt += alertdata.parameters.username + " for the " + alertdata.parameters.months + ' month subscription. "' + submessage + '"'
+                else
+                    messagetxt += alertdata.parameters.username + " for " + alertdata.parameters.months + ' months of subscriptions. "' + submessage + '"'
+                if (serverConfig.subs === "on")
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                alerttext = "<div class='text-primary'>KickSubscription: " + alertdata.parameters.username + " " + alertdata.parameters.months + 'm "' + submessage + '"</div>';
+                DisplayAlertMessages(alerttext);
+            case "trigger_KickFollowReceived":
+                messagetxt += alertdata.parameters.username + " for the follow."
+                if (serverConfig.follows === "on")
+                    PostMessageToDiscord(messagetxt, serverConfig.donations_channel);
+                alerttext = "<div class='text-secondary'>KickFollow: " + alertdata.parameters.username + "</div>";
                 DisplayAlertMessages(alerttext);
                 break;
         }

@@ -255,7 +255,28 @@ const triggersandactions =
                 parameters: {
                     data: ""
                 }
-            }
+            },
+            //Kick specific alerts
+            {
+                name: "StreamlabsKickFollowAlert",
+                displaytitle: "Follow on Kick",
+                description: "A Viewer Followed your Kick stream",
+                messagetype: "trigger_KickFollowReceived",
+                parameters: {
+                    username: ""
+                }
+            },
+            {
+                name: "StreamlabsKickSubscriptionAlert",
+                displaytitle: "Subscription on Kick",
+                description: "Someone Subscribed to your Kick stream",
+                messagetype: "trigger_KickSubscriptionReceived",
+                parameters: {
+                    username: "",
+                    type: "",
+                    months: "",
+                }
+            },
         ],
     // these are messages we can receive to perform an action
 }
@@ -918,7 +939,7 @@ function parseStreamlabsMessage (data)
         {
             trigger.parameters.username = data.message[0].name
             trigger.parameters.gifter = data.message[0].gifter
-            trigger.parameters.type = data.message[0].type
+            trigger.parameters.type = data.type
             trigger.parameters.months = data.message[0].months
             trigger.parameters.message = data.message[0].message
             outputTrigger(trigger)
@@ -1053,6 +1074,29 @@ function parseStreamlabsMessage (data)
         if (trigger)
         {
             trigger.parameters.data = data
+            outputTrigger(trigger)
+        }
+    }
+    // Kick events
+    else if (data.type === "follow" && data.for === "kick_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsKickFollowAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name;
+            outputTrigger(trigger)
+        }
+
+    }
+    else if (data.type === "subscription" && data.for === "kick_account")
+    {
+        trigger = triggersandactions.triggers.find(obj => obj.name === "StreamlabsKickSubscriptionAlert")
+        if (trigger)
+        {
+            trigger.parameters.username = data.message[0].name
+            trigger.parameters.type = data.type
+            trigger.parameters.months = data.message[0].months
+            trigger.parameters.message = data.message[0].message
             outputTrigger(trigger)
         }
     }

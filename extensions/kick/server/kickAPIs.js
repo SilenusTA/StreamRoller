@@ -18,6 +18,7 @@
 import https from 'https';
 import { Buffer } from 'buffer';
 import * as querystring from 'querystring';
+import * as logger from "../../../backend/data_center/modules/logger.js";
 const localConfig =
 {
     maxChatMessageLength: 500
@@ -110,8 +111,6 @@ function checkCredentials (log = false)
  */
 function refreshToken (forStreamer = true)
 {
-    //console.log("refreshToken:", forStreamer)
-    //console.log(Credentials)
     return new Promise((resolve, reject) =>
     {
         let postData = null
@@ -162,8 +161,8 @@ function refreshToken (forStreamer = true)
                     }
                 } else
                 {
-                    console.log("refreshToken:", JSON.parse(data).error, ": ", JSON.parse(data).error_description)
-                    console.log("refreshToken code:", res.statusCode, "message", res.statusMessage)
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel", "refreshToken Error: ", JSON.parse(data));
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel", "refreshToken code:", res.statusCode, "message", res.statusMessage);
                     reject(new Error(`Token refresh failed with status ${res.statusCode}`));
                 }
             });
@@ -217,7 +216,7 @@ function getUsersWithToken (token)
                         resolve(JSON.parse(data));
                     } catch (e)
                     {
-                        console.log("ERROR: getUsersWithToken: err.type", e.type)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUsersWithToken", "ERROR: ", e);
                         reject({ type: 'parse_error', raw: data });
                     }
                 }
@@ -244,8 +243,8 @@ async function getUser (forStreamer)
 {
     try
     {
-        checkCredentials()
-        //if (!checkCredentials())
+        //let credentialsOk = checkCredentials()
+        //if (!credsOk)
         //    return;
         try
         {
@@ -284,17 +283,17 @@ async function getUser (forStreamer)
                     return data;
                 } catch (err2)
                 {
-                    console.log('❌ getUser: Still failed after refresh:', err2);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Still failed after refresh err2:", err2);
                 }
             } else
             {
-                console.log('❌getUser: Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Request failed err:", err);
             }
         }
     }
     catch (err)
     {
-        console.log("ERROR: getUser:", err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "ERROR: getUser err:", err);
     }
 }
 // ============================================================================
@@ -331,7 +330,7 @@ function getChannelsWithToken (token)
 
                     } catch (e)
                     {
-                        console.log("ERROR: getChannelsWithToken: err.type", e.type)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", e);
                         reject({ type: 'getChannelsWithToken: parse_error', raw: data });
                     }
                 }
@@ -340,6 +339,7 @@ function getChannelsWithToken (token)
 
         req.on('error', (err) =>
         {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", err);
             reject({ type: 'getChannelsWithToken: request_error', error: err });
         });
 
@@ -378,17 +378,17 @@ async function getChannel ()
                     return data;
                 } catch (err2)
                 {
-                    console.log('❌ ERROR: getChannel Still failed after refresh:', err2);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannel", "Still failed after refresh:", err2);
                 }
             } else
             {
-                console.log('❌ ERROR: getChannel Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannel", "Request failed:", err);
             }
         }
     }
     catch (err)
     {
-        console.log("ERROR: getChannel:", err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannel", "Request failed:", err);
     }
 }
 // this link is provide by oxRetroDev on discord.
@@ -423,6 +423,7 @@ function getChannelData (username)
             {
                 if (res.statusCode === 401)
                 {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "401:Unauthorized");
                     reject({ type: 'getChannelData: unauthorized' });
                 } else
                 {
@@ -432,7 +433,7 @@ function getChannelData (username)
 
                     } catch (e)
                     {
-                        console.log("ERROR: getChannelData: err.type", e.type)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "parse_error:", e);
                         reject({ type: 'getChannelData: parse_error', raw: data });
                     }
                 }
@@ -441,6 +442,7 @@ function getChannelData (username)
 
         req.on('error', (err) =>
         {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "request_error:", err);
             reject({ type: 'getChannelData: request_error', error: err });
         });
 
@@ -479,6 +481,7 @@ function getLivestreamsWithToken (userId)
             {
                 if (res.statusCode === 401)
                 {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "401:unauthorized:");
                     reject({ type: 'getLivestreamsWithToken: unauthorized' });
                 } else
                 {
@@ -487,7 +490,7 @@ function getLivestreamsWithToken (userId)
                         resolve(JSON.parse(data));
                     } catch (e)
                     {
-                        console.log("ERROR: getLivestreamsWithToken: err.type", e.type)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "parse_error:", e);
                         reject({ type: 'getLivestreamsWithToken: parse_error', raw: data });
                     }
                 }
@@ -496,6 +499,7 @@ function getLivestreamsWithToken (userId)
 
         req.on('error', (err) =>
         {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "request_error:", err);
             reject({ type: 'getLivestreamsWithToken: request_error', error: err });
         });
 
@@ -536,17 +540,17 @@ async function getLivestream (userId)
                     return data;
                 } catch (err2)
                 {
-                    console.log('❌ ERROR: getLivestreamsWithToken Still failed after refresh:', err2);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "Still failed after refresh:", err2);
                 }
             } else
             {
-                console.log('❌ ERROR: getLivestreamsWithToken Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "Request failed:", err);
             }
         }
     }
     catch (err)
     {
-        console.log("ERROR: getLivestreamsWithToken:", err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "Error:", err);
     }
 }
 
@@ -596,12 +600,16 @@ async function sendChatMessageWithToken (messageData, token)
             {
                 if (res.statusCode === 401)
                 {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", "401:unauthorized");
                     reject({ type: 'sendChatMessageWithToken: unauthorized' });
                 }
                 else if (res.statusCode === 200)
                     resolve("Message Sent ")
                 else
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", "401:unauthorized", { code: res.statusCode, resmessage: res.statusMessage, message: responseData });
                     reject({ code: res.statusCode, message: responseData })
+                }
             });
         });
 
@@ -667,19 +675,19 @@ async function sendChatMessage (messageData)
                     return response;
                 } catch (err2)
                 {
-                    console.log('❌ ERROR: sendChatMessage Still failed after refresh:', err2);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "Still failed after refresh", err2);
                     return null;
                 }
             } else
             {
-                console.log('❌ ERROR: sendChatMessage Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "Request failed", err);
                 return null;
             }
         }
     }
     catch (err)
     {
-        console.log("ERROR: sendChatMessage:", err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "ERROR", err);
         return null;
     }
 }
@@ -776,19 +784,19 @@ async function setTitleAndCategory (title, category)
                     return response;
                 } catch (err2)
                 {
-                    console.log('❌ ERROR: setTitleAndCategory Still failed after refresh:', err2);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "setTitleAndCategory", "Still failed after refresh", err2);
                     return null;
                 }
             } else
             {
-                console.log('❌ ERROR: setTitleAndCategory Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "setTitleAndCategory", "Request failed", err);
                 return null;
             }
         }
     }
     catch (err)
     {
-        console.log("ERROR: setTitleAndCategory:", err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + "setTitleAndCategory", "ERROR", err);
         return null;
     }
 }
@@ -878,6 +886,7 @@ async function searchCategories (categoryName)
                 })
                 .catch((err) =>
                 {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed call to searchCategoriesWithToken", err);
                     reject("failed call to searchCategoriesWithToken", err)
                 })
         } catch (err)
@@ -898,17 +907,19 @@ async function searchCategories (categoryName)
                             })
                             .catch((err) =>
                             {
+                                logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed call to searchCategoriesWithToken after refresh", err);
                                 reject("failed to call searchCategoriesWithToken after refresh", err)
                             })
 
                     })
                     .catch((err) =>
                     {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed to get refresh tokens", err);
                         reject("failed to get refresh tokens", err)
                     })
             } else
             {
-                console.log('❌ ERROR: searchCategoriesWithPage Request failed:', err);
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", " Request failed", err);
                 reject("failed");
             }
         }
