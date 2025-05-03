@@ -63,7 +63,7 @@ function init (onMessageCallback, createDummyChatMessage)
 // ============================================================================
 /**
  * 
- * @param {string*} chatroomId // channel to subscribe to
+ * @param {string} chatroomId // channel to subscribe to
  * @param {string} userName // user logged in name
  * @param {string} streamerName // name for the channel Name we are connecting to (normally the same unless using the app to read/view another channel)
  */

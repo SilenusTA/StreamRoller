@@ -399,7 +399,7 @@ async function getChannel ()
 /**
  * 
  * @param {string} username 
- * @returns 
+ * @returns object
  */
 function getChannelData (username)
 {
@@ -753,7 +753,7 @@ async function setTitleAndCategoryWithToken (title, category, token)
  * 
  * @param {string} title 
  * @param {number} category 
- * @returns 
+ * @returns object
  */
 async function setTitleAndCategory (title, category)
 {
@@ -865,7 +865,7 @@ async function searchCategoriesWithToken (categoryName)
  * 
  * @param {string} title 
  * @param {number} category 
- * @returns 
+ * @returns object
  */
 async function searchCategories (categoryName)
 {
