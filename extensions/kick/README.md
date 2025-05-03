@@ -23,7 +23,7 @@ Provides StreamRoller with triggers and actions relating to kick streaming.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*
+Table last updated: *Sat, 03 May 2025 15:21:21 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -41,7 +41,10 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 | name | trigger | description |
 | --- | --- | --- |
-| Kick message received | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+| Kick message received | trigger_ChatMessageReceived | A chat message was received. htmlMessage field has name and message combined |
+| Category search results | trigger_searchedKickGames | Results of a search request in a JSON object |
+| Category history cleared | trigger_categoryHistoryCleared | The Category history was cleared |
+| Title history cleared | trigger_titleHistoryCleared | The Title history was cleared |
 UpdatedDocTime
 
 ### Triggers
@@ -52,4 +55,8 @@ ReplaceTAGForTriggers
 
 | name | trigger | description |
 | --- | --- | --- |
+| KickChatSendChatMessage | action_SendChatMessage | Post a message to Kick chat (Note user is case sensitive) |
+| SearchForKickGame | action_searchForKickGame | Triggers the action trigger_searchedKickGames |
+| ClearCategoryHistory | action_clearCategoryHistory | Clears out the Category history list |
+| ClearTitleHistory | action_clearKickTitleHistory | Clears out the Title history list |
 

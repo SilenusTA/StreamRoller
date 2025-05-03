@@ -32,7 +32,7 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*
+Table last updated: *Sat, 03 May 2025 15:21:21 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -42,7 +42,7 @@ To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS
 
 | name | trigger | description |
 | --- | --- | --- |
-| TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+| TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. htmlMessage field has name and message combined |
 | TwitchChatActionReceived | trigger_ChatActionReceived | A chat action was received (a /me message) |
 | TwitchChatBanReceived | trigger_ChatBanReceived | A chat user was banned |
 | TwitchChatMessageDeletedReceived | trigger_ChatMessageDeleted | A chat message was deleted  |

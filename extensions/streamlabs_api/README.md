@@ -39,7 +39,7 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*
+Table last updated: *Sat, 03 May 2025 15:21:21 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -66,6 +66,8 @@ To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS
 | StreamlabsYouTubeSuperchatAlert | trigger_YouTubeSuperchatReceived | Someone Superchated on YouTube |
 | StreamlabsDataDump | trigger_StreamlabsDataDump | Stream labs data dump, ie subs/month, top10 donators etc etc |
 | StreamlabsDataDumpUnderlying | trigger_StreamlabsDataDumpUnderlying | Stream labs Underlying data dump, ie subs/month, top10 donators etc etc |
+| StreamlabsKickFollowAlert | trigger_KickFollowReceived | A Viewer Followed your Kick stream |
+| StreamlabsKickSubscriptionAlert | trigger_KickSubscriptionReceived | Someone Subscribed to your Kick stream |
 
 
 ### Actions

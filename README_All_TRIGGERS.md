@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,287)
+### Current count (5,297)
 
-```Triggers: 3,712 / Actions: 1,575```
+```Triggers: 3,717 / Actions: 1,580```
 
 Contents
 
@@ -37,7 +37,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
+Table last updated: *Sat, 03 May 2025 15:21:21 GMT*## Extensions
 
 ## autopilot
 
@@ -67,6 +67,7 @@ Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
 | name | trigger | description |
 | --- | --- | --- |
 | OpenAIChatbotProcessText | action_ProcessText | Send some text through the chatbot (users in original message on the ignore list will not get processed) |
+| OpenAIChatbotChatMessageReceived | action_ProcessChatMessage | This message will be treated as a standard message from a chat window and will be added to conversations for auto responses as well as being tested for direct messages |
 | OpenAIChatbotProcessImage | action_ProcessImage | Send some text through the chatbot to create an image |
 | OpenAIChatbotSwitchProfile | action_ChangeProfile | Switches the chatbot to the given profile |
 ## discordchat
@@ -87,11 +88,18 @@ Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
 
 | name | trigger | description |
 | --- | --- | --- |
-| Kick message received | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+| Kick message received | trigger_ChatMessageReceived | A chat message was received. htmlMessage field has name and message combined |
+| Category search results | trigger_searchedKickGames | Results of a search request in a JSON object |
+| Category history cleared | trigger_categoryHistoryCleared | The Category history was cleared |
+| Title history cleared | trigger_titleHistoryCleared | The Title history was cleared |
 ### Actions
 
 | name | trigger | description |
 | --- | --- | --- |
+| KickChatSendChatMessage | action_SendChatMessage | Post a message to Kick chat (Note user is case sensitive) |
+| SearchForKickGame | action_searchForKickGame | Triggers the action trigger_searchedKickGames |
+| ClearCategoryHistory | action_clearCategoryHistory | Clears out the Category history list |
+| ClearTitleHistory | action_clearKickTitleHistory | Clears out the Title history list |
 ## msfs2020
 
 ### Triggers
@@ -5293,6 +5301,8 @@ Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
 | StreamlabsYouTubeSuperchatAlert | trigger_YouTubeSuperchatReceived | Someone Superchated on YouTube |
 | StreamlabsDataDump | trigger_StreamlabsDataDump | Stream labs data dump, ie subs/month, top10 donators etc etc |
 | StreamlabsDataDumpUnderlying | trigger_StreamlabsDataDumpUnderlying | Stream labs Underlying data dump, ie subs/month, top10 donators etc etc |
+| StreamlabsKickFollowAlert | trigger_KickFollowReceived | A Viewer Followed your Kick stream |
+| StreamlabsKickSubscriptionAlert | trigger_KickSubscriptionReceived | Someone Subscribed to your Kick stream |
 ### Actions
 
 | name | trigger | description |
@@ -5442,7 +5452,7 @@ Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
 
 | name | trigger | description |
 | --- | --- | --- |
-| TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+| TwitchChatChatMessageReceived | trigger_ChatMessageReceived | A chat message was received. htmlMessage field has name and message combined |
 | TwitchChatActionReceived | trigger_ChatActionReceived | A chat action was received (a /me message) |
 | TwitchChatBanReceived | trigger_ChatBanReceived | A chat user was banned |
 | TwitchChatMessageDeletedReceived | trigger_ChatMessageDeleted | A chat message was deleted  |
@@ -5510,7 +5520,7 @@ Table last updated: *Sun, 27 Apr 2025 17:39:43 GMT*## Extensions
 
 | name | trigger | description |
 | --- | --- | --- |
-| Youtube message received | trigger_ChatMessageReceived | A chat message was received. textMessage field has name and message combined |
+| Youtube message received | trigger_ChatMessageReceived | A chat message was received. htmlMessage field has name and message combined |
 ### Actions
 
 | name | trigger | description |
