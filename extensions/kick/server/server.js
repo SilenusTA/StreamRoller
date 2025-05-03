@@ -660,7 +660,7 @@ async function parseSettingsWidgetSmall (modalData)
                     enabledStateChangedTo = "off"
                 else
                     enabledStateChangedTo = "on"
-                DataChanged
+                DataChanged = true
             }
             // Process kick Title 
             if (modalData["kickTitleTextElement"] && modalData["kickTitleDropdownSelector"] != "")
@@ -707,26 +707,22 @@ async function parseSettingsWidgetSmall (modalData)
                     serverConfig.currentCategoryName = categoryName
                     DataChanged = true;
                 }
-
-                if (enabledStateChangedTo != null)
-                {
-                    if (enabledStateChangedTo == "off")
-                    {
-                        serverConfig.kickEnabled = "off";
-                        chatService.disconnectChat()
-                    }
-                    else
-                    {
-                        serverConfig.kickEnabled = "on";
-                        connectToChatScheduler()
-                    }
-                    DataChanged = true;
-                }
+                DataChanged = true;
+            }
+            if (enabledStateChangedTo == "off")
+            {
+                serverConfig.kickEnabled = "off";
+                chatService.disconnectChat()
+            }
+            else
+            {
+                serverConfig.kickEnabled = "on";
+                connectToChatScheduler()
             }
             // do we need to change title on kick
             if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != ""
                 && serverConfig.lastSelectedKickTitleId && serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId] && serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId] != ""
-                && serverConfig.kickEnabled
+                && serverConfig.kickEnabled == "on"
             )
             {
                 //update stream title/description
