@@ -148,9 +148,7 @@ function handleMessage (data)
         {
             // subscribe to a channel events
             subscribeToChannel(localConfig.chatroomId)
-        }
-        else if (message.event === 'pusher_internal:subscription_succeeded')
-        {
+
             // delay here as on startup the other extension might not be ready to receive yet
             setTimeout(() =>
             {
@@ -159,7 +157,7 @@ function handleMessage (data)
                     "id": "1",
                     "chatroom_id": 1,
                     "channel": localConfig.streamerName,
-                    "content": `${localConfig.userName} connected to ${localConfig.chatroomId} chatroom on Kick for streamer ${localConfig.streamerName}`,
+                    "content": `${localConfig.userName} connected to ${localConfig.channelName} chatroom on Kick for streamer ${localConfig.streamerName}`,
                     "type": "system",
                     "created_at": "2025-04-27T07:01:49+00:00",
                     "sender": {
@@ -170,7 +168,10 @@ function handleMessage (data)
                 };
                 localConfig.createDummyChatMessageCallback(dummyMessage)
             }, 5000);
-
+        }
+        else if (message.event === 'pusher_internal:subscription_succeeded')
+        {
+            //            
         }
         else if (message.event === 'App\\Events\\ChatMessageEvent')
         {
