@@ -1,100 +1,97 @@
-name: Create a dev Release
-run-name: ${{github.actor}} delivering exe to live repo release
+name: CI process chain
+run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
+
 on:
-  workflow_call:
-    inputs:
-      tag:
-        required: true
-        type: string
+  workflow_dispatch:
+  push:
+    tags:
+      - "ci*.*.*"
+
 env:
-  MY_API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-  GITHUB_TOKEN: ${{ github.token }}
-  VERSION_TAG: ${{inputs.tag}}
+  VERSION_TAG: ${{ github.ref_name }}
+
 jobs:
-  minify_code:
-    runs-on: ubuntu-latest
+  createReleaseTag:
+    runs-on: windows-latest
+    outputs:
+      tag_name: ${{ steps.increment_version.outputs.NEW_VERSION }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{inputs.tag}}
-      - name: minifying
-        uses: nizarmah/auto-minify@v2.1
-        with:
-          overwrite: true
-          js_engine: "uglify-js"
-      - name: removing git folder (to keep space down in exe)
+          ref: master
+
+      - name: npm install
+        run: npm install
+
+      - name: Increment Patch Version
+        id: increment_version
         run: |
-          ls -la
-          rm -fr .git/*
-          rmdir .git
-          ls -la
-      - name: removing automated documents folder
+          $version = "${{ env.VERSION_TAG }}"
+          $newVersion = "$version".replace("ci","v")
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: test output
         run: |
-          ls -la docs/
-          rm -fr docs/apidocs/*
-          rmdir docs/apidocs
-          ls -la docs/
-      - name: removing older extensions ~~
+          echo "VERSION_TAG is ${{ env.VERSION_TAG }}"
+          echo "NEW_VERSION is ${{ steps.increment_version.outputs.NEW_VERSION }}"
+        shell: pwsh
+
+      - name: Build and commit updated docs
         run: |
-          ls -la extensions/
-          rm -fr extensions/~~*
-          ls -la extensions/
-      - name: uploading artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: mini-artifacts
-          path: .
-  creating_exe:
-    runs-on: windows-latest
-    needs: minify_code
+          cd docs/apidocs
+          node readmebuilder.mjs
+          cd ../..
+          git config --global user.email "silenusta@gmail.com"
+          git config --global user.name "SilenusTA"
+          foreach ($line in Get-Content .\docs\apidocs\filelist.txt) { git add $line }
+          git commit -m "autodoc readme update"
+          git push
+        shell: pwsh
+
+      - name: Push new version tag
+        run: |
+          git tag ${{ steps.increment_version.outputs.NEW_VERSION }}
+          git push origin --tags
+        shell: pwsh
+
+  CreateGitHubRelease:
+    needs: createReleaseTag
+    runs-on: ubuntu-latest
     steps:
-      - name: importing artecfact
-        uses: actions/download-artifact@v4
-        with:
-          name: mini-artifacts
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.16.0"
-      - name: Create SoftwareVersion.txt
-        run: |
-          echo  ${{inputs.tag}} > SoftwareVersion.txt
-      - name: Printing version from SoftwareVersion.txt
-        run: |
-          cat SoftwareVersion.txt
-      - name: Creating exe
-        run: |
-          npm i -D caxa
-          npm install
-          npx caxa -m "Unpacking " -i . -o StreamRoller${{inputs.tag}}.exe -- "{{caxa}}/install.cmd" "{{caxa}}"
-      - name: Create Release.txt
-        run: |
-          echo Release version ${{inputs.tag}} >> Release.txt
-      - name: Zip up exe
-        run: |
-          7z a StreamRoller${{inputs.tag}}.zip StreamRoller${{inputs.tag}}.exe
+      - uses: actions/checkout@v4
+
       - name: Get previous release notes
         id: get-previous-release
         shell: bash
         run: |
-          PREV_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
-          echo "Previous tag: $PREV_RELEASE"
-          NOTES=$(gh release view "$PREV_RELEASE" --json body --jq '.body')
+          REPO="${{ github.repository }}"
+          PREV_RELEASE=$(gh release list --repo "$REPO" --limit 1 --json tagName --jq '.[0].tagName')
+          NOTES=$(gh release view "$PREV_RELEASE" --repo "$REPO" --json body --jq '.body')
           echo "release_notes<<EOF" >> $GITHUB_OUTPUT
           echo "$NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push Release
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          prerelease: true
-#          body: Version ${{inputs.tag}} of StreamRoller
+          tag_name: ${{ needs.createReleaseTag.outputs.tag_name }}
           body: ${{ steps.get-previous-release.outputs.release_notes }}
-          name: "dev_StreamRoller${{inputs.tag}}"
-          tag_name: ${{inputs.tag}}
-          token: ${{ secrets.API_TOKEN_GITHUB }}
-          repository: SilenusTA/StreamRoller
-          files: |
-            Release.txt
-            StreamRoller${{inputs.tag}}.zip
-            StreamRoller${{inputs.tag}}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  BuildRelease:
+    needs: createReleaseTag
+    uses: ./.github/workflows/create_dev_build.yml
+    with:
+      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+
+  UpdateDocs:
+    needs: [BuildRelease, createReleaseTag]
+    uses: ./.github/workflows/build_docs.yml
+    with:
+      tag: ${{ needs.createReleaseTag.outputs.tag_name }}
+    secrets: inherit

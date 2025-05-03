@@ -1,15 +1,13 @@
+# trigger on the cix.x.x tag.
 name: CI process chain
 run-name: ${{ github.actor }} running CI process on cix.x.x tag creation
-
 on:
   workflow_dispatch:
   push:
     tags:
       - "ci*.*.*"
-
 env:
   VERSION_TAG: ${{ github.ref_name }}
-
 jobs:
   createReleaseTag:
     runs-on: windows-latest
@@ -19,78 +17,52 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: master
-
       - name: npm install
         run: npm install
-
       - name: Increment Patch Version
         id: increment_version
         run: |
           $version = "${{ env.VERSION_TAG }}"
           $newVersion = "$version".replace("ci","v")
+          Write-Output "Generated Tag: $newVersion"
           "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "NEW_VERSION=$newVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
         shell: pwsh
-
       - name: test output
         run: |
-          echo "VERSION_TAG is ${{ env.VERSION_TAG }}"
+          echo "VERSION_TAG is ${{env.VERSION_TAG}}"
           echo "NEW_VERSION is ${{ steps.increment_version.outputs.NEW_VERSION }}"
         shell: pwsh
-
-      - name: Build and commit updated docs
+      - name: note time to check it was built later
+        run: more .\extensions\users\README.md
+      - name: running node readmebuilder.mjs
         run: |
           cd docs/apidocs
           node readmebuilder.mjs
-          cd ../..
+      - name: check timestamp for update
+        run: |
+          dir
+          more extensions\users\README.md
+      - name: adding files to git
+        run: |
           git config --global user.email "silenusta@gmail.com"
           git config --global user.name "SilenusTA"
-          foreach ($line in Get-Content .\docs\apidocs\filelist.txt) { git add $line }
+          foreach($line in Get-Content .\docs\apidocs\filelist.txt) {if($line -match $regex){git add $line}}
           git commit -m "autodoc readme update"
           git push
-        shell: pwsh
-
-      - name: Push new version tag
+      - name: Pushing tag to repo
         run: |
+          echo "Pushing TAG ${{ steps.increment_version.outputs.NEW_VERSION }}"
           git tag ${{ steps.increment_version.outputs.NEW_VERSION }}
           git push origin --tags
         shell: pwsh
-
-  CreateGitHubRelease:
-    needs: createReleaseTag
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get previous release notes
-        id: get-previous-release
-        shell: bash
-        run: |
-          PREV_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
-          echo "Previous tag: $PREV_RELEASE"
-          NOTES=$(gh release view "$PREV_RELEASE" --json body --jq '.body')
-          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.createReleaseTag.outputs.tag_name }}
-          body: ${{ steps.get-previous-release.outputs.release_notes }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   BuildRelease:
     needs: createReleaseTag
     uses: ./.github/workflows/create_dev_build.yml
     with:
       tag: ${{ needs.createReleaseTag.outputs.tag_name }}
-
   UpdateDocs:
-    needs: [BuildRelease, createReleaseTag]
+    needs: [BuildRelease,createReleaseTag]
     uses: ./.github/workflows/build_docs.yml
     with:
       tag: ${{ needs.createReleaseTag.outputs.tag_name }}
