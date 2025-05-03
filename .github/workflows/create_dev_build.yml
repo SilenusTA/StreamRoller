@@ -1,4 +1,4 @@
-name: Create a new Release
+name: Create a dev Release
 run-name: ${{github.actor}} delivering exe to live repo release
 on:
   workflow_call:
