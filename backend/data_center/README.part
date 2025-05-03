@@ -1,0 +1,42 @@
+<!-- this file will be auto updated for triggers and actions when the apidocs automatic document builder is run during ci process for delivering a build
+To have the triggers and actions inserted do not remove the tags 'ReplaceTAGFor...' below
+To test how the final readme will look run go to 'StreamRoller\docs\apidocs' and run 'node readmebuilder.mjs'
+The script will parse files in the extensions directory looking for "triggersandactions ="
+if found it will attempt to load the file and use the exported 'triggersandactions' variable to create the tables shown in the parsed README.md files -->
+# DataCenter
+
+Contents
+
+- [DataCenter](#datacenter)
+  - [Description](#description)
+  - [About](#about)
+  - [Triggers/Actions](#triggersactions)
+    - [Triggers](#triggers)
+    - [Actions](#actions)
+
+## Description
+
+Provides the core backend services for streamroller
+
+ReplaceTAGForTriggersUpdatedDocTime
+
+## About
+
+DataCenter Handles the websocket messages for the StreamRoller system. 
+It provides features such as
+
+- loading the extensions
+- saving and loading data
+- redirecting messages to channel
+
+## Triggers/Actions
+
+ReplaceTAGForTriggersUpdatedDocTime
+
+### Triggers
+
+ReplaceTAGForTriggers
+
+### Actions
+
+ReplaceTAGForActions
