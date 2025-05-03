@@ -74,6 +74,7 @@ jobs:
           7z a StreamRoller${{inputs.tag}}.zip StreamRoller${{inputs.tag}}.exe
       - name: Get previous release notes
         id: get-previous-release
+        shell: bash
         run: |
           PREV_RELEASE=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
           echo "Previous tag: $PREV_RELEASE"
