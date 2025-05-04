@@ -110,7 +110,7 @@ if (addresses[0] != undefined || addresses[0] != "")
     serverConfig.HOST = addresses[0];
 */
 logger.setLoggingLevel(serverConfig.logginglevel);
-console.log("\x1b[1m\x1b[33mStreamRoller running on\x1b[31m", serverConfig.HOST + ":" + serverConfig.PORT, "\x1b[33mIn a browser window to continue\x1b[0m");
+console.log("\x1b[1m\x1b[33mStreamRoller running on\x1b[31m", serverConfig.HOST + ":" + serverConfig.PORT, "\x1b[33m. Open this url in a browser window\x1b[0m");
 console.log("\x1b[1m\x1b[33mNote: Only load one version of the browser as multiple versions will conflict with each other leading to repeated messages in chat\x1b[0m");
 // ============================================================================
 //                          IMPORTS/VARIABLES

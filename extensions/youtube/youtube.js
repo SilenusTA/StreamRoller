@@ -90,8 +90,9 @@ const triggersandactions =
                 description: "A chat message was received. htmlMessage field has name and message combined",
                 messagetype: "trigger_ChatMessageReceived",
                 parameters: {
+                    triggerActionRef: "YouTubeChatMessage",//optional
+                    triggerActionRef_UIDescription: "Reference for this message",
 
-                    triggerId: "YouTubeChatMessage", //Identifier that users can use to identify this particular trigger message if triggered by an action
                     // streamroller settings
                     type: "trigger_ChatMessageReceived",
                     platform: "Youtube",
@@ -124,7 +125,9 @@ const triggersandactions =
                 description: "Post to youtube live chat if we are connected.",
                 messagetype: "action_youtubePostLiveChatMessage",
                 parameters: {
-                    actionId: "YouTubeChatMessage", //Identifier that users can use to identify any trigger fired by this action
+                    triggerActionRef: "YouTubeChatMessage",//optional
+                    triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "youtube",
                     message: ""
                 }
             }

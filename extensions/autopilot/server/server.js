@@ -210,6 +210,9 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname)
         {
+            // add version fixes to the users saved trigger data
+            server_packet.data = UpDateOlderTriggers(server_packet.data);
+
             if (server_packet.data == "")
             {
                 // server data is empty, possibly the first run of the code so just default it
@@ -220,6 +223,7 @@ function onDataCenterMessage (server_packet)
             {
                 serverData = structuredClone(default_serverData);
                 console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
+
                 SaveDataToServer()
                 SendUserPairings("");
                 SendMacros()
@@ -557,9 +561,11 @@ function CheckTriggers (data)
     {
         for (const [key, value] of Object.entries(serverData.userPairings.pairings))
         {
-            //console.log("value.trigger.messagetype", value.trigger.messagetype)
             if (value.trigger.messagetype == data.data.messagetype || value.trigger.messagetype == "trigger_AllTriggers")
+            {
+                //console.log("value.trigger.messagetype", value.trigger.messagetype, value.action)
                 ProcessReceivedTrigger(value, data)
+            }
         }
     }
 }
@@ -1086,5 +1092,64 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: UpDateOlderTriggers
+// ============================================================================
+/**
+ * This function parses older triggers and updates them with new fields to avoid the user having to redo them all manually. Wrote in longwinded format so it can be easier to understand for non/new coders
+ * @param {object} data 
+ * @returns {object}modified data packet
+ */
+function UpDateOlderTriggers (data)
+{
+    if (!data || data == "")
+        return ""
+    data = updatesFor_v0_3_04(data)
+
+    return data;
+}
+// ============================================================================
+//                           FUNCTION: UpDateOlderTriggers
+// ============================================================================
+/**
+ * added after release v0.3.04 04-05-25
+ * @param {object} data 
+ * @returns {object}
+ */
+function updatesFor_v0_3_04 (data)
+{
+    // add Platform To action_SendChatMessage
+    // update the action_SendChatMessage actions to add the new "platform" field if needed
+    //loop over each pairing
+    for (let i = 0; i < data.userPairings.pairings.length; i++)
+    {
+        // check if it has what we are looking for
+        if (data.userPairings.pairings[i].action.messagetype == "action_SendChatMessage"
+            || data.userPairings.pairings[i].action.messagetype == "action_ProcessText"
+        )
+        {
+            let platformIndex = -1;
+            // loop over each variable to see if the one we are after exists
+            for (let j = 0; j < data.userPairings.pairings[i].action.data.length; j++)
+            {
+                if ("platform" in data.userPairings.pairings[i].action.data[j])
+                    platformIndex = j;
+            }
+            // if it isn't there then lets add it
+            if (platformIndex == -1)
+            {
+                if (data.userPairings.pairings[i].action.extension == "twitchchat")
+                    data.userPairings.pairings[i].action.data.push({
+                        platform: "twitch"
+                    });
+                else if (data.userPairings.pairings[i].action.extension == "twitch" || data.userPairings.pairings[i].action.extension == "kick")
+                    data.userPairings.pairings[i].action.data.push({ platform: data.userPairings.pairings[i].action.extension })
+                else
+                    data.userPairings.pairings[i].action.data.push({ platform: "twitch" })
+            }
+        }
+    }
+    return data;
 }
 export { startServer, triggersandactions };

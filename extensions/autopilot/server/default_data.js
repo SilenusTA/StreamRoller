@@ -124,6 +124,9 @@ const default_serverData = {
                     "messagetype": "action_SendChatMessage",
                     "data": [
                         {
+                            "platform": "twitch"
+                        },
+                        {
                             "account": "bot"
                         },
                         {
@@ -158,6 +161,9 @@ const default_serverData = {
                     "channel": "TWITCH_CHAT",
                     "messagetype": "action_SendChatMessage",
                     "data": [
+                        {
+                            "platform": "twitch"
+                        },
                         {
                             "account": "bot"
                         },
@@ -194,6 +200,9 @@ const default_serverData = {
                     "channel": "TWITCH_CHAT",
                     "messagetype": "action_SendChatMessage",
                     "data": [
+                        {
+                            "platform": "twitch"
+                        },
                         {
                             "account": "bot"
                         },
@@ -235,6 +244,9 @@ const default_serverData = {
                     "messagetype": "action_SendChatMessage",
                     "data": [
                         {
+                            "platform": "twitch"
+                        },
+                        {
                             "account": "bot"
                         },
                         {
@@ -275,6 +287,9 @@ const default_serverData = {
                     "messagetype": "action_SendChatMessage",
                     "data": [
                         {
+                            "platform": "twitch"
+                        },
+                        {
                             "account": "bot"
                         },
                         {
@@ -284,6 +299,397 @@ const default_serverData = {
                     "paused": false
                 }
             },
+            {
+                "pairingTitle": "",
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "Quiz",
+                    "extension": "macros",
+                    "channel": "AUTOPILOT_BE",
+                    "messagetype": "trigger_Quiz",
+                    "data": [],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "quizbotStartQuiz",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "action_QuizbotStartQuiz",
+                    "data": []
+                }
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "TwitchChatChatMessageReceived",
+                    "extension": "twitchchat",
+                    "channel": "TWITCH_CHAT",
+                    "messagetype": "trigger_ChatMessageReceived",
+                    "data": [
+                        {
+                            "MATCHER_type": "1",
+                            "type": ""
+                        },
+                        {
+                            "MATCHER_htmlMessage": "1",
+                            "htmlMessage": ""
+                        },
+                        {
+                            "MATCHER_sender": "1",
+                            "sender": ""
+                        },
+                        {
+                            "MATCHER_message": "3",
+                            "message": "!answer"
+                        },
+                        {
+                            "MATCHER_color": "1",
+                            "color": ""
+                        },
+                        {
+                            "MATCHER_firstmessage": "1",
+                            "firstmessage": ""
+                        },
+                        {
+                            "MATCHER_mod": "1",
+                            "mod": ""
+                        },
+                        {
+                            "MATCHER_subscriber": "1",
+                            "subscriber": ""
+                        },
+                        {
+                            "MATCHER_vip": "1",
+                            "vip": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "quizbotCheckAnswer",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "action_QuizbotCheckAnswer",
+                    "data": [
+                        {
+                            "user": "%%sender%%"
+                        },
+                        {
+                            "answer": "%%message%%"
+                        }
+                    ],
+                    "paused": false
+                }
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "quizbotQuizStarted",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "trigger_QuizbotQuizStarted",
+                    "data": [
+                        {
+                            "MATCHER_question": "1",
+                            "question": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "KickChatSendChatMessage",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "action_SendChatMessage",
+                    "data": [
+                        {
+                            "platform": "twitch"
+                        },
+                        {
+                            "triggerActionRef": "2"
+                        },
+                        {
+                            "account": ""
+                        },
+                        {
+                            "message": "%%question%%"
+                        }
+                    ]
+                }
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "quizbotQuizTimeout",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "trigger_QuizbotQuizTimeout",
+                    "data": [
+                        {
+                            "MATCHER_question": "1",
+                            "question": ""
+                        },
+                        {
+                            "MATCHER_answer": "1",
+                            "answer": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "KickChatSendChatMessage",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "action_SendChatMessage",
+                    "data": [
+                        {
+                            "platform": "twitch"
+                        },
+                        {
+                            "triggerActionRef": "2"
+                        },
+                        {
+                            "account": ""
+                        },
+                        {
+                            "message": "Quiz timeout: The correct answer was %%answer%%"
+                        }
+                    ]
+                },
+                "pairingTitle": ""
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "quizbotQuizStopped",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "trigger_QuizbotQuizStopped",
+                    "data": [
+                        {
+                            "MATCHER_question": "1",
+                            "question": ""
+                        },
+                        {
+                            "MATCHER_answer": "1",
+                            "answer": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "KickChatSendChatMessage",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "action_SendChatMessage",
+                    "data": [
+                        {
+                            "platform": "twitch"
+                        },
+                        {
+                            "triggerActionRef": "2"
+                        },
+                        {
+                            "account": ""
+                        },
+                        {
+                            "message": "Quiz Stopped: The answer was %%answer%%"
+                        }
+                    ]
+                },
+                "pairingTitle": ""
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "quizbotIncorrectAnswer",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "trigger_QuizbotIncorrectAnswer",
+                    "data": [
+                        {
+                            "MATCHER_user": "1",
+                            "user": ""
+                        },
+                        {
+                            "MATCHER_question": "1",
+                            "question": ""
+                        },
+                        {
+                            "MATCHER_answer": "1",
+                            "answer": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "KickChatSendChatMessage",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "action_SendChatMessage",
+                    "data": [
+                        {
+                            "platform": "twitch"
+                        },
+                        {
+                            "triggerActionRef": "2"
+                        },
+                        {
+                            "account": ""
+                        },
+                        {
+                            "message": "@%%user%% \"%%answer%%\" was incorrect"
+                        }
+                    ]
+                },
+                "pairingTitle": ""
+            },
+            {
+                "group": "Kick_Quizbot_1",
+                "trigger": {
+                    "name": "quizbotCorrectAnswer",
+                    "extension": "quizbot",
+                    "channel": "QUIZBOT_CHANNEL",
+                    "messagetype": "trigger_QuizbotCorrectAnswer",
+                    "data": [
+                        {
+                            "MATCHER_user": "1",
+                            "user": ""
+                        },
+                        {
+                            "MATCHER_question": "1",
+                            "question": ""
+                        },
+                        {
+                            "MATCHER_answer": "1",
+                            "answer": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "KickChatSendChatMessage",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "action_SendChatMessage",
+                    "data": [
+                        {
+                            "platform": "twitch"
+                        },
+                        {
+                            "triggerActionRef": "2"
+                        },
+                        {
+                            "account": ""
+                        },
+                        {
+                            "message": "@%%user%% \"%%answer%%\" is Correct. Well done."
+                        }
+                    ]
+                }
+            },
+            {
+                "pairingTitle": "Handle kick messages from chatbot",
+                "group": "KickChatBot_1",
+                "trigger": {
+                    "name": "Kick message received",
+                    "extension": "kick",
+                    "channel": "KICK_CHANNEL",
+                    "messagetype": "trigger_ChatMessageReceived",
+                    "data": [
+                        {
+                            "MATCHER_type": "1",
+                            "type": ""
+                        },
+                        {
+                            "MATCHER_platform": "1",
+                            "platform": "kick"
+                        },
+                        {
+                            "MATCHER_htmlMessage": "1",
+                            "htmlMessage": ""
+                        },
+                        {
+                            "MATCHER_safeMessage": "1",
+                            "safeMessage": ""
+                        },
+                        {
+                            "MATCHER_message": "1",
+                            "message": ""
+                        },
+                        {
+                            "MATCHER_sender": "1",
+                            "sender": ""
+                        },
+                        {
+                            "MATCHER_id": "1",
+                            "id": ""
+                        },
+                        {
+                            "MATCHER_messagetype": "1",
+                            "messagetype": ""
+                        },
+                        {
+                            "MATCHER_timestamp": "1",
+                            "timestamp": ""
+                        },
+                        {
+                            "MATCHER_senderId": "1",
+                            "senderId": ""
+                        },
+                        {
+                            "MATCHER_userRoles": "1",
+                            "userRoles": ""
+                        },
+                        {
+                            "MATCHER_senderBadges": "1",
+                            "senderBadges": ""
+                        },
+                        {
+                            "MATCHER_color": "1",
+                            "color": ""
+                        },
+                        {
+                            "MATCHER_emotes": "1",
+                            "emotes": ""
+                        },
+                        {
+                            "MATCHER_triggerActionRef": "1",
+                            "triggerActionRef": ""
+                        }
+                    ],
+                    "cooldown": "0"
+                },
+                "action": {
+                    "name": "OpenAIChatbotChatMessageReceived",
+                    "extension": "chatbot",
+                    "channel": "CHATBOT_CHANNEL",
+                    "messagetype": "action_ProcessChatMessage",
+                    "data": [
+                        {
+                            "platform": "%%platform%%"
+                        },
+                        {
+                            "sender": "%%sender%%"
+                        },
+                        {
+                            "message": "%%message%%"
+                        },
+                        {
+                            "triggerActionRef": "%%triggerActionRef%%"
+                        },
+                        {
+                            "engine": ""
+                        },
+                        {
+                            "temperature": ""
+                        },
+                        {
+                            "maxtokens": ""
+                        }
+                    ]
+                }
+            }
         ],
         "groups": [
             {
@@ -291,6 +697,12 @@ const default_serverData = {
             },
             {
                 "name": "Quiz_1"
+            },
+            {
+                "name": "KickChatBot_1"
+            },
+            {
+                "name": "Kick_Quizbot_1"
             }
         ],
         "macrotriggers": {

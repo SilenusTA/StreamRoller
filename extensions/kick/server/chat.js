@@ -157,7 +157,7 @@ function handleMessage (data)
                     "id": "1",
                     "chatroom_id": 1,
                     "channel": localConfig.streamerName,
-                    "content": `${localConfig.userName} connected to ${localConfig.channelName} chatroom on Kick for streamer ${localConfig.streamerName}`,
+                    "content": `${localConfig.userName} connected to ${localConfig.channelName} chatroom on Kick`,
                     "type": "system",
                     "created_at": "2025-04-27T07:01:49+00:00",
                     "sender": {
@@ -174,9 +174,7 @@ function handleMessage (data)
             //            
         }
         else if (message.event === 'App\\Events\\ChatMessageEvent')
-        {
             onChatMessage(message)
-        }
         else
             console.log("Kick: not handling these messages yet", message)
     }
@@ -304,7 +302,10 @@ function connected ()
  */
 function onChatMessage (message)
 {
-    localConfig.onMessageCallback(message.data);
+    if (typeof (message.data) == "string")
+        localConfig.onMessageCallback(JSON.parse(message.data));
+    else
+        localConfig.onMessageCallback(message.data);
 }
 // ============================================================================
 //                           FUNCTION: Reconnect
@@ -317,8 +318,6 @@ function Reconnect ()
             reconnectAttempts: localConfig.reconnectAttempts,
             maxFailedConnections: localConfig.maxFailedConnections,
             readyState: localConfig.websocket.readyState,
-
-
         })
     if (localConfig.reconnectAttempts >= localConfig.maxFailedConnections)
     {

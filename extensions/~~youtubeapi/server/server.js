@@ -121,7 +121,7 @@ const triggersandactions =
                 parameters: {
                     // streamroller settings
                     type: "trigger_ChatMessageReceived",
-                    platform: "Youtube",
+                    platform: "youtube",
                     htmlMessage: "[username]: [message]",
                     safemessage: "",
                     color: "#FF0000",
@@ -154,7 +154,10 @@ const triggersandactions =
                 displaytitle: "Post a Message to youtube live chat",
                 description: "Post to youtube live chat if we are connected.",
                 messagetype: "action_youtubeAPIPostLiveChatMessage",
-                parameters: { message: "" }
+                parameters: {
+                    platform: "youtube",
+                    message: ""
+                }
             }
 
         ],

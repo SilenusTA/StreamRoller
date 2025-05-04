@@ -624,6 +624,7 @@ const triggersandactions =
             description: "Post a message to twitch chat",
             messagetype: "action_SendChatMessage",
             parameters: {
+                platform: "twitch",
                 account: "",
                 message: ""
             }
@@ -922,6 +923,11 @@ function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_SendChatMessage")
         {
+            if (extension_packet.data.pltform != "twitch")
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterMessage", "received action_SendChatMessage with missing platform flag ", server_packet);
+                return;
+            }
             if (serverConfig.DEBUG_ONLY_MIMIC_POSTING_TO_TWITCH.indexOf("on") < 0)
                 action_SendChatMessage(serverConfig.streamername, extension_packet.data)
             else

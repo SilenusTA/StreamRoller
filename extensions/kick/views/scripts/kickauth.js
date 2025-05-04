@@ -36,14 +36,19 @@ function updatePage ()
     }
     else
     {
-        window.location.href = 'https://id.kick.com/oauth/authorize' +
-            '?response_type=code' +
-            '&client_id=' + tempStorage.clientId +
-            '&redirect_uri=' + 'http://localhost:3000/kick/auth' +
-            '&scope=' + tempStorage.scopes +
-            '&code_challenge=' + tempStorage.kickOAuthChallenge +
-            '&code_challenge_method=S256' +
-            '&state=' + tempStorage.kickOAuthState + "_" + tempStorage.userType;
+
+        if (tempStorage.clientId == "")
+            document.getElementById("messages").innerHTML += document.getElementById("messages").innerHTML + "<BR>Missing Client Id. Please add the kick application client id and secret in the main setings page before trying to authorize"
+        else
+            window.location.href = 'https://id.kick.com/oauth/authorize' +
+                '?response_type=code' +
+                '&client_id=' + tempStorage.clientId +
+                '&redirect_uri=' + 'http://localhost:3000/kick/auth' +
+                '&scope=' + tempStorage.scopes +
+                '&code_challenge=' + tempStorage.kickOAuthChallenge +
+                '&code_challenge_method=S256' +
+                '&state=' + tempStorage.kickOAuthState + "_" + tempStorage.userType;
+
     }
 }
 updatePage()

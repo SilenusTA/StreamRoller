@@ -456,7 +456,19 @@ function sendQuizStarted ()
     let answer = QA[1].trim();
 
     answer = answer.replaceAll(/[!-~]/ig, "#")
+    // this gives us "!answer ####### #### #####" 
     data.parameters.question = QA[0].trim() + ": !answer " + answer
+    // kick doesn't like the above repeated chars so lets try replacing #### with -4- as the hint
+    data.parameters.question = data.parameters.question.replace(/(!answer\s+)((?:#+\s*)+)/, (_, prefix, hashes) =>
+    {
+        const replaced = hashes
+            .trim()
+            .split(/\s+/)
+            .map(group => `${group.length}`)
+            .join(' ');
+        return prefix + replaced;
+    });
+
 
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",

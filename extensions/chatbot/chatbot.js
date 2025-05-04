@@ -338,7 +338,10 @@ const triggersandactions =
                 displaytitle: "Response from chatbot",
                 description: "The OpenAI chatbot returned a response",
                 messagetype: "trigger_chatbotResponse",
-                parameters: { message: "" }
+                parameters: {
+                    platform: "",
+                    message: ""
+                }
             },
             {
                 name: "OpenAIImageResponseReceived",
@@ -347,6 +350,7 @@ const triggersandactions =
                 messagetype: "trigger_imageResponse",
                 parameters: {
                     url: "",
+                    platform: "",
                     requester: "",
                     temp_save_file: "",
                     message: "",
@@ -363,6 +367,7 @@ const triggersandactions =
                 description: "Send some text through the chatbot (users in original message on the ignore list will not get processed)",
                 messagetype: "action_ProcessText",
                 parameters: {
+                    platform: "",
                     sender: "",
                     message: "",
                     engine: "",
@@ -389,7 +394,7 @@ const triggersandactions =
 
             // new revamp starts here
             {
-                name: "OpenAIChatbotChatMessageReceived",
+                name: "OpenAIChatbotProcessChatMessage",
                 displaytitle: "Process a chat message",
                 description: "This message will be treated as a standard message from a chat window and will be added to conversations for auto responses as well as being tested for direct messages",
                 messagetype: "action_ProcessChatMessage",
@@ -424,6 +429,7 @@ const triggersandactions =
                 description: "Send some text through the chatbot to create an image",
                 messagetype: "action_ProcessImage",
                 parameters: {
+                    platform: "",
                     usechatbot: "true",
                     prompt: "",
                     message: "",
@@ -563,7 +569,7 @@ function onDataCenterMessage (server_packet)
                     || extension_packet.data.sender == ""
                     || extension_packet.data.sender == undefined)
                     extension_packet.data.sender = serverConfig.chatbotname
-                processTextMessage(extension_packet.data, true);
+                processTextMessage(extension_packet.data, true, extension_packet.data.platform);
             }
         }
         else if (extension_packet.type === "action_ProcessChatMessage") 
@@ -1218,7 +1224,7 @@ function heartBeatCallback ()
  * @param {boolean} [triggerresponse=false] send a trigger out when completed processing
  * @param {number} [maxRollbackCount=20] used for spam relief 
  */
-function processTextMessage (data, triggerresponse = false, maxRollbackCount = 20, platform = "twitch")
+function processTextMessage (data, triggerresponse = false, platform, maxRollbackCount = 20)
 {
     try
     {
@@ -1267,7 +1273,7 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
             }
             setTimeout(() =>
             {
-                processTextMessage(data, triggerresponse, maxRollbackCount--, platform)
+                processTextMessage(data, triggerresponse, platform, maxRollbackCount--)
             }, randomTimeout);
             return;
         }
@@ -1299,7 +1305,8 @@ function processTextMessage (data, triggerresponse = false, maxRollbackCount = 2
             .then(chatMessageToPost =>
             {
                 let msg = findtriggerByMessageType("trigger_chatbotResponse")
-                msg.parameters.message = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + chatMessageToPost
+                msg.parameters.message = serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + chatMessageToPost;
+                msg.parameters.platform = platform;
                 //if this is a trigger message then send out normally on the channel
                 if (triggerresponse)
                 {
@@ -2428,7 +2435,7 @@ function postMessageToTwitch (message)
             sr_api.ExtensionPacket(
                 "action_SendChatMessage",
                 serverConfig.extensionname,
-                { account: "bot", message: serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + message },
+                { platform: "twitch", account: "bot", message: serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + message },
                 "",
                 "twitchchat"),
             "",
@@ -2452,6 +2459,7 @@ function postMessageToKick (message)
                 "action_SendChatMessage",
                 serverConfig.extensionname,
                 {
+                    platform: "kick",
                     account: "bot",
                     message: serverConfig.chatbotprofiles[serverConfig.currentprofile].boticon + " " + message
                 },

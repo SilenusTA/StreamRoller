@@ -774,6 +774,11 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "trigger_chatbotResponse")
             {
+                let extension = ""
+                if (extension_packet.data.parameters.platform == "twitch")
+                    extension = "twitchchat"
+                else
+                    extension = extension_packet.data.parameters.platform
                 // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
                 sr_api.sendMessage(DataCenterSocket,
                     sr_api.ServerPacket("ExtensionMessage",
@@ -783,14 +788,15 @@
                             serverConfig.extensionname,
                             // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                             {
+                                platform: extension_packet.data.parameters.platform,
                                 account: "bot",
-                                message: extension_packet.data.response,
+                                message: extension_packet.data.parameters.response,
                                 'message-type': "AIchatbotmessage"
                             },
                             "",
-                            "twitchchat"),
+                            extension),
                         "",
-                        "twitchchat"
+                        extension
                     ));
             }
             // -------------------------------------------------------------------------------------------------
@@ -1171,6 +1177,11 @@
 
                 if (extension_packet.type === "trigger_chatbotResponse")
                 {
+                    let extension = ""
+                    if (extension_packet.data.parameters.platform == "twitch")
+                        extension = "twitchchat"
+                    else
+                        extension = extension_packet.data.parameters.platform
                     // these are responses from chatbot that got sent directly (ie not as chatbot chat functionality)
                     sr_api.sendMessage(DataCenterSocket,
                         sr_api.ServerPacket("ExtensionMessage",
@@ -1180,14 +1191,15 @@
                                 serverConfig.extensionname,
                                 // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                                 {
+                                    platform: extension_packet.data.parameters.platform,
                                     account: "bot",
                                     message: extension_packet.data.parameters.message,
                                     'message-type': "AIchatbotmessage"
                                 },
                                 "",
-                                "twitchchat"),
+                                extension),
                             "",
-                            "twitchchat"
+                            extension
                         ));
                 }
                 else if (extension_packet.type === "serverError")
@@ -3947,6 +3959,7 @@
                     serverConfig.extensionname,
                     // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                     {
+                        platform: "twitch",
                         account: account,
                         message: msg,
                         'message-type': "chat"
@@ -3973,6 +3986,7 @@
                         serverConfig.extensionname,
                         // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                         {
+                            platform: "youtube",
                             message: msg,
                         },
                         "",
@@ -3989,6 +4003,7 @@
                         serverConfig.extensionname,
                         // need to read accounts from twitchchat ext and give an option to chose who to send the message as
                         {
+                            platform: "youtube",
                             message: msg,
                         },
                         "",
@@ -4010,6 +4025,7 @@
                     serverConfig.extensionname,
                     // need to read accounts from kick ext and give an option to chose who to send the message as
                     {
+                        platform: "kick",
                         account: account,
                         message: msg,
                     },
