@@ -141,7 +141,6 @@ function handleMessage (data)
     {
         const message = JSON.parse(data);
         file_log("handleMessage", message)
-
         localConfig.connected = true;
         // When connection is established, subscribe to a channel
         if (message.event === 'pusher:connection_established')
@@ -236,7 +235,7 @@ function subscribeToChannel ()
     try
     {
         file_log("subscribeToChannel")
-        // subscribe to channelname
+        // subscribe to chatrooms
         let subscribeMessage = {
             event: 'pusher:subscribe',
             data: { channel: `chatrooms.${localConfig.chatroomId}.v2` }
@@ -247,7 +246,15 @@ function subscribeToChannel ()
         // subscribe to for rewards
         subscribeMessage = {
             event: 'pusher:subscribe',
-            data: { channel: `chatroom_${localConfig.chatroomId}` }
+            data: { channel: `chatrooms_${localConfig.chatroomId}` }
+        };
+        file_log("subscribeMessage", subscribeMessage)
+        localConfig.websocket.send(JSON.stringify(subscribeMessage));
+
+        // subscribe to for rewards
+        subscribeMessage = {
+            event: 'pusher:subscribe',
+            data: { channel: `chatrooms_${localConfig.chatroomId}.v1` }
         };
         file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
@@ -259,6 +266,23 @@ function subscribeToChannel ()
         };
         file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
+
+        // subscribe for alerts
+        subscribeMessage = {
+            event: 'pusher:subscribe',
+            data: { channel: `channel.${localConfig.channelId}.v1` }
+        };
+        file_log("subscribeMessage", subscribeMessage)
+        localConfig.websocket.send(JSON.stringify(subscribeMessage));
+
+        // subscribe for alerts
+        subscribeMessage = {
+            event: 'pusher:subscribe',
+            data: { channel: `channel.${localConfig.channelId}.v2` }
+        };
+        file_log("subscribeMessage", subscribeMessage)
+        localConfig.websocket.send(JSON.stringify(subscribeMessage));
+
     }
     catch (err)
     {

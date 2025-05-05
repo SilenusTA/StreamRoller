@@ -62,6 +62,7 @@ function onDataCenterDisconnect (reason)
 // ============================================================================
 function onDataCenterConnect (socket)
 {
+    updatePage()
     localConfig.connected = true;
 }
 // ============================================================================
@@ -149,6 +150,7 @@ function getOauthFromCode (code, isStreamer)
         .then(response => response.json())
         .then(result =>
         {
+            //sr_api.sendLogMessage(localConfig.DataCenterSocket, "callback oauth", "kick", "result", JSON.stringify(result, null, 2))
             tempStorage.kickAccessToken = result.access_token;
             tempStorage.kickRefreshToken = result.refresh_token;
             storeCredentials(isStreamer)
@@ -166,7 +168,7 @@ function parseParams (params)
 {
     let isStreamer = false;// is this a streamer or bot auth
     // get the data back from kick call
-
+    //sr_api.sendLogMessage(localConfig.DataCenterSocket, "callback oauth", "kick", "params", JSON.stringify(params, null, 2))
     // note state will either be a nonce or a tag to say if we are a bot or the streamer.
     //let state = hashMatch(/state=(\w+)/);
     let state = params.get("state")
@@ -188,4 +190,36 @@ function parseParams (params)
     else
         document.getElementById("messages").innerHTML = "Authorisation state incorrect. please try again by closing and reopening this window <a href='http://" + window.location.host + window.location.pathname + "'>Reload</a>"
     return;
+}
+// ============================================================================
+//                           FUNCTION: updatePage
+// ============================================================================
+function updatePage ()
+{
+    // check if this page has been called from the kick callback
+    if (document.location.href.indexOf("state") > -1)
+    {
+        if (!tempStorage.authorized)
+        {
+            const params = new URLSearchParams(window.location.search);
+            parseParams(params);
+            tempStorage.authorized = true;
+        }
+    }
+    else
+    {
+        sr_api.sendLogMessage(localConfig.DataCenterSocket, "callback oauth", "kick", "result", document.location.href)
+        if (tempStorage.clientId == "")
+            document.getElementById("messages").innerHTML += document.getElementById("messages").innerHTML + "<BR>Missing Client Id. Please add the kick application client id and secret in the main setings page before trying to authorize"
+        else
+            window.location.href = 'https://id.kick.com/oauth/authorize' +
+                '?response_type=code' +
+                '&client_id=' + tempStorage.clientId +
+                '&redirect_uri=' + 'http://localhost:3000/kick/auth' +
+                '&scope=' + tempStorage.scopes +
+                '&code_challenge=' + tempStorage.kickOAuthChallenge +
+                '&code_challenge_method=S256' +
+                '&state=' + tempStorage.kickOAuthState + "_" + tempStorage.userType;
+
+    }
 }

@@ -1100,6 +1100,10 @@ function parseStreamlabsMessage (data)
             outputTrigger(trigger)
         }
     }
+    else if (data.type === "alertPlaying")
+    {
+        //console.log("ignoring", data.type, "alert")
+    }
     else
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +

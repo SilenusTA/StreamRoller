@@ -167,21 +167,21 @@ function refreshToken (forStreamer = true)
                             }
                             else
                             {
-                                Credentials.kickAccessToken = parsed.access_token;
+                                Credentials.kickBotAccessToken = parsed.access_token;
                                 callbacks.updateRefreshTokenFn("kickBotAccessToken", parsed.access_token)
-                                Credentials.kickRefreshToken = parsed.refresh_token;
+                                Credentials.kickBotRefreshToken = parsed.refresh_token;
                                 callbacks.updateRefreshTokenFn("kickBotRefreshToken", parsed.access_token)
                             }
                             resolve({ type: "success", location: `refreshToken(${forStreamer})` });
                         } else
                         {
                             file_log(`refreshToken (${forStreamer}): No access_token in response`);
-                            reject({ type: "no_access_token_returned", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
+                            reject({ type: "no_access_token_returned", location: `refreshToken(${forStreamer})`, message: "you may need to re-authorize, API is still a work in progress and refreshing tokens needs a fix sorry" });
                         }
                     } catch (e)
                     {
                         file_log(`refreshToken (${forStreamer}): Failed to parse token response`);
-                        reject({ type: "error_parsing_refresh_token", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
+                        reject({ type: "error_parsing_refresh_token", location: `refreshToken(${forStreamer})`, message: "you may need to re-authorize, API is still a work in progress and refreshing tokens needs a fix sorry" });
                     }
                 }
                 else if (res.statusCode == 401)
@@ -190,9 +190,9 @@ function refreshToken (forStreamer = true)
                     file_log(`refreshToken (${forStreamer}): Refresh failed with 401`, res.statusMessage);
                     file_log(`refreshToken (${forStreamer}): response was`, errordata.error);
                     if (errordata.error == "invalid_grant")
-                        reject({ type: "invalid_grant", location: `refreshToken(${(forStreamer) ? "user" : "bot"})`, message: "need to authorize" });
+                        reject({ type: "invalid_grant", location: `refreshToken(${(forStreamer) ? "user" : "bot"})`, message: "you may need to re-authorize, API is still a work in progress and refreshing tokens needs a fix sorry" });
                     else
-                        reject({ type: "refresh_failed", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
+                        reject({ type: "refresh_failed", location: `refreshToken(${forStreamer})`, message: "you may need to re-authorize, API is still a work in progress and refreshing tokens needs a fix sorry" });
                 }
                 else
                 {
