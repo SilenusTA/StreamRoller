@@ -943,6 +943,11 @@
                             localConfig.kickchatchannel = extension_packet.data.streamerName;
                             setChatMessagesCardTitle();
                         }
+                        if (extension_packet.data.categoryName != localConfig.kickCategoryName)
+                        {
+                            localConfig.kickCategoryName = extension_packet.data.categoryName
+                            updateKickCategory(extension_packet.data.categoryName, extension_packet.data.categoryURL)
+                        }
                     }
                 }
                 else
@@ -972,28 +977,6 @@
             // -------------------------------------------------------------------------------------------------
             else if (server_packet.dest_channel === "CHATMOOD_CHANNEL")
                 console.log("CHATMOOD_CHANNEL received", extension_packet.data)
-            // -------------------------------------------------------------------------------------------------
-            //                           TWITCH_CHAT
-            // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "TWITCH_CHAT" || server_packet.dest_channel == "TWITCH")
-            {
-                if (extension_packet.type === "ChatMessage")
-                {
-                    if (serverConfig.winttstwitchenabled == "on")
-                    {
-                        //check for username or Displayname (timeout/ban messgges don't seem to have username field)
-                        let username = ""
-                        if (extension_packet.data.data.username)
-                            username = extension_packet.data.data.username
-                        else if (extension_packet.data["display-name"])
-                            username = extension_packet.data["display-name"]
-                        if (serverConfig.twitchBlackList && serverConfig.twitchBlackList.toLowerCase().indexOf(username) == -1)
-                            TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message, serverConfig.twitchTTSVolume)
-                    }
-                    parseTwitchChatMessage(extension_packet.data);
-                    displayChatMessages();
-                }
-            }
             // -------------------------------------------------------------------------------------------------
             //                           YOUTUBEAPI
             // -------------------------------------------------------------------------------------------------
@@ -1026,6 +1009,10 @@
                     parseKickChatMessage(extension_packet.data.parameters);
                     displayChatMessages();
                 }
+                else if (extension_packet.type === "trigger_KickGamedChanged")
+                {
+                    updateKickCategory(extension_packet.data.parameters.name, extension_packet.data.parameters.imageURL)
+                }
             }
             // -------------------------------------------------------------------------------------------------
             //                           YOUTUBE
@@ -1046,8 +1033,24 @@
             // -------------------------------------------------------------------------------------------------
             //                           TWITCH
             // -------------------------------------------------------------------------------------------------
-            else if (server_packet.dest_channel == "TWITCH")
+            else if (server_packet.dest_channel == "TWITCH_CHAT" || server_packet.dest_channel == "TWITCH")
             {
+                if (extension_packet.type === "ChatMessage")
+                {
+                    if (serverConfig.winttstwitchenabled == "on")
+                    {
+                        //check for username or Displayname (timeout/ban messgges don't seem to have username field)
+                        let username = ""
+                        if (extension_packet.data.data.username)
+                            username = extension_packet.data.data.username
+                        else if (extension_packet.data["display-name"])
+                            username = extension_packet.data["display-name"]
+                        if (serverConfig.twitchBlackList && serverConfig.twitchBlackList.toLowerCase().indexOf(username) == -1)
+                            TTSSpeak(serverConfig.twitchTTSVoiceIndex, extension_packet.data.message, serverConfig.twitchTTSVolume)
+                    }
+                    parseTwitchChatMessage(extension_packet.data);
+                    displayChatMessages();
+                }
                 if (extension_packet.type === "trigger_TwitchRedemptionAdd")
                 {
                     parseTwitchRedemption(extension_packet.data);
@@ -4636,6 +4639,16 @@
             swVersionHtml += "</div>"
             document.getElementById("softwareversion").innerHTML = swVersionHtml
         }
+    }
+    // ============================================================================
+    //                           FUNCTION: updateKickCategory
+    // ============================================================================
+    function updateKickCategory (name, url)
+    {
+        let ele = document.getElementById("liveportaltitleKickCategoryImage")
+        ele.title = name;
+        ele.innerHTML = `<img style="border: 5px solid #52db22; border-radius:50%; width:40px;height:40px" 
+        src="${url}">`
     }
     // ============================================================================
     //                           FUNCTION: sendAction

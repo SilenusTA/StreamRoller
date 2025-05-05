@@ -492,18 +492,18 @@ function sendQuizStarted ()
  */
 function checkAnswer (userAnswer)
 {
-    let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim()
-    let answer = userAnswer.answer.replace("!answer ", "").trim()
+    let currentAnswer = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[1].trim().toLowerCase()
+    let answer = userAnswer.answer.toLowerCase().replace("!answer ", "").trim()
     let data = {}
     let messagetype = ""
-    if (currentAnswer.toLowerCase() == answer.toLowerCase())
+    if (currentAnswer == answer)
         messagetype = "trigger_QuizbotCorrectAnswer";
     else
         messagetype = "trigger_QuizbotIncorrectAnswer";
     data = findtriggerByMessageType(messagetype);
     data.parameters.question = localConfig.quizQuestions[localConfig.currentQuestionAnswer].split("##")[0].trim();
     data.parameters.answer = answer;
-    data.parameters.user = userAnswer.user;
+    data.parameters.user = userAnswer.user + " (" + userAnswer.triggerparams.parameters.platform + ")";
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ChannelData",
             serverConfig.extensionname,

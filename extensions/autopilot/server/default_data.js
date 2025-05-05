@@ -321,69 +321,6 @@ const default_serverData = {
             {
                 "group": "Kick_Quizbot_1",
                 "trigger": {
-                    "name": "TwitchChatChatMessageReceived",
-                    "extension": "twitchchat",
-                    "channel": "TWITCH_CHAT",
-                    "messagetype": "trigger_ChatMessageReceived",
-                    "data": [
-                        {
-                            "MATCHER_type": "1",
-                            "type": ""
-                        },
-                        {
-                            "MATCHER_htmlMessage": "1",
-                            "htmlMessage": ""
-                        },
-                        {
-                            "MATCHER_sender": "1",
-                            "sender": ""
-                        },
-                        {
-                            "MATCHER_message": "3",
-                            "message": "!answer"
-                        },
-                        {
-                            "MATCHER_color": "1",
-                            "color": ""
-                        },
-                        {
-                            "MATCHER_firstmessage": "1",
-                            "firstmessage": ""
-                        },
-                        {
-                            "MATCHER_mod": "1",
-                            "mod": ""
-                        },
-                        {
-                            "MATCHER_subscriber": "1",
-                            "subscriber": ""
-                        },
-                        {
-                            "MATCHER_vip": "1",
-                            "vip": ""
-                        }
-                    ],
-                    "cooldown": "0"
-                },
-                "action": {
-                    "name": "quizbotCheckAnswer",
-                    "extension": "quizbot",
-                    "channel": "QUIZBOT_CHANNEL",
-                    "messagetype": "action_QuizbotCheckAnswer",
-                    "data": [
-                        {
-                            "user": "%%sender%%"
-                        },
-                        {
-                            "answer": "%%message%%"
-                        }
-                    ],
-                    "paused": false
-                }
-            },
-            {
-                "group": "Kick_Quizbot_1",
-                "trigger": {
                     "name": "quizbotQuizStarted",
                     "extension": "quizbot",
                     "channel": "QUIZBOT_CHANNEL",

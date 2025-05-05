@@ -52,6 +52,8 @@
         <li>For YouTube testing (without going live) start the stream on YouTube using 'Unlisted' rather than 'Public'</li>
         <li>For YouTube backup server (for some reason mine fails to connect the main server on YouTube) set 'Additional URL' to '?backup=1' (without quotes)
         </li>
+        <li>For Kick stream add /app to the URL you are given by kick. ie rtmps://xxxxxxx.global-contribute.live-video.net ->
+            rtmps://xxxxxxx.global-contribute.live-video.net<b>/app</b></li>
     </ul>
     <HR>
     <h4 class="text-center">Configuration Mode</h4>
@@ -294,7 +296,7 @@
                 // audioBitrate
                 streamsHtml += createTextBox("Audio Bitrate ", `multistream_audioBitrate_${i}`, stream.audioBitrate, false, "", `multistreamConfigurableDisplay_${i}`);
 
-                streamsHtml += '<div class=" py-2">'
+                streamsHtml += `<div class=" multistreamConfigurableDisplay_${i} py-2">`
                 streamsHtml += 'Audio Channels (Select none if you want all channels to save remuxing them all adding a performance hit)<BR>';
                 for (let trackId = 0; trackId < 6; trackId++)
                 {

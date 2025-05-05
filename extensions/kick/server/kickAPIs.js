@@ -21,7 +21,9 @@ import * as querystring from 'querystring';
 import * as logger from "../../../backend/data_center/modules/logger.js";
 const localConfig =
 {
-    maxChatMessageLength: 500
+    SYSTEM_LOGGING_TAG: "[KickAPIs.js]",
+    maxChatMessageLength: 500,
+    DEBUG: false,
 }
 // callbacks so we can update our refresh token if it expires
 const callbacks =
@@ -111,8 +113,10 @@ function checkCredentials (log = false)
  */
 function refreshToken (forStreamer = true)
 {
+    file_log(`######## refreshToken (${forStreamer}) ##############`)
     return new Promise((resolve, reject) =>
     {
+        file_log(`refreshToken (${forStreamer}):Attempting refresh using `, Credentials);
         let postData = null
         if (forStreamer)
             postData = querystring.stringify({
@@ -143,6 +147,8 @@ function refreshToken (forStreamer = true)
             res.on('data', (chunk) => { data += chunk; });
             res.on('end', () =>
             {
+                file_log(`refreshToken (${forStreamer}): returned res.statusCode ${res.statusCode} res.statusCode ${res.statusMessage}`);
+                file_log(`JSON.parse(data)`, JSON.parse(data));
                 if (res.statusCode >= 200 && res.statusCode < 300)
                 {
                     try
@@ -153,23 +159,29 @@ function refreshToken (forStreamer = true)
                             resolve(parsed);
                         } else
                         {
+                            file_log(`refreshToken (${forStreamer}): No access_token in response`);
                             reject(new Error('No access_token in response'));
                         }
                     } catch (e)
                     {
+                        file_log(`refreshToken (${forStreamer}): Failed to parse token response`);
                         reject(new Error('Failed to parse token response'));
                     }
-                } else
+                }
+                else
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel", "refreshToken Error: ", JSON.parse(data));
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel", "refreshToken code:", res.statusCode, "message", res.statusMessage);
-                    reject(new Error(`Token refresh failed with status ${res.statusCode}`));
+                    file_log(`refreshToken (${forStreamer}) refreshToken(1): Error res.statusCode=${res.statusCode} res.statusCode=${res.statusMessage}`);
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "refreshToken(2)", "statusCode:", res.statusCode, "message", res.statusMessage);
+                    reject({
+                        type: res.statusMessage, location: `refreshToken(${forStreamer})`, message: `Token refresh failed with status ${res.statusCode}`
+                    });
                 }
             });
         });
 
         req.on('error', (err) =>
         {
+            file_log(`refreshToken (${forStreamer}) on err handler`, err);
             reject(err);
         });
 
@@ -186,6 +198,7 @@ function refreshToken (forStreamer = true)
  */
 function getUsersWithToken (token)
 {
+    file_log(`######## getUsersWithToken (token) ##############`, token);
     return new Promise((resolve, reject) =>
     {
         const options = {
@@ -208,16 +221,19 @@ function getUsersWithToken (token)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'unauthorized' });
+                    file_log(`getUsersWithToken (token) res.statusCode:${res.statusCode}, res.statusMessage:${res.statusMessage}`);
+                    reject({ type: 'unauthorized', location: 'getUsersWithToken' });
                 } else
                 {
                     try
                     {
+                        file_log(`getUsersWithToken (token) success`);
                         resolve(JSON.parse(data));
                     } catch (e)
                     {
+                        file_log(`getUsersWithToken (token) Error parsing data`, e);
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUsersWithToken", "ERROR: ", e);
-                        reject({ type: 'parse_error', raw: data });
+                        reject({ type: 'parse_error', raw: data, location: 'getUsersWithToken' });
                     }
                 }
             });
@@ -225,7 +241,8 @@ function getUsersWithToken (token)
 
         req.on('error', (err) =>
         {
-            reject({ type: 'getUsersWithToken:request_error', error: err });
+            file_log(`getUsersWithToken (token) Erequest_error`, err);
+            reject({ type: 'getUsersWithToken:request_error', error: err, location: 'getUsersWithToken' });
         });
 
         req.end();
@@ -241,6 +258,7 @@ function getUsersWithToken (token)
  */
 async function getUser (forStreamer)
 {
+    file_log(`######## getUser (${forStreamer}) ##############`);
     try
     {
         //let credentialsOk = checkCredentials()
@@ -257,11 +275,14 @@ async function getUser (forStreamer)
             return data;
         } catch (err)
         {
+            file_log(`getUser (${forStreamer}) Error`, err);
             if (err.type === 'unauthorized')
             {
                 // Token likely expired
                 let tokens = null;
+                file_log(`getUser (${forStreamer}) Unauthorized, calling refresh`);
                 tokens = await refreshToken(forStreamer);
+                file_log(`getUser (${forStreamer}) tokens returned`, tokens);
                 if (forStreamer)
                 {
                     Credentials.kickAccessToken = tokens.access_token;
@@ -275,6 +296,7 @@ async function getUser (forStreamer)
                 callbacks.updateRefreshTokenFn(Credentials);
                 try
                 {
+                    file_log(`getUser (${forStreamer}) Second attempt after refresh`);
                     let data = null;
                     if (forStreamer)
                         data = await getUsersWithToken(Credentials.kickAccessToken);
@@ -283,16 +305,19 @@ async function getUser (forStreamer)
                     return data;
                 } catch (err2)
                 {
+                    file_log(`getUser (${forStreamer}) Still failed after refresh`, err2);
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Still failed after refresh err2:", err2);
                 }
             } else
             {
+                file_log(` getUser (${forStreamer}) Request failed err:`, err);
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Request failed err:", err);
             }
         }
     }
     catch (err)
     {
+        file_log(`getUser (${forStreamer}) Error:`, err);
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "ERROR: getUser err:", err);
     }
 }
@@ -301,6 +326,7 @@ async function getUser (forStreamer)
 // ============================================================================
 function getChannelsWithToken (token)
 {
+    file_log(`######## getChannelsWithToken (token) ##############`, token);
     return new Promise((resolve, reject) =>
     {
         const options = {
@@ -321,7 +347,7 @@ function getChannelsWithToken (token)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'getChannelsWithToken: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'getChannelsWithToken', data: data });
                 } else
                 {
                     try
@@ -331,7 +357,7 @@ function getChannelsWithToken (token)
                     } catch (e)
                     {
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", e);
-                        reject({ type: 'getChannelsWithToken: parse_error', raw: data });
+                        reject({ type: 'getChannelsWithToken: parse_error', location: 'getChannelsWithToken', data: data });
                     }
                 }
             });
@@ -340,7 +366,7 @@ function getChannelsWithToken (token)
         req.on('error', (err) =>
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", err);
-            reject({ type: 'getChannelsWithToken: request_error', error: err });
+            reject({ type: 'getChannelsWithToken: request_error', error: err, location: 'getChannelsWithToken' });
         });
 
         req.end();
@@ -354,6 +380,7 @@ function getChannelsWithToken (token)
  */
 async function getChannel ()
 {
+    file_log(`######## getChannel () ##############`);
     try
     {
         //if (!checkCredentials())
@@ -403,6 +430,7 @@ async function getChannel ()
  */
 function getChannelData (username)
 {
+    file_log(`######## getChannelData (${username}) ##############`);
     return new Promise((resolve, reject) =>
     {
         const options = {
@@ -424,7 +452,7 @@ function getChannelData (username)
                 if (res.statusCode === 401)
                 {
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "401:Unauthorized");
-                    reject({ type: 'getChannelData: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'getChannelData', data: data });
                 } else
                 {
                     try
@@ -434,7 +462,7 @@ function getChannelData (username)
                     } catch (e)
                     {
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "parse_error:", e);
-                        reject({ type: 'getChannelData: parse_error', raw: data });
+                        reject({ type: 'parse_error', location: 'getChannelData', data: data });
                     }
                 }
             });
@@ -443,7 +471,7 @@ function getChannelData (username)
         req.on('error', (err) =>
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "request_error:", err);
-            reject({ type: 'getChannelData: request_error', error: err });
+            reject({ type: 'request_error', error: err, location: 'getChannelData' });
         });
 
         req.end();
@@ -459,6 +487,7 @@ function getChannelData (username)
  */
 function getLivestreamsWithToken (userId)
 {
+    file_log(`######## getLivestreamsWithToken (${userId}) ##############`);
     return new Promise((resolve, reject) =>
     {
         const queryParams = new URLSearchParams({
@@ -481,8 +510,9 @@ function getLivestreamsWithToken (userId)
             {
                 if (res.statusCode === 401)
                 {
+                    file_log(`getLivestreamsWithToken (${userId}) res.statusCode:${res.statusCode}, res.statusMessage:${res.statusMessage}`);
                     logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "401:unauthorized:");
-                    reject({ type: 'getLivestreamsWithToken: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'getChannelData', data: data });
                 } else
                 {
                     try
@@ -490,8 +520,9 @@ function getLivestreamsWithToken (userId)
                         resolve(JSON.parse(data));
                     } catch (e)
                     {
+                        file_log(`getLivestreamsWithToken (${userId}) parse_error:`, e);
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "parse_error:", e);
-                        reject({ type: 'getLivestreamsWithToken: parse_error', raw: data });
+                        reject({ type: 'parse_error', location: 'getChannelData', data: data });
                     }
                 }
             });
@@ -499,8 +530,9 @@ function getLivestreamsWithToken (userId)
 
         req.on('error', (err) =>
         {
+            file_log(`getLivestreamsWithToken (${userId}) request_error:`, err);
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "request_error:", err);
-            reject({ type: 'getLivestreamsWithToken: request_error', error: err });
+            reject({ type: 'request_error', error: err, location: 'getChannelData' });
         });
 
         req.end();
@@ -516,6 +548,7 @@ function getLivestreamsWithToken (userId)
  */
 async function getLivestream (userId)
 {
+    file_log(`######## getLivestream (${userId}) ##############`);
     try
     {
         if (!checkCredentials())
@@ -565,6 +598,7 @@ async function getLivestream (userId)
  */
 async function sendChatMessageWithToken (messageData, token)
 {
+    file_log(`######## sendChatMessageWithToken (${messageData},token) ##############`, token);
     return new Promise((resolve, reject) =>
     {
         // lets pre-parse the message for kick specifically
@@ -600,15 +634,14 @@ async function sendChatMessageWithToken (messageData, token)
             {
                 if (res.statusCode === 401)
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", "401:unauthorized");
-                    reject({ type: 'sendChatMessageWithToken: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'sendChatMessageWithToken', data: responseData });
                 }
                 else if (res.statusCode === 200)
                     resolve("Message Sent ")
                 else
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", "401:unauthorized", { code: res.statusCode, resmessage: res.statusMessage, message: responseData });
-                    reject({ code: res.statusCode, message: responseData })
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", { code: res.statusCode, statusMessage: res.statusMessage, message: responseData });
+                    reject({ code: res.statusCode, message: responseData, location: 'sendChatMessageWithToken' })
                 }
             });
         });
@@ -632,6 +665,8 @@ async function sendChatMessageWithToken (messageData, token)
  */
 async function sendChatMessage (messageData)
 {
+    file_log(`######## sendChatMessage (${messageData}) ##############`);
+    //”Dog Days are Over”
     try
     {
         /*
@@ -645,8 +680,7 @@ async function sendChatMessage (messageData)
             let response = "Message Not sent"
             if (messageData.account == "user")
                 response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
-
-            if (messageData.account == "bot")
+            else if (messageData)
                 response = await sendChatMessageWithToken(messageData, Credentials.kickBotAccessToken);
             return response;
 
@@ -697,16 +731,17 @@ async function sendChatMessage (messageData)
 /**
  * 
  * @param {string} title 
- * @param {number} category 
+ * @param {number} categoryId 
  * @param {string} token kick access token
  * @returns promise
  */
-async function setTitleAndCategoryWithToken (title, category, token)
+async function setTitleAndCategoryWithToken (title, categoryId, token)
 {
+    file_log(`######## setTitleAndCategoryWithToken (${title},${categoryId},token) ##############`, token);
     return new Promise((resolve, reject) =>
     {
         let postData = JSON.stringify({
-            category_id: category,
+            category_id: categoryId,
             stream_title: title,
         });
 
@@ -728,18 +763,18 @@ async function setTitleAndCategoryWithToken (title, category, token)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'setTitleAndCategoryWithToken: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'setTitleAndCategoryWithToken', data: responseData });
                 }
                 else if (res.statusCode === 204)
                     resolve("Channel title and Category Updated ")
                 else
-                    reject({ code: res.statusCode, message: responseData })
+                    reject({ code: res.statusCode, message: responseData, location: 'setTitleAndCategoryWithToken' })
             });
         });
 
         req.on('error', (err) =>
         {
-            reject(err);
+            reject({ err: err, location: 'setTitleAndCategoryWithToken' });
         });
 
         req.write(postData);
@@ -752,11 +787,12 @@ async function setTitleAndCategoryWithToken (title, category, token)
 /**
  * 
  * @param {string} title 
- * @param {number} category 
+ * @param {number} categoryId 
  * @returns object
  */
-async function setTitleAndCategory (title, category)
+async function setTitleAndCategory (title, categoryId)
 {
+    file_log(`######## setTitleAndCategory (${title},${categoryId}) ##############`);
     try
     {
         /*
@@ -767,7 +803,7 @@ async function setTitleAndCategory (title, category)
         }*/
         try
         {
-            const response = await setTitleAndCategoryWithToken(title, category, Credentials.kickAccessToken);
+            const response = await setTitleAndCategoryWithToken(title, categoryId, Credentials.kickAccessToken);
             return response;
         } catch (err)
         {
@@ -780,7 +816,7 @@ async function setTitleAndCategory (title, category)
                 callbacks.updateRefreshTokenFn(Credentials)
                 try
                 {
-                    const response = await setTitleAndCategoryWithToken(title, category, Credentials.kickAccessToken);
+                    const response = await setTitleAndCategoryWithToken(title, categoryId, Credentials.kickAccessToken);
                     return response;
                 } catch (err2)
                 {
@@ -805,13 +841,12 @@ async function setTitleAndCategory (title, category)
 // ============================================================================
 /**
  * 
- * @param {string} title 
- * @param {number} category 
- * @param {string} token kick access token
+ * @param {string} categoryName 
  * @returns promise
  */
 async function searchCategoriesWithToken (categoryName)
 {
+    file_log(`######## searchCategoriesWithToken (${categoryName}) ##############`);
     return new Promise((resolve, reject) =>
     {
         let responseData = '';
@@ -840,12 +875,12 @@ async function searchCategoriesWithToken (categoryName)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'searchCategoriesWithToken: unauthorized' });
+                    reject({ type: 'unauthorized', location: 'searchCategoriesWithToken', data: responseData });
                 }
                 else if (res.statusCode === 200)
                     resolve(JSON.parse(responseData))
                 else
-                    reject({ code: res.statusCode, message: responseData })
+                    reject({ code: res.statusCode, location: 'searchCategoriesWithToken', data: responseData })
             });
         });
 
@@ -863,12 +898,12 @@ async function searchCategoriesWithToken (categoryName)
 // ============================================================================
 /**
  * 
- * @param {string} title 
- * @param {number} category 
+ * @param {number} categoryName 
  * @returns object
  */
 async function searchCategories (categoryName)
 {
+    file_log(`######## searchCategories (${categoryName}) ##############`);
     return new Promise((resolve, reject) =>
     {
         /*
@@ -886,44 +921,96 @@ async function searchCategories (categoryName)
                 })
                 .catch((err) =>
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed call to searchCategoriesWithToken", err);
-                    reject("failed call to searchCategoriesWithToken", err)
-                })
-        } catch (err)
-        {
-            if (err.type === 'unauthorized')
-            {
-                // Token likely expired
-                refreshToken()
-                    .then((tokens) =>
+                    if (err.type === 'unauthorized')
                     {
-                        Credentials.kickAccessToken = tokens.access_token
-                        Credentials.kickRefreshToken = tokens.refresh_token
-                        callbacks.updateRefreshTokenFn(Credentials)
-                        searchCategoriesWithToken(categoryName)
-                            .then((response) =>
+                        // Token likely expired
+                        refreshToken()
+                            .then((tokens) =>
                             {
-                                resolve(response);
+                                Credentials.kickAccessToken = tokens.access_token
+                                Credentials.kickRefreshToken = tokens.refresh_token
+                                callbacks.updateRefreshTokenFn(Credentials)
+                                searchCategoriesWithToken(categoryName)
+                                    .then((response) =>
+                                    {
+                                        resolve(response);
+                                    })
+                                    .catch((err) =>
+                                    {
+                                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed call to searchCategoriesWithToken after refresh", err);
+                                        reject("failed to call searchCategoriesWithToken after refresh", err)
+                                    })
+
                             })
                             .catch((err) =>
                             {
-                                logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed call to searchCategoriesWithToken after refresh", err);
-                                reject("failed to call searchCategoriesWithToken after refresh", err)
+                                logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed to get refresh tokens", err);
+                                reject("failed to get refresh tokens", err)
                             })
-
-                    })
-                    .catch((err) =>
+                    } else
                     {
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "failed to get refresh tokens", err);
-                        reject("failed to get refresh tokens", err)
-                    })
-            } else
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", " Request failed", err);
-                reject("failed");
-            }
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", " Request failed", err);
+                        reject("failed");
+                    }
+                })
+        }
+        catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "searchCategories", "Error", err);
+            reject("failed");
         }
     });
 }
+// ============================================================================
+//                           FUNCTION: file_log
+//                       For debug purposes. logs raw message data
+// ============================================================================
+import fs from 'fs'
+let basedir = "chatdata/";
+let fileHandle = null;
+let startup = true;
+async function file_log (userMessage, data = "")
+{
+    if (!localConfig.DEBUG)
+        return
+    let message = userMessage
+    try
+    {
 
+        var filename = "kickAPIRefreshTestLog.js";
+        var buffer = "";
+        if (!fs.existsSync(basedir))
+            fs.mkdirSync(basedir, { recursive: true });
+
+        // check if we already have this handler
+        if (!fileHandle)
+            fileHandle = await fs.createWriteStream(basedir + "/" + filename, { flags: 'a' });
+
+        if (startup)
+        {
+            startup = false;
+            buffer = "/* ################# startup ######################### */\n"
+        }
+        buffer += "message='" + message + "'\n"
+        if (typeof data != "object")
+            buffer += "data='" + data + "'\n"
+        else
+        {
+            if (typeof data.data == "string")
+                data.data = JSON.parse(data.data)
+            // this will handle the nested objects that are already stringified
+            data = JSON.stringify(data)
+            buffer += "data=" + data + "\n"
+        }
+
+        fileHandle.write(buffer);
+        //bad coding but can't end it here (due to async stuff) and it is just debug code (just left as a reminder we have a dangling pointer)
+        //fileHandle.end("")
+
+    }
+    catch (error)
+    {
+        console.log("debug file logging crashed", error.message)
+    }
+}
 export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData, sendChatMessage, setTitleAndCategory, searchCategories };

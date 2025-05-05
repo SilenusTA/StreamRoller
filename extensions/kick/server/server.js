@@ -48,7 +48,11 @@ const localConfig = {
     // use these fields to send errors in searching back to the user
     kickCategoryErrorsText: "",
     kickCategoryErrorsShowCounter: 0,
-    currentKickGameCategoryId: -1, // as reported by kick
+
+    userLiveStreamSchedulerHandle: null,
+    userLiveStreamSchedulerTimeout: 300000,//5mins
+    botLiveStreamSchedulerHandle: null,
+    botLiveStreamSchedulerTimeout: 1200000,//20mins
 };
 
 const default_serverConfig = {
@@ -58,6 +62,8 @@ const default_serverConfig = {
     kickEnabled: "off",
     currentCategoryId: -1,
     currentCategoryName: "none selected",
+    currentCategoryUrl: "",
+    currentTitle: "",
     channelData: null, // only storing this until we can get the official api returning the data. until then we are using a third party API to get the chatroom id so we store it to minimise usage of this api.
     kickCategoriesHistory: [],
     kickTitlesHistory: ["StreamRoller, the most versatile streaming tool around"],
@@ -72,7 +78,9 @@ const default_serverCredentials =
     kickApplicationSecret: "",
     streamerName: "", // streamer we are connecting to (ie channel for that streamer)
     userName: "", // currently log in user
-    botName: "" // currently logged in bot
+    userId: "",
+    botName: "", // currently logged in bot
+    botId: ""
 };
 let serverCredentials = structuredClone(default_serverCredentials);
 const triggersandactions =
@@ -129,7 +137,7 @@ const triggersandactions =
                 description: "Results of a search request in a JSON object",
                 messagetype: "trigger_searchedKickGames",
                 parameters: {
-
+                    platform: "kick",
                     triggerActionRef: "KickSearchedCategories",
                     triggerActionRef_UIDescription: "Reference for this message",
                     searchName: "",
@@ -144,21 +152,46 @@ const triggersandactions =
                 description: "The Category history was cleared",
                 messagetype: "trigger_categoryHistoryCleared",
                 parameters: {
+                    platform: "kick",
                     triggerActionRef: "KickCategoryHistoryCleared",
                     triggerActionRef_UIDescription: "Reference for this message",
                 }
-            }
-            ,
+            },
             {
                 name: "Title history cleared",
                 displaytitle: "The Title history was cleared",
                 description: "The Title history was cleared",
                 messagetype: "trigger_titleHistoryCleared",
                 parameters: {
+                    platform: "kick",
                     triggerActionRef: "KickTitleHistoryCleared",
                     triggerActionRef_UIDescription: "Reference for this message",
                 }
-            }
+            },
+            {
+                name: "GamedChanged",
+                displaytitle: "Gamed Changed",
+                description: "The Game was changed",
+                messagetype: "trigger_KickGamedChanged",
+                parameters: {
+                    gameId: "",
+                    name: "",
+                    imageURL: "",
+                    triggerActionRef: "kick",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
+            {
+                name: "TitleChanged",
+                displaytitle: "Title Changed",
+                description: "The Title was changed",
+                messagetype: "trigger_KickTitleChanged",
+                parameters: {
+                    title: "",
+                    triggerActionRef: "kick",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
         ],
     actions:
         [
@@ -170,8 +203,12 @@ const triggersandactions =
                 parameters: {
                     triggerActionRef: "KickChatMessage",
                     triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "Kick",//required
+                    platform_UIDescription: "platform that this message applies to",
                     account: "",
-                    message: ""
+                    account_UIDescription: "account to send on ie. user/bot",
+                    message: "",
+                    message_UIDescription: "message to send",
                 }
             },
             {
@@ -182,6 +219,8 @@ const triggersandactions =
                 parameters: {
                     triggerActionRef: "KickChatMessage",
                     triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "Kick",//required
+                    platform_UIDescription: "platform that this message applies to",
                     searchName: "",
                     searchName_UIDescription: "Name to search for",
                 }
@@ -194,6 +233,8 @@ const triggersandactions =
                 parameters: {
                     triggerActionRef: "KickClearCategoryHistory",
                     triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "Kick",//required
+                    platform_UIDescription: "platform that this message applies to",
                 }
             },
             {
@@ -204,6 +245,24 @@ const triggersandactions =
                 parameters: {
                     triggerActionRef: "KickClearTitleHistory",
                     triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "Kick",//required
+                    platform_UIDescription: "platform that this message applies to",
+                }
+            },
+            {
+                name: "SetTitleAndCategory",
+                displaytitle: "Set Title And Category",
+                description: "Changes teh current stream title and category",
+                messagetype: "action_setTitleAndCategory",
+                parameters: {
+                    title: "",
+                    title_UIDescription: "Title to set",
+                    category: "",
+                    category_UIDescription: "Category to set",
+                    triggerActionRef: "SetTitleAndCategory",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                    platform: "Kick",//required
+                    platform_UIDescription: "platform that this message applies to",
                 }
             }
 
@@ -364,22 +423,29 @@ async function onDataCenterMessage (server_packet)
                 sendAccountNames();
                 // update the kickAPI credentials 
                 kickAPI.setCredentials(serverCredentials);
-            }
-            if (serverConfig.kickEnabled == "on")
-            {
-                // temp fix until the official api returns the chatroom id.
-                // should really do this each time after initial dev is done
-                // TBD PreRelease - remove if statement before release
-                if (serverConfig.channelData == null)
+                if (serverConfig.kickEnabled == "on")
                 {
-                    serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
-                    SaveConfigToServer()
+                    // temp fix until the official api returns the chatroom id.
+                    // should really do this each time after initial dev is done
+                    // TBD PreRelease - remove if statement before release
+                    if (serverConfig.channelData == null)
+                    {
+                        serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
+                        SaveConfigToServer()
+                    }
+                    updateCategoryTitleFromKick()
+                    localConfig.kickLiveStream = await kickAPI.getLivestream(serverCredentials.userId)
+                    connectToChatScheduler()
                 }
-                localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
-                localConfig.kickLiveStream = await kickAPI.getLivestream(serverCredentials.userId)
-
-                connectToChatScheduler()
             }
+            else
+            {
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "CredentialsFile failed to get streamer details from kick ");
+            }
+        }
+        else
+        {
+            console.log("KickAPI CredentialsFile no kickAccessToken")
         }
 
         // ##################### Bot setup #############################
@@ -390,18 +456,31 @@ async function onDataCenterMessage (server_packet)
             localConfig.bot = await kickAPI.getUser(false)
             if (localConfig.bot && localConfig.bot.data[0].name)
             {
-                serverCredentials.botName = localConfig.bot.data[0].name
-                serverCredentials.botId = localConfig.bot.data[0].user_id
-                sendAccountNames();
-                // update the kickAPI credentials 
-                kickAPI.setCredentials(serverCredentials);
+                if (localConfig.bot && localConfig.bot.data[0].name)
+                {
+                    serverCredentials.botName = localConfig.bot.data[0].name
+                    serverCredentials.botId = localConfig.bot.data[0].user_id
+                    sendAccountNames();
+                    // update the kickAPI credentials 
+                    kickAPI.setCredentials(serverCredentials);
+                }
+                else
+                {
+                    console.log("KickAPI CredentialsFile failed on getUser for bot")
+                    console.log(localConfig.bot)
+                }
+            }
+            else
+            {
+                logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "CredentialsFile failed to get bot details from kick ");
             }
         }
-        /*let testdata = {
-            account: "bot",
-            message: "paste message in that is causing issues here to get it to send the message on startup"
+        else
+        {
+            console.log("KickAPI CredentialsFile no kickBotAccessToken")
         }
-        kickAPI.sendChatMessage(testdata)*/
+        checkForLiveStreams();
+        checkForLiveStreamsScheduler(serverCredentials.userId);
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -409,7 +488,10 @@ async function onDataCenterMessage (server_packet)
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
             if (extension_packet.to === serverConfig.extensionname)
+            {
                 SendSettingsWidgetSmall(extension_packet.from);
+                updateCategoryTitleFromKick()
+            }
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
         {
@@ -445,8 +527,24 @@ async function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_SendChatMessage")
         {
+            // only called once for kick
             if (serverConfig.kickEnabled == "on")
-                kickAPI.sendChatMessage(extension_packet.data)
+            {
+                if (extension_packet.data.platform)
+                {
+                    if (extension_packet.data.platform == "kick")
+                    {
+                        if (extension_packet.data.account == "")
+                            extension_packet.data.account = "bot"
+                        kickAPI.sendChatMessage(extension_packet.data)
+                    }
+                    else if (extension_packet.data.platform == "")
+                        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "action_SendChatMessage action has no platform selected ", server_packet);
+                }
+                else
+                    if (extension_packet.data.platform == "")
+                        logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "action_SendChatMessage action is missing a platform tag. Delete and recreate the trigger/action pairing to pick the new action that now has a platform option", server_packet);
+            }
         }
         else if (extension_packet.type === "action_searchForKickGame")
         {
@@ -473,6 +571,21 @@ async function onDataCenterMessage (server_packet)
             SaveConfigToServer();
             sendTitleClearedTrigger(extension_packet.data.triggerActionRef)
             SendSettingsWidgetSmall()
+        }
+        else if (extension_packet.type === "action_setTitleAndCategory")
+        {
+            // get all category that have the name in them.
+            localConfig.gameSearchCategories = await kickAPI.searchCategories(extension_packet.data.category);
+            // find the category we are looking for
+            const game = localConfig.gameSearchCategories.data.find(item => item.name == extension_packet.data.category);
+            if (game)
+            {
+                kickAPI.setTitleAndCategory(extension_packet.data.title, game.id)
+                    .then((data) =>
+                    {
+                        updateCategoryTitleFromKick();
+                    })
+            }
         }
         else
             logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "received unhandled ExtensionMessage ", server_packet);
@@ -685,11 +798,13 @@ async function parseSettingsWidgetSmall (modalData)
             let categoryId = ""
             let categoryName = ""
             const userSelectedCategoryId = modalData["kickGameCategoryDropdownSelector"]
+            // user selected category from our history
             if (userSelectedCategoryId)
             {
                 const historyIndex = serverConfig.kickCategoriesHistory.findIndex(e => e.id == userSelectedCategoryId);
                 if (historyIndex == -1)
                 {
+                    // check previous game search history to avoid res
                     const game = localConfig.gameSearchCategories.data.find(item => item.id == userSelectedCategoryId);
                     categoryId = game.id;
                     categoryName = game.name;
@@ -727,6 +842,10 @@ async function parseSettingsWidgetSmall (modalData)
             {
                 //update stream title/description
                 kickAPI.setTitleAndCategory(serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId], serverConfig.currentCategoryId)
+                    .then((data) =>
+                    {
+                        updateCategoryTitleFromKick();
+                    })
             }
             if (DataChanged)
             {
@@ -739,6 +858,65 @@ async function parseSettingsWidgetSmall (modalData)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".parseSettingsWidgetSmall", "Error", err, err.message);
     }
+}
+// ============================================================================
+//                           FUNCTION: updateCategoryTitleFromKick
+// ============================================================================
+async function updateCategoryTitleFromKick ()
+{
+    localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+    // update our category
+    if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category)
+    {
+        serverConfig.currentCategoryId = localConfig.kickChannel.data[0].category.id;
+        serverConfig.currentCategoryName = localConfig.kickChannel.data[0].category.name;
+        serverConfig.currentCategoryUrl = localConfig.kickChannel.data[0].category.thumbnail;
+        // check if we need to add this to our history list
+        let historyCategoryIndex = serverConfig.kickCategoriesHistory.findIndex(x => x.name === serverConfig.currentCategoryName);
+        // is this a new title
+        if (historyCategoryIndex == -1)
+            serverConfig.kickCategoriesHistory.push({ id: serverConfig.currentCategoryId, name: serverConfig.currentCategoryName });
+        sendCategoryTrigger();
+    }
+    // update our title
+    if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].stream_title)
+    {
+        // update our title
+        serverConfig.currentTitle = localConfig.kickChannel.data[0].stream_title;
+        // add title to history if not already there
+        let historyTitleIndex = serverConfig.kickTitlesHistory.findIndex(x => x === serverConfig.currentTitle);
+        // is this a new title
+        if (historyTitleIndex == -1)
+            serverConfig.lastSelectedKickTitleId = serverConfig.kickTitlesHistory.push(serverConfig.currentTitle) - 1
+        sendTitleTrigger();
+    }
+    SendSettingsWidgetSmall();
+}
+// ============================================================================
+//                           FUNCTION: sendCategoryTrigger
+// ============================================================================
+function sendCategoryTrigger ()
+{
+    let triggerToSend = null
+    // category changed
+    if (serverConfig.currentCategoryId != -1)
+    {
+        triggerToSend = findTriggerByMessageType("trigger_KickGamedChanged")
+        triggerToSend.parameters.gameId = serverConfig.currentCategoryId;
+        triggerToSend.parameters.name = serverConfig.currentCategoryName;
+        triggerToSend.parameters.imageURL = serverConfig.currentCategoryUrl;
+        postTrigger(triggerToSend);
+    }
+}
+// ============================================================================
+//                           FUNCTION: sendTitleTrigger
+// ============================================================================
+function sendTitleTrigger ()
+{
+    // title changed
+    let triggerToSend = findTriggerByMessageType("trigger_KickTitleChanged")
+    triggerToSend.parameters.title = serverConfig.currentTitle;
+    postTrigger(triggerToSend);
 }
 // ============================================================================
 //                           FUNCTION: connectToChatScheduler
@@ -766,6 +944,13 @@ async function connectToChat ()
 {
     try
     {
+        if (!localConfig.streamer || !localConfig.streamer.data)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
+                ".connectToChat", "no streamer to connect with, have you completed the user auth");
+            return;
+        }
+
         // temp fix until the official api returns the chatroom id.
         // should really do this each time after initial dev is done
         // TBD PreRelease - remove if statement before release
@@ -917,9 +1102,9 @@ function heartBeatCallback ()
     clearTimeout(localConfig.heartBeatHandle)
     // we can send a color for things like the liveportal page to use to show on the icon.
     let color = "red";
+
     let connected = localConfig.apiConnected && chatService.connected();
-    // need to fix this for the bots etc, when disabled it stops teh ability to send chat message from live portal
-    connected = true;
+
     // determine the color we wish to show for our status
     if (serverConfig.kickEnabled === "on")
     {
@@ -946,6 +1131,9 @@ function heartBeatCallback ()
                     color: color,
                     botName: serverCredentials.botName,
                     streamerName: serverCredentials.streamerName,
+                    currentCategoryId: serverConfig.currentCategoryId,
+                    categoryName: serverConfig.currentCategoryName,
+                    categoryURL: serverConfig.currentCategoryUrl
                 },
                 serverConfig.channel),
             serverConfig.channel
@@ -1071,7 +1259,10 @@ function onChatMessage (message)
         //    console.log("DEBUG:Kick:onChatMessage sender badges", message)
 
         // split out emotes from messages
-        const matches = [...message.content.matchAll(/\[emote:(s?)(\d+):([^\]]+)\]/g)];
+        const regex = /\[emote:(s?)(\d+):([^\]]+)\]/g;
+        const matches = [];
+        for (const match of message.content.matchAll(regex))
+            matches.push(match);
         const emotes = {};
         for (const match of matches)
         {
@@ -1095,7 +1286,6 @@ function onChatMessage (message)
 
         triggerToSend.parameters = {
             triggerActionRef: "KickChatMessage",
-            // streamroller settings
             type: "chat",
             platform: "Kick",
             htmlMessage: parsedTextMessage,
@@ -1338,6 +1528,43 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
     dropdownHtml += "</div>"
 
     return dropdownHtml
+}
+// ============================================================================
+//                      FUNCTION: checkForLiveStreams
+// ============================================================================
+/**
+ * schedules a check for users going live. might need to tweek the timeouts once working
+ */
+function checkForLiveStreams ()
+{
+    clearInterval(localConfig.botLiveStreamSchedulerHandle)
+    clearInterval(localConfig.userLiveStreamSchedulerHandle)
+
+    localConfig.userLiveStreamSchedulerHandle = setInterval(() =>
+    {
+        checkForLiveStreamsScheduler(serverCredentials.userId)
+    }, localConfig.userLiveStreamSchedulerTimeout)
+
+    localConfig.botLiveStreamSchedulerHandle = setInterval(() =>
+    {
+        checkForLiveStreamsScheduler(serverCredentials.userId)
+    }, localConfig.botLiveStreamSchedulerTimeout)
+}
+// ============================================================================
+//                      FUNCTION: checkForLiveStreams
+// ============================================================================
+/**
+ * checks if a user is live
+ * @param {number} id 
+ */
+function checkForLiveStreamsScheduler (id)
+{
+    kickAPI.getLivestream(id)
+        .then((data) =>
+        {
+            //console.log("checkForLive status", data.message);
+            //console.log("checkForLive data", data.data);
+        })
 }
 // ============================================================================
 //                                  EXPORTS

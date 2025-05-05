@@ -58,7 +58,8 @@ const localConfig = {
     // Error handlers
     // need to add these into the settings to avoid buffer overun exit/issues
     //ie for 50M buffer set this to 50 * 1024 * 1024 / 188
-    bufferOverrunFlags: "?overrun_nonfatal=1&fifo_size=50000000&buffer_size=65535",
+    //bufferOverrunFlags: "?overrun_nonfatal=1&fifo_size=50000000&buffer_size=65535",
+    bufferOverrunFlags: "?overrun_nonfatal=1",
     // This prevents warnings of header updates (not an issue in streaming)
     HeaderUpdateWarningsFlags1: "-flvflags",
     HeaderUpdateWarningsFlags2: "no_duration_filesize",
@@ -148,15 +149,40 @@ const defaultYouTubeStream =
     audioTracks: [],// which audio tracks to include, empty = all
     outputFormat: "flv",
 }
-
+const defaultKickStream =
+{
+    enabled: "off",
+    name: "Kick",
+    configurationMode: "Simple",
+    Advanced: "",
+    URL: "rtmps://???????.global-contribute.live-video.net",
+    twitchBandwidthTest: "off",
+    AdditionalURL: "",
+    AdditionalParams: "?bandwidthtest=true",
+    variableBitrate: "off",
+    videoEncoder: "h264_nvenc",
+    videoEncoderOption: "-preset",
+    videoEncoderOptionParameters: "p4",
+    targetBitrate: "8M",
+    resolution: "1664x936",
+    framerate: "30",
+    keyframeInterval: "60",
+    audioEncoder: "aac",
+    audioEncoderOption: "",
+    audioEncoderOptionParameters: "",
+    audioChannels: "",
+    audioBitrate: "128k",
+    audioTracks: [],// which audio tracks to include, empty = all
+    outputFormat: "flv",
+}
 const default_serverConfig = {
     __version__: "0.1",
     multistreamEnabled: "off",
     extensionname: "multistream",
     channel: "MULTISTREAM",
-    streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream, defaultTwitchStream],
+    streams: [defaultTwitchStream, defaultYouTubeStream, defaultTwitchStream, defaultKickStream],
     localStreamPort: 1935,
-    localStreamURL: "rtmp://localhost:localStreamPort",
+    localStreamURL: "udp://127.0.0.1:localStreamPort",
     multistream_restore_defaults: "off",
     useStreamRollerFFMPEG: false,
 };
@@ -870,9 +896,10 @@ function saveCredentialsToServer ()
             CredentialName: c,
             CredentialValue: localConfig.serverCredentials[c]
         }
+
         // can't set empty credentials
-        if (localConfig.serverCredentials[c] == "")
-            creds.CredentialValue = "Empty"
+        if (localConfig.serverCredentials[c] == "" || localConfig.serverCredentials[c] == "undefined")
+            creds.CredentialValue = "EmptyCredential"
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "UpdateCredentials",
@@ -997,7 +1024,8 @@ function buildSimpleStreamArgs (ffmpegArgs, stream, streamIndex, hideStreamKey)
 {
 
     //always take the complete video
-    ffmpegArgs.push("-map"); ffmpegArgs.push("0:v");
+
+    //ffmpegArgs.push("-map"); ffmpegArgs.push("0:v");
 
     if (stream.audioTracks && stream.audioTracks.length > 0)
     {
@@ -1006,7 +1034,7 @@ function buildSimpleStreamArgs (ffmpegArgs, stream, streamIndex, hideStreamKey)
     }
     else
     {
-        ffmpegArgs.push("-map"); ffmpegArgs.push("0:a");
+        //ffmpegArgs.push("-map"); ffmpegArgs.push("0:a");
         ffmpegArgs.push("-c:v"); ffmpegArgs.push("copy");
         ffmpegArgs.push("-c:a"); ffmpegArgs.push("copy");
     }
