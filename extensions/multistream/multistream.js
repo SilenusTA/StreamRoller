@@ -188,6 +188,8 @@ const default_serverConfig = {
 };
 
 let serverConfig = structuredClone(default_serverConfig)
+serverConfig.localStreamURL.replace("localStreamPort", serverConfig.localStreamPort)
+
 localConfig.serverCredentials =
 {
     version: "0.1",

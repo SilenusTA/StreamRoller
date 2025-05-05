@@ -90,7 +90,7 @@ let serverCredentials = structuredClone(default_serverCredentials);
 const triggersandactions =
 {
     extensionname: serverConfig.extensionname,
-    description: "Demo Extension for copying and pasting to get you started faster on writing extensions",
+    description: "Kick extension for enabling trigger/actions from kick",
     version: "0.3",
     channel: serverConfig.channel,
     triggers:
@@ -142,6 +142,7 @@ const triggersandactions =
                 messagetype: "trigger_searchedKickGames",
                 parameters: {
                     platform: "kick",
+                    platform_UIDescription: "Platform should be 'kick'",
                     triggerActionRef: "KickSearchedCategories",
                     triggerActionRef_UIDescription: "Reference for this message",
                     searchName: "",
@@ -503,18 +504,18 @@ async function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "action_searchForKickGame")
         {
             // if we have an empty search item then just return.
-            if (extension_packet.data.name == "")
+            if (extension_packet.data.searchName == "")
                 return
             try
             {
-                localConfig.gameSearchCategories = await kickAPI.searchCategories(extension_packet.data.name);
+                localConfig.gameSearchCategories = await kickAPI.searchCategories(extension_packet.data.searchName);
             }
             catch (err)
             {
                 console.log("searchCategories failed", err)
             }
             // this request comes from the small settings widget normally
-            sendGameCategoriesSearchTrigger(extension_packet.data.triggerActionRef)
+            sendGameCategoriesSearchTrigger(extension_packet.data.triggerActionRef, extension_packet.data.searchName)
             SendSettingsWidgetSmall()
         }
         else if (extension_packet.type === "action_clearCategoryHistory")
@@ -1399,7 +1400,7 @@ function sendGameCategoriesSearchTrigger (reference, searchName)
     let trigger = findTriggerByMessageType("trigger_searchedKickGames")
     trigger.parameters.triggerActionRef = reference;
     trigger.parameters.searchName = searchName;
-    trigger.parameters.categories = JSON.stringify(localConfig.gameSearchCategories.data)
+    trigger.parameters.categories = localConfig.gameSearchCategories.data.map(item => item.name).join(', ')
     postTrigger(trigger)
 }
 // ============================================================================

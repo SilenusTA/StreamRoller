@@ -277,7 +277,7 @@ function triggersLoadParameters (id)
                 triggerextensionparameters += "</div>"
                 triggerextensionparameters += "<div class='col-3'>"
                 // add the matcher dropdown to each variable name
-                triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%'>"
+                triggerextensionparameters += "<select id='triggerExtensionTriggerParametersMatcher_" + key + "' class='selectpicker btn btn-secondary' data-style='btn-danger' title = '' value='1' name='triggerExtensionTriggerParametersMatcher_" + key + "' style='max-width: 100%' title='select search options'>"
                 triggerextensionparameters += "<option data='Exact Match' class='form-control' value='1'>Exact Match</option>";
                 triggerextensionparameters += "<option data='Anywhere' class='form-control' value='2'>Anywhere</option>";
                 triggerextensionparameters += "<option data='Start of line' class='form-control' value='3'>Start of line</option>";
