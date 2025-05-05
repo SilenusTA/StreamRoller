@@ -39,12 +39,6 @@
 //      3   : log, info, awrn and err.
 //      4   : extra, additional info/heavy logging
 // *** no flag set defaults to standard logging
-// .....
-// Environment variable "STREAMTOOL_DEBUG_FORMAT" can be changed to format
-// the output.
-// Options include
-//     extended, extended-line, off
-// *** no flag set defaults to standard logging
 // ----------------------------- notes ----------------------------------------
 // TBD. Still need to update this to a better formatting for logging
 // ============================================================================
@@ -181,13 +175,6 @@ BgWhite = "\x1b[47m"
 function setLoggingLevel (level)
 {
     loglevel = level;
-    /*    
-        console.log("LOG:STREAMTOOL_DEBUG_LEVEL: ", loglevel);
-        if (!process.env.STREAMTOOL_DEBUG_FORMAT)
-            process.env.STREAMTOOL_DEBUG_FORMAT = "off"
-        console.log("LOG:Log system: " + process.platform);
-        console.log("LOG:Log color: " + usecolor);
-    */
 }
 /**
  * gets the current logging elvel
@@ -311,14 +298,7 @@ function output (col, func, tag, message)
             message = JSON.stringify(message, null, 2);
         if (message.length > cap_message_length)
             message = message.substring(0, cap_message_length) + "...";
-        if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended-line")
-            console.log(col, message, tag, func, tag);
-        else if (process.env.STREAMTOOL_DEBUG_FORMAT == "extended")
-            console.log(col, tag, func, tag, "\n", message);
-        else if (process.env.STREAMTOOL_DEBUG_FORMAT != "off")
-            console.log(col, tag, func, message);
-        else
-            console.log(col, tag, func, message);
+        console.log(col, tag, func, message);
     }
     catch (err)
     {
