@@ -4645,10 +4645,12 @@
     // ============================================================================
     function updateKickCategory (name, url)
     {
-        let ele = document.getElementById("liveportaltitleKickCategoryImage")
-        ele.title = name;
-        ele.innerHTML = `<img style="border: 5px solid #52db22; border-radius:50%; width:40px;height:40px" 
-        src="${url}">`
+        if (name && name != "" && name != "none selected")
+        {
+            let ele = document.getElementById("liveportaltitleKickCategoryImage")
+            ele.title = name;
+            ele.innerHTML = `<img style="border: 5px solid #52db22; border-radius:50%; width:40px;height:40px" src="${url}">`
+        }
     }
     // ============================================================================
     //                           FUNCTION: sendAction

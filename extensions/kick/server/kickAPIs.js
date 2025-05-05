@@ -23,7 +23,9 @@ const localConfig =
 {
     SYSTEM_LOGGING_TAG: "[KickAPIs.js]",
     maxChatMessageLength: 500,
-    DEBUG: false,
+    retryCounter: 2,// attempt to send a message again on a 400 request if it fails. For some reason occasionally a message will fail for no reason.
+    attemptCounter: 0,
+    DEBUG: false
 }
 // callbacks so we can update our refresh token if it expires
 const callbacks =
@@ -156,17 +158,41 @@ function refreshToken (forStreamer = true)
                         const parsed = JSON.parse(data);
                         if (parsed.access_token)
                         {
-                            resolve(parsed);
+                            if (forStreamer)
+                            {
+                                Credentials.kickAccessToken = parsed.access_token;
+                                callbacks.updateRefreshTokenFn("kickAccessToken", parsed.access_token)
+                                Credentials.kickRefreshToken = parsed.refresh_token;
+                                callbacks.updateRefreshTokenFn("kickRefreshToken", parsed.access_token)
+                            }
+                            else
+                            {
+                                Credentials.kickAccessToken = parsed.access_token;
+                                callbacks.updateRefreshTokenFn("kickBotAccessToken", parsed.access_token)
+                                Credentials.kickRefreshToken = parsed.refresh_token;
+                                callbacks.updateRefreshTokenFn("kickBotRefreshToken", parsed.access_token)
+                            }
+                            resolve({ type: "success", location: `refreshToken(${forStreamer})` });
                         } else
                         {
                             file_log(`refreshToken (${forStreamer}): No access_token in response`);
-                            reject(new Error('No access_token in response'));
+                            reject({ type: "no_access_token_returned", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
                         }
                     } catch (e)
                     {
                         file_log(`refreshToken (${forStreamer}): Failed to parse token response`);
-                        reject(new Error('Failed to parse token response'));
+                        reject({ type: "error_parsing_refresh_token", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
                     }
+                }
+                else if (res.statusCode == 401)
+                {
+                    let errordata = JSON.parse(data)
+                    file_log(`refreshToken (${forStreamer}): Refresh failed with 401`, res.statusMessage);
+                    file_log(`refreshToken (${forStreamer}): response was`, errordata.error);
+                    if (errordata.error == "invalid_grant")
+                        reject({ type: "invalid_grant", location: `refreshToken(${(forStreamer) ? "user" : "bot"})`, message: "need to authorize" });
+                    else
+                        reject({ type: "refresh_failed", location: `refreshToken(${forStreamer})`, message: "need to authorize" });
                 }
                 else
                 {
@@ -182,7 +208,7 @@ function refreshToken (forStreamer = true)
         req.on('error', (err) =>
         {
             file_log(`refreshToken (${forStreamer}) on err handler`, err);
-            reject(err);
+            reject({ type: "invalid_grant", location: `refreshToken(${forStreamer})`, message: err });
         });
 
         req.write(postData);
@@ -222,7 +248,7 @@ function getUsersWithToken (token)
                 if (res.statusCode === 401)
                 {
                     file_log(`getUsersWithToken (token) res.statusCode:${res.statusCode}, res.statusMessage:${res.statusMessage}`);
-                    reject({ type: 'unauthorized', location: 'getUsersWithToken' });
+                    reject({ type: 'Unauthorized', location: 'getUsersWithToken', message: 'possible refresh needed' });
                 } else
                 {
                     try
@@ -233,7 +259,7 @@ function getUsersWithToken (token)
                     {
                         file_log(`getUsersWithToken (token) Error parsing data`, e);
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUsersWithToken", "ERROR: ", e);
-                        reject({ type: 'parse_error', raw: data, location: 'getUsersWithToken' });
+                        reject({ type: 'parse_error', location: 'getUsersWithToken', message: data });
                     }
                 }
             });
@@ -241,8 +267,8 @@ function getUsersWithToken (token)
 
         req.on('error', (err) =>
         {
-            file_log(`getUsersWithToken (token) Erequest_error`, err);
-            reject({ type: 'getUsersWithToken:request_error', error: err, location: 'getUsersWithToken' });
+            file_log(`getUsersWithToken (token) request_error`, err);
+            reject({ type: 'getUsersWithToken:request_error', location: 'getUsersWithToken', message: err });
         });
 
         req.end();
@@ -276,49 +302,55 @@ async function getUser (forStreamer)
         } catch (err)
         {
             file_log(`getUser (${forStreamer}) Error`, err);
-            if (err.type === 'unauthorized')
+            if (err.type === 'Unauthorized')
             {
-                // Token likely expired
-                let tokens = null;
-                file_log(`getUser (${forStreamer}) Unauthorized, calling refresh`);
-                tokens = await refreshToken(forStreamer);
-                file_log(`getUser (${forStreamer}) tokens returned`, tokens);
-                if (forStreamer)
-                {
-                    Credentials.kickAccessToken = tokens.access_token;
-                    Credentials.kickRefreshToken = tokens.refresh_token;
-                }
-                else
-                {
-                    Credentials.kickBotAccessToken = tokens.access_token;
-                    Credentials.kickBotRefreshToken = tokens.refresh_token;
-                }
-                callbacks.updateRefreshTokenFn(Credentials);
                 try
                 {
-                    file_log(`getUser (${forStreamer}) Second attempt after refresh`);
-                    let data = null;
-                    if (forStreamer)
-                        data = await getUsersWithToken(Credentials.kickAccessToken);
-                    else
-                        data = await getUsersWithToken(Credentials.kickBotAccessToken);
-                    return data;
-                } catch (err2)
+                    // Token likely expired
+
+                    file_log(`getUser (${forStreamer}) Unauthorized, calling refresh`);
+                    const response = await refreshToken(forStreamer);
+                    file_log(`getUser (${forStreamer}) tokens returned`, response);
+                    try
+                    {
+                        file_log(`getUser (${forStreamer}) Second attempt after refresh`);
+                        let data = null;
+                        if (forStreamer)
+                            data = await getUsersWithToken(Credentials.kickAccessToken);
+                        else
+                            data = await getUsersWithToken(Credentials.kickBotAccessToken);
+                        return data;
+                    } catch (err2)
+                    {
+                        file_log(`getUser (${forStreamer}) Still failed after refresh`, err2);
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Still failed after refresh err2:", err2);
+                        throw err2;
+                    }
+                } catch (err)
                 {
-                    file_log(`getUser (${forStreamer}) Still failed after refresh`, err2);
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Still failed after refresh err2:", err2);
+                    // failed refresh
+                    file_log(`getUser (${forStreamer}) failed to refresh`, err);
+                    if (err.type == "invalid_grant")
+                        throw err
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + `getUser (${forStreamer})`, "failed to refresh:", err);
+
                 }
             } else
             {
-                file_log(` getUser (${forStreamer}) Request failed err:`, err);
+                file_log(`getUser (${forStreamer}) Request failed err:`, err);
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "Request failed err:", err);
+                throw err;
             }
         }
     }
     catch (err)
     {
         file_log(`getUser (${forStreamer}) Error:`, err);
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "ERROR: getUser err:", err);
+        if (err.type == "invalid_grant")
+            throw err
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "getUser", "ERROR: getUser err:", err);
+        throw err;
     }
 }
 // ============================================================================
@@ -347,7 +379,7 @@ function getChannelsWithToken (token)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'unauthorized', location: 'getChannelsWithToken', data: data });
+                    reject({ type: 'Unauthorized', location: 'getChannelsWithToken', message: data });
                 } else
                 {
                     try
@@ -357,7 +389,7 @@ function getChannelsWithToken (token)
                     } catch (e)
                     {
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", e);
-                        reject({ type: 'getChannelsWithToken: parse_error', location: 'getChannelsWithToken', data: data });
+                        reject({ type: 'getChannelsWithToken: parse_error', location: 'getChannelsWithToken', message: e });
                     }
                 }
             });
@@ -366,7 +398,7 @@ function getChannelsWithToken (token)
         req.on('error', (err) =>
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelsWithToken", "ERROR:", err);
-            reject({ type: 'getChannelsWithToken: request_error', error: err, location: 'getChannelsWithToken' });
+            reject({ type: 'getChannelsWithToken: request_error', location: 'getChannelsWithToken', message: err });
         });
 
         req.end();
@@ -391,14 +423,11 @@ async function getChannel ()
             return data;
         } catch (err)
         {
-            if (err.type === 'unauthorized')
+            if (err.type === 'Unauthorized')
             {
 
                 // Token likely expired
-                let tokens = await refreshToken();
-                Credentials.kickAccessToken = tokens.access_token
-                Credentials.kickRefreshToken = tokens.refresh_token
-                callbacks.updateRefreshTokenFn(Credentials)
+                let response = await refreshToken();
                 try
                 {
                     const data = await getChannelsWithToken(Credentials.kickAccessToken);
@@ -451,8 +480,8 @@ function getChannelData (username)
             {
                 if (res.statusCode === 401)
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "401:Unauthorized");
-                    reject({ type: 'unauthorized', location: 'getChannelData', data: data });
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", res.statusCode, res.statusMessage, data);
+                    reject({ type: 'Unauthorized', location: 'getChannelData', message: data });
                 } else
                 {
                     try
@@ -462,7 +491,7 @@ function getChannelData (username)
                     } catch (e)
                     {
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "parse_error:", e);
-                        reject({ type: 'parse_error', location: 'getChannelData', data: data });
+                        reject({ type: 'parse_error', location: 'getChannelData', message: e });
                     }
                 }
             });
@@ -471,7 +500,7 @@ function getChannelData (username)
         req.on('error', (err) =>
         {
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getChannelData", "request_error:", err);
-            reject({ type: 'request_error', error: err, location: 'getChannelData' });
+            reject({ type: 'request_error', message: err, location: 'getChannelData' });
         });
 
         req.end();
@@ -511,8 +540,8 @@ function getLivestreamsWithToken (userId)
                 if (res.statusCode === 401)
                 {
                     file_log(`getLivestreamsWithToken (${userId}) res.statusCode:${res.statusCode}, res.statusMessage:${res.statusMessage}`);
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "401:unauthorized:");
-                    reject({ type: 'unauthorized', location: 'getChannelData', data: data });
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "401:Unauthorized:");
+                    reject({ type: 'Unauthorized', location: 'getChannelData', message: data });
                 } else
                 {
                     try
@@ -522,7 +551,7 @@ function getLivestreamsWithToken (userId)
                     {
                         file_log(`getLivestreamsWithToken (${userId}) parse_error:`, e);
                         logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "parse_error:", e);
-                        reject({ type: 'parse_error', location: 'getChannelData', data: data });
+                        reject({ type: 'parse_error', location: 'getChannelData', message: data });
                     }
                 }
             });
@@ -532,7 +561,7 @@ function getLivestreamsWithToken (userId)
         {
             file_log(`getLivestreamsWithToken (${userId}) request_error:`, err);
             logger.err(localConfig.SYSTEM_LOGGING_TAG + "getLivestreamsWithToken", "request_error:", err);
-            reject({ type: 'request_error', error: err, location: 'getChannelData' });
+            reject({ type: 'request_error', location: 'getChannelData', message: err });
         });
 
         req.end();
@@ -559,14 +588,11 @@ async function getLivestream (userId)
             return data;
         } catch (err)
         {
-            if (err.type === 'unauthorized')
+            if (err.type === 'Unauthorized')
             {
 
                 // Token likely expired
-                let tokens = await refreshToken();
-                Credentials.kickAccessToken = tokens.access_token
-                Credentials.kickRefreshToken = tokens.refresh_token
-                callbacks.updateRefreshTokenFn(Credentials)
+                let response = await refreshToken();
                 try
                 {
                     const data = await getLivestreamsWithToken(userId);
@@ -598,7 +624,7 @@ async function getLivestream (userId)
  */
 async function sendChatMessageWithToken (messageData, token)
 {
-    file_log(`######## sendChatMessageWithToken (${messageData},token) ##############`, token);
+    file_log(`######## sendChatMessageWithToken (${messageData.message},token) ##############`, token);
     return new Promise((resolve, reject) =>
     {
         // lets pre-parse the message for kick specifically
@@ -614,7 +640,6 @@ async function sendChatMessageWithToken (messageData, token)
             content: message.toString(),
             type: "user"
         });
-
         const options = {
             hostname: 'api.kick.com',
             path: '/public/v1/chat',
@@ -632,23 +657,28 @@ async function sendChatMessageWithToken (messageData, token)
             res.on('data', (chunk) => { responseData += chunk; });
             res.on('end', () =>
             {
+                /*console.log("res", res.statusCode, res.statusMessage)
+                console.log("responseData", responseData)
+                console.log("postData", postData)*/
+
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'unauthorized', location: 'sendChatMessageWithToken', data: responseData });
+                    reject({ type: 'Unauthorized', location: 'sendChatMessageWithToken', message: responseData });
                 }
                 else if (res.statusCode === 200)
                     resolve("Message Sent ")
                 else
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessageWithToken", { code: res.statusCode, statusMessage: res.statusMessage, message: responseData });
-                    reject({ code: res.statusCode, message: responseData, location: 'sendChatMessageWithToken' })
+                    file_log(`sendChatMessageWithToken,error (${messageData.message})`,
+                        { type: res.statusCode, location: 'sendChatMessageWithToken', message: responseData });
+                    reject({ type: res.statusCode, location: 'sendChatMessageWithToken', message: responseData })
                 }
             });
         });
 
         req.on('error', (err) =>
         {
-            reject(err);
+            reject({ type: "error", location: 'sendChatMessageWithToken', message: err });
         });
 
         req.write(postData);
@@ -665,7 +695,7 @@ async function sendChatMessageWithToken (messageData, token)
  */
 async function sendChatMessage (messageData)
 {
-    file_log(`######## sendChatMessage (${messageData}) ##############`);
+    file_log('######## sendChatMessage (messageData) ##############', messageData);
     //”Dog Days are Over”
     try
     {
@@ -679,33 +709,36 @@ async function sendChatMessage (messageData)
         {
             let response = "Message Not sent"
             if (messageData.account == "user")
-                response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+            {
+                if (Credentials.kickAccessToken && Credentials.kickAccessToken != "")
+                    response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+            }
             else if (messageData)
-                response = await sendChatMessageWithToken(messageData, Credentials.kickBotAccessToken);
+            {
+                if (Credentials.kickAccessToken && Credentials.kickBotAccessToken != "")
+                    response = await sendChatMessageWithToken(messageData, Credentials.kickBotAccessToken);
+            }
             return response;
 
         } catch (err)
         {
-            if (err.type === 'unauthorized')
+            if (err.type === 'Unauthorized')
             {
+
                 // Token likely expired
-                let tokens = {};
+                let refreshResponse = {};
                 if (messageData.account == "user")
-                {
-                    tokens = await refreshToken();
-                    Credentials.kickAccessToken = tokens.access_token
-                    Credentials.kickRefreshToken = tokens.refresh_token
-                }
+                    refreshResponse = await refreshToken();
                 else (messageData.account == "bot")
-                {
-                    tokens = await refreshToken(false);
-                    Credentials.kickBotAccessToken = tokens.access_token
-                    Credentials.kickBotRefreshToken = tokens.refresh_token
-                }
-                callbacks.updateRefreshTokenFn(Credentials)
+                refreshResponse = await refreshToken(false);
+
                 try
                 {
-                    const response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+                    let response = null;
+                    if (messageData.account == "user")
+                        response = await sendChatMessageWithToken(messageData, Credentials.kickAccessToken);
+                    else if (messageData)
+                        response = await sendChatMessageWithToken(messageData, Credentials.kickBotAccessToken);
                     return response;
                 } catch (err2)
                 {
@@ -714,6 +747,33 @@ async function sendChatMessage (messageData)
                 }
             } else
             {
+                if (err.type == "400")
+                {
+                    console.log("failed to send message, retrying")
+                    if (localConfig.attemptCounter++ < localConfig.retryCounter)
+                    {
+                        //sometimes these fail for no apparent reason but are fine after a second request.
+                        setTimeout(() =>
+                        {
+                            try
+                            {
+                                sendChatMessage(messageData)
+                                    .then(() =>
+                                    {
+                                        localConfig.attemptCounter = 0
+                                    })
+                            }
+                            catch (err)
+                            {
+                                logger.warn(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "Request failed on retry", err);
+                            }
+                        }, 10000)
+                    }
+                    else
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "Request failed, to many retries", err);
+                    return null;
+
+                }
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "Request failed", err);
                 return null;
             }
@@ -721,8 +781,10 @@ async function sendChatMessage (messageData)
     }
     catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage", "ERROR", err);
-        return null;
+        if (err.type == "invalid_grant")
+            throw err
+        else
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + "sendChatMessage:ERROR", err);
     }
 }
 // ============================================================================
@@ -763,7 +825,7 @@ async function setTitleAndCategoryWithToken (title, categoryId, token)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'unauthorized', location: 'setTitleAndCategoryWithToken', data: responseData });
+                    reject({ type: 'Unauthorized', location: 'setTitleAndCategoryWithToken', data: responseData });
                 }
                 else if (res.statusCode === 204)
                     resolve("Channel title and Category Updated ")
@@ -798,7 +860,7 @@ async function setTitleAndCategory (title, categoryId)
         /*
         if (!checkCredentials(true))
         {
-            console.log("sendChatMessage Invalid credentials")
+            console.log("setTitleAndCategory Invalid credentials")
             return null;
         }*/
         try
@@ -807,13 +869,10 @@ async function setTitleAndCategory (title, categoryId)
             return response;
         } catch (err)
         {
-            if (err.type === 'unauthorized')
+            if (err.type === 'Unauthorized')
             {
                 // Token likely expired
-                let tokens = await refreshToken();
-                Credentials.kickAccessToken = tokens.access_token
-                Credentials.kickRefreshToken = tokens.refresh_token
-                callbacks.updateRefreshTokenFn(Credentials)
+                let refreshResponse = await refreshToken();
                 try
                 {
                     const response = await setTitleAndCategoryWithToken(title, categoryId, Credentials.kickAccessToken);
@@ -875,7 +934,7 @@ async function searchCategoriesWithToken (categoryName)
             {
                 if (res.statusCode === 401)
                 {
-                    reject({ type: 'unauthorized', location: 'searchCategoriesWithToken', data: responseData });
+                    reject({ type: 'Unauthorized', location: 'searchCategoriesWithToken', data: responseData });
                 }
                 else if (res.statusCode === 200)
                     resolve(JSON.parse(responseData))
@@ -909,7 +968,7 @@ async function searchCategories (categoryName)
         /*
         if (!checkCredentials(true))
         {
-            console.log("sendChatMessage Invalid credentials")
+            console.log("searchCategories Invalid credentials")
             return null;
         }*/
         try
@@ -921,15 +980,13 @@ async function searchCategories (categoryName)
                 })
                 .catch((err) =>
                 {
-                    if (err.type === 'unauthorized')
+                    if (err.type === 'Unauthorized')
                     {
                         // Token likely expired
                         refreshToken()
-                            .then((tokens) =>
+                            .then((refreshResponse) =>
                             {
-                                Credentials.kickAccessToken = tokens.access_token
-                                Credentials.kickRefreshToken = tokens.refresh_token
-                                callbacks.updateRefreshTokenFn(Credentials)
+
                                 searchCategoriesWithToken(categoryName)
                                     .then((response) =>
                                     {
