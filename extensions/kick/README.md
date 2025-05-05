@@ -23,7 +23,7 @@ Provides StreamRoller with triggers and actions relating to kick streaming.
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 03 May 2025 19:31:52 GMT*
+Table last updated: *Mon, 05 May 2025 00:58:34 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -45,6 +45,8 @@ Follow the steps on the the StreamRoller main settings page for the extension
 | Category search results | trigger_searchedKickGames | Results of a search request in a JSON object |
 | Category history cleared | trigger_categoryHistoryCleared | The Category history was cleared |
 | Title history cleared | trigger_titleHistoryCleared | The Title history was cleared |
+| GamedChanged | trigger_KickGamedChanged | The Game was changed |
+| TitleChanged | trigger_KickTitleChanged | The Title was changed |
 UpdatedDocTime
 
 ### Triggers
@@ -59,4 +61,5 @@ ReplaceTAGForTriggers
 | SearchForKickGame | action_searchForKickGame | Triggers the action trigger_searchedKickGames |
 | ClearCategoryHistory | action_clearCategoryHistory | Clears out the Category history list |
 | ClearTitleHistory | action_clearKickTitleHistory | Clears out the Title history list |
+| SetTitleAndCategory | action_setTitleAndCategory | Changes teh current stream title and category |
 

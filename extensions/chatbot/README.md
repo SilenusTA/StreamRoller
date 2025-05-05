@@ -176,7 +176,7 @@ This format generally replies with the username if asked a direct question, but 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sat, 03 May 2025 19:31:52 GMT*
+Table last updated: *Mon, 05 May 2025 00:58:34 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -195,7 +195,7 @@ To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS
 | name | trigger | description |
 | --- | --- | --- |
 | OpenAIChatbotProcessText | action_ProcessText | Send some text through the chatbot (users in original message on the ignore list will not get processed) |
-| OpenAIChatbotChatMessageReceived | action_ProcessChatMessage | This message will be treated as a standard message from a chat window and will be added to conversations for auto responses as well as being tested for direct messages |
+| OpenAIChatbotProcessChatMessage | action_ProcessChatMessage | This message will be treated as a standard message from a chat window and will be added to conversations for auto responses as well as being tested for direct messages |
 | OpenAIChatbotProcessImage | action_ProcessImage | Send some text through the chatbot to create an image |
 | OpenAIChatbotSwitchProfile | action_ChangeProfile | Switches the chatbot to the given profile |
 
