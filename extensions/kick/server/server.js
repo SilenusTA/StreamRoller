@@ -1533,15 +1533,18 @@ function checkForLiveStreams ()
     clearInterval(localConfig.botLiveStreamSchedulerHandle)
     clearInterval(localConfig.userLiveStreamSchedulerHandle)
 
-    localConfig.userLiveStreamSchedulerHandle = setInterval(() =>
+    if (serverConfig.kickEnabled == "on")
     {
-        checkForLiveStreamsScheduler(serverCredentials.userId)
-    }, localConfig.userLiveStreamSchedulerTimeout)
+        localConfig.userLiveStreamSchedulerHandle = setInterval(() =>
+        {
+            checkForLiveStreamsScheduler(serverCredentials.userId)
+        }, localConfig.userLiveStreamSchedulerTimeout)
 
-    localConfig.botLiveStreamSchedulerHandle = setInterval(() =>
-    {
-        checkForLiveStreamsScheduler(serverCredentials.userId)
-    }, localConfig.botLiveStreamSchedulerTimeout)
+        localConfig.botLiveStreamSchedulerHandle = setInterval(() =>
+        {
+            checkForLiveStreamsScheduler(serverCredentials.userId)
+        }, localConfig.botLiveStreamSchedulerTimeout)
+    }
 }
 // ============================================================================
 //                      FUNCTION: checkForLiveStreams
@@ -1629,7 +1632,7 @@ async function setupUsersScheduler ()
     }
     else
     {
-        console.log("Kick no streamer credentials found")
+        console.log("Kick: Missing streamer credentials,please connect using the main settings page for Kick")
     }
 
     // ##################### Bot setup #############################
@@ -1668,7 +1671,7 @@ async function setupUsersScheduler ()
     }
     else
     {
-        console.log("KickAPI CredentialsFile no bot credentials found")
+        console.log("Kick: Missing bot credentials,please connect using the main settings page for Kick")
     }
     checkForLiveStreams();
     //checkForLiveStreamsScheduler(serverCredentials.userId)
