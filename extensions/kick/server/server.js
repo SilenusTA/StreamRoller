@@ -637,7 +637,7 @@ function SendSettingsWidgetSmall (to = "")
                         serverConfig.kickCategoriesHistory,
                         serverConfig.currentCategoryId)
                     + `<button type="button" class="btn btn-secondary"  onClick="sendAction('action_clearCategoryHistory', 'kick', {});return false;">ClearHistory</button>`);
-                modalString = modalString.replace("kickSearchForGame", `<input type="text" class="form-control" id="kickSearchForKickGameElementId" name="kickSearchForKickGameElementId" placeholder="Enter Game name to search for (added to history when found)"><button type="button" class="btn btn-secondary"  onClick="sendAction('action_searchForKickGame', 'kick', {name:document.getElementById('kickSearchForKickGameElementId').value});return false;">Search</button>`);
+                modalString = modalString.replace("kickSearchForGame", `<input type="text" class="form-control" id="kickSearchForKickGameElementId" name="kickSearchForKickGameElementId" placeholder="Enter Game name to search for (added to history when found)"><button type="button" class="btn btn-secondary"  onClick="sendAction('action_searchForKickGame', 'kick', {searchName:document.getElementById('kickSearchForKickGameElementId').value});return false;">Search</button>`);
             }
             if (localConfig.kickCategoryErrorsShowCounter > 0)
             {
