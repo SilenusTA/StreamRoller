@@ -769,9 +769,10 @@ async function parseSettingsWidgetSmall (modalData)
             if (userSelectedCategoryId)
             {
                 const historyIndex = serverConfig.kickCategoriesHistory.findIndex(e => e.id == userSelectedCategoryId);
+                // if not in our history (must have been selected from the search list)
                 if (historyIndex == -1)
                 {
-                    // check previous game search history to avoid res
+                    // check previous game search history
                     const game = localConfig.gameSearchCategories.data.find(item => item.id == userSelectedCategoryId);
                     categoryId = game.id;
                     categoryName = game.name;
@@ -836,6 +837,7 @@ async function updateCategoryTitleFromKick ()
         if (serverConfig.channelData)
         {
             localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+            // kickChannel does not include any category data unless live
             // update our category
             if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category && localConfig.kickChannel.data[0].category.name != "")
             {
