@@ -837,7 +837,7 @@ async function updateCategoryTitleFromKick ()
         {
             localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
             // update our category
-            if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category)
+            if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category && localConfig.kickChannel.data[0].category.name != "")
             {
                 serverConfig.currentCategoryId = localConfig.kickChannel.data[0].category.id;
                 serverConfig.currentCategoryName = localConfig.kickChannel.data[0].category.name;
@@ -1417,7 +1417,7 @@ function sendGameCategoriesClearedTrigger (reference)
     postTrigger(trigger)
 }
 // ============================================================================
-//                           FUNCTION: createDropdownWithSearchableHistory
+//                           FUNCTION: sendTitleClearedTrigger
 // ============================================================================
 function sendTitleClearedTrigger (reference)
 {
