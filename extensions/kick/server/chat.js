@@ -300,6 +300,7 @@ function subscribeToChannel ()
 function disconnectChat ()
 {
     file_log("disconnectChat")
+    localConfig.connected = true;
     if (localConfig.websocket && localConfig.websocket.readyState !== WebSocket.CLOSED)
     {
         localConfig.listeners.forEach(({ event, handler }) =>

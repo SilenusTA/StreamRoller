@@ -461,10 +461,8 @@ async function onDataCenterMessage (server_packet)
         }
         else if (extension_packet.type === "action_SendChatMessage")
         {
-
             if (extension_packet.data.platform && extension_packet.data.platform == "kick")
             {
-                // only called once for kick
                 if (serverConfig.kickEnabled == "on")
                 {
 
@@ -809,11 +807,9 @@ async function parseSettingsWidgetSmall (modalData)
             )
             {
                 //update stream title/description
-                kickAPI.setTitleAndCategory(serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId], serverConfig.currentCategoryId)
-                    .then((data) =>
-                    {
-                        updateCategoryTitleFromKick();
-                    })
+                await kickAPI.setTitleAndCategory(serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId], serverConfig.currentCategoryId)
+                await updateCategoryTitleFromKick();
+
             }
             if (DataChanged)
             {
@@ -959,37 +955,45 @@ async function connectToChat ()
  */
 function parseSettingsWidgetLarge (data)
 {
-    if (data.kick_restore_defaults == "on")
+    try
     {
-        serverConfig = structuredClone(default_serverConfig);
-        DeleteCredentialsOnServer();
-        console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
-    }
-    else
-    {
-        serverConfig.kickEnabled = "off";
-        for (const [key, value] of Object.entries(data))
-            if (serverConfig[key])
-                serverConfig[key] = value;
-        // if we have changed the client ID lets set that
-        if (serverCredentials.kickApplicationClientId != data.kickApplicationClientId)
+        if (data.kick_restore_defaults == "on")
         {
-            serverCredentials.kickApplicationClientId = data.kickApplicationClientId;
-            kickAPI.setCredentials(serverCredentials);
-            SaveCredentialToServer("kickApplicationClientId", serverCredentials.kickApplicationClientId)
+            serverConfig = structuredClone(default_serverConfig);
+            DeleteCredentialsOnServer();
+            console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated.", "The config file has been Restored. Your settings may have changed" + "\x1b[0m");
         }
-        // if we have changed the client ID lets set that
-        if (serverCredentials.kickApplicationSecret != data.kickApplicationSecret)
+        else
         {
-            serverCredentials.kickApplicationSecret = data.kickApplicationSecret;
-            kickAPI.setCredentials(serverCredentials);
-            SaveCredentialToServer("kickApplicationSecret", serverCredentials.kickApplicationSecret)
+            serverConfig.kickEnabled = "off";
+            for (const [key, value] of Object.entries(data))
+                if (serverConfig[key])
+                    serverConfig[key] = value;
+            // if we have changed the client ID lets set that
+            if (serverCredentials.kickApplicationClientId != data.kickApplicationClientId)
+            {
+                serverCredentials.kickApplicationClientId = data.kickApplicationClientId;
+                kickAPI.setCredentials(serverCredentials);
+                SaveCredentialToServer("kickApplicationClientId", serverCredentials.kickApplicationClientId)
+            }
+            // if we have changed the client ID lets set that
+            if (serverCredentials.kickApplicationSecret != data.kickApplicationSecret)
+            {
+                serverCredentials.kickApplicationSecret = data.kickApplicationSecret;
+                kickAPI.setCredentials(serverCredentials);
+                SaveCredentialToServer("kickApplicationSecret", serverCredentials.kickApplicationSecret)
+            }
+
         }
 
-    }
+        SaveConfigToServer();
+        SendSettingsWidgetLarge("");
 
-    SaveConfigToServer();
-    SendSettingsWidgetLarge("");
+    } catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".parseSettingsWidgetLarge", "Error parsing data:", err, err.message);
+        return null
+    }
 }
 // ===========================================================================
 //                           FUNCTION: addGameToHistoryFromGameName
@@ -1214,33 +1218,7 @@ function postTrigger (data)
     sr_api.sendMessage(localConfig.DataCenterSocket,
         message);
 }
-// #######################################################################
-// ######################### sanitiseHTML ################################
-// #######################################################################
-/**
- * Removes html chars from a string to avoid chat message html injection
- * @param {string} string 
- * @returns {string} the parsed string
- */
-function sanitiseHTML (string)
-{
-    // sanitiser
-    var entityMap = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '/': '&#x2F;',
-        '`': '&#x60;',
-        '=': '&#x3D;'
-    };
 
-    return String(string).replace(/[&<>"'`=\/]/g, function (s)
-    {
-        return entityMap[s];
-    });
-}
 // ============================================================================
 //                           FUNCTION: onChatMessage
 // ============================================================================
