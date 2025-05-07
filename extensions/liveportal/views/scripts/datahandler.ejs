@@ -2590,20 +2590,20 @@
 
             if (haveUserName && serverConfig.currentChatAsUsername == "user")
             {
-                optioncode += "<option value='user' selected>user</option>"
+                optioncode += `<option value='user' selected>(${platform}) user</option>`
             }
             else
             {
-                optioncode += "<option value='user'>user</option>"
+                optioncode += `<option value='user'>(${platform}) user</option>`
             }
             if (haveBotName && serverConfig.currentChatAsUsername == "bot")
             {
                 selectedname = "bot"
-                optioncode += "<option value='bot' selected>bot</option>"
+                optioncode += `<option value='bot' selected>(${platform}) bot</option>`
             }
             else
             {
-                optioncode += "<option value='bot'>bot</option>"
+                optioncode += `<option value='bot'>(${platform}) bot</option>`
             }
             ele.innerHTML = optioncode;
             ele.valuse = selectedname;
