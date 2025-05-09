@@ -19,8 +19,8 @@
 
 The messages system sits on the socket protocol. There are helper functions to help with sending messages to aid in sending and receiving data. It is recommended to use these functions to avoid conflicts with changes in future versions.
 
-
 # Server Message data packets
+
 These messages are meant for server forwarding or information. The data packet for the top level message is as follows.
 
 Note: fields with a (*) are mandatory
@@ -38,7 +38,7 @@ Note: fields with a (*) are mandatory
 ```
 
 - type
-  - type of message. ie data, error, info registerforchannel (see [message types](#message-types) for more information) 
+  - type of message. ie data, error, info registerforchannel (see [message types](#message-types) for more information)
 - from
   - who sent the message. normally the extension name
 - data
@@ -55,12 +55,15 @@ Note: fields with a (*) are mandatory
 Note: an empty field will default to "" if not supplied.
 
 ## Server Message Types
+
 There are some special message types that are used (normally during startup or error handling). These are server message/data handled by the system.
+
 ### Server Message Types
+
 ```
   "RequestConfig"         Receive your saved config file
   "SaveConfig"            Saved your config file
-  "UpdateCredentials"     Update a credential for an extension
+  "UpdateCredential"     Update a credential for an extension
   "RequestCredentials"    Request the credentials for your extension
   "CredentialsFile"       Response from the "RequestCredentials" message
   "RequestData"           Request data file for extension
@@ -84,18 +87,21 @@ There are some special message types that are used (normally during startup or e
                           extension messages below)
   "ChannelData"           Data to be broadcast on channel.
 ```
+
 ### Server Message Type requirements
+
 Additional information on data/fields needed (over the madatory message type and from fields) for the requests
+
 - RequestConfig
-   - none
+  - none
 - SaveConfig
   - data field contains your config object
 config file in response to the "RequestConfig" message above
   - The to field will contain the name of the extension it is for
   - The data field will contain the config file
--  StopServer
-   -  none
-- UpdateCredentials
+- StopServer
+  - none
+- UpdateCredential
   - A data packet containing the extensionname, key and value pair for the credential you wish to set
 - RequestCredentials
   - none
@@ -109,12 +115,12 @@ for the extension
 - SaveData
   - data field contains data to save.
 - CreateChannel
-  - data field to contain string of channel name 
+  - data field to contain string of channel name
 - JoinChannel
-  - data field to contain string of channel name 
+  - data field to contain string of channel name
 - LeaveChannel
-  - data field to contain string of channel name 
-- ExtensionMessage 
+  - data field to contain string of channel name
+- ExtensionMessage
   - data field to contain an extension object as shown below
   - if 'to' field is populated then the object will be sent to that extension directly
   - if the 'dest_channel' field is populated then the message will be broadcast on that channel
@@ -122,10 +128,15 @@ for the extension
 - ChannelData
   - "data" field to contain data packet. This will be an extension specific data structure/type and is defined by the extension.
   - "dest_channal" field to be the channel to broadcast on.
+
 ### Server information messages
+
 There are message you can use to see information about channels created etc
+
 #### Broadcast messages
+
 These will be sent out to all extensions
+
 ```
 - ChannelJoined
   - Lets you know an extension has goined a particular channel
@@ -139,7 +150,9 @@ These will be sent out to all extensions
 ```
 
 #### Direct messages
+
 These are sent to an individual extension. Normally in reply to a request or error.
+
 ```
 - ConfigFile
   - This is a message sent from the server to an Extension containing it's config
@@ -162,25 +175,31 @@ These are sent to an individual extension. Normally in reply to a request or err
 ```
 
 ### Debug/utility functions
+
 These are mainly used for debugging purposes
+
 ```
   "SetLoggingLevel"       Sets the logging level for the server
   "RequestLoggingLevel"   Request the logging level for the server
   "LoggingLevel"          Response to Set/Request logging level
   "StopServer"            Stop the server
 ```
+
 - SetLoggingLevel
   - data field should contain the level to set (0-5)
-- RequestLoggingLevel 
+- RequestLoggingLevel
   - data field will contain the current logging level(0-5)
 - LoggingLevel (broadcast to all extensions)
   - this is the respont to a set or request for logging level
+
 # Extension Message Format
+
 These messges are for communication between extensions or to send/request data to an extension. i.e. sending html code to the admin extension to display on your link on the admin page or to receive the data back if a form was submitted.
 
 These messages are sent like any other but the data packet has a specified format. This can be defined yourself but it is suggested to use this format so that we have a common packet format for all extensions.
 
 The format is similar for both server and extension messages
+
 ```
 {
     * type:         <message type>
@@ -192,15 +211,18 @@ The format is similar for both server and extension messages
     # version:      <version of messaging system>
 }
 ```
+
 The main differences between the server packet and extension packet are
- - type is specific to the extension (ie "SettingsWidgetSmallCode" for the admin to define the data contains html code it will place on the screen, or "SettingsWidgetSmallData" if this is the results from a form submit)
- - It is up to the extension to define it's message types, data structures.
- - routing is done on priority of supplied fields IN THE SERVER MESSAGE, The fields in the extension message are used only by the extensions and not for routing
+
+- type is specific to the extension (ie "SettingsWidgetSmallCode" for the admin to define the data contains html code it will place on the screen, or "SettingsWidgetSmallData" if this is the results from a form submit)
+- It is up to the extension to define it's message types, data structures.
+- routing is done on priority of supplied fields IN THE SERVER MESSAGE, The fields in the extension message are used only by the extensions and not for routing
     1) "to" sent to the extension only
     2) "dest_channel" broadcast on the channel requested
     3) if neither of the above fields are populated the message will be broadcast to all extensions
-  - messages will follow the same format as server messages, The extension data packect will be inside the data field of message sent.
-  ie 
+- messages will follow the same format as server messages, The extension data packect will be inside the data field of message sent.
+  ie
+
   ```
     
     {

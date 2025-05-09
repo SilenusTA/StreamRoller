@@ -904,7 +904,7 @@ function saveCredentialsToServer ()
             creds.CredentialValue = "EmptyCredential"
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
-                "UpdateCredentials",
+                "UpdateCredential",
                 serverConfig.extensionname,
                 creds,
             ));

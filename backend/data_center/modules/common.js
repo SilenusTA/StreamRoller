@@ -26,7 +26,9 @@
 // GitHub: https://github.com/SilenusTA/streamer
 // Date: 02-Feb-2022
 // ============================================================================
-
+/* global
+  Buffer
+  */
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
@@ -287,8 +289,8 @@ function deleteCredentials (extensionname)
 //                  FUNCTION: saveCredentials
 // ============================================================================
 /**
- * Saves data to the filename given.
- * @param {object} data 
+ * Saves/updates an entry in the credentials file
+ * @param {object} data {CredentialName:name,CredentialValue:value}
  */
 function saveCredentials (data)
 {

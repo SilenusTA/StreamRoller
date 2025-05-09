@@ -87,18 +87,18 @@
 // ----------------------------- notes ----------------------------------------
 // none
 // ============================================================================
+import { Buffer } from 'buffer';
 import * as childprocess from "child_process";
+import * as fs from "fs";
 import process from 'node:process';
+import * as v8 from 'node:v8';
+import { dirname } from "path";
 import { Server } from "socket.io";
+import { fileURLToPath } from "url";
+import sr_api from "../public/streamroller-message-api.cjs";
 import * as cm from "./common.js";
 import * as logger from "./logger.js";
 import * as mh from "./message_handlers.js";
-import * as v8 from 'node:v8';
-import { Buffer } from 'buffer';
-import * as fs from "fs";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import sr_api from "../public/streamroller-message-api.cjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig =
@@ -417,11 +417,22 @@ function onMessage (socket, server_packet)
         process.exit(0);
     else if (server_packet.type == "RestartServer")
         RestartServer();
-    else if (server_packet.type === "UpdateCredentials")
+    else if (server_packet.type === "UpdateCredential")
     {
-        mh.UpdateCredentials(server_packet.data);
+        mh.UpdateCredential(server_packet.data);
         //resend new credentials to extension
         mh.RetrieveCredentials(server_packet.data.ExtensionName, localConfig.extensions);
+    }
+    else if (server_packet.type === "UpdateCredentials")
+    {
+        //loop each name value and update them.
+        Object.keys(server_packet.data.data).forEach(function (key)
+        {
+            mh.UpdateCredential({ ExtensionName: server_packet.from, CredentialName: key, CredentialValue: server_packet.data.data[key] })
+        });
+
+        //resend new credentials to extension
+        mh.RetrieveCredentials(server_packet.from, localConfig.extensions);
     }
     else if (server_packet.type === "RequestCredentials")
         mh.RetrieveCredentials(server_packet.from, localConfig.extensions);
@@ -838,3 +849,4 @@ function sendTrigger (data)
 //                           EXPORTS:
 // ============================================================================
 export { start, triggersandactions };
+

@@ -372,9 +372,9 @@ function forwardMessage (client_socket, server_packet, channels, extensions)
     }
 }
 // ============================================================================
-//                           FUNCTION: UpdateCredentials
+//                           FUNCTION: UpdateCredential
 // ============================================================================
-function UpdateCredentials (server_packet)
+function UpdateCredential (server_packet)
 {
     try
     {
@@ -495,6 +495,6 @@ function sendDataLoad (server_socket, receivedSize)
 // ============================================================================
 export
 {
-    broadcastMessage, createChannel, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setLoggingLevel, UpdateCredentials, DeleteCredentials, sendDataLoad, setExtensionName
+    broadcastMessage, createChannel, DeleteCredentials, errorMessage, forwardMessage, joinChannel, leaveChannel, RetrieveCredentials, saveConfig, saveData, sendChannelList, sendConfig, sendData, sendDataLoad, sendExtensionList, sendLoggingLevel, sendSoftwareVersion, setExtensionName, setLoggingLevel, UpdateCredential
 };
 

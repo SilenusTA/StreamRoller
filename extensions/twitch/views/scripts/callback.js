@@ -105,7 +105,7 @@ function UpdateCredential (name, value)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "UpdateCredentials",
+            "UpdateCredential",
             "twitch_auth",
             {
                 ExtensionName: localConfig.extensionsname, // set "twitch" here so that teh twitch extension will received these creds. The creds files are saved by this name and then the extension will received this file when asking for their credentials.

@@ -1332,7 +1332,7 @@ function SaveCredential (name, value)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "UpdateCredentials",
+            "UpdateCredential",
             localConfig.EXTENSION_NAME,
             {
                 ExtensionName: localConfig.EXTENSION_NAME,

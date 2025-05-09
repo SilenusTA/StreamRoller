@@ -420,19 +420,19 @@ function SaveConfigToServer ()
             serverConfig))
 }
 // ============================================================================
-//                           FUNCTION: UpdateCredentials
+//                           FUNCTION: UpdateCredential
 //          Update the credentials stored in the encrypted credential file
 // ============================================================================
 /**
  * Saves our credentials to the server
  */
-function UpdateCredentials ()
+function UpdateCredential ()
 {
     Object.keys(localCredentials).forEach(key =>
     {
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
-                "UpdateCredentials",
+                "UpdateCredential",
                 serverConfig.extensionname,
                 {
                     ExtensionName: serverConfig.extensionname,
@@ -586,7 +586,7 @@ async function pair ()
             // store the credentials for future use. Don't want the user to have to find their hub and press a button every time they start up StreamRoller
             localCredentials.username = createdUser.username;
             localCredentials.clientkey = createdUser.clientkey;
-            UpdateCredentials();
+            UpdateCredential();
             localConfig.status.paired = true;
         } catch (err)
         {
