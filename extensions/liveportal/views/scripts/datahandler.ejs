@@ -2572,42 +2572,19 @@
     // ============================================================================
     function updateUsernameDropdownList ()
     {
-        let haveUserName = false;
-        let haveBotName = false;
-        let twitchnamedropdowns = ""
         let optioncode = ""
-        let selectedname = "user";
-        let ele = document.getElementById("ChatMessageDropdown");
+        const ele = document.getElementById("ChatMessageDropdown");
         ele.innerHTML = ""
-        //localConfig.usernamelist
-        for (const [platform, names] of Object.entries(localConfig.usernamelist))
+        const usertypes = ["user", "bot"]
+        usertypes.forEach(function (name, index)
         {
-            if ("user" in names)
-                haveUserName = true;
-            if ("bot" in names)
-                haveBotName = true;
-            // platform = twitch,kick etc
-
-            if (haveUserName && serverConfig.currentChatAsUsername == "user")
-            {
-                optioncode += `<option value='user' selected>(${platform}) user</option>`
-            }
+            if (serverConfig.currentChatAsUsername == name)
+                optioncode += `<option value='${name}' selected>${name}</option>`
             else
-            {
-                optioncode += `<option value='user'>(${platform}) user</option>`
-            }
-            if (haveBotName && serverConfig.currentChatAsUsername == "bot")
-            {
-                selectedname = "bot"
-                optioncode += `<option value='bot' selected>(${platform}) bot</option>`
-            }
-            else
-            {
-                optioncode += `<option value='bot'>(${platform}) bot</option>`
-            }
-            ele.innerHTML = optioncode;
-            ele.valuse = selectedname;
-        };
+                optioncode += `<option value='${name}'>${name}</option>`
+        });
+        ele.innerHTML = optioncode;
+        ele.value = serverConfig.currentChatAsUsername;
     }
 
     // ============================================================================
@@ -3187,6 +3164,7 @@
     // ============================================================================
     //                           FUNCTION: parseKickChatMessage
     // ============================================================================
+    let counter = 0
     function parseKickChatMessage (chatdata)
     {
         try
@@ -3194,10 +3172,15 @@
             var today = new Date();
             let datestamp = new Date(today)
             let icons = "<img style='width: 20px;' alt='Kick' title='Kick' src='/liveportal/images/kick_icon.png'>"
-            if (chatdata.senderBadges.lenght > 1)
+            console.log("counter =", counter)
+            for (let bIndex = 0; bIndex < chatdata.senderBadges.length; bIndex++)
             {
-                if (chatdata.senderBadges[0].type == "broadcaster")
+                if (chatdata.senderBadges[bIndex].type == "broadcaster")
                     icons += "<img style='width: 20px;' alt='Kick' title='Kick Broadcaster' src='/liveportal/images/kick_broadcaster.png'>"
+                else if (chatdata.senderBadges[bIndex].type == "moderator")
+                    icons += "<img src='liveportal/images/badge_mod.png'>"
+                else
+                    console.log("sender badge not recognised", chatdata.senderBadges[bIndex])
             }
             let time = datestamp.getHours() + ":" + String(datestamp.getMinutes()).padStart(2, '0') + ":" + String(datestamp.getSeconds()).padStart(2, '0');
             // make setup our fields for parts of the message
