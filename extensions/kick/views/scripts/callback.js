@@ -87,12 +87,14 @@ function storeCredentials (isStreamerAccount)
         UpdateCredential("kickOAuthState", tempStorage.kickOAuthState);
         UpdateCredential("kickAccessToken", tempStorage.kickAccessToken);
         UpdateCredential("kickRefreshToken", tempStorage.kickRefreshToken);
+        UpdateCredential("kickRefreshExpires", tempStorage.kickRefreshExpires);
     }
     if (localConfig.connected && !isStreamerAccount)
     {    //bot auth
         UpdateCredential("kickBotOAuthState", tempStorage.kickOAuthState);
-        UpdateCredential("kickBotAccessToken", tempStorage.kickAccessToken)
-        UpdateCredential("kickBotRefreshToken", tempStorage.kickRefreshToken)
+        UpdateCredential("kickBotAccessToken", tempStorage.kickAccessToken);
+        UpdateCredential("kickBotRefreshToken", tempStorage.kickRefreshToken);
+        UpdateCredential("kickBotRefreshExpires", tempStorage.kickRefreshExpires)
     }
     if (!localConfig.connected)
     {
@@ -113,7 +115,7 @@ function UpdateCredential (name, value)
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
-            "UpdateCredentials",
+            "UpdateCredential",
             "kick_auth",
             {
                 ExtensionName: localConfig.extensionsname, // set "kick" here so that the kick extension will received these creds. The creds files are saved by this name and then the extension will received this file when asking for their credentials.
@@ -153,6 +155,7 @@ function getOauthFromCode (code, isStreamer)
             //sr_api.sendLogMessage(localConfig.DataCenterSocket, "callback oauth", "kick", "result", JSON.stringify(result, null, 2))
             tempStorage.kickAccessToken = result.access_token;
             tempStorage.kickRefreshToken = result.refresh_token;
+            tempStorage.kickRefreshExpires = Date.now() + (result.expires_in * 1000);
             storeCredentials(isStreamer)
         })
         .catch(error =>
