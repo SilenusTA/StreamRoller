@@ -859,7 +859,7 @@ async function updateCategoryTitleFromKick (reference = "Kick")
                 // if the above fails (might not be live), then attempt to get the last game we had set and update
                 // the data from that
                 let category = null;
-                if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != null)
+                if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != null && serverConfig.currentCategoryId != -1)
                 {
                     category = await kickAPI.getCategory(serverConfig.currentCategoryId);
                     serverConfig.currentCategoryId = category.data.id;
@@ -1610,7 +1610,8 @@ async function setupUsers ()
     clearTimeout(localConfig.setupUsersSchedulerHandle)
     localConfig.setupUsersSchedulerHandle = setTimeout(() =>
     {
-        setupUsersScheduler()
+        if (serverConfig.kickEnabled == "on")
+            setupUsersScheduler()
     }, localConfig.setupUsersSchedulerTimeout);
 }
 // ============================================================================
