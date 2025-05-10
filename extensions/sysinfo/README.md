@@ -28,7 +28,7 @@ select run as administrator) and then run StreamRoller from that prompt
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 06 May 2025 01:10:30 GMT*
+Table last updated: *Sat, 10 May 2025 02:45:53 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
