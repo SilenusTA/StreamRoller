@@ -17,13 +17,12 @@
 import { Buffer } from 'buffer';
 import https from 'https';
 import * as querystring from 'querystring';
-import * as logger from "../../../backend/data_center/modules/logger.js";
+
 const localConfig = {
     SYSTEM_LOGGING_TAG: '[KickAPIs.js]',
     maxChatMessageLength: 500,
     retryCounter: 2,
     attemptCounter: 0,
-    DEBUG: false,
 };
 
 let callbacks = { updateRefreshTokenFn: null };
@@ -51,7 +50,36 @@ function setCredentials (creds)
     Credentials = structuredClone(creds);
 }
 // ============================================================================
-//                           FUNCTION: init
+//                           FUNCTION: setCredentials
+// ============================================================================
+/**
+ * 
+ * @param {boolean} forStreamer 
+ * @param {string} accessToken 
+ * @param {string} refreshToken 
+ */
+function updateTokens (forStreamer, accessToken, refreshToken, expiry)
+{
+    if (forStreamer)
+    {
+        Credentials.kickAccessToken = accessToken;
+        Credentials.kickRefreshToken = refreshToken;
+        Credentials.kickRefreshExpires = expiry
+        callbacks.updateRefreshTokenFn('kickAccessToken', accessToken);
+        callbacks.updateRefreshTokenFn('kickRefreshToken', refreshToken);
+        callbacks.updateRefreshTokenFn('kickRefreshExpires', expiry);
+    } else
+    {
+        Credentials.kickBotAccessToken = accessToken;
+        Credentials.kickBotRefreshToken = refreshToken;
+        Credentials.kickBotRefreshExpires = expiry
+        callbacks.updateRefreshTokenFn('kickBotAccessToken', accessToken);
+        callbacks.updateRefreshTokenFn('kickBotRefreshToken', refreshToken);
+        callbacks.updateRefreshTokenFn('kickBotRefreshExpires', expiry);
+    }
+}
+// ============================================================================
+//                           FUNCTION: makeRequest
 // ============================================================================
 /**
  * 
@@ -118,8 +146,8 @@ function buildTokenPayload (refreshToken)
 async function refreshToken (forStreamer = true)
 {
     const refreshToken = forStreamer ? Credentials.kickRefreshToken : Credentials.kickBotRefreshToken;
+    const refreshTokenExpires = forStreamer ? Credentials.kickRefreshExpires : Credentials.kickBotRefreshExpires;
     const postData = buildTokenPayload(refreshToken);
-
     try
     {
         const response = await makeRequest({
@@ -132,30 +160,23 @@ async function refreshToken (forStreamer = true)
             },
             data: postData,
         });
-
-        const { access_token, refresh_token } = response;
+        const { access_token, refresh_token, expires_in } = response;
         if (!access_token) throw new Error('No access token in response');
-
-        if (forStreamer)
-        {
-            Credentials.kickAccessToken = access_token;
-            Credentials.kickRefreshToken = refresh_token;
-            callbacks.updateRefreshTokenFn?.('kickAccessToken', access_token);
-            callbacks.updateRefreshTokenFn?.('kickRefreshToken', refresh_token);
-        } else
-        {
-            Credentials.kickBotAccessToken = access_token;
-            Credentials.kickBotRefreshToken = refresh_token;
-            callbacks.updateRefreshTokenFn?.('kickBotAccessToken', access_token);
-            callbacks.updateRefreshTokenFn?.('kickBotRefreshToken', refresh_token);
-        }
+        updateTokens(forStreamer, access_token, refresh_token, Date.now() + (expires_in * 1000));
     } catch (err)
     {
-        if (err.body && JSON.parse(err.body)?.error === 'invalid_grant')
+        try
         {
-            throw { type: 'invalid_grant', message: 'Reauthorization required', location: `refreshToken(${forStreamer})` };
+            if (err.body && JSON.parse(err.body)?.error === 'invalid_grant')
+            {
+                throw { type: 'invalid_grant', message: 'Reauthorization required', location: `refreshToken(${forStreamer})` };
+            }
+            throw { type: 'refresh_failed', message: 'Token refresh failed', details: err };
         }
-        throw { type: 'refresh_failed', message: 'Token refresh failed', details: err };
+        catch (parseErr)
+        {
+            throw { type: 'error', message: 'Error parsing Error Message', details: err };
+        }
     }
 }
 // ============================================================================
@@ -216,7 +237,7 @@ const getUser = (forStreamer = true) => withAuthRetry(() => authorizedGet('/publ
  * 
  * @returns Promise
  */
-const getChannel = () => withAuthRetry(() => authorizedGet('/public/v1/channels'));
+const getChannel = (userId = "") => withAuthRetry(() => authorizedGet(`/public/v1/channels?broadcaster_user_id=${userId}`));
 // ============================================================================
 //                           FUNCTION: getLivestream
 // ============================================================================
@@ -230,14 +251,13 @@ const getLivestream = (userId) => withAuthRetry(() =>
         hostname: 'api.kick.com',
         path: `/public/v1/livestreams?broadcaster_user_id=${userId}`,
         headers: { Authorization: `Bearer ${Credentials.kickAccessToken}`, Accept: '*/*' },
-    })
-);
+    }));
 // ============================================================================
 //                           FUNCTION: sendChatMessage
 // ============================================================================
 /**
  * 
- * @param {*} messageData 
+ * @param {*} messageData {account, message, triggerActionRef}
  * @returns Promise
  */
 async function sendChatMessage (messageData)
@@ -250,7 +270,7 @@ async function sendChatMessage (messageData)
         .replaceAll('olddepMarv ', '[emote:3626103:olddepressedgamerMarv]');// temp fix. need to get emojis working
     // remove html
     message = sanitiseHTML(message);
-    if (message.byteLength > localConfig.maxChatMessageLength - 4)
+    if (message.length > localConfig.maxChatMessageLength - 4)
         message = message.slice(0, localConfig.maxChatMessageLength - 4) + "..."
     const postData = JSON.stringify({ broadcaster_user_id: Credentials.userId, content: message, type: 'user' });
     return withAuthRetry(() =>
@@ -268,7 +288,7 @@ async function sendChatMessage (messageData)
     );
 }
 // ============================================================================
-//                           FUNCTION: authorizedGet
+//                           FUNCTION: setTitleAndCategory
 // ============================================================================
 /**
  * 
@@ -294,7 +314,7 @@ async function setTitleAndCategory (title, categoryId)
     );
 }
 // ============================================================================
-//                           FUNCTION: authorizedGet
+//                           FUNCTION: searchCategories
 // ============================================================================
 /**
  * 
@@ -308,7 +328,21 @@ async function searchCategories (categoryName)
     );
 }
 // ============================================================================
-//                           FUNCTION: authorizedGet
+//                           FUNCTION: getCategory
+// ============================================================================
+/**
+ * 
+ * @param {string} categoryId 
+ * @returns Promise
+ */
+async function getCategory (categoryId)
+{
+    return withAuthRetry(() =>
+        authorizedGet(`/public/v1/categories/${categoryId}`)
+    );
+}
+// ============================================================================
+//                           FUNCTION: getChannelData
 // ============================================================================
 /**
  * 
@@ -349,4 +383,4 @@ function sanitiseHTML (string)
         return entityMap[s];
     });
 }
-export { init, setCredentials, getUser, getChannel, getLivestream, getChannelData, sendChatMessage, setTitleAndCategory, searchCategories };
+export { getChannel, getChannelData, getLivestream, getUser, init, getCategory, searchCategories, sendChatMessage, setCredentials, setTitleAndCategory };

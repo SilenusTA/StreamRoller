@@ -54,7 +54,7 @@ const localConfig = {
     botLiveStreamSchedulerHandle: null,
     botLiveStreamSchedulerTimeout: 1200000,//20mins
     updateCredentialsSchedulerHandle: null,
-    updateCredentialsSchedulerTimeout: 10000,//10sec
+    updateCredentialsSchedulerTimeout: 500,//0.5sec
     setupUsersSchedulerHandle: null,
     setupUsersSchedulerTimeout: 10000,//10sec
 };
@@ -424,7 +424,7 @@ async function onDataCenterMessage (server_packet)
             if (extension_packet.to === serverConfig.extensionname)
             {
                 SendSettingsWidgetSmall(extension_packet.from);
-                updateCategoryTitleFromKick()
+                updateCategoryTitleFromKick("Settings (Small) Request")
             }
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
@@ -435,7 +435,7 @@ async function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
             if (extension_packet.data.extensionname === serverConfig.extensionname)
-                parseSettingsWidgetSmall(extension_packet.data)
+                parseSettingsWidgetSmall(extension_packet.data, "Data from" + extension_packet.from)
         }
         else if (extension_packet.type === "SettingsWidgetLargeData")
         {
@@ -471,9 +471,9 @@ async function onDataCenterMessage (server_packet)
 
                     kickAPI.sendChatMessage({
                         account: extension_packet.data.account,
-                        message: extension_packet.data.message
-                    }
-                    )
+                        message: extension_packet.data.message,
+                        triggerActionRef: extension_packet.data.triggerActionRef
+                    })
                         .then((data) =>
                         {
                             //console.log("kickAPI.sendChatMessage returned", data)
@@ -513,24 +513,24 @@ async function onDataCenterMessage (server_packet)
                 console.log("searchCategories failed", err)
             }
             // this request comes from the small settings widget normally
-            sendGameCategoriesSearchTrigger(extension_packet.data.triggerActionRef, extension_packet.data.searchName)
-            SendSettingsWidgetSmall()
+            sendGameCategoriesSearchTrigger(extension_packet.data.searchName, extension_packet.data.triggerActionRef)
+            SendSettingsWidgetSmall({ reference: extension_packet.data.triggerActionRef })
         }
         else if (extension_packet.type === "action_clearCategoryHistory")
         {
             // if we have an empty search item then just return.
             serverConfig.kickCategoriesHistory = [];
-            SaveConfigToServer();
+            SaveConfigToServer(extension_packet.data.triggerActionRef);
             sendGameCategoriesClearedTrigger(extension_packet.data.triggerActionRef)
-            SendSettingsWidgetSmall()
+            SendSettingsWidgetSmall(extension_packet.data.triggerActionRef)
         }
         else if (extension_packet.type === "action_clearKickTitleHistory")
         {
             // if we have an empty search item then just return.
             serverConfig.kickTitlesHistory = [];
-            SaveConfigToServer();
+            SaveConfigToServer(extension_packet.data.triggerActionRef);
             sendTitleClearedTrigger(extension_packet.data.triggerActionRef)
-            SendSettingsWidgetSmall()
+            SendSettingsWidgetSmall({ reference: extension_packet.data.triggerActionRef })
         }
         else if (extension_packet.type === "action_setTitleAndCategory")
         {
@@ -545,7 +545,7 @@ async function onDataCenterMessage (server_packet)
                     kickAPI.setTitleAndCategory(extension_packet.data.title, game.id)
                         .then((data) =>
                         {
-                            updateCategoryTitleFromKick();
+                            updateCategoryTitleFromKick(extension_packet.data.triggerActionRef);
                         })
                 }
             }
@@ -585,8 +585,9 @@ async function onDataCenterMessage (server_packet)
 // ===========================================================================
 /**
  * @param {String} [to = ""] // extension name or send to channel if not provided
+ * @param {String} [reference = ""] 
  */
-function SendSettingsWidgetSmall (to = "")
+function SendSettingsWidgetSmall (to = "", reference = "Kick")
 {
     fs.readFile(__dirname + '/kicksettingswidgetsmall.html', function (err, filedata)
     {
@@ -669,9 +670,10 @@ function SendSettingsWidgetSmall (to = "")
 //                           FUNCTION: SendSettingsWidgetLarge
 // ===========================================================================
 /**
- * 
+ * @param {String} [to = ""] 
+ * @param {String} [reference = ""] 
  */
-function SendSettingsWidgetLarge (to = "")
+function SendSettingsWidgetLarge (to = "", reference = "Kick")
 {
     fs.readFile(__dirname + '/kicksettingswidgetlarge.html', function (err, filedata)
     {
@@ -717,8 +719,9 @@ function SendSettingsWidgetLarge (to = "")
 /**
  * 
  * @param {object} data // data from user submitted form
+ * @param {String} [reference = ""] 
  */
-async function parseSettingsWidgetSmall (modalData)
+async function parseSettingsWidgetSmall (modalData, reference = "Kick")
 {
     try
     {
@@ -808,7 +811,7 @@ async function parseSettingsWidgetSmall (modalData)
             {
                 //update stream title/description
                 await kickAPI.setTitleAndCategory(serverConfig.kickTitlesHistory[serverConfig.lastSelectedKickTitleId], serverConfig.currentCategoryId)
-                await updateCategoryTitleFromKick();
+                await updateCategoryTitleFromKick("Settings Update");
 
             }
             if (DataChanged)
@@ -826,13 +829,17 @@ async function parseSettingsWidgetSmall (modalData)
 // ============================================================================
 //                           FUNCTION: updateCategoryTitleFromKick
 // ============================================================================
-async function updateCategoryTitleFromKick ()
+/**
+ * 
+ * @param {String} [reference = ""] 
+ */
+async function updateCategoryTitleFromKick (reference = "Kick")
 {
     try
     {
         if (serverConfig.channelData)
         {
-            localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+            localConfig.kickChannel = await kickAPI.getChannel(serverCredentials.userId);
             // kickChannel does not include any category data unless live
             // update our category
             if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category && localConfig.kickChannel.data[0].category.name != "")
@@ -845,7 +852,20 @@ async function updateCategoryTitleFromKick ()
                 // is this a new title
                 if (historyCategoryIndex == -1)
                     serverConfig.kickCategoriesHistory.push({ id: serverConfig.currentCategoryId, name: serverConfig.currentCategoryName });
-                sendCategoryTrigger();
+                sendCategoryTrigger(reference);
+            }
+            else
+            {
+                // if the above fails (might not be live), then attempt to get the last game we had set and update
+                // the data from that
+                let category = null;
+                if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != null)
+                {
+                    category = await kickAPI.getCategory(serverConfig.currentCategoryId);
+                    serverConfig.currentCategoryId = category.data.id;
+                    serverConfig.currentCategoryName = category.data.name;
+                    serverConfig.currentCategoryUrl = category.data.thumbnail;
+                }
             }
             // update our title
             if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].stream_title)
@@ -857,7 +877,7 @@ async function updateCategoryTitleFromKick ()
                 // is this a new title
                 if (historyTitleIndex == -1)
                     serverConfig.lastSelectedKickTitleId = serverConfig.kickTitlesHistory.push(serverConfig.currentTitle) - 1
-                sendTitleTrigger();
+                sendTitleTrigger(reference);
             }
             SendSettingsWidgetSmall();
         }
@@ -871,7 +891,11 @@ async function updateCategoryTitleFromKick ()
 // ============================================================================
 //                           FUNCTION: sendCategoryTrigger
 // ============================================================================
-function sendCategoryTrigger ()
+/**
+ * 
+ * @param {String} [reference = ""] 
+ */
+function sendCategoryTrigger (reference = "Kick")
 {
     let triggerToSend = null
     // category changed
@@ -881,26 +905,32 @@ function sendCategoryTrigger ()
         triggerToSend.parameters.gameId = serverConfig.currentCategoryId;
         triggerToSend.parameters.name = serverConfig.currentCategoryName;
         triggerToSend.parameters.imageURL = serverConfig.currentCategoryUrl;
+        triggerToSend.parameters.triggerActionRef = reference;
         postTrigger(triggerToSend);
     }
 }
 // ============================================================================
 //                           FUNCTION: sendTitleTrigger
 // ============================================================================
-function sendTitleTrigger ()
+/**
+ * 
+ * @param {String} [reference = ""] 
+ */
+function sendTitleTrigger (reference = "Kick")
 {
     // title changed
     let triggerToSend = findTriggerByMessageType("trigger_KickTitleChanged")
     triggerToSend.parameters.title = serverConfig.currentTitle;
+    triggerToSend.parameters.triggerActionRef = reference;
     postTrigger(triggerToSend);
 }
 // ============================================================================
 //                           FUNCTION: connectToChatScheduler
 // ============================================================================
 /**
- * 
+ * @param {String} [reference = ""] 
  */
-function connectToChatScheduler ()
+function connectToChatScheduler (reference = "Kick")
 {
     clearTimeout(localConfig.connectToChatScheduleHandle)
     localConfig.connectToChatScheduleHandle = setTimeout(() =>
@@ -914,9 +944,9 @@ function connectToChatScheduler ()
 //                           FUNCTION: connectToChat
 // ============================================================================
 /**
- * 
+ * @param {String} [reference = ""] 
  */
-async function connectToChat ()
+async function connectToChat (reference = "Kick")
 {
     try
     {
@@ -935,7 +965,8 @@ async function connectToChat ()
             serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
             SaveConfigToServer()
         }
-        localConfig.kickChannel = await kickAPI.getChannel(`chatrooms.${serverConfig.channelData.chatroom.id}.v2`);
+
+        localConfig.kickChannel = await kickAPI.getChannel(serverCredentials.userId);
         localConfig.kickLiveStream = await kickAPI.getLivestream(localConfig.streamer.data[0].user_id)
 
         // setup chat connection for the streamer.
@@ -952,8 +983,9 @@ async function connectToChat ()
 // ============================================================================
 /**
  * @param {object} data // data from user submitted form
+ * @param {String} [reference = ""] 
  */
-function parseSettingsWidgetLarge (data)
+function parseSettingsWidgetLarge (data, reference = "Kick")
 {
     try
     {
@@ -966,6 +998,7 @@ function parseSettingsWidgetLarge (data)
         else
         {
             serverConfig.kickEnabled = "off";
+            let credentialsChanged = false;
             for (const [key, value] of Object.entries(data))
                 if (serverConfig[key])
                     serverConfig[key] = value;
@@ -974,15 +1007,18 @@ function parseSettingsWidgetLarge (data)
             {
                 serverCredentials.kickApplicationClientId = data.kickApplicationClientId;
                 kickAPI.setCredentials(serverCredentials);
-                SaveCredentialToServer("kickApplicationClientId", serverCredentials.kickApplicationClientId)
+                credentialsChanged = true;
+
             }
             // if we have changed the client ID lets set that
             if (serverCredentials.kickApplicationSecret != data.kickApplicationSecret)
             {
                 serverCredentials.kickApplicationSecret = data.kickApplicationSecret;
                 kickAPI.setCredentials(serverCredentials);
-                SaveCredentialToServer("kickApplicationSecret", serverCredentials.kickApplicationSecret)
+                credentialsChanged = true;
             }
+            //if (credentialsChanged)
+            SaveCredentialsToServer("parseSettingsWidgetLarge")
 
         }
 
@@ -1001,8 +1037,9 @@ function parseSettingsWidgetLarge (data)
 /**
  * Adds a game by name to the history list
  * @param {string} gameName 
+ * @param {String} [reference = ""] 
  */
-async function addGameToHistoryFromGameName (gameName)
+async function addGameToHistoryFromGameName (gameName, reference = "Kick")
 {
     try
     {
@@ -1049,8 +1086,9 @@ async function addGameToHistoryFromGameName (gameName)
 // ============================================================================
 /**
  * Sends our config to the server to be saved for next time we run
+ * @param {String} [reference = ""] 
  */
-function SaveConfigToServer ()
+function SaveConfigToServer (reference = "Kick")
 {
     // saves our serverConfig to the server so we can load it again next time we startup
     sr_api.sendMessage(localConfig.DataCenterSocket, sr_api.ServerPacket
@@ -1062,9 +1100,9 @@ function SaveConfigToServer ()
 //                           FUNCTION: DeleteCredentialsOnServer
 // ============================================================================
 /**
- * Sends Credentials to the server
+ * @param {String} [reference = ""] 
  */
-function DeleteCredentialsOnServer ()
+function DeleteCredentialsOnServer (reference = "Kick")
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
@@ -1126,13 +1164,15 @@ function heartBeatCallback ()
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
-//                           FUNCTION: SaveCredentialToServer
+//                           FUNCTION: updateRefreshToken
 // ============================================================================
 /**
  * Store an updated refresh token
- * @param {string} credentials 
+ * @param {string} name
+ * @param {string} value 
+ * @param {String} [reference = ""] 
  */
-function updateRefreshToken (name, value)
+function updateRefreshToken (name, value, reference = "Kick")
 {
     // during auth we may call this function several times so lets just buffer them
     // save them for use in the meantime
@@ -1140,7 +1180,7 @@ function updateRefreshToken (name, value)
     clearTimeout(localConfig.updateCredentialsSchedulerHandle);
     localConfig.updateCredentialsSchedulerHandle = setTimeout(() =>
     {
-        updateRefreshTokenScheduler(name, value)
+        updateRefreshTokenScheduler(name, value, reference)
     }, localConfig.updateCredentialsSchedulerTimeout);
 }
 // ============================================================================
@@ -1148,32 +1188,29 @@ function updateRefreshToken (name, value)
 // ============================================================================
 /**
  * Store an updated refresh token
- * @param {string} credentials 
+ * @param {String} [reference = ""] 
  */
-function updateRefreshTokenScheduler (name, value)
+function updateRefreshTokenScheduler (reference = "Kick")
 {
     // dev need to check this is working. remove once seen working ok
-    SaveCredentialToServer(name, value)
+    SaveCredentialsToServer(reference);
 }
 
 // ============================================================================
-//                           FUNCTION: SaveCredentialToServer
+//                           FUNCTION: SaveCredentialsToServer
 // ============================================================================
 /**
  * Sends Credential to the server to be saved
- * @param {string} name 
- * @param {string} value 
+ * @param {String} [reference = ""] 
  */
-function SaveCredentialToServer (name, value)
+function SaveCredentialsToServer (reference = "Kick")
 {
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket(
             "UpdateCredentials",
             serverConfig.extensionname,
             {
-                ExtensionName: serverConfig.extensionname,
-                CredentialName: name,
-                CredentialValue: value,
+                data: serverCredentials
             },
         ));
 }
@@ -1183,9 +1220,10 @@ function SaveCredentialToServer (name, value)
 /**
  * Finds a trigger from the messagetype
  * @param {string} messagetype 
+ * @param {String} [reference = ""] 
  * @returns {object} trigger
  */
-function findTriggerByMessageType (messagetype)
+function findTriggerByMessageType (messagetype, reference = "Kick")
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
@@ -1292,9 +1330,10 @@ function onChatMessage (message)
 // ============================================================================
 /**
  * Simulates a message from kick chat.
- * @param {object} data 
+ * @param {string} data 
+ * @param {String} [reference = ""] 
  */
-function createDummyChatMessageFromMessage (message)
+function createDummyChatMessageFromMessage (message, reference = "Kick")
 {
     let dummyMessage =
     {
@@ -1319,8 +1358,9 @@ function createDummyChatMessageFromMessage (message)
 /**
  * Simulates a message from kick chat.
  * @param {object} data 
+ * @param {String} [reference = ""] 
  */
-function createDummyChatMessage (message)
+function createDummyChatMessage (message, reference = "Kick")
 {
     //message.type("system")
     onChatMessage(message);
@@ -1330,8 +1370,9 @@ function createDummyChatMessage (message)
 // ===========================================================================
 /**
  * @param {String} toExtension 
+ * @param {String} [reference = ""] 
  */
-function sendAccountNames (toExtension = "")
+function sendAccountNames (toExtension = "", reference = "Kick")
 {
     // TBD create list from available names otherwise we need to supply both names
     let usrlist = {}
@@ -1374,8 +1415,9 @@ function sendAccountNames (toExtension = "")
  * 
  * @param {string} reference 
  * @param {string} searchName 
+ * @param {String} [reference = ""] 
  */
-function sendGameCategoriesSearchTrigger (reference, searchName)
+function sendGameCategoriesSearchTrigger (searchName, reference = "Kick")
 {
     let trigger = findTriggerByMessageType("trigger_searchedKickGames")
     trigger.parameters.triggerActionRef = reference;
@@ -1388,9 +1430,9 @@ function sendGameCategoriesSearchTrigger (reference, searchName)
 // ============================================================================
 /**
  * 
- * @param {string} reference 
+ * @param {String} [reference = ""] 
  */
-function sendGameCategoriesClearedTrigger (reference)
+function sendGameCategoriesClearedTrigger (reference = "Kick")
 {
     let trigger = findTriggerByMessageType("trigger_categoryHistoryCleared")
     trigger.parameters.triggerActionRef = reference;
@@ -1399,7 +1441,11 @@ function sendGameCategoriesClearedTrigger (reference)
 // ============================================================================
 //                           FUNCTION: sendTitleClearedTrigger
 // ============================================================================
-function sendTitleClearedTrigger (reference)
+/**
+ * 
+ * @param {String} [reference = ""] 
+ */
+function sendTitleClearedTrigger (reference = "Kick")
 {
     let trigger = findTriggerByMessageType("trigger_titleHistoryCleared")
     trigger.parameters.triggerActionRef = reference;
@@ -1506,9 +1552,10 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
 //                      FUNCTION: checkForLiveStreams
 // ============================================================================
 /**
- * schedules a check for users going live. might need to tweek the timeouts once working
+ * schedules a check for users going live. might need to tweak the timeouts once working
+ * @param {String} [reference = ""] 
  */
-function checkForLiveStreams ()
+function checkForLiveStreams (reference = "Kick")
 {
     clearInterval(localConfig.botLiveStreamSchedulerHandle)
     clearInterval(localConfig.userLiveStreamSchedulerHandle)
@@ -1532,8 +1579,9 @@ function checkForLiveStreams ()
 /**
  * checks if a user is live
  * @param {number} id 
+ * @param {String} [reference = ""] 
  */
-function checkForLiveStreamsScheduler (id)
+function checkForLiveStreamsScheduler (id, reference = "Kick")
 {
     if (typeof (id) != "undefined")
     {
@@ -1594,20 +1642,27 @@ async function setupUsersScheduler ()
                     {
                         serverConfig.channelData = await kickAPI.getChannelData(serverCredentials.streamerName)
                         SaveConfigToServer()
+                        if (serverConfig.channelData.recent_categories[0].id)
+                            serverConfig.currentCategoryId = serverConfig.channelData.recent_categories[0].id
+                        if (serverConfig.channelData.recent_categories[0].name)
+                            serverConfig.currentCategoryName = serverConfig.channelData.recent_categories[0].name
+                        if (serverConfig.channelData.recent_categories[0].banner.url)
+                            serverConfig.currentCategoryUrl = serverConfig.channelData.recent_categories[0].banner.url
                     }
-                    updateCategoryTitleFromKick()
+                    serverConfig.currentCategoryUrl = serverConfig.channelData.recent_categories[0].banner.url
+                    updateCategoryTitleFromKick("Setup Streamer")
                     localConfig.kickLiveStream = await kickAPI.getLivestream(serverCredentials.userId)
                     connectToChatScheduler()
                 }
             }
             else
             {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "CredentialsFile failed to get streamer details from kick ");
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".setupUsersScheduler", "CredentialsFile failed to get streamer details from kick ");
             }
         }
         catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterMessage", "Streamer setup error", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".setupUsersScheduler", "Streamer setup error", err);
         }
     }
     else
@@ -1629,7 +1684,6 @@ async function setupUsersScheduler ()
                 {
                     serverCredentials.botName = localConfig.bot.data[0].name
                     serverCredentials.botId = localConfig.bot.data[0].user_id
-                    sendAccountNames();
                     // update the kickAPI credentials 
                     kickAPI.setCredentials(serverCredentials);
                 }
@@ -1654,6 +1708,7 @@ async function setupUsersScheduler ()
         console.log("Kick: Missing bot credentials,please connect using the main settings page for Kick")
     }
     checkForLiveStreams();
+    sendAccountNames();
     //checkForLiveStreamsScheduler(serverCredentials.userId)
 }
 // ============================================================================

@@ -79,7 +79,6 @@ function connectChat (chatroomId, channelId, userName, streamerName)
         localConfig.streamerName = streamerName;
         localConfig.channelName = streamerName;
 
-        file_log("connectChat called for", userName)
         // disconnect if already connected
         if (localConfig.websocket && localConfig.websocket.readyState !== WebSocket.CLOSED)
         {
@@ -112,7 +111,6 @@ function connectChat (chatroomId, channelId, userName, streamerName)
     }
     catch (err)
     {
-        file_log(localConfig.SYSTEM_LOGGING_TAG + "connectChat Error Received:", err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "connectChat", "Error Received:", err);
         Reconnect();
     }
@@ -125,7 +123,6 @@ function connectChat (chatroomId, channelId, userName, streamerName)
  */
 function handleOpen ()
 {
-    file_log("Connection opened")
     //console.log(`Kick:Connection opened.`);
 }
 // ============================================================================
@@ -140,7 +137,6 @@ function handleMessage (data)
     try
     {
         const message = JSON.parse(data);
-        file_log("handleMessage", message)
         localConfig.connected = true;
         // When connection is established, subscribe to a channel
         if (message.event === 'pusher:connection_established')
@@ -179,7 +175,6 @@ function handleMessage (data)
     }
     catch (err)
     {
-        file_log(localConfig.SYSTEM_LOGGING_TAG + "handleMessage Error Received:", err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "handleMessage", "Error Received:", err);
     }
 }
@@ -193,7 +188,6 @@ function handleMessage (data)
 function handleError (error)
 {
 
-    file_log(localConfig.SYSTEM_LOGGING_TAG + "handleError Error Received:", error)
     logger.err(localConfig.SYSTEM_LOGGING_TAG + "Kick:chat:handleError", "Websocket Error Received:", error);
     Reconnect();
 }
@@ -207,7 +201,6 @@ function handleError (error)
  */
 function handleClose (code, reason)
 {
-    file_log("handleClose" + reason, code)
 
     localConfig.connected = false;
     let dummyMessage =
@@ -234,13 +227,11 @@ function subscribeToChannel ()
 {
     try
     {
-        file_log("subscribeToChannel")
         // subscribe to chatrooms
         let subscribeMessage = {
             event: 'pusher:subscribe',
             data: { channel: `chatrooms.${localConfig.chatroomId}.v2` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
         // subscribe to for rewards
@@ -248,7 +239,6 @@ function subscribeToChannel ()
             event: 'pusher:subscribe',
             data: { channel: `chatrooms_${localConfig.chatroomId}` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
         // subscribe to for rewards
@@ -256,7 +246,6 @@ function subscribeToChannel ()
             event: 'pusher:subscribe',
             data: { channel: `chatrooms_${localConfig.chatroomId}.v1` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
         // subscribe for alerts
@@ -264,7 +253,6 @@ function subscribeToChannel ()
             event: 'pusher:subscribe',
             data: { channel: `channel.${localConfig.channelId}` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
         // subscribe for alerts
@@ -272,7 +260,6 @@ function subscribeToChannel ()
             event: 'pusher:subscribe',
             data: { channel: `channel.${localConfig.channelId}.v1` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
         // subscribe for alerts
@@ -280,13 +267,11 @@ function subscribeToChannel ()
             event: 'pusher:subscribe',
             data: { channel: `channel.${localConfig.channelId}.v2` }
         };
-        file_log("subscribeMessage", subscribeMessage)
         localConfig.websocket.send(JSON.stringify(subscribeMessage));
 
     }
     catch (err)
     {
-        file_log(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel Error Received:", err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "subscribeToChannel", "failed, retrying.", err);
         setTimeout(subscribeToChannel(localConfig.channelName), 1000)
     }
@@ -299,7 +284,6 @@ function subscribeToChannel ()
  */
 function disconnectChat ()
 {
-    file_log("disconnectChat")
     localConfig.connected = true;
     if (localConfig.websocket && localConfig.websocket.readyState !== WebSocket.CLOSED)
     {
@@ -337,16 +321,8 @@ function onChatMessage (message)
 // ============================================================================
 function Reconnect ()
 {
-    file_log("Reconnecting chat ",
-        {
-            channelName: localConfig.channelName,
-            reconnectAttempts: localConfig.reconnectAttempts,
-            maxFailedConnections: localConfig.maxFailedConnections,
-            readyState: localConfig.websocket.readyState,
-        })
     if (localConfig.reconnectAttempts >= localConfig.maxFailedConnections)
     {
-        file_log(localConfig.SYSTEM_LOGGING_TAG + "Reconnect Error Received:", `Max reconnection attempts reached for ${localConfig.channelName}`)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "Reconnect", `Max reconnection attempts reached for ${localConfig.channelName}`);
         return; // Max retries reached, stop reconnecting
     }
@@ -354,7 +330,6 @@ function Reconnect ()
     if (localConfig.websocket && (localConfig.websocket.readyState === WebSocket.CLOSING || localConfig.websocket.readyState === WebSocket.CLOSED))
     {
         localConfig.reconnectAttempts++;
-        file_log(localConfig.SYSTEM_LOGGING_TAG + "Reconnect Error Received:", `Attempt #${localConfig.reconnectAttempts} for ${localConfig.channelName}`)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + "Reconnect", `Attempt #${localConfig.reconnectAttempts} for ${localConfig.channelName}`);
         setTimeout(() =>
         {
@@ -362,56 +337,5 @@ function Reconnect ()
         }, localConfig.reconnectionDelay);
     }
 }
-// ============================================================================
-//                           FUNCTION: file_log
-//                       For debug purposes. logs raw message data
-// ============================================================================
-import fs from 'fs'
-let basedir = "chatdata/";
-let fileHandle = null;
-let startup = true;
-async function file_log (userMessage, data = "")
-{
-    if (!localConfig.DEBUG)
-        return
-    let message = userMessage
-    try
-    {
 
-        var filename = "kickChatMessages.js";
-        var buffer = "";
-        if (!fs.existsSync(basedir))
-            fs.mkdirSync(basedir, { recursive: true });
-
-        // check if we already have this handler
-        if (!fileHandle)
-            fileHandle = await fs.createWriteStream(basedir + "/" + filename, { flags: 'a' });
-
-        if (startup)
-        {
-            startup = false;
-            buffer = "/* ################# startup ######################### */\n"
-        }
-        buffer += "message='" + message + "'\n"
-        if (typeof data != "object")
-            buffer += "data='" + data + "'\n"
-        else
-        {
-            if (typeof data.data == "string")
-                data.data = JSON.parse(data.data)
-            // this will handle the nested objects that are already stringified
-            data = JSON.stringify(data)
-            buffer += "data=" + data + "\n"
-        }
-
-        fileHandle.write(buffer);
-        //bad coding but can't end it here (due to async stuff) and it is just debug code (just left as a reminder we have a dangling pointer)
-        //fileHandle.end("")
-
-    }
-    catch (error)
-    {
-        console.log("debug file logging crashed", error.message)
-    }
-}
 export { init, connectChat, disconnectChat, connected }
