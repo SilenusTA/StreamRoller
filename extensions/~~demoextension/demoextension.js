@@ -65,6 +65,15 @@ const localConfig = {
     heartBeatTimeout: 5000,
     // heartbeat handle to hold the heartbeat timer
     heartBeatHandle: null,
+    // state of startup, ready gets set when we have all our config below
+    ready: false,
+    // timeout for checking readinessFlags
+    startupCheckTimer: 500,
+    // These flags are things we need before consider ourself started up and ready to
+    // run. Add things like CredentialsReceived etc as you require them
+    readinessFlags: {
+        ConfigReceived: false, // gets set when our config files comes in from the server
+    }
 };
 
 // serverConfig is how we store our data that is needed to persist
@@ -99,12 +108,17 @@ const triggersandactions =
     version: "0.2",
     channel: serverConfig.channel,
     // these are messages we can send out that other extensions might want to use to trigger an action
+    // types start with either trigger_ or action_ and should be unique to this package (ie name them appropriately)
+    // There are a few where a common name might be useful (ie chatmessages)
     triggers:
         [
             {
+                // notes:
+                // _UIDescription field is used as a tooltip popup on the autopilot page when the user hovers the mouse over this field.
+                // triggerActionRef field should be copied through from actions to any triggers happening due to this action (where possible). This allows the user to filter out only triggers that happened due to their action if they need to.
                 name: "demoextensionSomethingHappened",
                 name_UIDescription: "tooltip",
-                displaytitle: "Somthing happened",
+                displaytitle: "Something happened",
                 displaytitle_UIDescription: "tooltip",
                 description: "The Demo extension did something that you might like to know about",
                 description_UIDescription: "tooltip",
@@ -113,6 +127,8 @@ const triggersandactions =
                 parameters: {
                     message: "",
                     message_UIDescription: "tooltip",
+                    triggerActionRef: "DemoTrigger",// can be used by users to filter triggers
+                    triggerActionRef_UIDescription: "Reference for this message",
                 }
             }
         ],
@@ -128,7 +144,12 @@ const triggersandactions =
                 description_UIDescription: "tooltip",
                 messagetype: "action_DemoextensionDoStuff",
                 messagetype_UIDescription: "tooltip",
-                parameters: { message: "", message_UIDescription: "tooltip" }
+                parameters: {
+                    message: "",
+                    message_UIDescription: "tooltip",
+                    triggerActionRef: "DemoAction",
+                    triggerActionRef_UIDescription: "Reference for this message",
+                }
             }
 
         ],
@@ -153,6 +174,8 @@ function initialise (app, host, port, heartbeat)
         // use to process messages 
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
+        // startup check will set the ready flag when have met our startup requirements
+        startupCheck();
     } catch (err)
     {
         // using the logger module to log message to the console. message generally take the format of
@@ -237,9 +260,11 @@ function onDataCenterMessage (server_packet)
     // if we have requested our stored data we will receive a 'ConfigFile' type of packet
     if (server_packet.type === "ConfigFile")
     {
-        if (server_packet.data && server_packet.data.extensionname
-            && server_packet.data.extensionname === serverConfig.extensionname)
+        // check this config is ours
+        if (server_packet.data.extensionname === serverConfig.extensionname)
         {
+            localConfig.readinessFlags.ConfigReceived = true;
+            //
             let connectionChanged
             let configSubVersions = 0;
             let defaultSubVersions = default_serverConfig.__version__.split('.');
@@ -280,6 +305,7 @@ function onDataCenterMessage (server_packet)
                 //check for reconnection required, ie extension turned on/off etc
                 SendSettingsWidgetSmall();
             //SendSettingsWidgetLarge();
+
         }
     }
     // This is a message from an extension. the content format will be described by the extension
@@ -445,9 +471,9 @@ function process_stream_alert (server_packet)
  * this is done as part of the webpage request for modal message we get from 
  * extension. It is a way of getting some user feedback via submitted forms
  * from a page that supports the modal system
- * @param {String} toextension 
+ * @param {String} to 
  */
-function SendSettingsWidgetSmall (toextension)
+function SendSettingsWidgetSmall (to)
 {
     // read our modal file
     fs.readFile(__dirname + '/demoextensionsettingswidgetsmall.html', function (err, filedata)
@@ -490,11 +516,11 @@ function SendSettingsWidgetSmall (toextension)
                         serverConfig.extensionname, //our name
                         modalString,// data
                         serverConfig.channel,
-                        toextension,
+                        to,
 
                     ),
                     serverConfig.channel,
-                    toextension // in this case we only need the "to" channel as we will send only to the requester
+                    to // in this case we only need the "to" channel as we will send only to the requester
                 ))
         }
     });
@@ -556,6 +582,29 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
 }
 // ============================================================================
 //                                  EXPORTS
