@@ -318,14 +318,17 @@ function addToLogfile (func, tag, message)
 {
     if (firstrun)
     {
-        fs.unlink(logfilename, err =>
+        if (!fs.existsSync(logfilename))
         {
-            if (err)
+            fs.unlink(logfilename, err =>
             {
-                console.error(err)
-                return
-            }
-        })
+                if (err)
+                {
+                    console.error(err)
+                    return
+                }
+            })
+        }
         firstrun = false;
     }
     if (typeof (func) === "object")
