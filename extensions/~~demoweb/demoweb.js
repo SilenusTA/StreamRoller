@@ -41,8 +41,6 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import * as logger from "../../backend/data_center/modules/logger.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-
 // ============================================================================
 //                           FUNCTION: initialise
 // ============================================================================
@@ -52,7 +50,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
 
-function initialise (app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat, readyMessagefn)
 {
     logger.extra("[EXTENSION]demoweb.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     config.heartBeatTimeout = heartbeat;
@@ -74,6 +72,7 @@ function initialise (app, host, port, heartbeat)
                 }
             );
         });
+        readyMessagefn(config.EXTENSION_NAME)
     } catch (err)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "initialise failed:", err);

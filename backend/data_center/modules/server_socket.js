@@ -126,6 +126,11 @@ const localConfig =
 
     // callback to main server to save the updated server config
     saveServerConfigFunc: null,
+    // startup extension check for readiness interval
+    StartupIntervalHandle: null,
+    StartupInterval: 200,
+    StartupMaxTime: 100, //give extension 10seconds (StartupInterval*StartupMaxTime)  to startup
+    StartupMaxTimeCounter: 0,
 }
 const triggersandactions =
 {
@@ -240,6 +245,48 @@ const triggersandactions =
             }
         ],
 }
+
+
+// check for extension status so we can send a message out when all have reported read
+/**
+ * checks for extensions sending 'ready' message and send out a 'StreamRollerReady' when all extensions have responded
+ */
+function extensionReadinessCheckScheduler ()
+{
+    clearTimeout(localConfig.StartupIntervalHandle)
+    localConfig.StartupIntervalHandle = setInterval(() =>
+    {
+        extensionReadinessCheck()
+    }, localConfig.StartupInterval);
+}
+/**
+ * Extension readiness check
+ */
+function extensionReadinessCheck ()
+{
+    let AllExtensionsReady = true; // negative check
+    for (var key in localConfig.extensions) 
+    {
+        if (localConfig.extensions[key].state != "ready")
+            AllExtensionsReady = false;
+    }
+    //are we out of time or extensions finished loading
+    if (localConfig.StartupMaxTimeCounter++ > localConfig.StartupMaxTime
+        || (AllExtensionsReady && localConfig.extensions != {} && localConfig.server_socket != null))
+    {
+        // list extensions that failed to load in time
+        if (localConfig.StartupMaxTimeCounter++ > localConfig.StartupMaxTime)
+        {
+            for (var ext in localConfig.extensions)
+            {
+                if (localConfig.extensions[ext].state != "ready")
+                    console.log(`server startup time out for ${ext} `)
+            }
+        }
+        mh.broadcastMessage(localConfig.server_socket, sr_api.ServerPacket("StreamRollerReady", localConfig.extensionname, {}))
+        clearInterval(localConfig.StartupIntervalHandle)
+    }
+}
 // ============================================================================
 //                           FUNCTION: start
 // ============================================================================
@@ -268,7 +315,15 @@ function start (app, server, exts, serverConfig, saveServerConfigFunc)
     // create our extension array
     exts.forEach((elem, i) =>
     {
-        localConfig.extensions[elem] = {};
+        // extensions without backend servers may not send a running message via the socket
+        // and will set it via a function callback from the init function.
+        // That will happen before we get here so we need to make sure we don't overwrite 
+        // the running flags for these extensions
+        if (!localConfig.extensions[elem])
+        {
+            localConfig.extensions[elem] = {}
+            localConfig.extensions[elem].state = "loading";
+        }
     });
     localConfig.backend_server = server;
     cm.initcrypto();
@@ -317,6 +372,7 @@ function onConnect (socket)
 {
     socket.emit("connected", socket.id);
     socket.join(localConfig.channel);
+    extensionReadinessCheckScheduler();
     sendAddressTrigger();
 }
 // ============================================================================
@@ -373,9 +429,14 @@ function onMessage (socket, server_packet)
         mh.errorMessage(socket, "Missing type/from field", server_packet);
         return;
     }
-    // add this socket to the extension if it doesn't already exist
+    // add this socket to the extension list if it doesn't already exist
+    // these will be extension not started by the server
     if (typeof (localConfig.extensions[server_packet.from]) === "undefined" || !localConfig.extensions[server_packet.from])
+    {
         localConfig.extensions[server_packet.from] = {};
+        // added new extension so restart the check
+        extensionReadinessCheckScheduler();
+    }
     // check we have a valid socket for this extension, don't need to check if the extension exists as it will have been added above
     if (typeof (localConfig.extensions[server_packet.from].socket) === "undefined" || !localConfig.extensions[server_packet.from].socket)
     {
@@ -388,7 +449,7 @@ function onMessage (socket, server_packet)
     else
     {
         // note that we currently only have one slot per connection. this works for extensions that are only loaded once
-        // but for webpage stuff we will need to allow more than one sockect for that extension name
+        // but for webpage stuff we will need to allow more than one socket for that extension name
         // we need to append the socket id to the extension name to fix this!!!
         if (localConfig.extensions[server_packet.from].socket.id != socket.id)
         {
@@ -403,7 +464,11 @@ function onMessage (socket, server_packet)
         localConfig.connected_extensionlist[server_packet.from] = localConfig.extensions[server_packet.from].socket.connected
     }
     // process the clients request
-    if (server_packet.type === "RequestSoftwareVersion")
+    if (server_packet.type === "ExtensionConnected")
+        localConfig.extensions[server_packet.from] = { state: "connected" };
+    else if (server_packet.type === "ExtensionReady")
+        localConfig.extensions[server_packet.from] = { state: "ready" };
+    else if (server_packet.type === "RequestSoftwareVersion")
         mh.sendSoftwareVersion(socket, server_packet.from);
     else if (server_packet.type === "RequestConfig")
         mh.sendConfig(socket, server_packet.from);
@@ -771,7 +836,7 @@ function dataMonitorScheduler ()
 //                           FUNCTION: sendAddressTrigger
 // ============================================================================
 /**
- * Finds the trigger using the passed messagetype
+ * sends "trigger_StreamRollerIPChanged" message
  * @returns trigger
  */
 function sendAddressTrigger ()
@@ -815,7 +880,7 @@ function findTriggerByMessageType (messagetype)
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
         if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return triggersandactions.triggers[i];
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.extensionname +
         ".findTriggerByMessageType", "failed to find trigger", messagetype);
@@ -845,8 +910,21 @@ function sendTrigger (data)
         )
     );
 }
+/**
+ * Used by locally started extensions that have client webpages with the socket connection
+ * these might not always be loading in a browser so we fake the ready flag on startup.
+ * @param {string} ext 
+ */
+function readyMessage (ext)
+{
+    if (!localConfig.extensions[ext])
+    {
+        localConfig.extensions[ext] = {}
+        localConfig.extensions[ext].state = "ready"
+    }
+}
 // ============================================================================
 //                           EXPORTS:
 // ============================================================================
-export { start, triggersandactions };
+export { start, triggersandactions, readyMessage };
 

@@ -1428,7 +1428,8 @@ function findTriggerByMessageType (messagetype)
     for (let i = 0; i < localConf.tAndAs.triggers.length; i++)
     {
         if (localConf.tAndAs.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return localConf.tAndAs.triggers[i];
+
+            return structuredClone(localConf.tAndAs.triggers[i]);
     }
     logger.err(parentLocalConfig.SYSTEM_LOGGING_TAG + parentServerConfig.extensionname +
         ".findTriggerByMessageType", "failed to find action", messagetype);

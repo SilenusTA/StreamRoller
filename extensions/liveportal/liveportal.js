@@ -70,8 +70,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @param {string} host 
  * @param {number} port 
  * @param {number} heartbeat 
+ * @param {number} readyMessagefn 
  */
-function initialise (app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat, readyMessagefn)
 {
     logger.extra("[EXTENSION]liveportal.initialise", "host", host, "port", port, "heartbeat", heartbeat);
     config.heartBeatTimeout = heartbeat;
@@ -96,6 +97,14 @@ function initialise (app, host, port, heartbeat)
     } catch (err)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "initialise failed:", err);
+    }
+    try
+    {
+        readyMessagefn(config.EXTENSION_NAME)
+    }
+    catch (err)
+    {
+        logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "failed to set ready state:", err);
     }
 }
 // ============================================================================

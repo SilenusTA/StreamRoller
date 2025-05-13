@@ -1,0 +1,26 @@
+
+# StreamElements Extension
+
+Contents
+
+- [StreamElements Extension](#streamelements-extension)
+  - [Description](#description)
+  - [Triggers/Actions](#triggersactions)
+    - [Triggers](#triggers)
+    - [Actions](#actions)
+
+## Description
+
+Processes StreamElements events (follows etc)
+
+## Triggers/Actions
+
+ReplaceTAGForTriggersUpdatedDocTime
+
+### Triggers
+
+ReplaceTAGForTriggers
+
+### Actions
+
+ReplaceTAGForActions

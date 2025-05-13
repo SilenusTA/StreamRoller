@@ -44,6 +44,14 @@ import * as logger from "./modules/logger.js";
 import * as ServerSocket from "./modules/server_socket.js";
 import sr_api from "./public/streamroller-message-api.cjs";
 
+/*
+process.on('unhandledRejection', (reason, promise) =>
+{
+    console.log('Unhandled Promise Rejection:');
+    console.log('Reason:', reason);
+    console.log('Stack Trace:', reason?.stack || 'No stack trace available');
+});
+*/
 // testing startup time
 let DEBUG_TIMING = false;
 let debugStartTime = performance.now()
@@ -313,6 +321,10 @@ async function loadExtensions (extensionFolder)
                                 );
                             return x;
                         })
+                        .catch((err) =>
+                        {
+                            console.log("error loading module", err)
+                        })
                     return x;
                 }
                 else
@@ -345,7 +357,8 @@ async function loadExtensions (extensionFolder)
                             app, "http://" + serverConfig.HOST,
                             serverConfig.PORT,
                             // add a slight offset to the heartbeat so they don't all end up synced
-                            serverConfig.heartbeat + (Math.floor(Math.random() * 100)));
+                            serverConfig.heartbeat + (Math.floor(Math.random() * 100)),
+                            ServerSocket.readyMessage);
                     else
                         logger.err("[" + serverConfig.SYSTEM_LOGGING_TAG + "]server.js", "Error: Extension module " + files[index] + " did not export an initialise function");
                     if (DEBUG_TIMING)

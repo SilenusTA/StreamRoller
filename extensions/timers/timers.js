@@ -49,7 +49,12 @@ import sr_api from "../../backend/data_center/public/streamroller-message-api.cj
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const localConfig = {
     DataCenterSocket: null,
-    timers: [] // holds the local timers
+    timers: [], // holds the local timers
+    startupCheckTimer: 500,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+    },
 };
 const default_serverConfig = {
     __version__: 0.2,
@@ -58,7 +63,7 @@ const default_serverConfig = {
     // default values for timer modal
     TimerName: "StartCountdownTimer",
     TimerMessage: "Starting in",
-    TimerTimeout: "600"
+    TimerTimeout: "600",
 };
 let serverConfig = structuredClone(default_serverConfig);
 
@@ -147,6 +152,7 @@ function initialise (app, host, port, heartbeat)
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
+        startupCheck();
     } catch (err)
     {
         logger.err("[EXTENSION]" + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
@@ -173,15 +179,12 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
-    // Request our config from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
-
-    // Create a channel for messages to be sent out on
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
-
     );
 }
 // ============================================================================
@@ -193,10 +196,13 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    logger.log("[EXTENSION]" + serverConfig.extensionname + ".onDataCenterMessage", "message received ", server_packet);
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "StreamRollerReady")
+        localConfig.readinessFlags.streamRollerReady = true;
+    else if (server_packet.type === "ConfigFile")
     {
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.ConfigReceived = true;
+        if (server_packet.data != "" && server_packet.data.extensionname === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
@@ -531,10 +537,47 @@ function findtriggerByMessageType (messagetype)
 {
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
-        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase()) return triggersandactions.triggers[i];
+        if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                                  EXPORTS

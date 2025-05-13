@@ -69,7 +69,13 @@ const localConfig = {
     delayStartYoutubeMonitorHandle: null,
     delaySetupAuthenticatePage: null,
     liveChatId: null,
-    liveChatMessagePageToken: null
+    liveChatMessagePageToken: null,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+        CredentialsReceived: false,
+    },
+
 };
 
 const default_serverConfig = {
@@ -184,6 +190,7 @@ function init (host, port, heartbeat, webapp)
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
+        startupCheck()
     } catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
@@ -204,7 +211,8 @@ function onDataCenterDisconnect (reason)
 function onDataCenterConnect (socket)
 {
     logger.warn(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "requesting streamroller services");
-
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -220,8 +228,12 @@ function onDataCenterConnect (socket)
 // ============================================================================
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "StreamRollerReady")
+        localConfig.readinessFlags.streamRollerReady = true;
+    else if (server_packet.type === "ConfigFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.ConfigReceived = true;
         if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
         {
             let previous_enabled = serverConfig.youtubeapienabled;
@@ -246,6 +258,7 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to === serverConfig.extensionname)
         {
+            localConfig.readinessFlags.CredentialsReceived = true;
             let originalCredentials = serverCredentials
             serverCredentials = { ...serverCredentials, ...server_packet.data }
             // update the redirectURI just in case the user is running on a different port/ip
@@ -573,7 +586,7 @@ function findTriggerByMessageType (messagetype)
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
         if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return triggersandactions.triggers[i];
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findTriggerByMessageType", "failed to find action", messagetype);
@@ -1268,6 +1281,42 @@ function file_log ()
     {
         console.log("debug file logging error", error.message)
     }
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                                  EXPORTS

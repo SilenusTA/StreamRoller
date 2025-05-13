@@ -1,0 +1,15 @@
+{
+  "name": "streamelements",
+  "version": "1.0.0",
+  "description": "Handles streamelement alerts",
+  "main": "streamelements.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Twitch/OldDepressedGamer",
+  "license": "MIT",
+  "dependencies": {
+    "socket.io-client_2.2.0": "npm:socket.io-client@^2.2.0"
+  }
+}

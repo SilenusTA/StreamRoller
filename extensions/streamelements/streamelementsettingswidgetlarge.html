@@ -1,0 +1,64 @@
+<!--
+      StreamRoller_source Copyright 2023 "SilenusTA https://www.streamElements.tv/olddepressedgamer"
+ 
+      StreamRoller is an all in one streaming solution designed to give a single
+      'second monitor' control page and allow easy integration for configuring
+      content (ie. tweets linked to chat, overlays triggered by messages, hue lights
+      controlled by donations etc)
+ 
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU Affero General Public License as published
+      by the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+ 
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU Affero General Public License for more details.
+ 
+      You should have received a copy of the GNU Affero General Public License
+      along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ 
+-->
+<form id="streamelements_settingsform">
+    <div class="form-group invisible">
+        <input type="hidden" name="extensionname" class="form-control" value="extensionnametext" tabindex="-1" />
+        <input type="hidden" name="modalcodetype" class="form-control" value="SettingsWidgetLargeCode" tabindex="-1" />
+        <input type="hidden" name="modaldatatype" class="form-control" value="SettingsWidgetLargeData" tabindex="-1" />
+        <input type="hidden" name="channel" class="form-control" value="channeltext" tabindex="-1" />
+    </div>
+    <h4 class="text-center">streamElements Settings</h4>
+
+    <!-- streamElements login -->
+
+    <HR>
+    <H5>StreamElements Streamer Authorization</H5>
+    Go to your <a href="https://streamelements.com/dashboard/account/channels" target="_streamelements">StreamElements.com</a> page and copy the JWT Token
+    here for you Streamer account
+    <div id="StreamerJWTTokenDiv" class="form-group">
+        <label for="StreamerJWTToken" class="col-form-label">Streamer JWT Token</label>
+        <input type="password" name="StreamerJWTToken" class="form-control" id="StreamerJWTToken" value="StreamerJWTTokentext">
+    </div>
+    <!-- <H5>StreamElements Bot Authorization</H5>
+        Go to your <A href="https://streamelements.com/dashboard/account/channels" target="_streamelements">StreamElements.com</a> page and copy the JWT Token
+        here for your Bot account
+        <div class="form-group">
+            <label for="BotJWTToken" class="col-form-label">Bot JWT Token</label>
+            <input type="password" name="BotJWTToken" class="form-control" id="BotJWTToken" value="BotJWTTokentext">
+        </div>
+            -->
+
+    <HR>
+    <div class="form-group">
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" name="streamelements_restore_defaults" type="checkbox" id="streamelements_restore_defaults"
+                streamelements_restore_defaultschecked>
+            <label class="form-check-label" for="streamelements_restore_defaults">Reset to defaults</label>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button id="closeSettingsstreamelements" type="button" type="close" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+</form>

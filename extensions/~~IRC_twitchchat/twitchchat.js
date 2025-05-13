@@ -59,7 +59,14 @@ const localConfig = {
     heartBeatTimeout: 5000,
     heartBeatHandle: null,
     saveDataHandle: null,
-    logRawMessages: false
+    logRawMessages: false,
+    startupCheckTimer: 500,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+        CredentialsReceived: false,
+        DataFileReceived: false,
+    },
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
@@ -637,21 +644,21 @@ const triggersandactions =
 // Description: Starts the extension
 // Parameters: none
 // ----------------------------- notes ----------------------------------------
-// this funcion is required by the backend to start the extensions.
+// this function is required by the backend to start the extensions.
 // creates the connection to the data server and registers our message handlers
 // ============================================================================
 function initialise (app, host, port, heartbeat)
 {
-    logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "host", host, "port", port, "hoheartbeatst", heartbeat);
     if (typeof (heartbeat) != "undefined")
         localConfig.heartBeatTimeout = heartbeat;
     else
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heartbeat passed:", heartbeat);
 
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage,
             onDataCenterConnect, onDataCenterDisconnect, host, port);
+        startupCheck();
     } catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
@@ -683,7 +690,8 @@ function onDataCenterDisconnect (reason)
 // ===========================================================================
 function onDataCenterConnect (socket)
 {
-    // create our channel
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, serverConfig.channel));
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -705,10 +713,14 @@ function onDataCenterConnect (socket)
 // ===========================================================================
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "StreamRollerReady")
+        localConfig.readinessFlags.streamRollerReady = true;
+    else if (server_packet.type === "ConfigFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.ConfigReceived = true;
         // check it is our config
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.data != "" && server_packet.data.extensionname === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
@@ -729,6 +741,7 @@ function onDataCenterMessage (server_packet)
         // if it is empty we will use our current default and send it to the server 
         if (server_packet.to === serverConfig.extensionname)
         {
+            localConfig.readinessFlags.CredentialsReceived = true;
             //console.log("credentials file", server_packet)
             // check we have been sent something
             if (server_packet.data != "")
@@ -796,13 +809,18 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "DataFile")
     {
-        if (server_packet.data != "")
+        if (server_packet.to === serverConfig.extensionname)
         {
-            // check it is our data
-            if (server_packet.to === serverConfig.extensionname && server_packet.data.chatMessageBuffer.length > 0)
+            localConfig.readinessFlags.DataFileReceived = true;
+
+            if (server_packet.data != "")
             {
-                serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
-                SaveDataToServer();
+                // check it is our data
+                if (server_packet.to === serverConfig.extensionname && server_packet.data.chatMessageBuffer.length > 0)
+                {
+                    serverData.chatMessageBuffer = server_packet.data.chatMessageBuffer;
+                    SaveDataToServer();
+                }
             }
         }
     }
@@ -1269,7 +1287,7 @@ function findtriggerByMessageType (messagetype)
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
         if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return triggersandactions.triggers[i];
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
@@ -2196,6 +2214,43 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                           EXPORTS: initialise

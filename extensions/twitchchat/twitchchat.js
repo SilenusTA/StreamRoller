@@ -75,7 +75,13 @@ const localConfig = {
     //avoid swamping reconnection (needs to be higher than the above timer for connection)
     reconnectChatSchedulerTimeout: 3000,
     reconnectChatSchedulerHandle: [],
-
+    startupCheckTimer: 500,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+        CredentialsReceived: false,
+        DataFileReceived: false,
+    },
 };
 localConfig.twitchClient["bot"] = {
     connection: null,
@@ -676,6 +682,7 @@ function initialise (app, host, port, heartbeat)
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage,
             onDataCenterConnect, onDataCenterDisconnect, host, port);
+        startupCheck();
     } catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".initialise", "localConfig.DataCenterSocket connection failed:", err);
@@ -707,7 +714,8 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    // create our channel
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", localConfig.EXTENSION_NAME, serverConfig.channel));
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -735,10 +743,14 @@ function onDataCenterMessage (server_packet)
 {
     try
     {
-        if (server_packet.type === "ConfigFile")
+        if (server_packet.type === "StreamRollerReady")
+            localConfig.readinessFlags.streamRollerReady = true;
+        else if (server_packet.type === "ConfigFile")
         {
-            // check it is our config
-            if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.ConfigReceived = true;
+
+            if (server_packet.data != "" && server_packet.data.extensionname === serverConfig.extensionname)
             {
                 if (server_packet.data.__version__ != default_serverConfig.__version__)
                 {
@@ -755,8 +767,8 @@ function onDataCenterMessage (server_packet)
         }
         else if (server_packet.type === "CredentialsFile")
         {
-            // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-            // if it is empty we will use our current default and send it to the server 
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.CredentialsReceived = true;
             if (server_packet.to === serverConfig.extensionname)
             {
                 let changedUsers = [];
@@ -846,6 +858,9 @@ function onDataCenterMessage (server_packet)
         }
         else if (server_packet.type === "DataFile")
         {
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.DataFileReceived = true;
+
             if (server_packet.data != "")
             {
                 // check it is our data
@@ -1410,7 +1425,7 @@ function findtriggerByMessageType (messagetype)
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
         if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return triggersandactions.triggers[i];
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findtriggerByMessageType", "failed to find action", messagetype);
@@ -2527,6 +2542,42 @@ function sanitiseHTML (string)
     {
         return entityMap[s];
     });
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                           EXPORTS: initialise

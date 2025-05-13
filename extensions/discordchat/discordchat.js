@@ -49,7 +49,14 @@ const localConfig = {
         connected: false
     },
     DataCenterSocket: null,
-    discordToken: ""
+    discordToken: "",
+    startupCheckTimer: 500,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+        CredentialsReceived: false,
+        DataFileReceived: false,
+    },
 };
 //this object will be overwritten from the sever data if it exists
 const default_serverConfig = {
@@ -127,11 +134,12 @@ function initialise (app, host, port, heartbeat)
     if (typeof (heartbeat) != "undefined")
         localConfig.heartBeatTimeout = heartbeat;
     else
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heatbeat passed:", heartbeat);
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket no heartbeat passed:", heartbeat);
 
     try
     {
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect, host, port);
+        startupCheck();
     } catch (err)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".initialise", "DataCenterSocket connection failed:", err);
@@ -157,21 +165,17 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect ()
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".onDataCenterConnect", "Creating our channel");
-    // Request our config from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
-    // Request our credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
-    // Create/Join the channels we need for this
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestData", localConfig.EXTENSION_NAME));
-    // clear the previous timeout if we have one
     clearTimeout(localConfig.heartBeatHandle);
-    // start our heartbeat timer
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
 }
 // ============================================================================
@@ -183,11 +187,13 @@ function onDataCenterConnect ()
  */
 function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "StreamRollerReady")
+        localConfig.readinessFlags.streamRollerReady = true;
+    else if (server_packet.type === "ConfigFile")
     {
-        // check if there is a server config to use. This could be empty if it is our first run or we have never saved any config data before. 
-        // if it is empty we will use our current default and send it to the server 
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.ConfigReceived = true;
+        if (server_packet.data != "" && server_packet.data.extensionname === serverConfig.extensionname)
         {
             if (server_packet.data.__version__ != default_serverConfig.__version__)
             {
@@ -201,6 +207,8 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.CredentialsReceived = true;
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
             // temp code to change discord token name to newer variable. 
@@ -225,6 +233,9 @@ function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "DataFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.DataFileReceived = true;
+
         if (server_packet.data != "")
         {
             // check it is our config
@@ -863,6 +874,42 @@ function heartBeatCallback ()
         ),
     );
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout)
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                           EXPORTS: initialise

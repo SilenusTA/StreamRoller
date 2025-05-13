@@ -177,9 +177,7 @@ function onDataCenterConnect (socket)
  */
 function onDataCenterMessage (server_packet)
 {
-    // -------------------------------------------------------------------------------------------------
-    //                  RECEIVED CONFIG
-    // -------------------------------------------------------------------------------------------------
+
     if (server_packet.type === "ConfigFile")
     {
         // check it is our config
@@ -587,10 +585,18 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
     let match = true
     // we have the correct extension, channel and message type
     // lets check the variables to see if those are a match
+
+    // this just covers { MATCHER_sender: '1', sender: '' } part of teh parameter.
     pairing.trigger.data.forEach((param) =>
     {
         for (var i in param)
         {
+            let receivedParam = ""
+            if (typeof receivedTrigger.data.parameters[i] !== "undefined" && receivedTrigger.data.parameters[i] !== null)
+                receivedParam = receivedTrigger.data.parameters[i].toString().toLowerCase()
+            let checkParam = ""
+            if (typeof param[i] !== "undefined" && param[i] !== null)
+                checkParam = param[i].toString().toLowerCase()
             try
             {
                 // don't check the MATCHER variables as these are used to determine how to perform the match (Start of line etc)
@@ -598,43 +604,44 @@ function ProcessReceivedTrigger (pairing, receivedTrigger)
                 {
                     // get the relevant matcher for this value
                     let searchtype = param["MATCHER_" + i]
-                    if (typeof (receivedTrigger.data.parameters[i]) == "string")// && typeof param[i] === "string")
+
+                    if (receivedParam)// && typeof checkParam === "string")
                     {
                         switch (searchtype)
                         {
                             case "2"://match anywhere
-                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                if (checkParam != "" && receivedParam.indexOf(checkParam) == -1)
                                     match = false;
                                 break;
                             case "3"://match start of line only
-                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) != 0)
+                                if (checkParam != "" && receivedParam.indexOf(checkParam) != 0)
                                     match = false;
                                 break;
                             case "4"://doesn't match
-                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == 0)
+                                if (checkParam != "" && receivedParam.indexOf(checkParam) == 0)
                                     match = false;
                                 break;
                             case "5"://match complete word only
-                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase().indexOf(param[i].toLowerCase()) == -1)
+                                if (checkParam != "" && receivedParam.indexOf(checkParam) == -1)
                                 {
                                     match = false;
                                 }
                                 else
                                 {
-                                    let wordArray = receivedTrigger.data.parameters[i].split(" ")
+                                    let wordArray = receivedParam.split(" ")
                                     match = false;
-                                    if (wordArray.includes(param[i]))
+                                    if (wordArray.includes(checkParam))
                                         match = true;
                                 }
                                 break;
                             default:
                                 // check for exact match
-                                if (param[i] != "" && receivedTrigger.data.parameters[i].toLowerCase() != param[i].toLowerCase())
+                                if (checkParam != "" && receivedParam != checkParam)
                                     match = false;
                         }
                     }
                     //check non string types for not matching
-                    else if (param[i] != "" && receivedTrigger.data.parameters[i] != param[i])
+                    else if (checkParam != "" && receivedParam != checkParam)
                         match = false;
                 }
             }
@@ -738,7 +745,7 @@ function TriggerAction (action, triggerParams)
                             // remove the first number of words the user specified
                             for (var x = 0; x < wordNumber; x++)
                                 sourceArray.splice(0, 1)
-                            tempAction = sourceArray.join(" ").trim()
+                            tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray.join(" ").trim())
                         }
                         else
                         {
@@ -747,7 +754,7 @@ function TriggerAction (action, triggerParams)
                             sourceData.replaceAll("%%", "")
                             // split the data into an array so we can index the work the user wants
                             const sourceArray = sourceData.split(" ");
-                            tempAction = sourceArray[wordNumber]
+                            tempAction = tempAction.replace("%%" + sourceVar + "%%", sourceArray[wordNumber])
                         }
                     }
                     else

@@ -57,6 +57,13 @@ const localConfig = {
     updateCredentialsSchedulerTimeout: 500,//0.5sec
     setupUsersSchedulerHandle: null,
     setupUsersSchedulerTimeout: 10000,//10sec
+
+    startupCheckTimer: 500,
+    ready: false,
+    readinessFlags: {
+        ConfigReceived: false,
+        CredentialsReceived: false,
+    },
 };
 
 const default_serverConfig = {
@@ -78,6 +85,7 @@ let serverConfig = structuredClone(default_serverConfig)
 const default_serverCredentials =
 {
     version: "0.1",
+    ExtensionName: 'kick',
     kickApplicationClientId: "",
     kickApplicationSecret: "",
     streamerName: "", // streamer we are connecting to (ie channel for that streamer)
@@ -302,6 +310,7 @@ function start (host, port, nonce, clientId, heartbeat, setClientSecretFn)
 
         localConfig.DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect,
             onDataCenterDisconnect, host, port);
+        startupCheck();
 
     } catch (err)
     {
@@ -328,13 +337,12 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    // Request our config from the server
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestConfig", serverConfig.extensionname));
-    // Request our Credentials from the server
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("RequestCredentials", serverConfig.extensionname));
-    // Create a channel for messages to be sent out on
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
     localConfig.heartBeatHandle = setTimeout(heartBeatCallback, localConfig.heartBeatTimeout);
@@ -348,8 +356,12 @@ function onDataCenterConnect (socket)
  */
 async function onDataCenterMessage (server_packet)
 {
-    if (server_packet.type === "ConfigFile")
+    if (server_packet.type === "StreamRollerReady")
+        localConfig.readinessFlags.streamRollerReady = true;
+    else if (server_packet.type === "ConfigFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.ConfigReceived = true;
         if (server_packet.data && server_packet.data.extensionname
             && server_packet.data.extensionname === serverConfig.extensionname)
         {
@@ -395,6 +407,9 @@ async function onDataCenterMessage (server_packet)
     }
     else if (server_packet.type === "CredentialsFile")
     {
+        if (server_packet.to == serverConfig.extensionname)
+            localConfig.readinessFlags.CredentialsReceived = true;
+
         // we have a saved credentials file
         if (server_packet.to === serverConfig.extensionname && server_packet.data != "")
         {
@@ -421,16 +436,12 @@ async function onDataCenterMessage (server_packet)
         let extension_packet = server_packet.data;
         if (extension_packet.type === "RequestSettingsWidgetSmallCode")
         {
-            if (extension_packet.to === serverConfig.extensionname)
-            {
-                SendSettingsWidgetSmall(extension_packet.from);
-                updateCategoryTitleFromKick("Settings (Small) Request")
-            }
+            updateCategoryTitleFromKick("Settings (Small) Request")
+            SendSettingsWidgetSmall(extension_packet.from);
         }
         else if (extension_packet.type === "RequestSettingsWidgetLargeCode")
         {
-            if (extension_packet.to === serverConfig.extensionname)
-                SendSettingsWidgetLarge();
+            SendSettingsWidgetLarge();
         }
         else if (extension_packet.type === "SettingsWidgetSmallData")
         {
@@ -997,7 +1008,6 @@ function parseSettingsWidgetLarge (data, reference = "Kick")
         }
         else
         {
-            serverConfig.kickEnabled = "off";
             let credentialsChanged = false;
             for (const [key, value] of Object.entries(data))
                 if (serverConfig[key])
@@ -1017,8 +1027,8 @@ function parseSettingsWidgetLarge (data, reference = "Kick")
                 kickAPI.setCredentials(serverCredentials);
                 credentialsChanged = true;
             }
-            //if (credentialsChanged)
-            SaveCredentialsToServer("parseSettingsWidgetLarge")
+            if (credentialsChanged)
+                SaveCredentialsToServer("parseSettingsWidgetLarge")
 
         }
 
@@ -1228,7 +1238,7 @@ function findTriggerByMessageType (messagetype, reference = "Kick")
     for (let i = 0; i < triggersandactions.triggers.length; i++)
     {
         if (triggersandactions.triggers[i].messagetype.toLowerCase() == messagetype.toLowerCase())
-            return triggersandactions.triggers[i];
+            return structuredClone(triggersandactions.triggers[i]);
     }
     logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
         ".findTriggerByMessageType", "failed to find action", messagetype);
@@ -1291,32 +1301,29 @@ function onChatMessage (message)
 
             safeMessage = parsedTextMessage.replaceAll(key, "");
         }
-        let triggerToSend = findTriggerByMessageType("trigger_ChatMessageReceived")
+        let tr = findTriggerByMessageType("trigger_ChatMessageReceived")
         // kick appears to sanitise source text but lets replace unicode anyway
         safeMessage = safeMessage.replace(/[^\x00-\x7F]/g, "");
 
-        triggerToSend.parameters = {
-            triggerActionRef: "KickChatMessage",
-            type: "chat",
-            platform: "Kick",
-            htmlMessage: parsedTextMessage,
-            safeMessage: safeMessage,
-            color: message.sender.identity.color,
+        tr.parameters.triggerActionRef = "KickChatMessage";
+        tr.parameters.type = "chat";
+        tr.parameters.platform = "Kick";
+        tr.parameters.htmlMessage = parsedTextMessage;
+        tr.parameters.safeMessage = safeMessage;
+        tr.parameters.color = message.sender.identity.color;
+        // kick message data
+        tr.parameters.id = message.id;
+        tr.parameters.message = message.content;
+        tr.parameters.messagetype = message.type;
+        tr.parameters.timestamp = message.created_at;
+        tr.parameters.emotes = JSON.stringify(emotes);
 
-            // kick message data
-            id: message.id,
-            message: message.content,
-            messagetype: message.type,
-            timestamp: message.created_at,
-            emotes: JSON.stringify(emotes),
-
-            //kick author data
-            sender: message.sender.username,
-            senderId: message.sender.id,
-            senderBadges: message.sender.identity.badges,
-            roles: "viewer"
-        }
-        postTrigger(triggerToSend);
+        //kick author data
+        tr.parameters.sender = message.sender.username;
+        tr.parameters.senderId = message.sender.id;
+        tr.parameters.senderBadges = message.sender.identity.badges;
+        tr.parameters.roles = "viewer";
+        postTrigger(tr);
 
     }
     catch (err)
@@ -1711,6 +1718,42 @@ async function setupUsersScheduler ()
     checkForLiveStreams();
     sendAccountNames();
     //checkForLiveStreamsScheduler(serverCredentials.userId)
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * waits for config and credentials files to set ready flag
+ */
+function startupCheck ()
+{
+    const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+    if (allReady)
+    {
+        localConfig.ready = true;
+        try
+        {
+            postStartupActions();
+            // perform any startup stuff here that requires saved credentials and config
+        } catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+        }
+    }
+    else
+        setTimeout(startupCheck, localConfig.startupCheckTimer);
+}
+// ============================================================================
+//                           FUNCTION: startupCheck
+// ============================================================================
+/**
+ * At this point we should have any config/credentials loaded
+ */
+function postStartupActions ()
+{
+    // Let the server know we are now up and running.
+    sr_api.sendMessage(localConfig.DataCenterSocket,
+        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 }
 // ============================================================================
 //                                  EXPORTS

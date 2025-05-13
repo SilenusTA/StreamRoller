@@ -51,7 +51,7 @@ import * as server from "./server/server.js"
  * @param {number} port 
  * @param {number} heartbeat 
  */
-function initialise (app, host, port, heartbeat)
+function initialise (app, host, port, heartbeat, readyMessagefn)
 {
     config.heartBeatTimeout = heartbeat;
     app.use("/autopilot/", express.static(__dirname + "/public"));
@@ -72,6 +72,7 @@ function initialise (app, host, port, heartbeat)
                 }
             );
         });
+        readyMessagefn(config.EXTENSION_NAME)
     } catch (err)
     {
         logger.err(config.SYSTEM_LOGGING_TAG + config.EXTENSION_NAME + ".initialise", "initialise failed:", err);

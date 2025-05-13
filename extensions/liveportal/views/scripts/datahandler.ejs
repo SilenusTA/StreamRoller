@@ -169,6 +169,14 @@
 
         documentHiddenConnectHandler: null,
         documentHiddenConnectTimeout: 1000,
+
+        startupCheckTimer: 500,
+        ready: false,
+        readinessFlags: {
+            ConfigReceived: false,
+            DataFileReceived: false,
+        },
+        streamRollerReady: false
     }
     const chatcolors =
     {
@@ -246,8 +254,8 @@
                         .then(data => 
                         {
                             livePortalVolatileData.extensions[serverConfig.extensionname].settingswidgetlarge_placeholder = data
-                            resolve("Success");
                             checkForNewSoftwareVersion();
+                            resolve("Success");
                         })
                 })
                 .catch(error => console.log("LoadPages failed with error :", error))
@@ -285,18 +293,6 @@
 
     });
     // ============================================================================
-    //                           FUNCTION: scriptLoadFailed
-    // ============================================================================
-    // Description: Runs when a script fails to load (404 error)
-    function scriptLoadFailed (scriptname)
-    {
-        console.log("failed to load", scriptname, "reloading page")
-        setTimeout(() =>
-        {
-            location.reload();
-        }, 5000);
-    }
-    // ============================================================================
     //                           FUNCTION: ConnectToDataCenter
     // ============================================================================
     // Description: Connect to the data center socket
@@ -312,6 +308,7 @@
         {
             DataCenterSocket = sr_api.setupConnection(onDataCenterMessage, onDataCenterConnect, onDataCenterDisconnect,
                 host, port);
+            startupCheck();
         } catch (err)
         {
             console.log("datahandler.initialise", "DataCenterSocket connection failed:", err);
@@ -336,6 +333,11 @@
                 delete livePortalVolatileData.extensions[key];
         }
         livePortalVolatileData.channellist = {};
+        localConfig.streamRollerReady = false;
+        localConfig.ready = false;
+        localConfig.readinessFlags.ConfigReceived = false
+        localConfig.readinessFlags.ConfigReceived = false
+        localConfig.readinessFlags.DataFileReceived = false
         // clear out and reload the extensions list to make it obvious we have lost connetion
         loadExtensionCards([])
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = "<div style='color:red'>Server Disconnected<BR>Waiting for connection ...</div>";
@@ -351,10 +353,29 @@
     // ===========================================================================
     function onDataCenterConnect (socket)
     {
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("RequestConfig", serverConfig.extensionname
+            ));
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("RequestData", serverConfig.extensionname));
+
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
+        );
+        //request software version
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket(
+                "RequestSoftwareVersion",
+                serverConfig.extensionname,
+                serverConfig.channel
+            ));
+        startupCheck()
         // Request the stuff we need first here
         // We give the system some time to get things in and delay some of the longer stuff till the end (like the chat buffers) 
         // This is just to allow the extensions to get up and running
-        startupRequests();
+        //startupRequests();
     }
     // ============================================================================
     //                           FUNCTION: startupRequests
@@ -363,6 +384,11 @@
     // ============================================================================
     function startupRequests ()
     {
+        if (!localConfig.streamRollerReady)
+        {
+            setTimeout(startupRequests, 500)
+            return
+        }
         // check if we already have a handle
         if (localConfig.documentHiddenConnectHandler != null)
         {
@@ -381,26 +407,6 @@
         }
         localConfig.documentHiddenConnectHandler = setTimeout(() =>
         {
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket(
-                    "RequestConfig",
-                    serverConfig.extensionname
-                ));
-
-            //request software version
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket(
-                    "RequestSoftwareVersion",
-                    serverConfig.extensionname,
-                    serverConfig.channel
-                ));
-
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket("RequestData", serverConfig.extensionname));
-
-            sr_api.sendMessage(DataCenterSocket,
-                sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel)
-            );
             RequestExtList();
             RequestLoggingLevel();
             setTimeout(() =>
@@ -436,11 +442,12 @@
     // ===========================================================================
     function onDataCenterMessage (server_packet)
     {
-        // -------------------------------------------------------------------------------------------------
-        //                  RECEIVED CONFIG
-        // -------------------------------------------------------------------------------------------------
-        if (server_packet.type === "ConfigFile")
+        if (server_packet.type === "StreamRollerReady")
+            localConfig.streamRollerReady = true;
+        else if (server_packet.type === "ConfigFile")
         {
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.ConfigReceived = true;
 
             // check it is our config
             if (server_packet.data && server_packet.data.extensionname
@@ -492,6 +499,8 @@
         }
         else if (server_packet.type === "DataFile")
         {
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.DataFileReceived = true;
             if (server_packet.data == "")
             {
                 // server data is empty, possibly the first run of the code so just default it
@@ -592,11 +601,6 @@
             // -------------------------------------------------------------------------------------------------
             else if (extension_packet.type === "RequestSettingsWidgetSmallCode")
             {
-                if (extension_packet.from == "undefined")
-                {
-                    console.log("RequestSettingsWidgetSmallCode undefined from")
-                    console.log(extension_packet)
-                }
                 SendSettingsWidgetSmall(extension_packet.from);
             }
 
@@ -614,13 +618,16 @@
             {
                 // we process our own submits so don't do anything with the updates we send out if they come 
                 // back to us
-                if (extension_packet.from != serverConfig.extensionname && livePortalVolatileData.extensions[extension_packet.from])
+                //console.log(`Received SettingsWidgetSmallCode(ExtensionMessage) from ${extension_packet.from}`)
+                if (extension_packet.from != serverConfig.extensionname)
                 {
                     if (!livePortalVolatileData.extensions[extension_packet.from])
                         livePortalVolatileData.extensions[extension_packet.from] = {}
                     livePortalVolatileData.extensions[extension_packet.from].settingswidgetsmall = extension_packet.data
                     addSettingsWidgetSmall(extension_packet.from);
                 }
+
+
             }
             // -------------------------------------------------------------------------------------------------
             //                   RECEIVED EXTENSION MODAL CODE
@@ -851,6 +858,7 @@
             // -------------------------------------------------------------------------------------------------
             if (extension_packet.type === "SettingsWidgetSmallCode")
             {
+                //console.log(`Received SettingsWidgetSmallCode(ChannelData) from ${extension_packet.from}`)
                 // we process our own submits so don't do anything with the updates we send out if they come 
                 // back to us
                 if (extension_packet.from != serverConfig.extensionname && livePortalVolatileData.extensions[extension_packet.from])
@@ -1300,18 +1308,24 @@
         extensions.sort()
         // First we create all the links (these may be changed below if the extension has provided a modal box)
         var html = "<div>";
+        let floodTimer = 100;
+        let timer = 0
         for (var i = 0; i < extensions.length; i++)
         {
             // if we dont currently have that extension add it to the list and request the code for its settings
             // displays if it has them (done via callbacks over the websocket)
+
             if (typeof livePortalVolatileData.extensions[extensions[i]] == "undefined")
             {
                 livePortalVolatileData.extensions[extensions[i]] = {};
                 livePortalVolatileData.extensions[extensions[i]].display = false;
-                RequestSettingsWidgetSmallsCode(extensions[i]);
-                RequestSettingsWidgetLargeCode(extensions[i]);
-
             }
+            // check for small widget
+            if (typeof livePortalVolatileData.extensions[extensions[i]].settingswidgetsmall == "undefined")
+                RequestSettingsWidgetSmallsCode(extensions[i]);
+            // check for large widget
+            if (typeof livePortalVolatileData.extensions[extensions[i]].settingswidgetlarge == "undefined")
+                RequestSettingsWidgetLargeCode(extensions[i]);
 
             html += "<div id='" + extensions[i] + "_visibility_settingswidgetsmall' style='display: none;'> <span id='" + extensions[i] + "_status' class='extensioncardicon'>&#x2B24</span>";
             html += " <span id='" + extensions[i] + "_settingslinkname'>" + extensions[i] + "</span></div>";
@@ -1322,7 +1336,7 @@
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-title")[0].innerHTML = "ExtensionsList";
         document.getElementById("ExtensionsListCard").getElementsByClassName("card-text")[0].innerHTML = html;
 
-        // lets check if we have a previous settingswidgets cards for this extension and if so add it to the link above
+        // lets check if we have a previous card
         for (var i = 0; i < extensions.length; i++)
         {
             if (livePortalVolatileData.extensions[extensions[i]].settingswidgetsmall)
@@ -2510,7 +2524,6 @@
     // ===========================================================================
     async function processTwitchChatBuffer (chatdata)
     {
-        let counter = 0
         // as we have received a bufer lets delete the old data
         document.getElementById("ChatMessagesCardText").innerHTML = "";
 
@@ -2798,7 +2811,6 @@
     // ===========================================================================
     async function processDiscordChatBuffer (chatdata)
     {
-        let counter = 0
         // as we have received a bufer lets delete the old data
         document.getElementById("ModMessagesCardText").innerHTML = "";
         localConfig.modMessageBuffer = [];
@@ -3164,7 +3176,7 @@
     // ============================================================================
     //                           FUNCTION: parseKickChatMessage
     // ============================================================================
-    let counter = 0
+
     function parseKickChatMessage (chatdata)
     {
         try
@@ -3172,7 +3184,6 @@
             var today = new Date();
             let datestamp = new Date(today)
             let icons = "<img style='width: 20px;' alt='Kick' title='Kick' src='/liveportal/images/kick_icon.png'>"
-            console.log("counter =", counter)
             for (let bIndex = 0; bIndex < chatdata.senderBadges.length; bIndex++)
             {
                 if (chatdata.senderBadges[bIndex].type == "broadcaster")
@@ -4671,5 +4682,42 @@
         const minutes = (date.getMinutes()).padStart(2, '0');
         const seconds = (date.getSeconds()).padStart(2, '0');
         return year + "_" + month + "_" + day + "-" + hours + "_" + minutes + "_" + seconds
+    }
+    // ============================================================================
+    //                           FUNCTION: startupCheck
+    // ============================================================================
+    /**
+     * waits for config and credentials files to set ready flag
+     */
+    function startupCheck ()
+    {
+        const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+        if (allReady)
+        {
+            localConfig.ready = true;
+            try
+            {
+                postStartupActions();
+                // perform any startup stuff here that requires saved credentials and config
+            } catch (err)
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            }
+        }
+        else
+            setTimeout(startupCheck, localConfig.startupCheckTimer);
+    }
+    // ============================================================================
+    //                           FUNCTION: startupCheck
+    // ============================================================================
+    /**
+     * At this point we should have any config/credentials loaded
+     */
+    function postStartupActions ()
+    {
+        // Let the server know we are now up and running.
+        sr_api.sendMessage(DataCenterSocket,
+            sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
+        startupRequests()
     }
 </script>

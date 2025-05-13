@@ -64,17 +64,3 @@
         </div>
     </div>
 </nav>
-<script>
-    // ============================================================================
-    //                           FUNCTION: scriptLoadFailed
-    // ============================================================================
-    // Description: Runs when a script fails to load (404 error)
-    function scriptLoadFailed (scriptname)
-    {
-        console.log("failed to load", scriptname, "reloading page")
-        setTimeout(() =>
-        {
-            location.reload();
-        }, 5000);
-    }
-</script>
