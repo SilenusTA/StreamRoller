@@ -9,13 +9,13 @@ tools together, ie select a trigger and tell it what actions you want it to perf
 
 [See **all Trigger/Actions** Available here](https://github.com/SilenusTA/StreamRoller/blob/master/README_All_TRIGGERS.md)
 
-# Take control of your stream (```5,879,739``` Possibilities)
+# Take control of your stream (```5,895,549``` Possibilities)
 
 No other software out there gives you the same level of control over your stream in one App
 
-No. of possible combinations for a single trigger->action ```5,879,739```
+No. of possible combinations for a single trigger->action ```5,895,549```
 
-No. of user configurable Trigger / Action available: ```5,300```
+No. of user configurable Trigger / Action available: ```5,310```
 
 No. of possible chained commands ```infinite```
 

@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,300)
+### Current count (5,310)
 
-```Triggers: 3,719 / Actions: 1,581```
+```Triggers: 3,729 / Actions: 1,581```
 
 Contents
 
@@ -23,6 +23,7 @@ Contents
     - [philipshue](#philipshue)
     - [quizbot](#quizbot)
     - [randomfact](#randomfact)
+    - [streamelements](#streamelements)
     - [streamersonglist](#streamersonglist)
     - [streamlabs_api](#streamlabs_api)
     - [sysinfo](#sysinfo)
@@ -37,7 +38,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sat, 10 May 2025 04:31:03 GMT*## Extensions
+Table last updated: *Tue, 13 May 2025 05:22:43 GMT*## Extensions
 
 ## autopilot
 
@@ -5267,6 +5268,26 @@ Table last updated: *Sat, 10 May 2025 04:31:03 GMT*## Extensions
 | name | trigger | description |
 | --- | --- | --- |
 | RandfactRequest | action_RequestRandomFact | Requests a random fact |
+## streamelements
+
+### Triggers
+
+| name | trigger | description |
+| --- | --- | --- |
+| StreamElementsFollow | trigger_StreamElementsFollow | Someone followed on the platform specified |
+| StreamElementsCheer | trigger_StreamElementsCheer | Someone Cheered on the platform specified |
+| StreamElementsRaid | trigger_StreamElementsRaid | Someone Raided on the platform specified |
+| StreamElementsSubscription | trigger_StreamElementsSubscription | Someone Subscribed on the platform specified |
+| StreamElementsCommunityGiftPurchase | trigger_StreamElementsCommunityGiftPurchase | Someone gifted subs on the platform specified |
+| StreamElementsTip | trigger_StreamElementsTip | Someone Tip'd on the platform specified |
+| StreamElementsRedemption | trigger_StreamElementsRedemption | Someone Redeemed on the platform specified |
+| StreamElementsChannelPointsRedemption | trigger_StreamElementsChannelPointsRedemption | Someone Redeemed Channel Points on the platform specified |
+| StreamElementsMerch | trigger_StreamElementsMerch | Someone purchased something on the platform specified, items will contain the 'name price quantity' for that item. Multiple item purchase will have a trigger for each item even if brought in one purchase |
+| charityDonation | trigger_StreamElementsCharityDonation | Charity Campaign Donation |
+### Actions
+
+| name | trigger | description |
+| --- | --- | --- |
 ## streamersonglist
 
 ### Triggers
