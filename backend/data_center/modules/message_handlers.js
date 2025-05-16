@@ -146,16 +146,24 @@ function saveData (extensionname, data)
  */
 function sendExtensionList (clientsocket, extensionname, extensions)
 {
-    let names = [];
-    for (const [key, value] of Object.entries(extensions))
+    try
     {
-        names.push(key);
+        let names = [];
+        for (const [key, value] of Object.entries(extensions))
+        {
+            names.push(key);
+        }
+        logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendExtensionList", "sending ExtensionList to " + extensionname);
+        let msg = sr_api.ServerPacket("ExtensionList", EXTENSION_NAME, names, "", extensionname);
+        if (monitorSocketSentData)
+            socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
+        clientsocket.emit("message", msg);
     }
-    logger.log("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendExtensionList", "sending ExtensionList to " + extensionname);
-    let msg = sr_api.ServerPacket("ExtensionList", EXTENSION_NAME, names, "", extensionname);
-    if (monitorSocketSentData)
-        socketSentSize = socketSentSize + Buffer.byteLength(JSON.stringify(msg))
-    clientsocket.emit("message", msg);
+    catch (error)
+    {
+        if (!clientsocket)
+            logger.err("[" + SYSTEM_LOGGING_TAG + "]message_handlers.sendExtensionList", "Error: clientsocket null " + clientsocket, "extensionname:", extensionname, "extensions:", extensions);
+    }
 }
 // ============================================================================
 //                           FUNCTION: sendChannelList

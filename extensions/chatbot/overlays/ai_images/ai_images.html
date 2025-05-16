@@ -27,25 +27,19 @@
 <head>
       <meta charset="UTF-8">
       <title>Ai_images</title>
-      <link rel="stylesheet"
-            type="text/css"
-            href="./ai_images.css">
-      <link rel="icon"
-            href="./favicon.ico"
-            type="ai_images/x-icon">
+      <link rel="stylesheet" type="text/css" href="./ai_images.css">
+      <link rel="icon" href="./favicon.ico" type="ai_images/x-icon">
 </head>
 <!-- page body -->
 
 <body>
       <main>
-            <div id="ai_imagescontent"
-                  class="ai_imagescontent">
+            <div id="ai_imagescontent" class="ai_imagescontent">
                   <div id="data"></div>
             </div>
       </main>
       <!-- socket.io need to connect to StreamRoller -->
-      <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js'
-            type='text/javascript'></script>
+      <script src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.js' type='text/javascript'></script>
       <!-- StreamRoller API -->
       <script src="../../../../backend/data_center/public/streamroller-message-api.cjs"></script>
       <!-- code to handle StreamRoller messages -->
@@ -63,7 +57,12 @@
                         backgroundalpha: "0",
                         duration: "5000",
                         handleGalleryTimer: null
-                  }
+                  },
+                  startupCheckTimer: 500,
+                  ready: false,
+                  readinessFlags: {
+                        Ready: false,// no setup stuff required
+                  },
             }
             // actions will be used to send data to the overlay
             const triggersandactions =
@@ -113,8 +112,8 @@
             // --------------------------------------------------------------
             function onConnect ()
             {
-                  console.log("connected")
-                  sendTriggersAndActions("");
+                  readinessFlags.Ready = true;
+                  startupCheck();
             }
             // --------------------------------------------------------------
             // FUNCTION: onDisconnect
@@ -128,8 +127,10 @@
             // --------------------------------------------------------------
             function onDataCenterMessage (server_packet)
             {
+                  if (server_packet.type === "StreamRollerReady")
+                        localConfig.readinessFlags.streamRollerReady = true;
                   // Extensions message are messages sent direct to us
-                  if (server_packet.type == "ExtensionMessage")
+                  else if (server_packet.type == "ExtensionMessage")
                   {
                         let extension_packet = server_packet.data;
                         // --------------------------------------------------------------
@@ -244,6 +245,43 @@
                               updateImage(index + 1)
                         }, data.duration);
                   }
+            }
+            // ============================================================================
+            //                           FUNCTION: startupCheck
+            // ============================================================================
+            /**
+             * waits for config and credentials files to set ready flag
+             */
+            function startupCheck ()
+            {
+                  const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+                  if (allReady)
+                  {
+                        localConfig.ready = true;
+                        try
+                        {
+                              postStartupActions();
+                              // perform any startup stuff here that requires saved credentials and config
+                        } catch (err)
+                        {
+                              logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+                        }
+                  }
+                  else
+                        setTimeout(startupCheck, localConfig.startupCheckTimer);
+            }
+            // ============================================================================
+            //                           FUNCTION: startupCheck
+            // ============================================================================
+            /**
+             * At this point we should have any config/credentials loaded
+             */
+            function postStartupActions ()
+            {
+                  // Let the server know we are now up and running.
+                  sr_api.sendMessage(localConfig.DataCenterSocket,
+                        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
+                  sendTriggersAndActions("");
             }
       </script>
 </body>

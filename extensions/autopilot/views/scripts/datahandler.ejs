@@ -40,7 +40,12 @@
         heartBeatTimeout: "6000",
         connected: true,
         DataCenterSocket: null,
-        extensionList: null
+        extensionList: null,
+        startupCheckTimer: 500,
+        ready: false,
+        readinessFlags: {
+            ConfigReceived: false,
+        },
     }
 
     var host = '<%= host %>';
@@ -84,6 +89,9 @@
         //    sr_api.ServerPacket("CreateChannel", serverConfig.extensionname, serverConfig.channel));
 
         sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
+
+        sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket(
                 "RequestConfig",
                 serverConfig.extensionname
@@ -98,17 +106,8 @@
                 serverConfig.extensionname,
                 ""//serverConfig.channel
             ));
-
-        sr_api.sendMessage(localConfig.DataCenterSocket,
-            sr_api.ServerPacket(
-                "JoinChannel",
-                serverConfig.extensionname,
-                "AUTOPILOT_BE"
-            ));
-        RequestExtList();
-        RequestMacroImages();
-        RequestUserTriggers()
         //heartBeatCallback();
+        startupCheck();
         localConfig.connected = true;
     }
     // ============================================================================
@@ -116,11 +115,23 @@
     // ============================================================================
     function onDataCenterMessage (server_packet)
     {
-        // -------------------------------------------------------------------------------------------------
-        //                  RECEIVED CONFIG
-        // -------------------------------------------------------------------------------------------------
-        if (server_packet.type === "ConfigFile")
+        if (server_packet.type === "StreamRollerReady")
         {
+            localConfig.readinessFlags.streamRollerReady = true;
+            sr_api.sendMessage(localConfig.DataCenterSocket,
+                sr_api.ServerPacket(
+                    "JoinChannel",
+                    serverConfig.extensionname,
+                    "AUTOPILOT_BE"
+                ));
+            RequestExtList();
+            RequestMacroImages();
+            RequestUserTriggers()
+        }
+        else if (server_packet.type === "ConfigFile")
+        {
+            if (server_packet.to == serverConfig.extensionname)
+                localConfig.readinessFlags.ConfigReceived = true;
 
             // check it is our config
             if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
@@ -286,18 +297,6 @@
                         ));
                 }, 10000);
             }
-            //else
-            //console.log(".onDataCenterMessage", "Channel " + server_packet.channel + " doesn't exist, skipping rejoin (extension has probably not started up and created a channel yet", server_packet.data);
-
-            // -------------------------------------------------------------------------------------------------
-            //                           IGNORING THESE MESSAGE (to save loging them)
-            // -------------------------------------------------------------------------------------------------
-        } else if (server_packet.type === "ChannelJoined"
-            || server_packet.type === "ChannelCreated"
-            || server_packet.type === "ChannelLeft"
-        )
-        {
-            // just a blank handler for items we are not using to avoid message from the catchall
         }
         // ------------------------------------------------ unknown message type received -----------------------------------------------
         else
@@ -394,5 +393,42 @@
         imagehtml += "</div>"
         ele.innerHTML = imagehtml
     }
+    // ============================================================================
+    //                           FUNCTION: startupCheck
+    // ============================================================================
+    /**
+     * waits for config and credentials files to set ready flag
+     */
+    function startupCheck ()
+    {
+        const allReady = Object.values(localConfig.readinessFlags).every(flag => flag);
+        if (allReady)
+        {
+            localConfig.ready = true;
+            try
+            {
+                postStartupActions();
+                // perform any startup stuff here that requires saved credentials and config
+            } catch (err)
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            }
+        }
+        else
+            setTimeout(startupCheck, localConfig.startupCheckTimer);
+    }
+    // ============================================================================
+    //                           FUNCTION: startupCheck
+    // ============================================================================
+    /**
+     * At this point we should have any config/credentials loaded
+     */
+    function postStartupActions ()
+    {
+        console.log("sending ExtensionReady")
+        // Let the server know we are now up and running.
+        sr_api.sendMessage(localConfig.DataCenterSocket,
+            sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
 
+    }
 </script>

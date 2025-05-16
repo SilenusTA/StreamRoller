@@ -253,6 +253,7 @@ const triggersandactions =
  */
 function extensionReadinessCheckScheduler ()
 {
+    localConfig.StartupMaxTimeCounter = 0;
     clearTimeout(localConfig.StartupIntervalHandle)
     localConfig.StartupIntervalHandle = setInterval(() =>
     {
@@ -387,6 +388,13 @@ function onDisconnect (socket, reason)
 {
     // set the extension as disconnected
     let ext = Object.keys(localConfig.extensions).find((entry) => (localConfig.extensions[entry].socket != undefined && localConfig.extensions[entry].socket.id == socket.id))
+
+    if (localConfig.extensions[ext])
+    {
+        localConfig.extensions[ext].state = "disconnected"
+        localConfig.StartupMaxTimeCounter = 0;
+    }
+
     localConfig.connected_extensionlist[ext] = socket.connected
     // the disconnected extension previously was on our requesters list so we need to remove it
     if (localConfig.extensionlist_requesters.includes(ext))
@@ -433,7 +441,7 @@ function onMessage (socket, server_packet)
     // these will be extension not started by the server
     if (typeof (localConfig.extensions[server_packet.from]) === "undefined" || !localConfig.extensions[server_packet.from])
     {
-        localConfig.extensions[server_packet.from] = {};
+        localConfig.extensions[server_packet.from] = { state: "connecting" };
         // added new extension so restart the check
         extensionReadinessCheckScheduler();
     }
@@ -643,7 +651,10 @@ function updateExtensionsListRequesters ()
         localConfig.extensionlist_requesters_handles[localConfig.extensionlist_requesters[i]] = setTimeout(() =>
         {
             // send the connected extension list
-            mh.sendExtensionList(localConfig.extensions[localConfig.extensionlist_requesters[i]].socket, localConfig.extensionlist_requesters[i], localConfig.connected_extensionlist);
+            if (localConfig.extensions[localConfig.extensionlist_requesters[i]].socket)
+                mh.sendExtensionList(localConfig.extensions[localConfig.extensionlist_requesters[i]].socket, localConfig.extensionlist_requesters[i], localConfig.connected_extensionlist);
+            else
+                logger.err("[" + localConfig.serverConfig.SYSTEM_LOGGING_TAG + "]server_socket.updateExtensionsListRequesters", "Attempt to send to invalid socket for requesters", localConfig.extensionlist_requesters[i]);
         }, 2000);
     }
     // update users who have requested the full list (even extensions without sockets)
@@ -653,8 +664,12 @@ function updateExtensionsListRequesters ()
         clearTimeout(localConfig.all_extensionlist_requesters_handles[localConfig.all_extensionlist_requesters[i]])
         localConfig.all_extensionlist_requesters_handles[localConfig.all_extensionlist_requesters[i]] = setTimeout(() =>
         {
-            // send the connected extension list
-            mh.sendExtensionList(localConfig.extensions[localConfig.all_extensionlist_requesters[i]].socket, localConfig.all_extensionlist_requesters[i], localConfig.extensions);
+            if (localConfig.extensions[localConfig.all_extensionlist_requesters[i]].socket)
+                // send the connected extension list
+                mh.sendExtensionList(localConfig.extensions[localConfig.all_extensionlist_requesters[i]].socket, localConfig.all_extensionlist_requesters[i], localConfig.extensions);
+            else
+                logger.err("[" + localConfig.serverConfig.SYSTEM_LOGGING_TAG + "]server_socket.updateExtensionsListRequesters", "Attempt to send to invalid socket for requesters All extensions", localConfig.all_extensionlist_requesters[i]);
+
         }, 2000);
     }
 }
