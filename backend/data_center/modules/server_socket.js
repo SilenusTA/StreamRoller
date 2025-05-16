@@ -254,7 +254,8 @@ const triggersandactions =
 function extensionReadinessCheckScheduler ()
 {
     localConfig.StartupMaxTimeCounter = 0;
-    clearTimeout(localConfig.StartupIntervalHandle)
+    clearTimeout(localConfig.StartupIntervalHandle);
+    mh.broadcastMessage(localConfig.server_socket, sr_api.ServerPacket("StreamRollerUpdating", localConfig.extensionname, {}))
     localConfig.StartupIntervalHandle = setInterval(() =>
     {
         extensionReadinessCheck()

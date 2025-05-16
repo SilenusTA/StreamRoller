@@ -23,12 +23,12 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
 import * as fs from "fs";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import socketIo from "socket.io-client_2.2.0";
+import { fileURLToPath } from 'url';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 
 // debugging
 //import { file_log } from './filelog.js'
@@ -1080,7 +1080,7 @@ function startupCheck ()
             postStartupActions();
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", err);
         }
     }
     else

@@ -4250,7 +4250,7 @@ function startupCheck ()
             // perform any startup stuff here that requires saved credentials and config
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", err);
         }
     }
     else
@@ -4270,3 +4270,4 @@ function postStartupActions ()
 }
 
 export { start, triggersandactions };
+

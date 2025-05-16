@@ -26,12 +26,12 @@
 // ============================================================================
 //                           IMPORTS/VARIABLES
 // ============================================================================
-import * as logger from "../../backend/data_center/modules/logger.js";
-import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
-import si from 'systeminformation';
 import * as fs from "fs";
 import { dirname } from 'path';
+import si from 'systeminformation';
 import { fileURLToPath } from 'url';
+import * as logger from "../../backend/data_center/modules/logger.js";
+import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const localConfig = {
@@ -757,7 +757,7 @@ function startupCheck ()
             // perform any startup stuff here that requires saved credentials and config
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", err);
         }
     }
     else
@@ -779,3 +779,4 @@ function postStartupActions ()
 //                                  EXPORTS
 // ============================================================================
 export { initialise, triggersandactions };
+
