@@ -112,7 +112,7 @@
             // --------------------------------------------------------------
             function onConnect ()
             {
-                  readinessFlags.Ready = true;
+                  localConfig.readinessFlags.Ready = true;
                   startupCheck();
             }
             // --------------------------------------------------------------
@@ -234,11 +234,7 @@
                         //document.getElementById("data").innerHTML = "url('" + data.url.replace(".jpg", ".txt") + "')"
                         //$("#data").load(data.url.replace(".jpg", ".txt"))
                         //document.getElementById("data").innerHTML = readTextFile(data.url.replace(".jpg", ".txt"))
-                        document.getElementById("data").innerHTML = "<span>" +
-                              "Username: " + data.requester +
-                              "<BR>Prompt: " + data.prompt +
-                              //"<BR>RevisedPrompt: " + data.revisedPrompt +
-                              "</span>"
+                        document.getElementById("data").innerHTML = "<span style='position: absolute; bottom: 0px;   left: 0%;'>" + "Username: " + data.requester + "<BR>Prompt: " + data.prompt + "</span>"
 
                         localConfig.settings.handleGalleryTimer = setTimeout(() =>
                         {
@@ -264,7 +260,7 @@
                               // perform any startup stuff here that requires saved credentials and config
                         } catch (err)
                         {
-                              logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+                              console.log("startupCheck calling postStartupActions Error:", err);
                         }
                   }
                   else
@@ -280,7 +276,7 @@
             {
                   // Let the server know we are now up and running.
                   sr_api.sendMessage(localConfig.DataCenterSocket,
-                        sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
+                        sr_api.ServerPacket("ExtensionReady", localConfig.extensionname));
                   sendTriggersAndActions("");
             }
       </script>
