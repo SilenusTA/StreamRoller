@@ -848,49 +848,52 @@ async function updateCategoryTitleFromKick (reference = "Kick")
 {
     try
     {
-        if (serverConfig.channelData)
+        if (serverConfig.kickEnabled == "on")
         {
-            localConfig.kickChannel = await kickAPI.getChannel(serverCredentials.userId);
-            // kickChannel does not include any category data unless live
-            // update our category
-            if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category && localConfig.kickChannel.data[0].category.name != "")
+            if (serverConfig.channelData)
             {
-                serverConfig.currentCategoryId = localConfig.kickChannel.data[0].category.id;
-                serverConfig.currentCategoryName = localConfig.kickChannel.data[0].category.name;
-                serverConfig.currentCategoryUrl = localConfig.kickChannel.data[0].category.thumbnail;
-                // check if we need to add this to our history list
-                let historyCategoryIndex = serverConfig.kickCategoriesHistory.findIndex(x => x.name === serverConfig.currentCategoryName);
-                // is this a new title
-                if (historyCategoryIndex == -1)
-                    serverConfig.kickCategoriesHistory.push({ id: serverConfig.currentCategoryId, name: serverConfig.currentCategoryName });
-                sendCategoryTrigger(reference);
-            }
-            else
-            {
-                // if the above fails (might not be live), then attempt to get the last game we had set and update
-                // the data from that
-                let category = null;
-                if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != null && serverConfig.currentCategoryId != -1)
+                localConfig.kickChannel = await kickAPI.getChannel(serverCredentials.userId);
+                // kickChannel does not include any category data unless live
+                // update our category
+                if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].category && localConfig.kickChannel.data[0].category.name != "")
                 {
-                    category = await kickAPI.getCategory(serverConfig.currentCategoryId);
-                    serverConfig.currentCategoryId = category.data.id;
-                    serverConfig.currentCategoryName = category.data.name;
-                    serverConfig.currentCategoryUrl = category.data.thumbnail;
+                    serverConfig.currentCategoryId = localConfig.kickChannel.data[0].category.id;
+                    serverConfig.currentCategoryName = localConfig.kickChannel.data[0].category.name;
+                    serverConfig.currentCategoryUrl = localConfig.kickChannel.data[0].category.thumbnail;
+                    // check if we need to add this to our history list
+                    let historyCategoryIndex = serverConfig.kickCategoriesHistory.findIndex(x => x.name === serverConfig.currentCategoryName);
+                    // is this a new title
+                    if (historyCategoryIndex == -1)
+                        serverConfig.kickCategoriesHistory.push({ id: serverConfig.currentCategoryId, name: serverConfig.currentCategoryName });
+                    sendCategoryTrigger(reference);
                 }
-            }
-            // update our title
-            if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].stream_title)
-            {
+                else
+                {
+                    // if the above fails (might not be live), then attempt to get the last game we had set and update
+                    // the data from that
+                    let category = null;
+                    if (serverConfig.currentCategoryId && serverConfig.currentCategoryId != null && serverConfig.currentCategoryId != -1)
+                    {
+                        category = await kickAPI.getCategory(serverConfig.currentCategoryId);
+                        serverConfig.currentCategoryId = category.data.id;
+                        serverConfig.currentCategoryName = category.data.name;
+                        serverConfig.currentCategoryUrl = category.data.thumbnail;
+                    }
+                }
                 // update our title
-                serverConfig.currentTitle = localConfig.kickChannel.data[0].stream_title;
-                // add title to history if not already there
-                let historyTitleIndex = serverConfig.kickTitlesHistory.findIndex(x => x === serverConfig.currentTitle);
-                // is this a new title
-                if (historyTitleIndex == -1)
-                    serverConfig.lastSelectedKickTitleId = serverConfig.kickTitlesHistory.push(serverConfig.currentTitle) - 1
-                sendTitleTrigger(reference);
+                if (localConfig.kickChannel && localConfig.kickChannel.data && localConfig.kickChannel.data[0].stream_title)
+                {
+                    // update our title
+                    serverConfig.currentTitle = localConfig.kickChannel.data[0].stream_title;
+                    // add title to history if not already there
+                    let historyTitleIndex = serverConfig.kickTitlesHistory.findIndex(x => x === serverConfig.currentTitle);
+                    // is this a new title
+                    if (historyTitleIndex == -1)
+                        serverConfig.lastSelectedKickTitleId = serverConfig.kickTitlesHistory.push(serverConfig.currentTitle) - 1
+                    sendTitleTrigger(reference);
+                }
+                SendSettingsWidgetSmall();
             }
-            SendSettingsWidgetSmall();
         }
     }
     catch (err)
