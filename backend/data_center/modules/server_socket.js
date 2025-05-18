@@ -474,9 +474,9 @@ function onMessage (socket, server_packet)
     }
     // process the clients request
     if (server_packet.type === "ExtensionConnected")
-        localConfig.extensions[server_packet.from] = { state: "connected" };
+        localConfig.extensions[server_packet.from].state = "connected";
     else if (server_packet.type === "ExtensionReady")
-        localConfig.extensions[server_packet.from] = { state: "ready" };
+        localConfig.extensions[server_packet.from].state = "ready";
     else if (server_packet.type === "RequestSoftwareVersion")
         mh.sendSoftwareVersion(socket, server_packet.from);
     else if (server_packet.type === "RequestConfig")
