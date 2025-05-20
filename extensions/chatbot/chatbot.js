@@ -42,9 +42,11 @@
  * Requires OpenAI account.
  * 
  */
-import { Configuration, OpenAIApi } from "openai";
+import { OpenAI as OpenAIApi } from "openai";
+
 import * as logger from "../../backend/data_center/modules/logger.js";
 // extension helper provides some functions to save you having to write them.
+import { Buffer } from 'buffer';
 import * as fs from "fs";
 import https from "https";
 import sr_api from "../../backend/data_center/public/streamroller-message-api.cjs";
@@ -90,7 +92,7 @@ const localConfig = {
     },
 };
 const default_serverConfig = {
-    __version__: "0.6",
+    __version__: "0.7",
     extensionname: localConfig.EXTENSION_NAME,
     channel: localConfig.OUR_CHANNEL,
     chatbotname: "NONAMESET",
@@ -119,27 +121,26 @@ const default_serverConfig = {
     // slow the response down as if someone has actually type it
     chatbottypingdelay: "0.2",
     // setup the personality of the chatbot
-    listofmodels: ["gpt-3.5-turbo", "gpt-4"],
     defaultsettings:
     {
-        model: "gpt-3.5-turbo",
+        model: "gpt-4.1-nano",
         temperature: "0.8",
         max_tokens: "110",
         //profiletouse :"0" TBD later
     },
     // auto response settings
-    chatbotautoresponseengine: "gpt-3.5-turbo",
+    chatbotautoresponseengine: "gpt-4.1-nano",
     chatbotautoresponsetemperature: "1.2",
     chatbotautoresponsemaxtokenstouse: "110",
     // #### Note CHATBOTTRIGGERNAME will get replaced with the bot name from twitchchat extension or user settings page ####
     chatbotnametriggertag: "CHATBOTTRIGGERNAME",
-    chatbotnametriggerengine: "gpt-3.5-turbo",
+    chatbotnametriggerengine: "gpt-4.1-nano",
     chatbotnametriggertagstartofline: "on",
     chatbotnametriggertemperature: "1.2",
     chatbotnametriggermaxtokenstouse: "110",
 
     // query tag is the chat text to look for to send a direct question/message to openAI GPT
-    chatbotqueryengine: "gpt-3.5-turbo",
+    chatbotqueryengine: "gpt-4.1-nano",
     chatbotquerytag: "?",
     chatbotquerytagstartofline: "on",
     chatbotquerytemperature: "0.4",
@@ -147,9 +148,24 @@ const default_serverConfig = {
 
     // Translate the following text to english 
     translatetoengtag: "ToEng",
-    translatetoengengine: "gpt-3.5-turbo",
+    translatetoengengine: "gpt-4.1-nano",
     translatetoengtagtemperature: "0.4",
     translatetoengtagmaxtokenstouse: "110",
+
+    // image settings
+    imageModels: ["dall-e-3", "gpt-image-1"],
+    currentimageModel: 0,
+    imageSizes: [
+        ["1024x1024", "1792x1024", "1024x1792"],
+        ["1024x1024", "1536x1024", "1024x1536", "auto"],
+    ],
+    currentchatbotImageSize: [0, 0],
+
+    imageQualities: [
+        ["auto", "standard", "hd"],
+        ["auto", "low", "medium", "high"],
+    ],
+    currentchatbotImageQuality: [0, 0],
 
     currentprofile: "0",
     chatbotprofiles: [
@@ -298,26 +314,6 @@ const default_serverConfig = {
             a4: ""
         }
     ],
-
-    /*chattemperature: "0.4",
- questiontemperature: "0.1",
- maxtokenstouse: "110",
- // openAI settings. we use different settings for a question to the general bot responses
- settings: {
-     chatmodel: {
-         //model: "text-davinci-003",
-         model: "gpt-3.5-turbo",
-         temperature: "0.8", // will be overwritten by chattemperature
-         max_tokens: "110", // note twich chat is somewhere around 125 tokens +- lenght of words in responce
-     },
-     // different settings available for direct questions
-     questionmodel: {
-         model: "gpt-3.5-turbo",
-         temperature: "0.1",// will be overwritten by questiontemperature
-         max_tokens: "110",
-     },
- },
-*/
     // =============================
     // debug dialog variables
     // =============================
@@ -421,14 +417,6 @@ const triggersandactions =
                     maxtokens_UIDescription: "(Optional)Maximum tokens to use for this message (limits response length)",
                 }
             },
-
-
-
-
-
-
-
-
             {
                 name: "OpenAIChatbotProcessImage",
                 displaytitle: "Process Image",
@@ -496,7 +484,6 @@ function onDataCenterDisconnect (reason)
  */
 function onDataCenterConnect (socket)
 {
-    logger.log(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".onDataCenterConnect", "Creating our channel");
     sr_api.sendMessage(localConfig.DataCenterSocket,
         sr_api.ServerPacket("ExtensionConnected", serverConfig.extensionname));
     sr_api.sendMessage(localConfig.DataCenterSocket,
@@ -534,21 +521,44 @@ function onDataCenterMessage (server_packet)
     {
         if (server_packet.to == serverConfig.extensionname)
             localConfig.readinessFlags.ConfigReceived = true;
-        // if we have data and it is for us ...
-        if (server_packet.data != "" && server_packet.to === serverConfig.extensionname)
+        if (!server_packet.data || server_packet.data == "")
         {
-            // check for updates to the version
-            if (server_packet.data.__version__ != default_serverConfig.__version__)
+            serverConfig = structuredClone(default_serverConfig);
+            SaveConfigToServer();
+        }
+        else if (server_packet.data && server_packet.data.extensionname
+            && server_packet.data.extensionname === serverConfig.extensionname)
+        {
+            let configSubVersions = 0;
+            let defaultSubVersions = default_serverConfig.__version__.split('.');
+            configSubVersions = server_packet.data.__version__.split('.')
+            if (configSubVersions[0] != defaultSubVersions[0])
             {
+                // Major version number change. Replace config with defaults
+                // perform a deep clone overwriting our server config.
                 serverConfig = structuredClone(default_serverConfig);
+                // notify the user their config has been updated.
                 console.log("\x1b[31m" + serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__ + ". Your settings may have changed" + "\x1b[0m");
+                SaveConfigToServer();
+            }
+            else if (configSubVersions[1] != defaultSubVersions[1])
+            {
+                // Minor version number change. Overwrite config with defaults
+                // perform a merge replacing any values we currently have and keeping the new variables
+                serverConfig = { ...default_serverConfig, ...server_packet.data };
+                // update the version number to the current default number
+                serverConfig.__version__ = default_serverConfig.__version__;
+                console.log(serverConfig.extensionname + " ConfigFile Updated", "The config file has been Updated to the latest version v" + default_serverConfig.__version__);
+                SaveConfigToServer();
             }
             else
+            {
+                // no version number changed so we can just use the saved file
                 serverConfig = structuredClone(server_packet.data);
-
-            SaveConfigToServer();
-            startChatbotTimer();
+            }
         }
+        SaveConfigToServer();
+        startChatbotTimer();
     }
     else if (server_packet.type === "ExtensionMessage")
     {
@@ -571,6 +581,7 @@ function onDataCenterMessage (server_packet)
             }
         }
         // old message previously sent directly from twitch
+        // need to change this and use trigger action_ProcessChatMessage instead
         else if (extension_packet.type === "action_ProcessText")
         {
             if (extension_packet.to === serverConfig.extensionname)
@@ -625,7 +636,7 @@ function onDataCenterMessage (server_packet)
         else if (extension_packet.type === "action_ProcessImage")
         {
             if (extension_packet.to === serverConfig.extensionname)
-                createImageFromAction(extension_packet.data, true);
+                createImageFromAction(extension_packet.data, extension_packet.data.platform, extension_packet.data.triggerActionRef);
         }
         else if (extension_packet.type === "action_ChangeProfile")
         {
@@ -943,6 +954,13 @@ function handleSettingsWidgetLargeData (modalcode)
             serverConfig.chatbotprofiles[i]["a" + j] = modalcode["p" + i + "a" + j]
         }
     }
+    serverConfig.currentimageModel = modalcode.OpenAIImageModelDropdownSelector;
+    serverConfig.currentchatbotImageSize[0] = modalcode.OpenAIImageSize_0DropdownSelector;
+    serverConfig.currentchatbotImageSize[1] = modalcode.OpenAIImageSize_1DropdownSelector;
+    serverConfig.currentchatbotImageQuality[0] = modalcode.OpenAIImageQuality_0DropdownSelector;
+    serverConfig.currentchatbotImageQuality[1] = modalcode.OpenAIImageQuality_1DropdownSelector;
+
+
 }
 // ===========================================================================
 //                           FUNCTION: SendSettingsWidgetSmall
@@ -1112,6 +1130,56 @@ function SendSettingsWidgetLarge (to)
             }
             modalstring = modalstring.replace("chatbotprofileoptionssplaceholder", optioncode);
             modalstring = modalstring.replace("chatbotprofileandbehavioursplaceholder", profilecode);
+
+            // Image Generation Model
+            let imageModelSelector = "<h4>Image Models</H4>"
+            imageModelSelector +=
+                `<select class="selectpicker btn-secondary" data-style="btn-danger" style="max-width: 85%;" title="Model For Image Generation"  id="OpenAIImageModelDropdownSelector" value="${serverConfig.currentimageModel}" name="OpenAIImageModelDropdownSelector" required="">`
+            // model selection
+            serverConfig.imageModels.forEach((name, i) => 
+            {
+                if (i == serverConfig.currentimageModel)
+                    imageModelSelector += `<option value="${i}" selected>${name}</option>`
+                else
+                    imageModelSelector += `<option value="${i}">${name}</option>`
+            });
+            imageModelSelector += `</select>`
+            // loop again to add model options
+            imageModelSelector += "<h4>Model Options</h4>"
+            imageModelSelector += "<HR>"
+            serverConfig.imageModels.forEach((name, i) =>
+            {
+                imageModelSelector += "<HR>"
+                imageModelSelector += `<h4>${name}</h4>`
+                imageModelSelector += `<h5>Size</h5>`
+                // Image Size
+                imageModelSelector +=
+                    `<select class="selectpicker btn-secondary" data-style="btn-danger" style="max-width: 85%;" title="Size For Image Generation"  id="OpenAIImageImageSize_${i}DropdownSelector" value="${serverConfig.currentchatbotImageSize[i]}" name="OpenAIImageSize_${i}DropdownSelector" required="">`
+                serverConfig.imageSizes[i].forEach((name, j) =>
+                {
+                    if (j == serverConfig.currentchatbotImageSize[i])
+                        imageModelSelector += `<option value="${j}" selected>${name}</option>`
+                    else
+                        imageModelSelector += `<option value="${j}">${name}</option>`
+
+                });
+                imageModelSelector += `</select>`
+                imageModelSelector += `<h5>Quality</h5>`
+                // Image Quality
+                imageModelSelector +=
+                    `<select class="selectpicker btn-secondary" data-style="btn-danger" style="max-width: 85%;" title="Size For Image Generation"  id="OpenAIImageImageQuality_${i}DropdownSelector" value="${serverConfig.currentchatbotImageQuality[i]}" name="OpenAIImageQuality_${i}DropdownSelector" required="">`
+                serverConfig.imageQualities[i].forEach((name, j) =>
+                {
+                    if (j == serverConfig.currentchatbotImageQuality[i])
+                        imageModelSelector += `<option value="${j}" selected>${name}</option>`
+                    else
+                        imageModelSelector += `<option value="${j}">${name}</option>`
+
+                });
+                imageModelSelector += `</select>`
+            })
+
+            modalstring = modalstring.replace("ImageGenerationModelReplacementTag", imageModelSelector);
             // send the modified modal data to the server
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
@@ -1846,7 +1914,7 @@ function processChatMessage (data, maxRollbackCount = 20, platform = "twitch")
         }
         else
         {
-            console.log("chatbot.processChatMessage chatdata.message error, chatdata, data", chatdata, data)
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".processChatMessage", "error, chatdata, data", chatdata, data);
         }
     }
 
@@ -1889,7 +1957,7 @@ function processChatMessage (data, maxRollbackCount = 20, platform = "twitch")
 
         if (serverConfig.DEBUG_MODE === "on" && directChatbotTriggerTag)
         {
-            if (serverConfig.DEBUG_MODE === "on" && directChatbotTriggerTag)
+            if (directChatbotTriggerTag)
                 console.log("Chat Triggerd message")
             else
                 console.log("Standard Chat response")
@@ -1970,21 +2038,27 @@ async function callOpenAI (string_array, modelToUse, platform)
     {
         if (localConfig.openAIKey)
         {
-            localConfig.OpenAPIHandle = new OpenAIApi(new Configuration(
+            localConfig.OpenAPIHandle = new OpenAIApi(
                 {
                     apiKey: localConfig.openAIKey
-                }));
+                });
 
-            //console.log("#'#'#'#'#'#'#' CHATBOT: sending following to OpenAI: #'#'#'#'#'#'#' ")
-            //console.log(message_string)
-            const response = await localConfig.OpenAPIHandle.createChatCompletion(
-                {
-                    model: modelToUse.model,
-                    messages: string_array,
-                    temperature: Number(modelToUse.chattemperature),
-                    max_tokens: Number(modelToUse.max_tokens)
-                    //stop: ["Human:", "AI:"]
-                })
+            const response = await localConfig.OpenAPIHandle.responses.create({
+                model: "gpt-4.1",
+                store: false,
+                max_output_tokens: Number(modelToUse.max_tokens),
+                temperature: Number(modelToUse.chattemperature),
+                truncation: "auto",
+                input: string_array,
+            })
+                /*const response = await localConfig.OpenAPIHandle.createChatCompletion(
+                    {
+                        model: modelToUse.model,
+                        messages: string_array,
+                        temperature: Number(modelToUse.chattemperature),
+                        max_tokens: Number(modelToUse.max_tokens)
+                        //stop: ["Human:", "AI:"]
+                    })*/
                 .catch((err) => 
                 {
                     localConfig.requestPending = false;
@@ -2005,19 +2079,13 @@ async function callOpenAI (string_array, modelToUse, platform)
             if (serverConfig.DEBUG_MODE === "on")
             {
                 console.log("CHATBOT: OpenAI returned the following response :")
-                console.log(response.data.choices)
+                console.log(response.output_text)
             }
-            // TBD May need to loop and join all the responses
-            let openAIResponce = response.data.choices[response.data.choices.length - 1].message.content.trim("?").trim("\n").trim()
 
-            if (response.data.choices[0].finish_reason == 'stop' || response.data.choices[0].finish_reason == 'length')
+            let openAIResponce = response.output_text;
+            if (response.status == "completed")
             {
-                //chatbottypingdelay
-                openAIResponce = openAIResponce.trim()
-
-                // if we ran over the buffer (openai didn't return the whole string) add a "..."
-                if (response.data.choices[0].finish_reason === "length")
-                    openAIResponce = openAIResponce + " ..."
+                //openAIResponce = openAIResponce.trim()
                 openAIResponce = openAIResponce.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
                 localConfig.lastAIResponse = openAIResponce;
                 localConfig.lastAIRequest[platform] = ""
@@ -2025,8 +2093,6 @@ async function callOpenAI (string_array, modelToUse, platform)
                     localConfig.chatHistory[platform] = [];
                 for (let index = 0; index < localConfig.chatHistory[platform].length; index++)
                     localConfig.lastAIRequest[platform] += localConfig.chatHistory[platform][index].content + ". "
-                openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotname + ":", "");
-                openAIResponce = openAIResponce.replaceAll(serverConfig.chatbotnametriggertag + ":", "");
                 openAIResponce = replaceUnusualChars(openAIResponce)
                 return openAIResponce;
             }
@@ -2180,12 +2246,14 @@ function replaceUnusualChars (message)
 //            Creates an image from a description
 // ============================================================================
 /**
- * Takes a messages and tries to get an openAI dall-e-3 image generated. if successful
+ * Takes a messages and tries to get an openAI image generated. if successful
  * we then send a trigger out with the details of the image (filename,prompt etc)
  * @param {object} data action_ProcessImage params {usechatbot,prompt,message,append,requester}
+ * @param {string} platform
+ * @param {string} ref
  * @returns error messages
  */
-async function createImageFromAction (data, platform = "twitch")
+async function createImageFromAction (data, platform = "twitch", ref = "")
 {
     if (serverConfig.generateimages != "on")
     {
@@ -2195,8 +2263,6 @@ async function createImageFromAction (data, platform = "twitch")
     try
     {
         let messages = ""
-        let openAIImageQuery = ""
-
         // Create our image prompt for OpenAI
         if (data.message == "")
         {
@@ -2205,130 +2271,315 @@ async function createImageFromAction (data, platform = "twitch")
                 messages = data.prompt + " " + localConfig.lastAIResponse + " " + data.append
             else if (localConfig.lastAIRequest[platform])
                 messages = data.prompt + " " + localConfig.lastAIRequest[platform] + " " + data.append
-            else
+            else if (data.prompt != "" && data.append != "")
                 messages = data.prompt + " " + data.append
+            else
+            {
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI error data ", data)
+                return "no data to send for request"
+            }
 
         }
         else
             messages = data.prompt + " " + data.message + " " + data.append;
         if (serverConfig.DEBUG_MODE === "on")
             console.log("chatbot:createImageFromAction: messages", messages)
-        if (localConfig.openAIKey)
-        {
-            // get image URL from OpenAI
-            localConfig.openAPIImageHandle = new OpenAIApi(new Configuration(
-                {
-                    apiKey: localConfig.openAIKey
-                }));
-            openAIImageQuery = messages
-            const response = await localConfig.openAPIImageHandle.createImage({
-                model: "dall-e-3",
-                prompt: openAIImageQuery,
-                n: 1,
-                quality: "standard",
-                size: "1024x1024", // options are 1024x1024, 1024x1792 or 1792x1024
-            })
-                .catch((err) => 
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI Failed (possibly incorrect credentials?)", err.message)
-                    sendErrorMessageToChannel(err)
-                    logger.err("Full error message", JSON.stringify(err, null, 2))
-                })
 
-            // get the image url from OpenAI's response
-            let image_url = response.data.data[0].url;
-            if (!image_url || image_url == "")
-            {
-                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: callOpenAI no responce or partial response")
-                return "Failed to get a response from chatbot, server might be down"
-            }
-            else
-            {
-                // save image to live dir folder
-                let saveDir = __dirname + "\\" + serverConfig.livedir + "\\"
-                // create a filenmane using a timestamp
-                let dateNow = new Date()
-                let fileTimeStamp = dateNow.getFullYear()
-                    + "-" + dateNow.getMonth().toString().padStart(2, '0')
-                    + "-" + dateNow.getDate().toString().padStart(2, '0')
-                    + "__" + dateNow.getHours().toString().padStart(2, '0')
-                    + "-" + dateNow.getMinutes().toString().padStart(2, '0')
-                    + "-" + dateNow.getSeconds().toString().padStart(2, '0')
-
-                let imageName = "saved_image_"
-                if (data.requester && data.requester != "")
-                    imageName = data.requester + "_" + fileTimeStamp
-                let imageFilename = saveDir + imageName + ".jpg"
-
-                // save image files from the url link
-                try
-                {
-                    // if the dir doesn't exist then make it
-                    if (!fs.existsSync(saveDir))
-                    {
-                        fs.mkdirSync(saveDir, { recursive: true });
-                    }
-
-                    // ######### save metadata file #########
-                    let content = ""
-                    content = data.requester + "\n"
-                    content = content + messages + "\n"
-                    content = content + response.data.data[0].revised_prompt + "\n"
-                    // save the image meta-data file
-                    fs.writeFile(saveDir + imageName + ".txt", content, err =>
-                    {
-                        if (err)
-                        {
-                            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving image.txt meta file", err, err.message)
-                        }
-
-                    });
-
-                    // ######### save the image file #########
-                    // create a stream and write the file to disk.
-                    const file = fs.createWriteStream(imageFilename);
-                    https.get(image_url, response =>
-                    {
-                        response.pipe(file);
-
-                    }).on('error', err =>
-                    {
-                        fs.unlink(imageName);
-                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving AI image", err, err.message)
-                    });
-
-                    // when file has finished writing send out the notification with a short url
-                    file.on('finish', () =>
-                    {
-                        // Close the file descriptor 
-                        file.close((err) =>
-                        {
-                            if (err)
-                                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Fail to close file", err, err.message)
-                            else
-                            {
-                                sendImageTiggerResponse(image_url, data.requester, imageFilename, messages, response.data.data[0].revised_prompt)
-                            }
-                        });
-
-                    });
-                }
-                catch (err)
-                {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Saving image failed", err, err.message)
-                }
-            }
-        }
-        else
-        {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".createImageFromAction:", "No openAI auth key set");
-        }
+        if (serverConfig.currentimageModel == 0) //dall-e-3 image
+            generate_Dall_E_3_Image(messages, data.requester, platform, ref);
+        else if (serverConfig.currentimageModel == 1) //gpt-image-1
+            generate_GPT_Image_1_Image(messages, data.requester, platform, ref);
     }
     catch (e)
     {
         logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".createImageFromAction:", "openAI datacenter message processing failed:", e, e.message, data);
         return;
     }
+}
+// ============================================================================
+//                           FUNCTION: generate_Dall_E_3_Image
+// ============================================================================
+/**
+ * generates a dall-e-3 image
+ * @param {object} messages 
+ * @param {string} requester 
+ * @param {string} platform 
+ * @param {string} ref 
+ */
+function generate_Dall_E_3_Image (messages, requester, platform, ref)
+{
+    try
+    {
+        let openAIImageQuery = ""
+        if (localConfig.openAIKey)
+        {
+            // get image URL from OpenAI
+            localConfig.openAPIImageHandle = new OpenAIApi(
+                {
+                    apiKey: localConfig.openAIKey
+                });
+            openAIImageQuery = messages
+            localConfig.openAPIImageHandle.images.generate({
+                model: serverConfig.imageModels[serverConfig.currentimageModel],
+                prompt: openAIImageQuery,
+                n: 1,
+                quality: serverConfig.imageQualities[0][serverConfig.currentchatbotImageQuality[0]],
+                size: serverConfig.imageSizes[0][serverConfig.currentchatbotImageSize[0]], // options are 1024x1024, 1024x1792 or 1792x1024
+            })
+                .then(response =>
+                {
+                    let image_url = null;
+                    image_url = response.data[0].url;
+                    if (!image_url || image_url == "")
+                    {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".generate_Dall_E_3_Image: callOpenAI no responce or partial response")
+                        return "Failed to get a response from chatbot, server might be down"
+                    }
+                    else
+                        saveImageFileFromURL(image_url, requester, messages, response.data[0].revised_prompt, platform, ref)
+                })
+                .catch((err) => 
+                {
+                    if (err.status == "403")
+                        console.log(err.message)
+                    else
+                    {
+                        console.log(err)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".generate_Dall_E_3_Image: callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                        sendErrorMessageToChannel(err)
+                        logger.err("Full error message", JSON.stringify(err.toString()), null, 2)
+                    }
+                })
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".generate_Dall_E_3_Image:", "No openAI auth key set");
+        }
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".generate_Dall_E_3_Image:", "openAI datacenter message processing failed:", e, e.message, messages, requester);
+        return;
+    }
+}
+// ============================================================================
+//                           FUNCTION: generate_GPT_image_1_Image
+// ============================================================================
+/**
+ * generates a dall-e-3 image
+ * @param {object} messages 
+ * @param {string} requester 
+ * @param {string} platform 
+ * @param {string} ref 
+ */
+function generate_GPT_Image_1_Image (messages, requester, platform, ref)
+{
+    try
+    {
+        let openAIImageQuery = ""
+        if (localConfig.openAIKey)
+        {
+            localConfig.openAPIImageHandle = new OpenAIApi(
+                {
+                    apiKey: localConfig.openAIKey
+                });
+            openAIImageQuery = messages
+            localConfig.openAPIImageHandle.images.generate({
+                model: serverConfig.imageModels[serverConfig.currentimageModel],
+                prompt: openAIImageQuery,
+                n: 1,
+                quality: serverConfig.imageQualities[1][serverConfig.currentchatbotImageQuality[1]],
+                size: serverConfig.imageSizes[1][serverConfig.currentchatbotImageSize[1]],
+            })
+                .then(response =>
+                {
+
+                    let imageBuffer = null;
+                    // get the image url from OpenAI's response
+                    imageBuffer = Buffer.from(response.data[0].b64_json, "base64");
+                    if ((!imageBuffer || imageBuffer == ""))
+                    {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".generate_GPT_Image_1_Image: callOpenAI no responce or partial response")
+                        return "Failed to get a response from chatbot, server might be down"
+                    }
+                    else
+                        saveImageFileFromBuffer(imageBuffer, requester, prompt, platform, ref)
+
+                })
+                .catch((err) => 
+                {
+                    if (err.status == "403")
+                        console.log(err.message)
+                    else
+                    {
+                        console.log(err)
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".generate_GPT_Image_1_Image: callOpenAI Failed (possibly incorrect credentials?)", err.message)
+                        sendErrorMessageToChannel(err)
+                        logger.err("Full error message", JSON.stringify(err.toString()), null, 2)
+                    }
+                })
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".generate_GPT_Image_1_Image:", "No openAI auth key set");
+        }
+
+    }
+    catch (e)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + localConfig.EXTENSION_NAME + ".generate_GPT_Image_1_Image:", "openAI datacenter message processing failed:", e, e.message);
+        return;
+    }
+}
+// ============================================================================
+//                           FUNCTION: saveImageFileFromURL
+// ============================================================================
+/**
+ * 
+ * @param {string} URL 
+ * @param {string} requester 
+ * @param {string} prompt 
+ * @param {string} revised_prompt 
+ * @param {string} platform 
+ * @param {string} ref 
+ */
+function saveImageFileFromURL (URL, requester, prompt, revised_prompt, platform, ref)
+{
+    // save image to live dir folder
+    let saveDir = __dirname + "\\" + serverConfig.livedir + "\\"
+    // create a filenmane using a timestamp
+    let dateNow = new Date()
+    let fileTimeStamp = dateNow.getFullYear()
+        + "-" + dateNow.getMonth().toString().padStart(2, '0')
+        + "-" + dateNow.getDate().toString().padStart(2, '0')
+        + "__" + dateNow.getHours().toString().padStart(2, '0')
+        + "-" + dateNow.getMinutes().toString().padStart(2, '0')
+        + "-" + dateNow.getSeconds().toString().padStart(2, '0')
+
+    let imageName = "saved_image_"
+    if (requester && requester != "")
+        imageName = requester + "_" + fileTimeStamp
+    let imageFilename = saveDir + imageName
+
+    try
+    {
+        // if the dir doesn't exist then make it
+        if (!fs.existsSync(saveDir))
+            fs.mkdirSync(saveDir, { recursive: true });
+
+        createImageMetaDataFile(imageFilename + ".txt", requester, prompt, platform, ref)
+
+        // ######### save the image file #########
+        // create a stream and write the file to disk.
+        const file = fs.createWriteStream(imageFilename + ".jpg");
+        https.get(URL, response =>
+        {
+            response.pipe(file);
+        }).on('error', err =>
+        {
+            fs.unlink(imageName + ".jpg");
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving AI image", err, err.message)
+        });
+
+        // when file has finished writing send out the notification with a short url
+        file.on('finish', () =>
+        {
+            // Close the file descriptor 
+            file.close((err) =>
+            {
+                if (err)
+                {
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Fail to close file", err, err.message)
+                    return "";
+                }
+                else
+                    sendImageTiggerResponse(URL, requester, imageFilename + ".jpg", prompt, revised_prompt, platform, ref)
+
+            });
+
+        });
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Saving image failed", err, err.message)
+    }
+}
+// ============================================================================
+//                           FUNCTION: saveImageFileFromBuffer
+// ============================================================================
+/**
+ * sends an error message out on our channel.
+ * @param {string} imageBuffer 
+ * @param {string} requester 
+ * @param {string} prompt 
+ * @param {string} platform 
+ * @param {string} ref 
+ */
+function saveImageFileFromBuffer (imageBuffer, requester, prompt, platform, ref)
+{
+    // save image to live dir folder
+    let saveDir = __dirname + "\\" + serverConfig.livedir + "\\"
+    // create a filenmane using a timestamp
+    let dateNow = new Date()
+    let fileTimeStamp = dateNow.getFullYear()
+        + "-" + dateNow.getMonth().toString().padStart(2, '0')
+        + "-" + dateNow.getDate().toString().padStart(2, '0')
+        + "__" + dateNow.getHours().toString().padStart(2, '0')
+        + "-" + dateNow.getMinutes().toString().padStart(2, '0')
+        + "-" + dateNow.getSeconds().toString().padStart(2, '0')
+
+    let imageName = "saved_image_"
+    if (requester && requester != "")
+        imageName = requester + "_" + fileTimeStamp
+    let imageFilename = saveDir + imageName
+
+    try
+    {
+        // if the dir doesn't exist then make it
+        if (!fs.existsSync(saveDir))
+            fs.mkdirSync(saveDir, { recursive: true });
+        // ######### save the metadata file #########
+        createImageMetaDataFile(imageFilename + ".txt", requester, platform, ref)
+        // ######### save the image file #########
+        //const file = fs.createWriteStream(imageFilename + ".png");
+
+        try
+        {
+            fs.writeFileSync(imageFilename + ".png", imageBuffer)
+            sendImageTiggerResponse("", requester, imageFilename + ".png", prompt, "", platform, ref)
+        }
+        catch (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".saveImageFileFromBuffer: Saving image failed", err, err.message)
+        }
+    }
+    catch (err)
+    {
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".saveImageFileFromBuffer: Creating image file failed", err, err.message)
+    }
+}
+// ============================================================================
+//                           FUNCTION: createImageMetaDataFile
+// ============================================================================
+/**
+ * 
+ * @param {string} filename 
+ * @param {string} requester 
+ * @param {string} prompt 
+ * @param {string} platform 
+ * @param {string} ref 
+ */
+function createImageMetaDataFile (filename, requester, prompt, platform, ref)
+{
+    // save the image meta-data file
+    fs.writeFile(filename, prompt + "\n" + "platform" + platform + "\n" + "ref" + ref, err =>
+    {
+        if (err)
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname, ".createImageFromAction: Error saving image.txt meta file", err, err.message)
+        }
+
+    });
 }
 // ============================================================================
 //                           FUNCTION: sendErrorMessageToChannel
@@ -2406,8 +2657,10 @@ function sendErrorMessageToChannel (err)
  * @param {string} tmp_file_name 
  * @param {string} message 
  * @param {string} rev_prompt 
+ * @param {string} platform 
+ * @param {string} ref 
  */
-function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, rev_prompt)
+function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, rev_prompt, platform, ref)
 {
     let msg = findtriggerByMessageType("trigger_imageResponse")
     if (msg)
@@ -2417,6 +2670,8 @@ function sendImageTiggerResponse (image_url, requester, tmp_file_name, message, 
         msg.parameters.temp_save_file = tmp_file_name;
         msg.parameters.message = message;
         msg.parameters.rev_prompt = rev_prompt;
+        msg.parameters.platform = platform
+        msg.parameters.triggerActionRef = ref
         // send the modal data to our channel
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ChannelData",
@@ -2688,7 +2943,7 @@ function startupCheck ()
             // perform any startup stuff here that requires saved credentials and config
         } catch (err)
         {
-            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", "connectToSE Error:", err);
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startupCheck", err);
         }
     }
     else

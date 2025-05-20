@@ -449,20 +449,21 @@
             if (server_packet.to == serverConfig.extensionname)
                 localConfig.readinessFlags.ConfigReceived = true;
 
+            // if config is empty just use default
+            if (!server_packet.data || server_packet.data == "")
+            {
+                // server data is empty, possibly the first run of the code so just default it
+                serverConfig = structuredClone(default_serverConfig);
+                SaveConfigToServer();
+            }
             // check it is our config
-            if (server_packet.data && server_packet.data.extensionname
+            else if (server_packet.data && server_packet.data.extensionname
                 && server_packet.data.extensionname === serverConfig.extensionname)
             {
                 let configSubVersions = 0;
                 let defaultSubVersions = default_serverConfig.__version__.split('.');
-                if (server_packet.data == "")
-                {
-                    // server data is empty, possibly the first run of the code so just default it
-                    serverConfig = structuredClone(default_serverConfig);
-                    SaveConfigToServer();
-                }
-                else
-                    configSubVersions = server_packet.data.__version__.split('.')
+
+                configSubVersions = server_packet.data.__version__.split('.')
 
                 if (configSubVersions[0] != defaultSubVersions[0])
                 {

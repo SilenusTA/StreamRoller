@@ -173,7 +173,10 @@ const triggersandactions =
                 mod: false,
                 subscriber: false,
                 vip: false,
-                platform: "Twitch"
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatActionReceived",
@@ -188,7 +191,11 @@ const triggersandactions =
                 color: "",
                 firstmessage: false,
                 mod: false,
-                subscriber: false
+                subscriber: false,
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatBanReceived",
@@ -199,7 +206,11 @@ const triggersandactions =
                 type: "trigger_ChatBanReceived",
                 htmlMessage: "",
                 username: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatMessageDeletedReceived",
@@ -210,7 +221,11 @@ const triggersandactions =
                 type: "trigger_ChatMessageDeleted",
                 htmlMessage: "[Username]'s message was deleted",
                 username: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatPrimePaidUpgradeReceived",
@@ -220,7 +235,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatPrimePaidUpgrade",
                 htmlMessage: "[Username] upgraded their prime",
-                username: ""
+                username: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatRaidReceived",
@@ -231,7 +250,11 @@ const triggersandactions =
                 type: "trigger_ChatRaid",
                 htmlMessage: "[Username] raided with [viewers]",
                 username: "",
-                viewers: ""
+                viewers: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatRedeemReceived",
@@ -243,7 +266,11 @@ const triggersandactions =
                 htmlMessage: "[Username] redeemed chat points",
                 username: "",
                 message: "",
-                rewardType: ""
+                rewardType: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatResubReceived",
@@ -255,7 +282,11 @@ const triggersandactions =
                 htmlMessage: "[Username] resubbed: [message]",
                 username: "",
                 message: "",
-                months: ""
+                months: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatRitualReceived",
@@ -267,6 +298,10 @@ const triggersandactions =
                 ritualName: "",
                 username: "",
                 message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatRoomstateReceived",
@@ -281,7 +316,11 @@ const triggersandactions =
                 followersonly: "-1",
                 r9k: false,
                 slow: false,
-                subsonly: false
+                subsonly: false,
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatSubscriptionReceived",
@@ -293,7 +332,11 @@ const triggersandactions =
                 htmlMessage: "[Username] subscribed: [message]",
                 username: "",
                 message: "",
-                subplan: ""
+                subplan: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatTimeoutReceived",
@@ -305,7 +348,11 @@ const triggersandactions =
                 htmlMessage: "[Username] was timedout for [duration]:[reason]",
                 username: "",
                 message: "",
-                duration: ""
+                duration: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatSubMysteryGiftReceived",
@@ -316,7 +363,11 @@ const triggersandactions =
                 type: "trigger_ChatSubMysteryGift",
                 htmlMessage: "[Username] received a giftsub",
                 username: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         {
@@ -328,7 +379,11 @@ const triggersandactions =
                 type: "trigger_ChatAutoMod",
                 htmlMessage: "no default message",
                 msgID: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         {
@@ -339,6 +394,10 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatReconnect",
                 htmlMessage: "Reconnect",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatAnonGiftPaidUpgradeReceived",
@@ -348,7 +407,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatAnonGiftPaidUpgrade",
                 htmlMessage: "[Username] received an annonomous paid upgrade (I think)",
-                username: ""
+                username: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatAnonSubMysteryGiftReceived",
@@ -359,7 +422,11 @@ const triggersandactions =
                 type: "trigger_ChatAnonSubMysteryGift",
                 htmlMessage: "anon sub mystery gift x[numbOfSubs]",
                 numbOfSubs: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatAnonSubGiftReceived",
@@ -370,7 +437,11 @@ const triggersandactions =
                 type: "trigger_ChatAnonSubGift",
                 htmlMessage: "[Username] received an anon sub gift: [message]",
                 username: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatCheerReceived",
@@ -381,7 +452,11 @@ const triggersandactions =
                 type: "trigger_ChatCheer",
                 htmlMessage: "[Username] Cheered with [bits]",
                 username: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         {
@@ -392,7 +467,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatMod",
                 htmlMessage: "no default message",
-                username: ""
+                username: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         /* {
@@ -415,7 +494,11 @@ const triggersandactions =
                 type: "trigger_ChatSubGift",
                 htmlMessage: "[Username] gifed a sub to [Username] ",
                 gifter: "",
-                recipient: ""
+                recipient: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
 
             }
         }, {
@@ -428,6 +511,10 @@ const triggersandactions =
                 htmlMessage: "List of subscribers (I think)",
                 channel: "",
                 enabled: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatVipss",
@@ -439,6 +526,10 @@ const triggersandactions =
                 htmlMessage: "List of Vips(I think)",
                 channel: "",
                 vips: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatClear",
@@ -449,6 +540,10 @@ const triggersandactions =
                 type: "trigger_ChatClear",
                 htmlMessage: "Chat was cleared",
                 channel: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         /* {
@@ -460,6 +555,10 @@ const triggersandactions =
                 type: "trigger_ChatUnmod",
                 htmlMessage: "no default message",  
                 username: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },         {
             name: "TwitchChatEmoteSet",
@@ -470,6 +569,10 @@ const triggersandactions =
                 type: "trigger_ChatEmoteSet",
                 htmlMessage: "emote set received",  
                 message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, */
         {
@@ -481,7 +584,11 @@ const triggersandactions =
                 type: "trigger_ChatFollowersOnly",
                 htmlMessage: "Follower only mode [enabled] for [length]",
                 enabled: false,
-                length: ""
+                length: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatGiftPaidUpgrade",
@@ -493,6 +600,10 @@ const triggersandactions =
                 htmlMessage: "[Username] upgraded [Username] to a paid sub",
                 sender: "",
                 recipient: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatEmoteOnly",
@@ -502,7 +613,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatEmoteOnly",
                 htmlMessage: "Emote only mode [enabled]",
-                enabled: false
+                enabled: false,
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatr9kbeta",
@@ -512,7 +627,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_Chatr9kbeta",
                 htmlMessage: "r9kBeta mode [message]",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatSlowmode",
@@ -523,7 +642,11 @@ const triggersandactions =
                 type: "trigger_ChatSlowmode",
                 htmlMessage: "Slowmode [enabled] for [length]",
                 enabled: false,
-                length: ""
+                length: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatWhisper",
@@ -534,7 +657,11 @@ const triggersandactions =
                 type: "trigger_ChatWhisper",
                 htmlMessage: "Whisper from [Username]: [message]",
                 from: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatNotice",
@@ -545,7 +672,11 @@ const triggersandactions =
                 type: "trigger_ChatNotice",
                 htmlMessage: "Notice: [message]",
                 msgid: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatUserNotice",
@@ -556,7 +687,11 @@ const triggersandactions =
                 type: "trigger_ChatUserNotice",
                 htmlMessage: "UserNotice: [message]",
                 msgid: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, {
             name: "TwitchChatDisconnected",
@@ -566,7 +701,11 @@ const triggersandactions =
             parameters: {
                 type: "trigger_ChatDisconnected",
                 htmlMessage: "Disconnected: [reason]",
-                reason: ""
+                reason: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         /*{
@@ -577,7 +716,11 @@ const triggersandactions =
                         parameters: {
                 type: "trigger_ChatServerChange",
                 htmlMessage: "Server changed to [channel]",  
-                channel: ""
+                channel: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },*/
         {
@@ -589,7 +732,11 @@ const triggersandactions =
                 type: "trigger_ChatConnected",
                 htmlMessage: "Connected to [address][port]",
                 address: "",
-                port: ""
+                port: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
         /* {
@@ -601,7 +748,11 @@ const triggersandactions =
                 type: "trigger_ChatConnecting",
                 htmlMessage: "Connecting to [address][port]",  
                 address: "",
-                port: ""
+                port: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },   {
             name: "TwitchChatLogon",
@@ -610,7 +761,11 @@ const triggersandactions =
             messagetype: "trigger_ChatLogon",
                             parameters: {
                 type: "trigger_ChatLogon",
-                htmlMessage: "Logon",  
+                htmlMessage: "Logon",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }, 
         */
@@ -624,7 +779,10 @@ const triggersandactions =
                 htmlMessage: "[username] Joined [channel]",
                 username: "",
                 channel: "",
-                platform: ""
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         },
             /* {
@@ -635,7 +793,11 @@ const triggersandactions =
                                 parameters: {
                     type: "trigger_ChatPart",
                     htmlMessage: "[username] Left",
-                    username: ""
+                    username: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
                 }
             }*/
         ],
@@ -647,9 +809,12 @@ const triggersandactions =
             description: "Post a message to twitch chat (Note user is case sensitive)",
             messagetype: "action_SendChatMessage",
             parameters: {
-                platform: "twitch",
                 account: "",
-                message: ""
+                message: "",
+                platform: "twitch",
+                platform_UIDescription: "(Required)platform the message was received on. ie twitch/youtube",
+                triggerActionRef: "TwitchChat",
+                triggerActionRef_UIDescription: "(Optional)Reference for this message",
             }
         }],
 }
