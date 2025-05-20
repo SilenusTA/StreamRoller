@@ -1146,7 +1146,6 @@ function SendSettingsWidgetLarge (to)
             imageModelSelector += `</select>`
             // loop again to add model options
             imageModelSelector += "<h4>Model Options</h4>"
-            imageModelSelector += "<HR>"
             serverConfig.imageModels.forEach((name, i) =>
             {
                 imageModelSelector += "<HR>"
