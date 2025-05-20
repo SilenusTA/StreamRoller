@@ -176,7 +176,7 @@ This format generally replies with the username if asked a direct question, but 
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 13 May 2025 05:22:43 GMT*
+Table last updated: *Tue, 20 May 2025 20:41:02 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
