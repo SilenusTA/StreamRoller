@@ -969,7 +969,7 @@ function DeleteTriggerGroup (name)
 
     if (usertriggerslist.groups.find(x => x.name == name) != undefined)
     {
-        if (typeof (usertriggerslist.pairings.find(item => item.group === "Default")) != "undefined")
+        if (typeof (usertriggerslist.pairings.find(item => item.group === name)) != "undefined")
             alert("Group: not empty")
         else if (name == "Default")
             alert("Can't delete the default group")
