@@ -237,13 +237,6 @@
                     // call the save function directly here
                     downloadServerDataFileReceivedResponse(extension_packet.data);
             }
-            // -------------------------------------------------------------------------------------------------
-            //                   RECEIVED Unhandled extension message
-            // -------------------------------------------------------------------------------------------------
-            else
-            {
-                //    console.log(".onDataCenterMessage", "ExtensionMessage not handled ", extension_packet.type, " from ", extension_packet.from);
-            }
         }
         // -------------------------------------------------------------------------------------------------
         //                       RECEIVED CHANNEL DATA
@@ -259,22 +252,6 @@
             if (extension_packet.type === "UserPairings")
             {
                 receivedUserPairings(extension_packet.data)
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           Ignore these messages
-            // -------------------------------------------------------------------------------------------------
-            else if (extension_packet.type === "HeartBeat"
-                || extension_packet.type === "UserMacros"
-            )
-            {
-                // ignoring these messages
-            }
-            // -------------------------------------------------------------------------------------------------
-            //                           UNHANDLED CHANNEL DATA
-            // -------------------------------------------------------------------------------------------------
-            else
-            {
-                console.log(".onDataCenterMessage", "Channel Data ", server_packet, " not handled");
             }
         }
         // -------------------------------------------------------------------------------------------------
@@ -298,9 +275,6 @@
                 }, 10000);
             }
         }
-        // ------------------------------------------------ unknown message type received -----------------------------------------------
-        else
-            console.log(".onDataCenterMessage", "Unhandled message type:", server_packet);
     }
     // ============================================================================
     //                           FUNCTION: SaveConfigToServer
@@ -425,7 +399,6 @@
      */
     function postStartupActions ()
     {
-        console.log("sending ExtensionReady")
         // Let the server know we are now up and running.
         sr_api.sendMessage(localConfig.DataCenterSocket,
             sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));

@@ -98,13 +98,26 @@ function receivedTrigger (extensiontriggers)
         extensionlist[extensiontriggers.extensionname] =
         {
             channel: extensiontriggers.channel,
-            description: extensiontriggers.description
+            description: extensiontriggers.description,
+            version: extensiontriggers.version
         }
     }
     if (extensiontriggers.triggers && extensiontriggers.triggers.length > 0)
+    {
         fulltriggerslist.triggers[extensiontriggers.extensionname] = extensiontriggers.triggers
+        fulltriggerslist.triggers[extensiontriggers.extensionname].forEach((value, index) =>
+        {
+            fulltriggerslist.triggers[extensiontriggers.extensionname][index].version = extensiontriggers.version
+        })
+    }
     if (extensiontriggers.actions && extensiontriggers.actions.length > 0)
+    {
         fulltriggerslist.actions[extensiontriggers.extensionname] = extensiontriggers.actions
+        fulltriggerslist.actions[extensiontriggers.extensionname].forEach((value, index) =>
+        {
+            fulltriggerslist.actions[extensiontriggers.extensionname][index].version = extensiontriggers.version
+        })
+    }
     fulltriggerslist.triggers = sortByKey(fulltriggerslist.triggers)
     fulltriggerslist.actions = sortByKey(fulltriggerslist.actions)
     // update the page with the new triggeroptions
@@ -491,7 +504,8 @@ function createTriggerAction (e)
             extension: extname,
             channel: channel,
             messagetype: $("#triggerExtensionTriggers option:selected").attr('data'),
-            data: []
+            data: [],
+            version: extensionlist[extname].version
 
         },
         action:
@@ -500,7 +514,8 @@ function createTriggerAction (e)
             extension: document.getElementById("actionExtensionChoser").value,
             channel: document.getElementById("actionExtensionChoserChannel").value,
             messagetype: $("#actionExtensionAction option:selected").attr('data'),
-            data: []
+            data: [],
+            version: extensionlist[document.getElementById("actionExtensionChoser").value].version
         }
     }
     let fieldsAsArray = $(e).serializeArray();
@@ -722,7 +737,6 @@ function populateTriggersTable ()
         group_actions.innerHTML = "Hide all groups"
     }
     btn.id = "AllGroupsHiddenButtonImage"
-
     group_actions.appendChild(btn)
     group_actions.appendChild(document.createElement("hr"))
 
@@ -753,6 +767,10 @@ function populateTriggersTable ()
             btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide ' + group_id + '_Group', '/autopilot/images/show.png')
         else
             btn = createAnchorButton('btn btn-secondary', "javascript:ShowHideTriggerGroup('" + group + "');", 'Show/Hide ' + group_id + '_Group', '/autopilot/images/hide.png')
+        group_div.appendChild(btn)
+
+        // downloadGroupButton
+        btn = createAnchorButton('btn btn-secondary', "javascript:downloadGroupButton('" + group + "');", 'Download  ' + group_id + '_Group', '/autopilot/images/download.png')
         group_div.appendChild(btn)
         table.appendChild(group_div)
 
@@ -789,6 +807,49 @@ function populateTriggersTable ()
                 let tr = tbody.insertRow()
 
                 let pairingTitle = tr.insertCell()
+                let showVersionWarning = false;
+                // check if we have loaded the extension version yet for the trigger
+                if (extensionlist[usertriggerslist.pairings[i].trigger.extension])
+                {
+                    // temp code
+                    // if users data doesn't have a version just use the current one for now
+                    // can be removed later as thsi is only for users with prior pairings before we added the 
+                    // version numbers in. Add in v0.3.30
+                    if (!usertriggerslist.pairings[i].trigger.version)
+                        usertriggerslist.pairings[i].trigger.version = extensionlist[usertriggerslist.pairings[i].trigger.extension].version;
+                    // end temp code
+                    // check if we have loaded the extensions triggers yet so we can see the version number
+                    else if (extensionlist[usertriggerslist.pairings[i].trigger.extension]
+                        && usertriggerslist.pairings[i].trigger.version != extensionlist[usertriggerslist.pairings[i].trigger.extension].version)
+                    {
+                        showVersionWarning = true;
+
+                    }
+                }
+                // check if we have loaded the extension version yet for the action
+                if (extensionlist[usertriggerslist.pairings[i].action.extension])
+                {
+                    // temp code
+                    // if users data doesn't have a version just use the current one for now
+                    // can be removed later as thsi is only for users with prior pairings before we added the 
+                    // version numbers in. Add in v0.3.30
+                    if (!usertriggerslist.pairings[i].action.version)
+                        usertriggerslist.pairings[i].action.version = extensionlist[usertriggerslist.pairings[i].action.extension].version;
+                    // end temp code
+                    // check if we have loaded the extensions triggers yet so we can see the version number
+                    else if (extensionlist[usertriggerslist.pairings[i].action.extension]
+                        && usertriggerslist.pairings[i].action.version != extensionlist[usertriggerslist.pairings[i].action.extension].version)
+                    {
+                        showVersionWarning = true;
+
+                    }
+                }
+
+                if (showVersionWarning)
+                {
+                    pairingTitle.innerHTML = "<img src='/autopilot/images/warning.png' width='30px' height='30px' title='Trigger has been updated, please recreate this trigger/action pairing'>"
+                }
+
                 pairingTitle.style.width = "20%"
                 if (!usertriggerslist.pairings[i].pairingTitle || usertriggerslist.pairings[i].pairingTitle == "")
                 {
@@ -806,7 +867,7 @@ function populateTriggersTable ()
 
                 }
                 else
-                    pairingTitle.innerHTML = usertriggerslist.pairings[i].pairingTitle
+                    pairingTitle.innerHTML += usertriggerslist.pairings[i].pairingTitle
 
                 //split row into triggers and action cells
                 let triggerdatacell = tr.insertCell()
@@ -814,7 +875,6 @@ function populateTriggersTable ()
                 let triggersdatacelltable = document.createElement("table")
                 triggerdatacell.appendChild(triggersdatacelltable)
                 let triggerdatacellrow = triggersdatacelltable.insertRow()
-
 
                 let actiondatacell = tr.insertCell()
                 actiondatacell.style.width = "40%"
@@ -1050,6 +1110,39 @@ function pauseGroupButton (group)
 
     updateServerPairingsList()
     //populateTriggersTable();
+}
+// ============================================================================
+//                     FUNCTION: downloadGroupButton
+//              download a groups trigger and actions for sharing with others
+// ============================================================================
+function downloadGroupButton (group)
+{
+    try
+    {   // should only be called via a users request to download the server file after
+
+        let pairings = []
+        usertriggerslist.pairings.forEach(element =>
+        {
+            if (element.group == group)
+                pairings.push(element)
+            //console.log("found group item", element)
+        });
+
+        if (pairings.length > 0)
+        {
+            // we have received the file from the server
+            let fileToDownload = JSON.stringify(pairings, null, 2);
+            var a = document.createElement("a");
+            var file = new Blob([fileToDownload], { type: "application/json" });
+            a.href = URL.createObjectURL(file);
+            a.download = group + "_pairings" + getFileNameDateString() + ".json";
+            a.click();
+        }
+    }
+    catch (err)
+    {
+        console.log("downloadGroupButton Error:", err, err.message)
+    }
 }
 // ============================================================================
 //                     FUNCTION: pauseGroupButton
@@ -1526,6 +1619,42 @@ function downloadServerDataFileReceived (data)
     }
 }
 // ============================================================================
+//                     FUNCTION: uploadGroupDataClicked
+// ============================================================================
+function uploadGroupDataClicked ()
+{
+    try
+    {
+        // user has selected a file to upload to the server
+        var file = document.getElementById('AutoPilotGroupFileUploadElement').files[0];
+        if (file)
+        {
+            var reader = new FileReader();
+            reader.readAsText(file, "application/json");
+            reader.onload = function (evt)
+            {
+                let userGroupFile = JSON.parse(evt.target.result);
+                // some basic sanity checks.
+                if (userGroupFile && userGroupFile != "")
+                {
+                    document.getElementById('AutoPilotGroupFileUploadMessage').innerHTML = "Processing";
+                    processingAnimation('AutoPilotGroupFileUploadMessage');
+                    saveUserGroupFile(userGroupFile)
+                }
+                else
+                {
+                    document.getElementById('AutoPilotGroupFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+                }
+            }
+        } else
+            document.getElementById('AutoPilotGroupFileUploadMessage').innerHTML = "Error reading file, is it the correct format"
+    }
+    catch (err)
+    {
+        console.log("uploadServerGroupClicked Error:", err, err.message)
+    }
+}
+// ============================================================================
 //                     FUNCTION: uploadServerDataClicked
 // ============================================================================
 function uploadServerDataClicked ()
@@ -1564,11 +1693,31 @@ function uploadServerDataClicked ()
     }
 }
 // ============================================================================
+//                     FUNCTION: saveUserGroupFile
+// ============================================================================
+function saveUserGroupFile (userDataFile)
+{
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "userRequestSaveGroupFile",
+                serverConfig.extensionname,
+                userDataFile,
+                "",
+                "autopilot"
+            ),
+            "",
+            "autopilot"
+        ));
+}
+// ============================================================================
 //                     FUNCTION: saveUserDataFile
 // ============================================================================
 function saveUserDataFile (userDataFile)
 {
-    // request the saved data from the server (callback will go to downloadServerDataFileReceived below)
     sr_api.sendMessage(
         localConfig.DataCenterSocket,
         sr_api.ServerPacket(

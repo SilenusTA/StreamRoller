@@ -261,6 +261,16 @@
       -->
     <HR class="hrbold">
     <h3>Current Triggers and actions</h3>
+    <div class="form-group">
+      <!-- <h5>Upload a Group File</h5>-->
+      <label class="form-label" for="AutoPilotGroupFileUploadElement">Upload a group</label>
+      <form class="form-inline">
+        <input type="file" name="" class="form-control" id="AutoPilotGroupFileUploadElement">
+        <BR>
+        <button type="button" id="Upload" class="btn btn-secondary" onclick="uploadGroupDataClicked()">Upload Group</button>
+        <div id="AutoPilotGroupFileUploadMessage"></div>
+      </form>
+    </div>
     <table id="TriggersAndActionsTable" class="table  bg-light text-dark">
     </table>
     </form>

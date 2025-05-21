@@ -214,17 +214,8 @@ function onDataCenterMessage (server_packet)
             if (server_packet.data == "")
             {
                 // server data is empty, possibly the first run of the code so just default it
-                serverConfig = structuredClone(default_serverConfig);
-                SaveConfigToServer();
-            }
-            else if (server_packet.data.__version__ != default_serverData.__version__)
-            {
                 serverData = structuredClone(default_serverData);
-                console.log("\x1b[31m" + serverConfig.extensionname + " Datafile Updated", "The Data file has been Updated to the latest version v" + default_serverData.__version__ + ". Your settings may have changed" + "\x1b[0m");
-
-                SaveDataToServer()
-                SendUserPairings("");
-                SendMacros()
+                SaveDataToServer();
             }
             else
             {
@@ -415,6 +406,15 @@ function onDataCenterMessage (server_packet)
             {
                 parseUserRequestSaveDataFile(extension_packet.data)
             }
+        }
+        // -------------------------------------------------------------------------------------------------
+        //                   REQUEST SERVER DATA FILE
+        // -------------------------------------------------------------------------------------------------
+        else if (extension_packet.type === "userRequestSaveGroupFile")
+        {
+            //This is used on the front end so users can save off a full data file of the server prior to updating
+            if (server_packet.to === serverConfig.extensionname && server_packet.from === "autopilot_frontend")
+                parseUserRequestSaveGroupFile(extension_packet.data)
         }
         // -------------------------------------------------------------------------------------------------
         //                   RECEIVED Unhandled extension message
@@ -1030,6 +1030,66 @@ function triggerMacroButton (name)
     }
 
 }
+
+// ============================================================================
+//                           FUNCTION: parseUserRequestSaveGroupFile
+// ============================================================================
+/**
+ * Handles a 'parseUserRequestSaveGroupFile' message triggered when a user uploads a new group
+ * JSON data file containing the trigger/action pairings
+ * @param {object} data 
+ */
+function parseUserRequestSaveGroupFile (data)
+{
+    let groups = new Set(data.map(item => item.group));
+    let response = "No Response from Server, please try again.";
+    if (groups.size == 0)
+        response = "File has no group";
+    else if (groups.size > 1)
+        response = "File has to many groups, only one allowed";
+    else
+    {
+        let groupname = data[0].group;
+        let pairingGroups = serverData.userPairings.pairings.filter(item => item.group === groupname).length;
+        let counter = 0;
+        // check if we already have this group
+        while (pairingGroups > 0)
+        {
+            counter++;
+            pairingGroups = serverData.userPairings.pairings.filter(item => item.group === groupname + "_" + counter).length;
+        }
+        // if we have new group name update the list
+        if (counter != 0)
+        {
+            groupname = groupname + "_" + counter;
+            data.forEach((value, index) =>
+            {
+                data[index].group = groupname
+            })
+        }
+        serverData.userPairings.pairings = serverData.userPairings.pairings.concat(data);
+        serverData.userPairings.groups.push({ "name": groupname })
+        SaveDataToServer();
+        SendUserPairings("");
+        response = "updated data"
+    }
+    sr_api.sendMessage(
+        localConfig.DataCenterSocket,
+        sr_api.ServerPacket(
+            "ExtensionMessage",
+            serverConfig.extensionname,
+            sr_api.ExtensionPacket(
+                "AutopilotUserSaveServerDataResponse",
+                serverConfig.extensionname,
+                { response: response },
+                "",
+                "autopilot_frontend"
+            ),
+            "",
+            "autopilot_frontend"
+        ));
+
+}
 // ============================================================================
 //                           FUNCTION: parseUserRequestSaveDataFile
 // ============================================================================
@@ -1040,20 +1100,13 @@ function triggerMacroButton (name)
  */
 function parseUserRequestSaveDataFile (data)
 {
-    //do something with the file. ie check version etc.
     let response = "No Response from Server, please try again.";
     try
     {
-        if (data.__version__ === default_serverData.__version__)
-        {
-            // overwrite our data and save it to the server.
-            serverData = structuredClone(data);
-            SaveDataToServer()//we have the same version of the file so we should save it over our current one.
-            response = "Data saved."
-        }
-        else
-
-            response = "received file version doesn't match current version: " + data.__version__ + " == " + default_serverData.__version__
+        // overwrite our data and save it to the server.
+        serverData = structuredClone(data);
+        SaveDataToServer()
+        response = "Data saved."
     }
     catch (err)
     {
