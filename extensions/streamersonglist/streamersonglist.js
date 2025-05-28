@@ -980,45 +980,73 @@ function outputSongList ()
         );
     }
 }
+
 // ============================================================================
 //                           FUNCTION: fetchSongList
 // ============================================================================
 /**
  * Fetches the full songlist from the StreamerSonglist server
  */
-function fetchSongList ()
+async function fetchSongList ()
 {
     if (serverConfig.enableStreamerSongList == "on")
     {
-        fetch(`${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs`, {
-            headers: { 'Client-ID': serverCredentials.authToken, },
-        })
-            .then(response =>
+        const limit = 100;
+        let current = 0;
+        let allSongs = { items: [], total: 0 };
+        let hasMore = true;
+        try
+        {
+            while (hasMore)
             {
-                if (!response.ok)
+                const url = `${serverConfig.sslURI}/v1/streamers/${serverCredentials.username}/songs?size=${limit}&current=${current}`;
+                try
                 {
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details. Request failed with status " + response.status)
-                    return
-                }
+                    const response = await fetch(url
+                        /*, {
+                        headers: {
+                            'Client-ID': serverCredentials.authToken
+                        },
+                    }*/);
+                    if (!response.ok) 
+                    {
+                        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details. Request failed with status " + response.status)
+                        return
+                    }
+                    const data = await response.json();
 
-                return response.json();
-            })
-            .then(data =>
-            {
-                localConfig.songlist = data;
-                outputSongList();
-                localConfig.status.connected = true;
-            })
-            .catch(e =>
-            {
-                if (e.message.indexOf("status 401") > -1)
+                    allSongs.items = allSongs.items.concat(data.items);
+                    allSongs.total = data.total;
+                    if (allSongs.items.length < allSongs.total)
+                    {
+                        hasMore = true;
+                        current++
+                    } else
+                    {
+                        hasMore = false;
+                    }
+                    //hasMore = false
+                } catch (error)
                 {
-                    localConfig.status.connected = false;
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details");
+                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list", error.Error);
+                    hasMore = false;
                 }
-                else
-                    logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list", e.Error);
-            });
+            }
+
+            localConfig.songlist = allSongs;
+            outputSongList();
+            localConfig.status.connected = true;
+        }
+        catch (e)
+        {
+            if (e.message.indexOf("status 401") > -1)
+            {
+                localConfig.status.connected = false;
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list. Check Credentials/login details");
+            }
+            else
+                logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".fetchSongList", "Error getting songs list", e.Error);
+        }
     }
 }
 // ============================================================================
