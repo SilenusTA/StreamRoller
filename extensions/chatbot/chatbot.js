@@ -2078,11 +2078,16 @@ async function callOpenAI (string_array, modelToUse, platform)
             if (serverConfig.DEBUG_MODE === "on")
             {
                 console.log("CHATBOT: OpenAI returned the following response :")
-                console.log(response.output_text)
+                console.log(JSON.stringify(response))
+                console.log("response.error", response.error)
             }
 
             let openAIResponce = response.output_text;
-            if (response.status == "completed")
+            //if (response.status == "completed" || response.status == "incomplete")
+            if (response.error == null
+                || response.status == "completed"
+                || response.status == "incomplete"// might be a partial due to token limit we have set
+            )
             {
                 //openAIResponce = openAIResponce.trim()
                 openAIResponce = openAIResponce.replaceAll("\n", " ").replace(/\s+/g, ' ').trim()
@@ -2097,6 +2102,11 @@ async function callOpenAI (string_array, modelToUse, platform)
             }
             else
             {
+                if (serverConfig.DEBUG_MODE === "on")
+                {
+                    logger.err("CHATBOT: OpenAI returned the following error :")
+                    logger.err(JSON.stringify(response))
+                }
                 localConfig.lastrequesttime = Date.now();
                 localConfig.requestPending = false;
             }
