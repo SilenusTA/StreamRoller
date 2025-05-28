@@ -22,7 +22,7 @@ Contents
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Tue, 20 May 2025 20:41:02 GMT*
+Table last updated: *Wed, 28 May 2025 03:08:18 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
