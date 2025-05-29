@@ -25,67 +25,10 @@
 // -------------------------- Creation ----------------------------------------
 // @author Silenus aka twitch.tv/OldDepressedGamer
 // GitHub: https://github.com/SilenusTA/StreamRoller
-// Date: 14-Jan-2021
-// --------------------------- functionality ----------------------------------
-// On connection the client will receive a client id. After initial connection
-// the client should join(register)/create a room it wishes to use. Multiple 
-// rooms can be created/joined(registered).
-// You can then send/monitor the channel for messages as required
-// === Rooms ===
-// The API expects clients to join a room by registering.
-// ie. if an extension is provided for twitch chat it might create a
-// room called 'TWITCH_CHAT' and the any client can register
-// for messages to that room. Each module will have to specify
-// the rooms they create so that users know what to register for
-// ............................. usage ........................................
-// ------------------------ Import socket.io
-//    import DataCenterIo from "socket.io-client";
-// ------------------------ setup handlers to receive messages from the system normally three are used
-//    DataCenterSocket.on("connect", (data) => onDataCenterConnect(DataCenterSocket));
-//    DataCenterSocket.on("disconnect", (reason) => onDataCenterDisconnect(reason));
-//    DataCenterSocket.on("message", (data) => onDataCenterMessage(data));
-// ------------------------ Connect to the websocket handle
-//    DataCenterSocket = DataCenterIo("http://localhost:3000", { transports: ["websocket"] });
-// ------------------------ send a message to a room in the data center
-//    DataCenterSocket.emit(messagetype, 
-//                          {CLIENT_ID, 
-//                           SOCKET_NAME, 
-//                           CHANNEL_NAME, 
-//                           MESSAGE_TYPE,
-//                           data
-//                          });
-// --------------------------- description -------------------------------------
-// 1) After the connection a "connect" message should be received. In the handler
-//    for this "onDataCenterDisconnect(reason)" above you should either create or
-//    register to a room/channel to send and receive messages from.
-// 2) All data packets are stringified JSON objects as shown below
-// 3) CLIENT_ID is what you get in the first message to the client when connecting
-//    and gets received by the onDataCenterConnect(DataCenterSocket)) function
-// ....... A NOTE ON MESSAGE TYPES ......
-// There are three places where message types come up.
-// 1) initial connection, this will be the websoctet type, normally set to
-//            { transports: ["websocket"] }
-// 2) In emit/receive funcions
-//             messagetype ( lower case in emit meessage above in usage section)
-//             First parameter in a received message (the .on handlers above)                
-//    this is one of the following
-//       createchannel, register, message, disconnect,unregister
-//    this tells us what type of websocket service you are requesting/recieving. 
-//    Once up and running you will only use the 'message' service with a data 
-//    message as shown below
-// 5) In the data section of a message. This is the one we will mostly use during
-//    normal operation (ie not connecting or disconnecting the socket)
-//          MESSAGE_TYPE is one of "data" or "info" or "error"
-// ....................... data message format .................................
-// ============================================================================
 */
 
 // ============================================================================
 //                           IMPORTS/VARIABLES
-// ============================================================================
-// Description: Import/Variable section
-// ----------------------------- notes ----------------------------------------
-// none
 // ============================================================================
 import { Buffer } from 'buffer';
 import * as childprocess from "child_process";
@@ -245,9 +188,9 @@ const triggersandactions =
             }
         ],
 }
-
-
-// check for extension status so we can send a message out when all have reported read
+// ============================================================================
+//                           FUNCTION: extensionReadinessCheckScheduler
+// ============================================================================
 /**
  * checks for extensions sending 'ready' message and send out a 'StreamRollerReady' when all extensions have responded
  */
@@ -261,6 +204,9 @@ function extensionReadinessCheckScheduler ()
         extensionReadinessCheck()
     }, localConfig.StartupInterval);
 }
+// ============================================================================
+//                           FUNCTION: extensionReadinessCheck
+// ============================================================================
 /**
  * Extension readiness check
  */
@@ -468,7 +414,6 @@ function onMessage (socket, server_packet)
             logger.warn("[" + localConfig.serverConfig.SYSTEM_LOGGING_TAG + "]server_socket.onMessage", "New id " + socket.id);
             //update the extensions socket as it has changed
             localConfig.extensions[server_packet.from].socket = socket;
-
         }
         localConfig.connected_extensionlist[server_packet.from] = localConfig.extensions[server_packet.from].socket.connected
     }

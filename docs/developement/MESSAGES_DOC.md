@@ -78,8 +78,8 @@ There are some special message types that are used (normally during startup or e
   "UpdateCredentials"     Update multiple credentials the extension. Response "CredentialsFile"
   "RequestCredentials"    Request the credentials for the extension. Response "CredentialsFile"
   "DeleteCredentials"     Delete teh credentials for the extension provided.Response "CredentialsFileDeleted"
-  "RequestExtensionsList" Request a list of loaded extensions using the system. Response "ExtensionList"
-  "RequestAllExtensionsList" Request all extensions (even not yet connected). Response "ExtensionList"
+  "RequestExtensionsList" Request a list of loaded extensions using the system. Response "ExtensionList". Any updates to this list will be resent to any extension that has previously sent this request
+  "RequestAllExtensionsList" Request all extensions (even not yet connected). Response "ExtensionList". Any updates to this list will be resent to any extension that has previously sent this request
   "RequestChannelsList"   Request a list of channels currently available. Response "ChannelList"
   "CreateChannel"         Create a channel for to send/receive messages on. Response "ChannelCreated" or "ChannelJoined"
   "JoinChannel"           Join a channel to send/receive messages on. Response "ChannelJoined" or "UnknownChannel"

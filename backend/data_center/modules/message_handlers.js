@@ -273,7 +273,6 @@ function leaveChannel (client_socket, extensionname, channel_to_leave)
         logger.log("[" + SYSTEM_LOGGING_TAG + "] message_handlers.leaveChannel Extension:"
             + extensionname + " leaving " + channel_to_leave);
         client_socket.leave(channel_to_leave);
-        //server_socket.to(channel_to_leave).emit('ChannelLeft', extensionname);
     } catch (e)
     {
         logger.err("[" + SYSTEM_LOGGING_TAG + "] message_handlers.leaveChannel Extension:"
@@ -485,7 +484,7 @@ function errorMessage (client_socket, error, data)
     client_socket.emit("message", msg)
 }
 // ============================================================================
-//                           FUNCTION: errorMessage
+//                           FUNCTION: sendDataLoad
 // ============================================================================
 /**
  * Send an error message to the given socket
