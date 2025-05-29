@@ -47,21 +47,17 @@ let __api_version__ = "0.2";
  * @param {*} data Data to be sent (optional)
  * @param {string} dest_channel Destination Channel name (optional) if omitted defaults to broadcasting
  * @param {string} to Extension to be sent to (optional) if omitted defaults to sending to channel
- * @param {string} ret_channel return channel (optional)
- * @param {string} version Interface version for debugging purposes only(optional)
  * @return {string} A JSON stringified version of the message object
  */
-function ServerPacket (type, from, data, dest_channel, to, ret_channel, version = __api_version__)
+function ServerPacket (type, from, data, dest_channel, to)
 {
-    //console.log("ServerPacket data:", type, from, typeof (data))
     return {
         type: type,
         from: from,
         dest_channel: dest_channel,
         to: to,
-        ret_channel: ret_channel,
         data: data,
-        version: version
+        version: __api_version__
     };
 
 }
@@ -75,11 +71,9 @@ function ServerPacket (type, from, data, dest_channel, to, ret_channel, version 
  * @param {*} data Data of the message (optional)
  * @param {string} dest_channel Destination channel name (optional)
  * @param {string} to Extension name of intended receiver (optional)
- * @param {string} ret_channel Return channel of any response (optional)
- * @param {string} version Interface version for debugging purposes only(optional)
  * @returns {string} A JSON stringified version of the message object
  */
-function ExtensionPacket (type, from, data, dest_channel, to, ret_channel, version = __api_version__)
+function ExtensionPacket (type, from, data, dest_channel, to)
 {
     // console.log("ExtensionPacket data:", type, typeof (data), data)
     return {
@@ -87,9 +81,8 @@ function ExtensionPacket (type, from, data, dest_channel, to, ret_channel, versi
         from: from,
         dest_channel: dest_channel,
         to: to,
-        ret_channel: ret_channel,
         data: data,
-        version: version
+        version: __api_version__
     };
 }
 // ============================================================================
