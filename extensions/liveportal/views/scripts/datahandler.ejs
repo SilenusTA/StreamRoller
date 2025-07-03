@@ -2665,9 +2665,18 @@
     // ===========================================================================
     function LoadVoices ()
     {
-        //update TTS voices if we don't have any yet
-        if (!localConfig.TTSVoiceList.length)
-            localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
+        let voicesLoaded = false;
+        localConfig.TTSVoiceList = window.speechSynthesis.getVoices();
+
+        // For some reason windows doesn't always send back a full list and misses out the default voices
+        for (const voice of localConfig.TTSVoiceList) 
+        {
+            if (voice.name == "Microsoft George - English (United Kingdom)")
+            {
+                voicesLoaded = true
+                break;
+            }
+        }
 
         //filter out stuff the user is interested in
         if (serverConfig.TTSVoiceFilter != "")
@@ -2682,15 +2691,13 @@
         localConfig.TTSVoiceList.sort(compare);
         //if we got voices then update out settings
         if (localConfig.TTSVoiceList.length)
-        {
             UpdateOwnSettingsWidgetSmallData()
-        }
-        else
+        if (!voicesLoaded)
         {
             setTimeout(() =>
             {
                 LoadVoices()
-            }, 1000);
+            }, 5000);
         }
     }
     // ============================================================================

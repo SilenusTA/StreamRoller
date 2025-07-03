@@ -1778,8 +1778,8 @@ function processChatMessage (data, maxRollbackCount = 20, platform = "twitch")
             // ##############################################
             //         Processing a sub/dono message message
             // ##############################################
-            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!! chatbot: sub/dono message", chatdata.message)
             messages = [{ "role": "user", "content": data.data['system-msg'] }];
+            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!! chatbot: sub/dono message", messages)
         }
 
         if (serverConfig.translatetoeng === "on" || serverConfig.submessageenabled === "on")
