@@ -4608,7 +4608,8 @@
             for (let i = 0; i < allTags.length; i++)
             {
                 //find the first version tag
-                if (allTags[i].name.indexOf("v") == 0)
+                if (allTags[i].name.indexOf("v") == 0
+                    && !allTags[i].name.indexOf("vi") == 0)
                 {
                     let tag = allTags[i]
                     localConfig.latestRelease =
