@@ -186,7 +186,7 @@
         default_system_color: "red",
         default_username_color: "#7097ff",//#6f42c1",
         default_timecode_color: "#757875",
-        default_user_at_color: "red",
+        default_user_at_color: "#f84242",
         default_text_bright_color: "white",
         default_sub_color: "#03b503",
         default_reward_color: "red",
@@ -2961,10 +2961,10 @@
             //  ##################################
             //  check if someone @'d us
             //  ##################################
-            if (localConfig.usernamelist && localConfig.usernamelist.twitch && localConfig.usernamelist.twitch.user && chatdata.message && chatdata.message.toLowerCase().indexOf('@' + localConfig.usernamelist.twitch.user.toLowerCase()) > -1)
+            if (localConfig.usernamelist && localConfig.usernamelist.twitch && localConfig.usernamelist.twitch.user && chatdata.message && chatdata.message.toLowerCase().indexOf(localConfig.usernamelist.twitch.user.toLowerCase()) > -1)
             {
-                var myregex = new RegExp("@" + localConfig.usernamelist.twitch.user, "gi")
-                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'> @" + localConfig.usernamelist.twitch.user + "</span>")
+                var myregex = new RegExp(localConfig.usernamelist.twitch.user, "gi")
+                message = message.replace(myregex, "<span style='color:" + chatcolors.default_text_bright_color + ";background-color: " + chatcolors.default_user_at_color + ";'>" + localConfig.usernamelist.twitch.user + "</span>")
             }
 
             //  ##################################
