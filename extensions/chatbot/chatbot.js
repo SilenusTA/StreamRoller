@@ -2043,7 +2043,7 @@ async function callOpenAI (string_array, modelToUse, platform)
                 });
 
             const response = await localConfig.OpenAPIHandle.responses.create({
-                model: "gpt-4.1",
+                model: modelToUse.model,
                 store: false,
                 max_output_tokens: Number(modelToUse.max_tokens),
                 temperature: Number(modelToUse.chattemperature),
@@ -2145,9 +2145,8 @@ async function callOpenAI (string_array, modelToUse, platform)
  */
 function addPersonality (username, message, profile, platform)
 {
-    let outputmessage = [{ "role": "system", "content": serverConfig.chatbotprofiles[profile].p }]
-
-    let CBBehaviour = [
+    let outputmessage = [
+        { "role": "system", "content": serverConfig.chatbotprofiles[profile].p },
         { "role": "user", "content": serverConfig.chatbotprofiles[profile].q1.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a1 },
         { "role": "user", "content": serverConfig.chatbotprofiles[profile].q2.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
@@ -2157,9 +2156,6 @@ function addPersonality (username, message, profile, platform)
         { "role": "user", "content": serverConfig.chatbotprofiles[profile].q4.replace("%%CHATBOTTRIGGERNAME%%", serverConfig.chatbotnametriggertag) },
         { "role": "assistant", "content": serverConfig.chatbotprofiles[profile].a4 }
     ];
-    // add behaviour messages
-    for (const obj of CBBehaviour)
-        outputmessage.push(obj);
 
     if (message == "")
     {
