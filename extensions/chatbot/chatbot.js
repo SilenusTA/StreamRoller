@@ -2035,6 +2035,12 @@ async function callOpenAI (string_array, modelToUse, platform)
         console.log("Calling OpenAI with model ", string_array, modelToUse)
     try
     {
+        string_array.push(
+            {
+                role: 'system',
+                content: 'Absolutely no Markdown, formatting, line breaks, bullet points, or code blocks. Every reply must be in plain, unformatted text as a single, self-contained Twitch chat message.'
+            }
+        )
         if (localConfig.openAIKey)
         {
             localConfig.OpenAPIHandle = new OpenAIApi(
