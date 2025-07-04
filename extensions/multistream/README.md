@@ -129,7 +129,7 @@ This gives you the ability to see errors (even more if adding the +info, +verbos
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Wed, 28 May 2025 03:08:18 GMT*
+Table last updated: *Fri, 04 Jul 2025 00:39:55 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
