@@ -76,6 +76,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: false
+          make_latest: true
           body: Version ${{inputs.tag}} of StreamRoller
           name: "StreamRoller${{inputs.tag}}"
           tag_name: ${{inputs.tag}}
