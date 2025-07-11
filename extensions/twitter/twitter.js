@@ -541,13 +541,14 @@ function tweetmessage (message)
         localConfig.twitterClient.tweetsV2.createTweet({ "text": message })
             .then(response =>
             {
+                localConfig.status.connected = true;
                 logger.extra(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
                     ".tweetmessage", "Tweet sent ", message);
             }).catch(err =>
             {
                 localConfig.status.connected = false;
                 logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname +
-                    ".tweetmessage", "Failed to tweet message ... ", err.name, err.message);
+                    ".tweetmessage", "Failed to tweet message ... ", message, err.name, err.message);
             })
 
     }
