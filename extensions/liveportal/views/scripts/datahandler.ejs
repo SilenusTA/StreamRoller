@@ -899,7 +899,7 @@
                     // setup a new timeout for this extension
                     livePortalVolatileData.extensions[extension_packet.from].deadmansHeartBeatHandle = setTimeout(() => 
                     {
-                        deadMansHeartBeatCallback(extension_packet.from)
+                        deadMansHeartBeatCallback_Extension(extension_packet.from)
                     },
                         localConfig.deadmansHeartBeatTimeout);
 
@@ -1253,14 +1253,14 @@
         }
     }
     // ============================================================================
-    //                           FUNCTION: deadMansHeartBeatCallback
+    //                           FUNCTION: deadMansHeartBeatCallback_Extension
     // ============================================================================
     // Description: started when we get a heartbeat and used to mark the extension as down if it expires
     // Parameters: extension name and the state (true fals to represent status)
     // ----------------------------- notes ----------------------------------------
     // none
     // ===========================================================================
-    function deadMansHeartBeatCallback (extensionname)
+    function deadMansHeartBeatCallback_Extension (extensionname)
     {
         setExtensionStatus(extensionname, false);
     }
