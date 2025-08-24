@@ -52,7 +52,7 @@ Timers provide a great way to give more control over the system. You can set a t
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Fri, 04 Jul 2025 01:08:17 GMT*
+Table last updated: *Sun, 13 Jul 2025 18:24:16 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
