@@ -3086,7 +3086,11 @@ async function banUser (username, reason)
                     localConfig.apiClient.moderation.banUser(localConfig.streamerData.id, banData)
                         .then((response) =>
                         {
-                            //console.log("twitch.banUser User returned", response)
+                            console.log("banUser returned", response)
+                        })
+                        .catch((err) =>
+                        {
+                            console.log("apiClient.moderation.banUser error", err, err.message)
                         })
                 }
                 else
