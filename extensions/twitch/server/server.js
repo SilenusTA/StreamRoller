@@ -60,6 +60,7 @@ const localConfig =
     twitchCategoryErrorsText: "",
     twitchCategoryErrorsShowCounter: 0,
     currentTwitchGameCategoryId: -1, // as reported by twitch
+    currentTwitchStreamTitle: "", // as reported by twitch
 
     sendUserTwitchChatCredentialsTimeout: 5000,
     sendUserTwitchChatCredentialsHandle: null,
@@ -2196,7 +2197,7 @@ function onDataCenterMessage (server_packet)
             // -----------------------------------------------------------------------------------
             else if (extension_packet.type === "action_GetTwitchStats")
             {
-                sendCurrentGameData(extension_packet.data.actionID)
+                sendTwitchStats(extension_packet.data.actionID)
             }
             // -----------------------------------------------------------------------------------
             //                   action_GetTwitchStats
@@ -2629,6 +2630,7 @@ async function connectTwitch ()
 
                 // set our current game id and add it to the history
                 localConfig.currentTwitchGameCategoryId = channelData.gameId;
+                localConfig.currentTwitchStreamTitle = channelData.title;
                 // need to do this here as we don't have the game image in the current data.
                 addGameToHistoryFromGameName(channelData.gameName)
                 // Connect to the pub sub event listener
@@ -2645,7 +2647,7 @@ async function connectTwitch ()
                 //to start up (if we have just started the server)
                 setTimeout(() =>
                 {
-                    sendCurrentGameData("twitch")
+                    sendTwitchStats("twitch")
                 }, 5000);
 
             })
@@ -4021,13 +4023,13 @@ function sendGameCategoriesTrigger (id = "twitch")
     sendTrigger(trigger)
 }
 // ===========================================================================
-//                           FUNCTION: sendCurrentGameData
+//                           FUNCTION: sendTwitchStats
 // ===========================================================================
 /**
  * sends trigger_TwitchGamedChanged
  * @param {number} [triggerId="twitch"] ref id from action
  */
-function sendCurrentGameData (triggerId = "twitch")
+function sendTwitchStats (triggerId = "twitch")
 {
     let trigger = findTriggerByMessageType("trigger_TwitchGamedChanged");
     const game = serverConfig.twitchCategoriesHistory.find(e => e.id === localConfig.currentTwitchGameCategoryId);
@@ -4036,6 +4038,14 @@ function sendCurrentGameData (triggerId = "twitch")
         trigger.parameters = { triggerId: triggerId, id: game.id, name: game.name, imageURL: game.imageURL }
         sendTrigger(trigger)
     }
+
+    trigger = findTriggerByMessageType("trigger_TwitchTitleChanged");
+    if (game)
+    {
+        trigger.parameters = { triggerId: triggerId, title: localConfig.currentTwitchStreamTitle }
+        sendTrigger(trigger)
+    }
+
 }
 // ===========================================================================
 //                           FUNCTION: raidChannel
@@ -4078,6 +4088,16 @@ function pubSubTriggerCallback (trigger)
         // change our setup so it matches the data from twitch
         localConfig.currentTwitchGameCategoryId = trigger.parameters.gameId;
         addGameToHistoryFromGameName(trigger.parameters.name)
+        //update any of our modals
+        SendSettingsWidgetSmall()
+        //save the serverConfig so we remember the changes
+        SaveConfigToServer()
+    }
+    else if (trigger.messagetype == "trigger_TwitchTitleChanged")
+    {
+        // change our setup so it matches the data from twitch
+        localConfig.currentTwitchStreamTitle = trigger.parameters.title;
+
         //update any of our modals
         SendSettingsWidgetSmall()
         //save the serverConfig so we remember the changes

@@ -31,7 +31,7 @@
     const default_serverConfig = {
         // version number only needs updating if changing or deleting a variable.
         // new variables do not need the version updated.        
-        __version__: "0.6",
+        __version__: "0.7",
         // extensions vars
         extensionname: "liveportal",
         channel: "LIVE_PORTAL",
@@ -75,9 +75,32 @@
         currentchatAsPlatform: "twitch",
 
         // ##### settings widget variables
+
         // TTS settings
         TTSVoiceFilter: "English", // filter out voices you are interested in
-        //twith tts
+
+        // #################################################
+        // Partially updated code, needs finishing
+        // the tts data following this object should be updated to all come from this structure.
+        platformData:
+        {
+            twitch:
+            {
+                streamCategory: "",
+                streamCategoryImageCode: "",
+                streamTitle: "",
+                //twitch tts
+                /*
+                TTStwitchenabled: "off",
+                TTSVolume: "1",
+                TTSBlackList: "",
+                TTSVoiceName: "Please select a windows voice",
+                TTSVoiceIndex: -1,
+                */
+            }
+
+        },
+        //twitch tts
         winttstwitchenabled: "off",
         twitchTTSVolume: "1",
         twitchBlackList: "",
@@ -95,6 +118,9 @@
         kickBlackList: "",
         kickTTSVoiceName: "Please select a windows voice",
         kickTTSVoiceIndex: -1,
+
+        // Partially updated code end comment
+        // #################################################
         // random facts twitter settings
         randomfactsenabled: "on",
         randomfactstimeout: 1800000,//30 min
@@ -1067,11 +1093,17 @@
                 }
                 else if (extension_packet.type === "trigger_TwitchGamedChanged")
                 {
-                    let ele = document.getElementById("liveportaltitleTwitchCategoryImage")
                     let imagecode = extension_packet.data.parameters.imageURL.replace("{width}", 30).replace("{height}", 30)
-                    ele.title = extension_packet.data.parameters.name;
-                    ele.innerHTML = "<img style='border: 5px solid #6441a5; border-radius:50%' src='" + imagecode + "'>"
+                    serverConfig.platformData.twitch.streamCategory = extension_packet.data.parameters.name;
+                    serverConfig.platformData.twitch.streamCategoryImageCode = imagecode
+                    updateTwitchCategoryAndTitle()
                 }
+                else if (extension_packet.type === "trigger_TwitchTitleChanged")
+                {
+                    serverConfig.platformData.twitch.streamTitle = extension_packet.data.parameters.title
+                    updateTwitchCategoryAndTitle();
+                }
+
             }
             // -------------------------------------------------------------------------------------------------
             //                           DISCORD_CHAT
@@ -3989,7 +4021,7 @@
                     sr_api.ExtensionPacket(
                         "action_youtubeAPIPostLiveChatMessage",
                         serverConfig.extensionname,
-                        // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                        // need to read accounts from youtube ext and give an option to chose who to send the message as
                         {
                             platform: "youtube",
                             message: msg,
@@ -4006,7 +4038,7 @@
                     sr_api.ExtensionPacket(
                         "action_youtubePostLiveChatMessage",
                         serverConfig.extensionname,
-                        // need to read accounts from twitchchat ext and give an option to chose who to send the message as
+                        // need to read accounts from youtube ext and give an option to chose who to send the message as
                         {
                             platform: "youtube",
                             message: msg,
@@ -4728,5 +4760,17 @@
         sr_api.sendMessage(DataCenterSocket,
             sr_api.ServerPacket("ExtensionReady", serverConfig.extensionname));
         startupRequests()
+    }
+    // ============================================================================
+    //                           FUNCTION: updateTwitchCategoryAndTitle
+    // ============================================================================
+    /**
+     * 
+     */
+    function updateTwitchCategoryAndTitle ()
+    {
+        let ele = document.getElementById("liveportaltitleTwitchCategoryImage")
+        ele.title = serverConfig.platformData.twitch.streamCategory + " : " + serverConfig.platformData.twitch.streamTitle;
+        ele.innerHTML = "<img style='border: 5px solid #6441a5; border-radius:50%' src='" + serverConfig.platformData.twitch.streamCategoryImageCode + "'>"
     }
 </script>
