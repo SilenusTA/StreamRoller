@@ -52,6 +52,7 @@ const localConfig =
     authProvider: "",
     apiClient: null,
     gameCategories: [],
+    twitchImages: {},
     // variables from the Settings widget
     twitchCategoriesDropdownId: "twitchGameCategoryDropdownSelector",
     twitchTitleDropdownId: "twitchTitleDropdownSelector",
@@ -72,7 +73,11 @@ const localConfig =
         ConfigReceived: false,
         CredentialsReceived: false,
     },
+
 }
+
+localConfig.twitchImages["badges"] = {};
+
 const default_serverConfig = {
     __version__: "0.5",
     extensionname: "twitch",
@@ -957,6 +962,18 @@ const triggersandactions =
                     triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
                 }
             },
+
+            {
+                name: "GlobalBadges",
+                displaytitle: "Global Badges",
+                description: "Global Badges",
+                messagetype: "trigger_TwitchGlobalBadges",
+                parameters: {
+                    badges: {},
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference copied from the action that created this trigger"
+                }
+            },
             {
                 name: "Leaderboard",
                 displaytitle: "Leaderboard",
@@ -1215,6 +1232,16 @@ const triggersandactions =
                 displaytitle: "Cheer Emotes",
                 description: "Get cheer emotes",
                 messagetype: "action_TwitchCheerEmotes",
+                parameters: {
+                    triggerActionRef: "twitch",
+                    triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
+                }
+            },
+            {
+                name: "GlobalBadges",
+                displaytitle: "Global Badges",
+                description: "Get Global Badges",
+                messagetype: "action_TwitchGlobalBadges",
                 parameters: {
                     triggerActionRef: "twitch",
                     triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
@@ -1963,6 +1990,14 @@ function onDataCenterMessage (server_packet)
             {
                 if (serverConfig.twitchenabled == "on")
                     cheerEmotes()
+            }
+            // -----------------------------------------------------------------------------------
+            //                   action_TwitchGlobalBadges
+            // -----------------------------------------------------------------------------------
+            else if (extension_packet.type === "action_TwitchGlobalBadges")
+            {
+                if (serverConfig.twitchenabled == "on")
+                    globalBadges()
             }
             // -----------------------------------------------------------------------------------
             //                   action_TwitchLeaderboard
@@ -3245,6 +3280,47 @@ async function cheerEmotes ()
     {
         console.log(err)
         logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".cheerEmotes", "ERROR", "Failed to get cheer emotes  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
+        console.log(err._body);
+    }
+}
+// ===========================================================================
+//                           FUNCTION: globalBadges
+// ===========================================================================
+/**
+ * send trigger_TwitchGlobalBadges
+ */
+async function globalBadges ()
+{
+    try
+    {
+        localConfig.apiClient.chat.getGlobalBadges()
+            .then((data) =>
+            {
+                let counter = 0
+                for (counter = 0; counter < data.length; counter++)
+                {
+                    localConfig.twitchImages.badges[data[counter].id] = {};
+                    let versions = data[counter].versions
+                    let c;
+                    for (c = 0; c < versions.length; c++)
+                    {
+                        localConfig.twitchImages.badges[data[counter].id][c] = versions[c].getImageUrl(1);
+                    }
+                }
+                let trigger = findTriggerByMessageType("trigger_TwitchGlobalBadges");
+                trigger.parameters.badges = localConfig.twitchImages;
+                sendTrigger(trigger)
+
+            })
+            .catch((err) =>
+            {
+                logger.err(serverConfig.extensionname + ".globalBadges requesting badges", "Unhandled exception:", err);
+            })
+    }
+    catch (err)
+    {
+        console.log(err)
+        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".globalBadges", "ERROR", "Failed to get channel badges  (try reauthorising by going to go to http://localhost:3000/twitch/auth)");
         console.log(err._body);
     }
 }
