@@ -30,7 +30,7 @@ Follow the steps on the the StreamRoller main settings page for the extension
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Sun, 19 Oct 2025 21:34:42 GMT*
+Table last updated: *Mon, 01 Dec 2025 02:23:46 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 
@@ -94,6 +94,7 @@ To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS
 | FollowerCount | trigger_TwitchFollowerCount | Follower count |
 | FollowedChannels | trigger_TwitchFollowedChannels | Followed channels |
 | CheerEmotes | trigger_TwitchCheerEmotes | Cheer emotes |
+| GlobalBadges | trigger_TwitchGlobalBadges | Global Badges |
 | Leaderboard | trigger_TwitchLeaderboard | Bits leaderboard |
 | Poll | trigger_TwitchPoll | A poll |
 | UserBlocks | trigger_TwitchUserBlocks | Who this user has blocked |
@@ -121,6 +122,7 @@ To see the full list of Triggers/Actions available checkout [README_All_TRIGGERS
 | FollowerCount | action_TwitchFollowerCount | Get follower count |
 | FollowedChannels | action_TwitchFollowedChannels | Get followed channels |
 | CheerEmotes | action_TwitchCheerEmotes | Get cheer emotes |
+| GlobalBadges | action_TwitchGlobalBadges | Get Global Badges |
 | Leaderboard | action_TwitchLeaderboard | Get bits leaderboard |
 | GetPolls | action_TwitchGetPolls | Gets a list of polls |
 | GetPoll | action_TwitchGetPoll | Get a poll |
