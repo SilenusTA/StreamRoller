@@ -2,9 +2,9 @@
 
 ## Overview
 
-### Current count (5,310)
+### Current count (5,312)
 
-```Triggers: 3,729 / Actions: 1,581```
+```Triggers: 3,730 / Actions: 1,582```
 
 Contents
 
@@ -38,7 +38,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Sun, 19 Oct 2025 21:34:42 GMT*## Extensions
+Table last updated: *Mon, 01 Dec 2025 02:23:46 GMT*## Extensions
 
 ## autopilot
 
@@ -5422,6 +5422,7 @@ Table last updated: *Sun, 19 Oct 2025 21:34:42 GMT*## Extensions
 | FollowerCount | trigger_TwitchFollowerCount | Follower count |
 | FollowedChannels | trigger_TwitchFollowedChannels | Followed channels |
 | CheerEmotes | trigger_TwitchCheerEmotes | Cheer emotes |
+| GlobalBadges | trigger_TwitchGlobalBadges | Global Badges |
 | Leaderboard | trigger_TwitchLeaderboard | Bits leaderboard |
 | Poll | trigger_TwitchPoll | A poll |
 | UserBlocks | trigger_TwitchUserBlocks | Who this user has blocked |
@@ -5447,6 +5448,7 @@ Table last updated: *Sun, 19 Oct 2025 21:34:42 GMT*## Extensions
 | FollowerCount | action_TwitchFollowerCount | Get follower count |
 | FollowedChannels | action_TwitchFollowedChannels | Get followed channels |
 | CheerEmotes | action_TwitchCheerEmotes | Get cheer emotes |
+| GlobalBadges | action_TwitchGlobalBadges | Get Global Badges |
 | Leaderboard | action_TwitchLeaderboard | Get bits leaderboard |
 | GetPolls | action_TwitchGetPolls | Gets a list of polls |
 | GetPoll | action_TwitchGetPoll | Get a poll |
