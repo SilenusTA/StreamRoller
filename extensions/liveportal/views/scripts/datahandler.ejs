@@ -3100,13 +3100,11 @@
                 name_field = user_color + chatdata.data['display-name'] + "&gt</span> ";
 
                 // ########### Add Badges
-                //icon=icon + "<img src='liveportal/images/badge_mod.png'>";
                 for (var key in chatdata.data.badges)
                 {
                     if (key == "moderator")
                         continue;
-                    var obj = localConfig.twitchGlobalBadges.badges[key];
-                    icons = icons + `<img src='${localConfig.twitchGlobalBadges.badges[key][0]}'>`
+                    icons = icons + `<img src='${localConfig.twitchGlobalBadges.badges[key][0].url}' title = '${localConfig.twitchGlobalBadges.badges[key][0].description}'>`
                 }
                 // ########### create our message line
                 // set the card title (may have changed since last time around)

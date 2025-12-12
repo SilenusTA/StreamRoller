@@ -3304,7 +3304,9 @@ async function globalBadges ()
                     let c;
                     for (c = 0; c < versions.length; c++)
                     {
-                        localConfig.twitchImages.badges[data[counter].id][c] = versions[c].getImageUrl(1);
+                        localConfig.twitchImages.badges[data[counter].id][c] = {};
+                        localConfig.twitchImages.badges[data[counter].id][c].url = versions[c].getImageUrl(1);
+                        localConfig.twitchImages.badges[data[counter].id][c].description = versions[c].description;
                     }
                 }
                 let trigger = findTriggerByMessageType("trigger_TwitchGlobalBadges");
