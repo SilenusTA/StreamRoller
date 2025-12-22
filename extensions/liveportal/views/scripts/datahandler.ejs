@@ -2067,12 +2067,8 @@
 
             if (skippedframes > 1000)
             {
-                if (skippedframes > 10000)
-                    skippedframestxt = (~~(skippedframes / 1000)) + "k"
-                skippedframestxt = "<span style='color:red'>Network frames errors:<BR>" + skippedframestxt + "</span>";
+                skippedframestxt = "<span style='color:red'>Network frames errors:<BR>" + (~~(skippedframes / 1000)) + "k" + "</span>";
             }
-            else if (skippedframes > 0)
-                skippedframestxt = "<span style='color:orange'>Network frames errors:<BR>" + skippedframes + "</span>";
             else
                 skippedframestxt = "<span style='color:green'>Network frames errors:<BR>" + skippedframes + "</span>";
 
