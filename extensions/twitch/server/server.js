@@ -2497,6 +2497,26 @@ function handleSettingsWidgetSmallData (modalCode)
             // return now to clear options
             return restartConnection;
         }
+        /*
+        // Code for deleting a single history item. ie example is removing category 'Line Rider JavaScript'
+        // Need to add icon to history list to call this code.
+        console.log("SendSettingsWidgetSmall")
+        console.log("serverConfig.twitchCategoriesHistory")
+        console.log(JSON.stringify(serverConfig.twitchCategoriesHistory, null, 2))
+        const index = serverConfig.twitchCategoriesHistory.findIndex(element => element.name === "Line Rider JavaScript");
+        console.log("index: ", index)
+        if (index > 0)
+        {
+            console.log(serverConfig.twitchCategoriesHistory[index])
+            let temp = serverConfig.twitchCategoriesHistory.map(item =>
+            {
+                return item.name != "Line Rider JavaScript" ? item : null;
+            }).filter(item => item !== null);
+
+            console.log("temp", JSON.stringify(temp, null, 2))
+            serverConfig.twitchCategoriesHistory = temp;
+        }
+        */
         // search for game on twitch
         if (modalCode["twitchSearchForTwitchGameElementId"] && modalCode["twitchSearchForTwitchGameElementId"] != "")
         {
@@ -2693,12 +2713,20 @@ async function connectTwitch ()
     }
     catch (err)
     {
-        logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch", "ERROR", err.message);
-        localConfig.status.connected = false;
-        setTimeout(() =>
+        if (err.message == "Invalid token supplied")
         {
-            connectTwitch()
-        }, localConfig.twitchReconnectTimer);
+            console.log("Invalid token supplied for", serverConfig.twitchstreamername);
+            console.log("Please re-authorize")
+        }
+        else
+        {
+            logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".connectTwitch1", "ERROR", err.message);
+            localConfig.status.connected = false;
+            setTimeout(() =>
+            {
+                connectTwitch()
+            }, localConfig.twitchReconnectTimer);
+        }
     }
 }
 // ===========================================================================
@@ -2816,15 +2844,16 @@ async function getGameFromId (gameId)
         }
         if (categoryIndex == -1)
         {
-            // wd don't have this game so lets go get it.
-            localConfig.apiClient.games.getGameById(gameId)
-                .then((game) => 
-                {
-                    if (game)
-                        return { id: game.id, name: game.name, imageURL: game.boxArtUrl }
-                    else
-                        return null
-                })
+            // we don't have this game so lets go get it.
+            try
+            {
+                let game = await localConfig.apiClient.games.getGameById(gameId);
+                return { id: game.id, name: game.name, imageURL: game.boxArtUrl }
+            }
+            catch (err)
+            {
+                return null;
+            }
         }
         else
             return (localConfig.gameCategories[categoryIndex])
@@ -2899,7 +2928,7 @@ async function startCommercial (length)
                     })
                     .catch((err) =>
                     {
-                        if (err && err._body, JSON.parse(err._body).message)
+                        if (err && err._body && JSON.parse(err._body))
                             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.parse(err._body).message)
                         else
                             logger.err(localConfig.SYSTEM_LOGGING_TAG + serverConfig.extensionname + ".startCommercial:Error", JSON.stringify(err, null, 2))
