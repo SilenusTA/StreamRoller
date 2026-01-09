@@ -58,6 +58,11 @@ const localConfig =
     twitchTitleDropdownId: "twitchTitleDropdownSelector",
     twitchTitlesTextElementId: "twitchTitleTextElement",
     // use these fields to send errors in searching back to the user
+    twitchUserErrorReloadCount: 3,// how many page refreshes for the message to be maintained
+    twitchRemoveTitleHistoryErrorsText: "",
+    twitchRemoveTitleHistoryErrorsShowCounter: 0,
+    twitchRemoveCategoryHistoryErrorsText: "",
+    twitchRemoveCategoryHistoryErrorsShowCounter: 0,
     twitchCategoryErrorsText: "",
     twitchCategoryErrorsShowCounter: 0,
     currentTwitchGameCategoryId: -1, // as reported by twitch
@@ -2343,6 +2348,39 @@ function SendSettingsWidgetSmall (toChannel = "")
                         localConfig.currentTwitchGameCategoryId));
                 modalString = modalString.replace("twitchTwitchSearchForGame", `<input type="text" class="form-control" id="twitchSearchForTwitchGameElementId" name="twitchSearchForTwitchGameElementId" placeholder="Enter Game name to search for (added to history when found)">`);
             }
+            // set any twitch title remove errors
+            if (localConfig.twitchRemoveTitleHistoryErrorsShowCounter > 0)
+            {
+                localConfig.twitchRemoveTitleHistoryErrorsShowCounter--;
+                modalString = modalString.replace("twitchGameTitleRemoveErrors",
+                    "<div>" + localConfig.twitchRemoveTitleHistoryErrorsText + "</div>"
+                )
+            }
+            else
+                modalString = modalString.replace("twitchGameTitleRemoveErrors", "")
+
+            // set any twitch category remove errors
+            if (localConfig.twitchRemoveCategoryHistoryErrorsShowCounter > 0)
+            {
+                localConfig.twitchRemoveCategoryHistoryErrorsShowCounter--;
+                modalString = modalString.replace("twitchGameCategoryRemoveErrors",
+                    "<div>" + localConfig.twitchRemoveCategoryHistoryErrorsText + "</div>"
+                )
+            }
+            else
+                modalString = modalString.replace("twitchGameCategoryRemoveErrors", "")
+
+            // set any twitch category remove errors
+            if (localConfig.twitchCategoryErrorsShowCounter > 0)
+            {
+                localConfig.twitchCategoryErrorsShowCounter--;
+                modalString = modalString.replace("twitchGameCategoryRemoveErrors",
+                    "<div>" + localConfig.twitchCategoryErrorsText + "</div>"
+                )
+            }
+            else
+                modalString = modalString.replace("twitchGameCategoryRemoveErrors", "")
+            // set any twitch category errors
             if (localConfig.twitchCategoryErrorsShowCounter > 0)
             {
                 localConfig.twitchCategoryErrorsShowCounter--;
@@ -2352,6 +2390,7 @@ function SendSettingsWidgetSmall (toChannel = "")
             }
             else
                 modalString = modalString.replace("twitchGameCategorySearchErrors", "")
+
             sr_api.sendMessage(localConfig.DataCenterSocket,
                 sr_api.ServerPacket(
                     "ExtensionMessage",
@@ -2482,14 +2521,13 @@ function handleSettingsWidgetSmallData (modalCode)
         }
 
         /* check clear history/categories flag */
-        let clearTwitchTitles = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"] == "on"
-        let clearTwitchCategories = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"] == "on"
-
-        if (clearTwitchTitles || clearTwitchCategories)
+        let clearTwitchTitlesChecked = modalCode[localConfig.twitchTitleDropdownId + "_clearHistory"] == "on"
+        let clearTwitchCategoriesChecked = modalCode[localConfig.twitchCategoriesDropdownId + "_clearHistory"] == "on"
+        if (clearTwitchTitlesChecked || clearTwitchCategoriesChecked)
         {
-            if (clearTwitchCategories)
+            if (clearTwitchCategoriesChecked)
                 serverConfig.twitchCategoriesHistory = [];
-            if (clearTwitchTitles)
+            if (clearTwitchTitlesChecked)
             {
                 serverConfig.twitchTitlesHistory = [];
                 localConfig.currentTwitchGameCategoryId = -1
@@ -2497,26 +2535,99 @@ function handleSettingsWidgetSmallData (modalCode)
             // return now to clear options
             return restartConnection;
         }
-        /*
-        // Code for deleting a single history item. ie example is removing category 'Line Rider JavaScript'
-        // Need to add icon to history list to call this code.
-        console.log("SendSettingsWidgetSmall")
-        console.log("serverConfig.twitchCategoriesHistory")
-        console.log(JSON.stringify(serverConfig.twitchCategoriesHistory, null, 2))
-        const index = serverConfig.twitchCategoriesHistory.findIndex(element => element.name === "Line Rider JavaScript");
-        console.log("index: ", index)
-        if (index > 0)
-        {
-            console.log(serverConfig.twitchCategoriesHistory[index])
-            let temp = serverConfig.twitchCategoriesHistory.map(item =>
-            {
-                return item.name != "Line Rider JavaScript" ? item : null;
-            }).filter(item => item !== null);
 
-            console.log("temp", JSON.stringify(temp, null, 2))
-            serverConfig.twitchCategoriesHistory = temp;
+        /* check if we want to remove/clear the current selected item. */
+        let removeTwitchTitleFromHistory = modalCode[localConfig.twitchTitleDropdownId + "_removeHistoryItem"] == "on"
+        let removeTwitchCategoriesFromHistory = modalCode[localConfig.twitchCategoriesDropdownId + "_removeHistoryItem"] == "on"
+
+        if (removeTwitchTitleFromHistory || removeTwitchCategoriesFromHistory)
+        {
+            if (removeTwitchCategoriesFromHistory)
+            /////serverConfig.twitchCategoriesHistory = [];
+            {
+                let selectedCategory = modalCode[localConfig.twitchCategoriesDropdownId];
+                if (selectedCategory && selectedCategory != "")
+                {
+                    let categoryHistoryIndex = serverConfig.twitchCategoriesHistory.findIndex(x => x.id === selectedCategory);
+
+                    //do we have this Category in our history
+                    if (categoryHistoryIndex > -1)
+                    {
+
+                        // check if Category is the current one set on twitch (not allowed to delete this one)
+                        if (serverConfig.twitchCategoriesHistory[categoryHistoryIndex].id == localConfig.currentTwitchGameCategoryId)
+                        {
+                            let message = "Attempt to delete current category from history, give user an error"
+                            console.log(message)
+
+                            localConfig.twitchRemoveCategoryHistoryErrorsText = "ERROR: " + message
+                            localConfig.twitchRemoveCategoryHistoryErrorsShowCounter = localConfig.twitchUserErrorReloadCount
+                        }
+                        else
+                        {
+                            serverConfig.twitchCategoriesHistory.splice(categoryHistoryIndex, 1);
+                            // find the new Category index and update lastSelectedTwitchCategoryId
+
+                            localConfig.twitchRemoveCategoryHistoryErrorsText = "";
+                            localConfig.twitchRemoveCategoryHistoryErrorsShowCounter = 0;
+                        }
+                    }
+                    else
+                    {
+                        console.log("Category not found in history when attempting to remove from history")
+                        localConfig.twitchRemoveCategoryHistoryErrorsText = "ERROR: Attempt to delete current Category, Change to another Category before attempting to remove a title from the list"
+                        localConfig.twitchRemoveCategoryHistoryErrorsShowCounter = localConfig.twitchUserErrorReloadCount
+                    }
+                }
+            }
+
+            // ###  remove title from history list
+            if (removeTwitchTitleFromHistory)
+            {
+                if (modalCode[localConfig.twitchTitlesTextElementId] && modalCode[localConfig.twitchTitlesTextElementId] != "")
+                {
+                    let titleIndex = serverConfig.twitchTitlesHistory.findIndex(x => x === modalCode[localConfig.twitchTitlesTextElementId]);
+
+                    //do we have this title in our history
+                    if (titleIndex > -1)
+                    {
+                        // check if title is the current one set on twitch (not allowed to delete this one)
+                        if (titleIndex == serverConfig.lastSelectedTwitchTitleId)
+                        {
+                            let message = "ERROR: Attempt to delete current title, Change to another title before attempting to remove a title from the list"
+                            console.log(message)
+
+                            localConfig.twitchRemoveTitleHistoryErrorsText = message
+                            localConfig.twitchRemoveTitleHistoryErrorsShowCounter = localConfig.twitchUserErrorReloadCount
+                        }
+                        else
+                        {
+                            let currentTitle = serverConfig.twitchTitlesHistory[serverConfig.lastSelectedTwitchTitleId];
+
+                            serverConfig.twitchTitlesHistory.splice(titleIndex, 1);
+                            // find the new title index and update lastSelectedTwitchTitleId
+
+                            const newTitleIndex = serverConfig.twitchTitlesHistory.findIndex(element => element === currentTitle);
+                            serverConfig.lastSelectedTwitchTitleId = newTitleIndex;
+
+                            localConfig.twitchRemoveTitleHistoryErrorsText = "";
+                            localConfig.twitchRemoveTitleHistoryErrorsShowCounter = 0;
+                            SaveConfigToServer()
+                        }
+                    }
+                    else
+                    {
+                        let message = "ERROR: Attempt to delete current title, Change to another title before attempting to remove a title from the list"
+                        console.log(message)
+                        localConfig.twitchRemoveTitleHistoryErrorsText = message
+                        localConfig.twitchRemoveTitleHistoryErrorsShowCounter = localConfig.twitchUserErrorReloadCount
+                    }
+                }
+            }
+            // return now to clear options
+            return restartConnection;
         }
-        */
+
         // search for game on twitch
         if (modalCode["twitchSearchForTwitchGameElementId"] && modalCode["twitchSearchForTwitchGameElementId"] != "")
         {
@@ -2793,7 +2904,7 @@ async function addGameToHistoryFromGameName (gameName)
                         localConfig.twitchCategoryErrorsText = "Couldn't Find Game '" + gameName + "' on twitch"
                         // how many reloads to keep displaying the error 
                         // due to the chance of another update going out too quickly
-                        localConfig.twitchCategoryErrorsShowCounter = 3;
+                        localConfig.twitchCategoryErrorsShowCounter = localConfig.twitchUserErrorReloadCount;
                         SendSettingsWidgetSmall()
                     }
 
@@ -4204,6 +4315,14 @@ function pubSubTriggerCallback (trigger)
     {
         // change our setup so it matches the data from twitch
         localConfig.currentTwitchStreamTitle = trigger.parameters.title;
+        //update our local history id if it exists
+        serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.findIndex(element => element === localConfig.currentTwitchStreamTitle);
+
+        let titleIndex = serverConfig.twitchTitlesHistory.findIndex(element => element === localConfig.currentTwitchStreamTitle);
+        if (titleIndex > -1)
+            serverConfig.lastSelectedTwitchTitleId = titleIndex;
+        else
+            serverConfig.lastSelectedTwitchTitleId = serverConfig.twitchTitlesHistory.push(localConfig.currentTwitchStreamTitle) - 1
 
         //update any of our modals
         SendSettingsWidgetSmall()
@@ -4262,7 +4381,7 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
         history.forEach(item =>
         {
             if (item.id == currentSelectedId)
-                dropdownHtml += "<option value=\"" + item.id + "\" selected>" + item.name + "</option>";
+                dropdownHtml += "<option style='color: orange;' value=\"" + item.id + "\" selected>" + item.name + "</option>";
             else
                 dropdownHtml += "<option value=\"" + item.id + "\">" + item.name + "</option>";
         });
@@ -4284,13 +4403,17 @@ function createDropdownWithSearchableHistory (id, categories = [], history = [],
         if (!history.some(e => e.id === option.id))
         {
             if (option.id == currentSelectedId)
-                dropdownHtml += '<option value="' + option.id + '" selected>' + option.name + '</option>';
+                dropdownHtml += '<option style="color: orange;" value="' + option.id + '" selected>' + option.name + '</option>';
             else
                 dropdownHtml += '<option value="' + option.id + '">' + option.name + '</option>';
         }
     });
     dropdownHtml += '</select>';
     // add clear history checkbox
+    dropdownHtml += `&nbsp<div class="form-check form-check-inline">
+        <input class="form-check-input" name="${id}_removeHistoryItem" type="checkbox" id="${id}_removeHistoryItem" ${id}_removeHistoryItemchecked>
+        <label class="form-check-label" for="${id}_removeHistoryItem">Remove selected item from history</label>
+      </div>`
     dropdownHtml += `&nbsp<div class="form-check form-check-inline">
         <input class="form-check-input" name="${id}_clearHistory" type="checkbox" id="${id}_clearHistory" ${id}_clearHistorychecked>
         <label class="form-check-label" for="${id}_clearHistory">Clear History</label>
@@ -4326,7 +4449,7 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
         history.forEach((item, i) => 
         {
             if (i == currentSelectedId)
-                dropdownHtml += `<option value="` + i + `" selected >` + item + `</option>`;
+                dropdownHtml += `<option style="color: orange; value="` + i + `" selected >` + item + `</option>`;
 
             else
                 dropdownHtml += `<option value="` + i + `">` + item + `</option>`;
@@ -4336,6 +4459,10 @@ function getTextboxWithHistoryHTML (SelectEleId, TextEleId, history, currentSele
     else
         dropdownHtml += '<option value="separator" disabled style="color:rgb(255 255 0 / 80%);font-weight: bold">--No History Available--</option>'
     dropdownHtml += '</select>';
+    dropdownHtml += `&nbsp<div class="form-check form-check-inline">
+        <input class="form-check-input" name="${SelectEleId}_removeHistoryItem" type="checkbox" id="${SelectEleId}_removeHistoryItem" ${SelectEleId}_removeHistoryItemchecked>
+        <label class="form-check-label" for="${SelectEleId}_removeHistoryItem">Remove selected item from history</label>
+      </div>`
     dropdownHtml += `&nbsp<div class="form-check form-check-inline">
         <input class="form-check-input" name="${SelectEleId}_clearHistory" type="checkbox" id="${SelectEleId}_clearHistory" ${SelectEleId}_clearHistorychecked>
         <label class="form-check-label" for="${SelectEleId}_clearHistory">Clear History</label>
