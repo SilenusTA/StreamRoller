@@ -10,8 +10,8 @@
   "author": "Twitch/OldDepressedGamer",
   "license": "",
   "dependencies": {
-    "@twurple/api": "^7.0.2",
-    "@twurple/auth": "^7.0.2",
-    "@twurple/eventsub-ws": "^7.0.2"
+    "@twurple/api": "^8.0.3",
+    "@twurple/auth": "^8.0.3",
+    "@twurple/eventsub-ws": "^8.0.3"
   }
 }

@@ -30,8 +30,11 @@ onChannelGoalBegin
 onChannelGoalEnd
 onChannelGoalProgress
 onChannelHypeTrainBegin
+onChannelHypeTrainBeginV2
 onChannelHypeTrainEnd
+onChannelHypeTrainEndV2
 onChannelHypeTrainProgress
+onChannelHypeTrainProgressV2
 onChannelModeratorAdd
 onChannelModeratorRemove
 onChannelPollBegin
@@ -97,9 +100,9 @@ pubSubHandles["onChannelFollow"] = { "name": "onChannelFollow", "func": onChanne
 pubSubHandles["onChannelGoalBegin"] = { "name": "onChannelGoalBegin", "func": onChannelGoalBegin, "handle": null }
 pubSubHandles["onChannelGoalEnd"] = { "name": "onChannelGoalEnd", "func": onChannelGoalEnd, "handle": null }
 pubSubHandles["onChannelGoalProgress"] = { "name": "onChannelGoalProgress", "func": onChannelGoalProgress, "handle": null }
-pubSubHandles["onChannelHypeTrainBegin"] = { "name": "onChannelHypeTrainBegin", "func": onChannelHypeTrainBegin, "handle": null }
-pubSubHandles["onChannelHypeTrainEnd"] = { "name": "onChannelHypeTrainEnd", "func": onChannelHypeTrainEnd, "handle": null }
-pubSubHandles["onChannelHypeTrainProgress"] = { "name": "onChannelHypeTrainProgress", "func": onChannelHypeTrainProgress, "handle": null }
+pubSubHandles["onChannelHypeTrainBeginV2"] = { "name": "onChannelHypeTrainBeginV2", "func": onChannelHypeTrainBeginV2, "handle": null }
+pubSubHandles["onChannelHypeTrainEndV2"] = { "name": "onChannelHypeTrainEndV2", "func": onChannelHypeTrainEndV2, "handle": null }
+pubSubHandles["onChannelHypeTrainProgressV2"] = { "name": "onChannelHypeTrainProgressV2", "func": onChannelHypeTrainProgressV2, "handle": null }
 pubSubHandles["onChannelModeratorAdd"] = { "name": "onChannelModeratorAdd", "func": onChannelModeratorAdd, "handle": null }
 pubSubHandles["onChannelModeratorRemove"] = { "name": "onChannelModeratorRemove", "func": onChannelModeratorRemove, "handle": null }
 pubSubHandles["onChannelPollBegin"] = { "name": "onChannelPollBegin", "func": onChannelPollBegin, "handle": null }
@@ -486,13 +489,13 @@ function onChannelGoalProgress (data)
     }
 }
 // ============================================================================
-//                           FUNCTION: onChannelHypeTrainBegin
+//                           FUNCTION: onChannelHypeTrainBeginV2
 // ============================================================================
 /**
  * Fires on a twitch pubsub event
  * @param {object} data 
  */
-function onChannelHypeTrainBegin (data)
+function onChannelHypeTrainBeginV2 (data)
 {
     try
     {
@@ -511,17 +514,17 @@ function onChannelHypeTrainBegin (data)
     }
     catch (err)
     {
-        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainBegin", "ERROR", err.message);
+        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainBeginV2", "ERROR", err.message);
     }
 }
 // ============================================================================
-//                           FUNCTION: onChannelHypeTrainEnd
+//                           FUNCTION: onChannelHypeTrainEndV2
 // ============================================================================
 /**
  * Fires on a twitch pubsub event
  * @param {object} data 
  */
-function onChannelHypeTrainEnd (data)
+function onChannelHypeTrainEndV2 (data)
 {
     try
     {
@@ -538,17 +541,17 @@ function onChannelHypeTrainEnd (data)
     }
     catch (err)
     {
-        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainEnd", "ERROR", err.message);
+        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainEndV2", "ERROR", err.message);
     }
 }
 // ============================================================================
-//                           FUNCTION: onChannelHypeTrainProgress
+//                           FUNCTION: onChannelHypeTrainProgressV2
 // ============================================================================
 /**
  * Fires on a twitch pubsub event
  * @param {object} data 
  */
-function onChannelHypeTrainProgress (data)
+function onChannelHypeTrainProgressV2 (data)
 {
     try
     {
@@ -567,7 +570,7 @@ function onChannelHypeTrainProgress (data)
     }
     catch (err)
     {
-        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainProgress", "ERROR", err.message);
+        logger.err("[EXTENSIONS]twitch.eventsub.onChannelHypeTrainProgressV2", "ERROR", err.message);
     }
 }
 // ============================================================================

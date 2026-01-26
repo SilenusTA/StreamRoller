@@ -2791,23 +2791,34 @@
     // ============================================================================
     function TTSSpeak (voiceIndex, text, volume = 1)
     {
-        let voiceId = voiceIndex;
-        let message = text
-        // if no voice selected just go with the first
-        if (voiceIndex == undefined || voiceIndex < 0)
-            voiceId = 0;
-        if (!localConfig.TTSVoiceList.length)
-            LoadVoices()
-        if ('speechSynthesis' in window && localConfig.TTSVoiceList.length > 0)
+        try
         {
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.voice = localConfig.TTSVoiceList[voiceId];
-            utterance.lang = localConfig.TTSVoiceList[voiceId].lang;
-            utterance.volume = volume;
-            window.speechSynthesis.speak(utterance);
-        } else
+            let voiceId = voiceIndex;
+            let message = text
+
+            // if no voice selected just go with the first
+            if (voiceIndex == undefined || voiceIndex < 0 || voiceIndex > localConfig.TTSVoiceList.length)
+            {
+                sr_api.sendLogMessage(DataCenterSocket, "LivePortal", serverConfig.extensionname, "TTS Voice not found in Windows Voices list", "true", "false");
+                voiceId = 0;
+            }
+            if (!localConfig.TTSVoiceList.length)
+                LoadVoices()
+            if ('speechSynthesis' in window && localConfig.TTSVoiceList.length > 0)
+            {
+                const utterance = new SpeechSynthesisUtterance(message);
+                utterance.voice = localConfig.TTSVoiceList[voiceId];
+                utterance.lang = localConfig.TTSVoiceList[voiceId].lang;
+                utterance.volume = volume;
+                window.speechSynthesis.speak(utterance);
+            } else
+            {
+                console.log("Your browser does not support Text-to-Speech.");
+            }
+        }
+        catch (err)
         {
-            console.log("Your browser does not support Text-to-Speech.");
+            sr_api.sendLogMessage(DataCenterSocket, "LivePortal", serverConfig.extensionname, "TTS Voice error:" + err, "true", "false");
         }
     }
     // ============================================================================
