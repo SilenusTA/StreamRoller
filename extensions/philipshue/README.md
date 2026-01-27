@@ -25,7 +25,7 @@ Pair the extension using the 'pair' option in the small settings dialog and pres
 
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 
-Table last updated: *Mon, 01 Dec 2025 02:23:46 GMT*
+Table last updated: *Tue, 27 Jan 2026 21:20:40 GMT*
 
 <div style='color:orange'>> Note that there are thousands of dynamically created options for some games like MSFS2020. These will only appear whe the game/extension is running and the extension connected.</div>
 

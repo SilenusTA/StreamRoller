@@ -38,7 +38,7 @@ Contents
 Triggers and actions below are updated when the automatic document generation system is run and only contain triggers actions relating to this specific extension.
 Some triggers and action have to be manually parsed as they are dynamic (ie the thousands that are generated for MSFS2020)
 
-Table last updated: *Mon, 01 Dec 2025 02:23:46 GMT*## Extensions
+Table last updated: *Tue, 27 Jan 2026 21:20:40 GMT*## Extensions
 
 ## autopilot
 
