@@ -1422,6 +1422,7 @@ const triggersandactions =
                 parameters: {
                     username: "",
                     data: null,
+                    data_UIDescription: "Currently not used",
                     triggerActionRef: "twitch",
                     triggerActionRef_UIDescription: "Extensionname or User reference that will be passed through to triggers created from this action where possible"
                 }
